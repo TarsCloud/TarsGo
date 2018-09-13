@@ -62,7 +62,6 @@ ifneq ($(TARS_SRC),)
 
 SERVER_NAME := $(TARGET)
 
-HELP += $(HELP_RELEASE)
 endif
 #----------------------------------------------------------------------------------
 
@@ -76,7 +75,6 @@ cleanall:
 HELP += $(HELP_CLEAN)
 HELP += $(HELP_CLEANALL)
 
-HELP_RELEASE  = "\n\e[1;33mrelease\e[0m:\t[copy '\e[1;32m$(ICE_SRC) $(ICE_H) $(ICE_OBJ)\e[0m' -> '/home/tafTARS/$(APP)/$(TARGET)']"
 HELP_CLEAN    = "\n\e[1;33mclean\e[0m:\t\t[remove $(LOCAL_OBJ) $(TARGET)]"
 HELP_CLEANALL = "\n\e[1;33mcleanall\e[0m:\t[clean & rm .*.d]"
 HELP_TAR      = "\n\e[1;33mtar\e[0m:\t\t[will do 'tar $(TARGET).tgz $(RELEASE_FILE)']"
