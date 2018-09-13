@@ -11,8 +11,9 @@ Install tars:  `go get github.com/TarsCloud/TarsGo/tars `
 Compile the tars protocol to Golang tool:
 
 ```shell
-cd $GOPATH/src/github.com/Tencent/Tars/go/tars/tools/tars2go && go build . 
-cp tarsgo $GOPTAH/bin
+cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go && go build . 
+
+cp tars2go $GOPTAH/bin
 ```
 
 Check whether the tars in the GOPTH path are successfully installed.
@@ -81,29 +82,29 @@ Click "Submit", after successful, the TestApp application under the menu number 
 Run the create_tars_server.sh script to automatically create the files necessary for the service.
 
 ```shell
-sh $GOPATH/src/tars/tools/create_tars_server.sh [App] [Server] [Servant]
+sh $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/create_tars_server.sh [App] [Server] [Servant]
 E.g:  
-sh $GOPATH/src/tars/tools/create_tars_server.sh TestApp HelloGo SayHello
+sh $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/create_tars_server.sh TestApp HelloGo SayHello
 ```
 
 After the command is executed, the code will be generated into GOPATH, and the directory will be named in `APP/Server`. The generated code also prompts the specific path.
 
 ```shell
-[root@1-1-1-1 ~/tarsgo-quickstart]# sh $GOPATH/src/tars/tools/create_tars_server.sh TestApp HelloGo SayHello
+[root@1-1-1-1 ~]# sh $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/create_tars_server.sh TestApp HelloGo SayHello
 [create server: TestApp.HelloGo ...]
 [mkdir: $GOPATH/src/TestApp/HelloGo/]
->>>Now doing:./ServantImp.go >>>>
->>>Now doing:./Server.conf >>>>
->>>Now doing:./makefile >>>>
->>>Now doing:./Servant.jce >>>>
->>>Now doing:./Server.go >>>>
 >>>Now doing:./start.sh >>>>
+>>>Now doing:./Server.go >>>>
+>>>Now doing:./Server.conf >>>>
+>>>Now doing:./ServantImp.go >>>>
+>>>Now doing:./makefile >>>>
+>>>Now doing:./Servant.tars >>>>
 >>>Now doing:client/client.go >>>>
 >>>Now doing:vendor/vendor.json >>>>
 # runtime/internal/sys
 >>> Great！Done! You can jump in $GOPATH/src/TestApp/HelloGo
 >>> Tip: After editing the JCE file, use the following to automatically generate the go file.
->>>       $GOPATH/bin/tars2go *.jce
+>>>       $GOPATH/bin/tars2go *.tars
 ```
 
 ### Defining interface files
@@ -125,6 +126,12 @@ interface SayHello{
 
 ### Server development
 
+First convert the tars protocol file to the Golang language form
+
+```shell
+$GOPATH/bin/tars2go SayHello.tars
+```
+
 Now let's implement the logic of the server: the client sends a "name", and the server responds with the "hello name".
 
 cat $GOPATH/src/TestApp/HelloGo/SayHelloImp.go
@@ -136,7 +143,7 @@ type SayHelloImp struct {
 }
 
 func (imp *SayHelloImp) EchoHello(name string, greeting *string) (int32, error) {
-     *greetring = "hello " + name
+     *greeting = "hello " + name
      return 0, nil
 }
 ```
@@ -236,7 +243,7 @@ package main
 
 import (
 	"net/http"
-	"tars"
+	"github.com/TarsCloud/TarsGo/tars"
 )
 
 func main() {

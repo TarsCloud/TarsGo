@@ -11,8 +11,9 @@ Golang环境准备，tarsgo要求golang版本在1.9.x及以上。
 编译tars协议转Golang工具：
 
 ```shell
-cd $GOPATH/src/github.com/Tencent/Tars/go/tars/tools/tars2go && go build . 
-cp tarsgo $GOPTAH/bin
+cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go && go build . 
+
+cp tars2go $GOPTAH/bin
 ```
 
 检查下GOPTH路径下tars是否安装成功。
@@ -83,29 +84,29 @@ TARS管理系统的菜单树下，有以下功能：
 运行create_tars_server.sh脚本，自动创建服务必须的文件。
 
 ```shell
-sh $GOPATH/src/tars/tools/create_tars_server.sh [App] [Server] [Servant]
+sh $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/create_tars_server.sh [App] [Server] [Servant]
 例如： 
-sh $GOPATH/src/tars/tools/create_tars_server.sh TestApp HelloGo SayHello
+sh $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/create_tars_server.sh TestApp HelloGo SayHello
 ```
 
 命令执行后将生成代码至GOPATH中，并以`APP/Server`命名目录，生成代码中也有提示具体路径。
 
 ```shell
-[root@1-1-1-1 ~/tarsgo-quickstart]# sh $GOPATH/src/tars/tools/create_tars_server.sh TestApp HelloGo SayHello
+[root@1-1-1-1 ~]# sh $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/create_tars_server.sh TestApp HelloGo SayHello
 [create server: TestApp.HelloGo ...]
 [mkdir: $GOPATH/src/TestApp/HelloGo/]
->>>Now doing:./ServantImp.go >>>>
->>>Now doing:./Server.conf >>>>
->>>Now doing:./makefile >>>>
->>>Now doing:./Servant.jce >>>>
->>>Now doing:./Server.go >>>>
 >>>Now doing:./start.sh >>>>
+>>>Now doing:./Server.go >>>>
+>>>Now doing:./Server.conf >>>>
+>>>Now doing:./ServantImp.go >>>>
+>>>Now doing:./makefile >>>>
+>>>Now doing:./Servant.tars >>>>
 >>>Now doing:client/client.go >>>>
 >>>Now doing:vendor/vendor.json >>>>
 # runtime/internal/sys
 >>> Great！Done! You can jump in $GOPATH/src/TestApp/HelloGo
->>> 提示：当编辑完成JCE文件后，使用如下自动生成go文件
->>>       $GOPATH/bin/tars2go *.jce
+>>> 当编辑完成Tars文件后，使用如下自动生成go文件
+>>>       $GOPATH/bin/tars2go *.tars
 ```
 
 ### 定义接口文件
@@ -127,6 +128,12 @@ interface SayHello{
 
 ### 服务端开发
 
+首先把tars协议文件转化为Golang语言形式
+
+```shell
+$GOPATH/bin/tars2go SayHello.tars
+```
+
 现在开始实现服务端的逻辑：客户端传来一个名字，服务端回应hello name。
 
 cat $GOPATH/src/TestApp/HelloGo/SayHelloImp.go
@@ -138,7 +145,7 @@ type SayHelloImp struct {
 }
 
 func (imp *SayHelloImp) EchoHello(name string, greeting *string) (int32, error) {
-     *greetring = "hello " + name
+     *greeting = "hello " + name
      return 0, nil
 }
 ```
@@ -170,7 +177,7 @@ func main() { //Init servant
 编译生成可执行文件，并打包发布包。
 
 ```shell
-make && make tar
+cd $GOPATH/src/TestApp/HelloGo/ && make && make tar
 ```
 
 将生成可执行文件HelloGo和发布包HelloGo.tgz
@@ -238,7 +245,7 @@ package main
 
 import (
 	"net/http"
-	"tars"
+	"github.com/TarsCloud/TarsGo/tars"
 )
 
 func main() {
