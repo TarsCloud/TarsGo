@@ -7,7 +7,7 @@
 
 ## functional characteristics
 - Tars2go tool: tars file is automatically generated and converted into go language, contains RPC server/client  code, implemented in go language .
-Serialization and deserialization of tars in go language
+- Serialization and deserialization of tars in go language
 - The server supports heartbeat report, stat monitoring report, custom command processing, basic log
 - The client supports direct connection and route access, automatic reconnection, periodic refresh of node status, and support for UDP/TCP protocol.
 - The support of remote log
@@ -20,6 +20,10 @@ Serialization and deserialization of tars in go language
 - Require Go 1.9.x or above, see https://golang.org/doc/install
 - go get -u github.com/TarsCloud/TarsGo/tars
 
+
+## Quickstart
+- for quickstart ,see [tars_go_quickstart_en.md](tars/docs/tars_go_quickstart_en.md)
+- 快速开始，请查看 [tars_go_quickstart.md](tars/docs/tars_go_quickstart.md)
 
 
 ## usage
