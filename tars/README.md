@@ -21,6 +21,10 @@ Serialization and deserialization of tars in go language
 - go get -u github.com/TarsCloud/TarsGo/tars
 
 
+## Quickstart
+- for quickstart ,see [tars_go_quickstart_en.md](tars/docs/tars_go_quickstart_en.md)
+- 快速开始，请查看 [tars_go_quickstart.md](tars/docs/tars_go_quickstart.md)
+
 
 ## usage
 ### 1 server
