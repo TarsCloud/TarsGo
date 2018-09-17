@@ -136,25 +136,25 @@ type serverConfig struct {
 
 ```
 
-Node: local tarsnode address, only if u use tars platform to deploy will use this parameter.
-APP: The application name.
-Server: The server name.
-LogPath: The  diretory to save logs.
-LogSize: The size when ratate logs.
-LogLevel: The rotate log level.
-Version: Tarsgo version.
-LocalIP: Local ip address.
-BasePath: Base path for the binary.
-DataPath: Path for store some cache file.
-config: The configuration center for getting configuration， like tars.tarsconfig.ConfigObj.
-notify： The notify center for report notify report , like tars.tarsnotify.NotifyObj
-log： The remote log center , like tars.tarslog.LogObj
-netThread: Reserved  for controling the go routine that rececv and send pacakges.
-Adapters:  The specify configuration for each adapters
-Contianer: Reserved for later use, to store the contianer name.
-Isdocker: Reserved for later use, to specify if the server runing inside a container.
-Enableset: True if used set division.
-Setdivision: To specify  which set division ,like gray.sz.*
+- Node: local tarsnode address, only if u use tars platform to deploy will use this parameter.
+- APP: The application name.
+- Server: The server name.
+- LogPath: The  diretory to save logs.
+- LogSize: The size when ratate logs.
+- LogLevel: The rotate log level.
+- Version: Tarsgo version.
+- LocalIP: Local ip address.
+- BasePath: Base path for the binary.
+- DataPath: Path for store some cache file.
+- config: The configuration center for getting configuration， like tars.tarsconfig.ConfigObj.
+- notify： The notify center for report notify report , like tars.tarsnotify.NotifyObj
+- log： The remote log center , like tars.tarslog.LogObj
+- netThread: Reserved  for controling the go routine that rececv and send pacakges.
+- Adapters:  The specify configuration for each adapters
+- Contianer: Reserved for later use, to store the contianer name.
+- Isdocker: Reserved for later use, to specify if the server runing inside a container.
+- Enableset: True if used set division.
+- Setdivision: To specify  which set division ,like gray.sz.*
 
 A server side configuration look like:
 ```
