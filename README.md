@@ -33,6 +33,7 @@
 #### 1.1 interface definition
 
 write a tars file, like hello.tars ,under $GOPATH/src , like $GOPATH/src/TestApp/TestServer/hello.tars
+For Getting more detail about tars protocol , see https://github.com/TarsCloud/TarsTup/blob/master/docs-en/tars_tup.md
 	
 ```
 	
