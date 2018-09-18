@@ -5,15 +5,16 @@ package tars
 import (
 	"flag"
 	"fmt"
+	"net/http"
+	"os"
+	"sync"
+	"time"
+
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/adminf"
 	"github.com/TarsCloud/TarsGo/tars/transport"
 	"github.com/TarsCloud/TarsGo/tars/util/conf"
 	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 	"github.com/TarsCloud/TarsGo/tars/util/rogger"
-	"net/http"
-	"os"
-	"sync"
-	"time"
 )
 
 var tarsConfig map[string]*transport.TarsServerConf
@@ -88,7 +89,7 @@ func initConfig() {
 	//add adapters config
 	svrCfg.Adapters = make(map[string]adapterConfig)
 
-	rogger.SetLevel(rogger.ERROR)
+	rogger.SetLevel(rogger.StringToLevel(svrCfg.LogLevel))
 	TLOG.SetFileRoller(svrCfg.LogPath+"/"+svrCfg.App+"/"+svrCfg.Server, 10, 100)
 
 	//client
