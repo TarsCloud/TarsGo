@@ -17,6 +17,7 @@
 
 
 ## Install
+- For install OSS and other basic server , see more in https://github.com/TarsCloud/Tars/blob/master/Install.md
 - Require Go 1.9.x or above, see https://golang.org/doc/install
 - go get -u github.com/TarsCloud/TarsGo/tars
 
