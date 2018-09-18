@@ -194,13 +194,15 @@ import (
         "TestApp"
 )
 
+//只需初始化一次，全局的
+var comm *Communicator
 func main() {
-        comm := tars.NewCommunicator()
+        comm = tars.NewCommunicator()
         obj := "TestApp.HelloGo.SayHelloObj@tcp -h 127.0.0.1 -p 3002 -t 60000"
         app := new(TestApp.SayHello)
         /*
          // if your service has been registered at tars registry
-         comm := tars.NewCommunicator()
+         comm = tars.NewCommunicator()
          obj := "TestApp.HelloGo.SayHelloObj"
          // tarsregistry service at 192.168.1.1:17890 
          comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h 192.168.1.1 -p 17890")
