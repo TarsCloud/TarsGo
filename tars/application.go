@@ -85,7 +85,7 @@ func initConfig() {
 
 	svrCfg.log = sMap["log"]
 	//add version info
-	svrCfg.Version = TarsVsersion
+	svrCfg.Version = TarsVersion
 	//add adapters config
 	svrCfg.Adapters = make(map[string]adapterConfig)
 

@@ -11,7 +11,7 @@ const (
 	//for now ,some option shuold update from remote config
 
 	//version
-	TarsVsersion string = "1.0.0"
+	TarsVersion string = "1.0.0"
 
 	//server
 
