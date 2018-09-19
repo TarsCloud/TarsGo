@@ -13,10 +13,10 @@ Compile the tars protocol to Golang tool:
 ```shell
 cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go && go build . 
 
-cp tars2go $GOPTAH/bin
+cp tars2go $GOPATH/bin
 ```
 
-Check whether the tars in the GOPTH path are successfully installed.
+Check whether the tars in the GOPATH path are successfully installed.
 
 ## Service naming
 
@@ -134,7 +134,9 @@ $GOPATH/bin/tars2go SayHello.tars
 
 Now let's implement the logic of the server: the client sends a "name", and the server responds with the "hello name".
 
+```shell
 cat $GOPATH/src/TestApp/HelloGo/SayHelloImp.go
+```
 
 ```go
 package main
