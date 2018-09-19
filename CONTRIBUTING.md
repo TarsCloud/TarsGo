@@ -47,8 +47,11 @@ if u want to create a pull request ,u must create a issue first .
 In the pr , u should give the related issue.  
 All pull request must go to dev branch , not master.
 
+## 4 code standards
+ALL go file must be formated by gofmt and  must be fixed after golint.
 
-## 4 AUTHORS
+
+## 5 AUTHORS
 After ur pr is merged , ur name and github email will be showed in AUTHORS like following.
 ```
 # This file lists all individuals having contributed content to the repository.
