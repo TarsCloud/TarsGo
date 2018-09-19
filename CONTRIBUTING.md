@@ -1,4 +1,4 @@
-#Contributing to TarsGo
+# Contributing to TarsGo
 
 
 ## 1 Create an issue 
