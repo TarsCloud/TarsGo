@@ -13,10 +13,10 @@ Golang环境准备，tarsgo要求golang版本在1.9.x及以上。
 ```shell
 cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go && go build . 
 
-cp tars2go $GOPTAH/bin
+cp tars2go $GOPATH/bin
 ```
 
-检查下GOPTH路径下tars是否安装成功。
+检查下GOPATH路径下tars是否安装成功。
 
 ## 服务命名
 
@@ -136,7 +136,9 @@ $GOPATH/bin/tars2go SayHello.tars
 
 现在开始实现服务端的逻辑：客户端传来一个名字，服务端回应hello name。
 
+```shell
 cat $GOPATH/src/TestApp/HelloGo/SayHelloImp.go
+```
 
 ```go
 package main
