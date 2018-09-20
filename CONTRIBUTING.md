@@ -3,7 +3,7 @@
 
 ## 1 Create an issue 
   
-if u want to report a bug, use this template in issue:
+if you want to report a bug, use this template in issue:
 ```
 **Describe the bug**
 A clear and concise description of what the bug is.
@@ -22,7 +22,7 @@ A clear and concise description of what you expected to happen.
 **Additional context**
 Add any other context about the problem here.
 ```
- if u want to propose a feature ,use this template in issue :
+ if you want to propose a feature ,use this template in issue :
 ```
 **Is your feature request related to a problem? Please describe.**
 A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
@@ -43,16 +43,16 @@ click the fork button on the right top of the project.
 ![fork button](tars/docs/images/fork_button.png)
 
 ## 3 create a pull request
-if u want to create a pull request ,u must create a issue first . 
-In the pr , u should give the related issue.  
-All pull request must go to dev branch , not master.
+if you want to create a pull request, you must create a issue first. 
+In the pr, you should give the related issue.  
+All pull request must go to dev branch, not master.
 
 ## 4 code standards
 ALL go file must be formated by gofmt and  must be fixed after golint.
 
 
 ## 5 AUTHORS
-After ur pr is merged , ur name and github email will be showed in AUTHORS like following.
+After your pr is merged, your name and github email will be showed in AUTHORS like following.
 ```
 # This file lists all individuals having contributed content to the repository.
 # For how it is generated, see `hack/generate-authors.sh`.
