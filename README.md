@@ -3,9 +3,10 @@
 ## About
 - 	Tarsgo is high performance rpc framework in Golang programing language which use tars protocol.With the rise - of containerization technology such as docker, k8s, etcd, Go language has become popular. Go's coroutine concurrency mechanism makes Go is very suitable for large-scale high-concurrency back-end server program development. The Go language has near C/C++ performance and near python productivity. At Tencent , part of the existing C++ developer gradually turn into Go developer, and Tars as  widely used RPC framework, has now supported C + + / Java / Nodejs /Php, and the combination with Go language has become a general trend. Therefore, in the voice of users, we launched Tarsgo, and we have applied to Tencent map application,  YingYongbao application, Internet plus and other projects. 
 
+- Learn more about whole Tars architecture and design,  see https://github.com/TarsCloud/Tars/blob/master/Introduction.en.md
 
 
-## functional characteristics
+## Functional characteristics
 - Tars2go tool: tars file is automatically generated and converted into go language, contains RPC server/client  code, implemented in go language .
 - Serialization and deserialization of tars in go language
 - The server supports heartbeat report, stat monitoring report, custom command processing, basic log
@@ -23,11 +24,11 @@
 
 
 ## Quickstart
-- for quickstart ,see [tars_go_quickstart_en.md](tars/docs/tars_go_quickstart_en.md)
-- 快速开始，请查看 [tars_go_quickstart.md](tars/docs/tars_go_quickstart.md)
+- for quickstart ,see [tars_go_quickstart_en.md](docs/tars_go_quickstart_en.md)
+- 快速开始，请查看 [tars_go_quickstart.md](docs/tars_go_quickstart.md)
 
 
-## usage
+## Usage
 ### 1 server
  - Below is a full example to illustrate how to use tarsgo to build a server.
   
