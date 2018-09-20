@@ -24,8 +24,8 @@
 
 
 ## Quickstart
-- for quickstart ,see [tars_go_quickstart_en.md](docs/tars_go_quickstart_en.md)
-- 快速开始，请查看 [tars_go_quickstart.md](docs/tars_go_quickstart.md)
+- for quickstart ,see [tars_go_quickstart_en.md](tars/docs/tars_go_quickstart_en.md)
+- 快速开始，请查看 [tars_go_quickstart.md](tars/docs/tars_go_quickstart.md)
 
 
 ## Usage
