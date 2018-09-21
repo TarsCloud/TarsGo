@@ -300,8 +300,8 @@ func main() {
     obj := "TestApp.TestServer.HelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
     app := new(TestApp.Hello)
     comm.StringToProxy(obj, app)
-	var req string="Hello Wold"
-    var res string
+	var req string="Hello World"
+    var out string
     ret, err := app.TestHello(req, &out)
     if err != nil {
         fmt.Println(err)
@@ -445,8 +445,8 @@ func main() {
     obj := "TestApp.TestServer.HelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
     app := new(TestApp.Hello)
     comm.StringToProxy(obj, app)
-	var req string="Hello Wold"
-    var res string
+	var req string="Hello World"
+    var out string
     ret, err := app.TestHello(req, &out)
     if err != nil {
         fmt.Println(err)
@@ -475,8 +475,8 @@ func main() {
     app := new(TestApp.Hello)
     comm.StringToProxy(obj, app)
 	go func(){
-		var req string="Hello Wold"
-    	var res string
+		var req string="Hello World"
+    	var out string
     	ret, err := app.TestHello(req, &out)
     	if err != nil {
         	fmt.Println(err)
