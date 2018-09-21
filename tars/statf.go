@@ -87,7 +87,6 @@ func (s *StatFHelper) addUpMsg(statList *list.List, fromServer bool) {
 		v.MinRspTime = v.MinRspTime / c
 		//v.WeightValue = v.WeightValue / c
 		//v.WeightCount = v.WeightCount / c
-		s.mStatInfo[k] = v
 	}
 
 	ret, err := s.sf.ReportMicMsg(s.mStatInfo, !fromServer)
