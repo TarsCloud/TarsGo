@@ -320,7 +320,7 @@ illustration:
 - app.TestHello is used to call the method defined in the tars file ,and ret and err will be returned .
 
 #### 2.2 communicator
-A communicator represent a group of resources for sending and receiving pacakges for the client side, which in the end manages the socket communicating for each object.
+A communicator represent a group of resources for sending and receiving packages for the client side, which in the end manages the socket communicating for each object.
 U will only need one communicator in a program.
 ```
 var comm *tars.Communicato
