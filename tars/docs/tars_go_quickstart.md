@@ -197,7 +197,7 @@ import (
 )
 
 //只需初始化一次，全局的
-var comm *Communicator
+var comm *tars.Communicator
 func main() {
         comm = tars.NewCommunicator()
         obj := "TestApp.HelloGo.SayHelloObj@tcp -h 127.0.0.1 -p 3002 -t 60000"
