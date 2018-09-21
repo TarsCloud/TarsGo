@@ -301,7 +301,7 @@ func main() {
     app := new(TestApp.Hello)
     comm.StringToProxy(obj, app)
 	var req string="Hello Wold"
-    var res string
+    var out string
     ret, err := app.TestHello(req, &out)
     if err != nil {
         fmt.Println(err)
@@ -446,7 +446,7 @@ func main() {
     app := new(TestApp.Hello)
     comm.StringToProxy(obj, app)
 	var req string="Hello Wold"
-    var res string
+    var out string
     ret, err := app.TestHello(req, &out)
     if err != nil {
         fmt.Println(err)
@@ -476,7 +476,7 @@ func main() {
     comm.StringToProxy(obj, app)
 	go func(){
 		var req string="Hello Wold"
-    	var res string
+    	var out string
     	ret, err := app.TestHello(req, &out)
     	if err != nil {
         	fmt.Println(err)
