@@ -1,5 +1,5 @@
 # Tarsgo  Document
-
+[点我查看中文版](README.zh.md)
 ## About
 - Tarsgo is high performance RPC framework in Golang programing language using the tars protocol.
 - Go has become popular for programming with the rise of containerization technology such as docker, k8s, and etcd.
@@ -28,9 +28,10 @@ For quick install OSS and other basic servers, see more about [Deploy](https://g
 
 
 ## Quickstart
-- For quickstart ,see [tars_go_quickstart_en.md](docs/tars_go_quickstart_en.md)
-- 快速开始，请查看 [tars_go_quickstart.md](docs/tars_go_quickstart.md)
+- For quickstart, see [tars_go_quickstart_en.md](docs/tars_go_quickstart_en.md)
 
+## Performance
+- For performance, see [tars_go_performance.md](docs/tars_go_performance.md)
 
 ## Usage
 ### 1 server
@@ -722,6 +723,3 @@ const (
 
 ```
 
-## Performance
-
-For performance ,see [tars_go_performance.md](docs/tars_go_performance.md)
