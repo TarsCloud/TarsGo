@@ -40,7 +40,7 @@ For Example：TestApp.HelloServer.HelloObj.
 
 # Tars management system
 
-When you login successfully, you will enter the Tars management system, as shown below:![tars_manager_main](https://raw.githubusercontent.com/TarsCloud/Tars/1dc4ede7d8ac4a78e1ee1b5fa12d7117118617f9/docs/images/tars_web_index.png)
+When you login successfully, you will enter the Tars management system, as shown below:![tars_manager_main](../docs/images/tars_web_index_en.png)
 
 Under the menu tree of the Tars management system, the following functions are available:
 
@@ -53,7 +53,7 @@ Service deployment can actually be done after service development, but it is rec
 
 As shown below：
 
-![new_project](../docs/images/tars_go_quickstart_bushu1.png)
+![new_project](../docs/images/tars_go_quickstart_bushu1_en.png)
 
 - Application: Which application the service program belongs to, for example:TestApp。
 - Service Name: The identification name of the service program, for example: HelloGo。
@@ -73,7 +73,7 @@ As shown below：
 
 Click "Submit", after successful, the TestApp application under the menu number will appear the HelloServer name, and you will see the information of your new service program on the right side, as shown below:
 
-![service_inactive](../docs/images/tars_go_quickstart_service_inactive.png)
+![service_inactive](../docs/images/tars_go_quickstart_service_inactive_en.png)
 
 ## Service development
 
@@ -268,13 +268,12 @@ In the menu tree of tars management system, find the service you deployed and cl
 
 Select "Publish Management", select the node to be published, click "Publish Selected Node", click "Upload Release Package", select the released package, as shown below:
 
-![release](../docs/images/tars_go_quickstart_release.png)
+![release](../docs/images/tars_go_quickstart_release_en.png)
 
 After uploading the distribution package, click on the "Select Release Version" drop-down box and the service program you uploaded will appear. Select the top one (latest uploaded).
 
 Click "Publish", the service starts to be released, after the release is successful, the following interface appears, as shown below:
 
-![service_ok](../docs/images/tars_go_quickstart_service_ok.png)
-
+![service_ok](../docs/images/tars_go_quickstart_service_ok_en.png)
 
 
