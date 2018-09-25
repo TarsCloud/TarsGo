@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"strconv"
-	"tars/transport"
+	"github.com/TarsCloud/TarsGo/tars/transport"
 	"time"
 )
 
