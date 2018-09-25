@@ -1,41 +1,47 @@
 # Tarsgo  Document
 
 ## About
-- 	Tarsgo is high performance rpc framework in Golang programing language which use tars protocol.With the rise of containerization technology such as docker, k8s, etcd, Go language has become popular. Go's goroutine concurrency mechanism makes Go is very suitable for large-scale high-concurrency back-end server program development. The Go language has near C/C++ performance and near python productivity. At Tencent , part of the existing C++ developer gradually turn into Go developer, and Tars as  widely used RPC framework, has now supported C + + / Java / Nodejs /Php, and the combination with Go language has become a general trend. Therefore, in the voice of users, we launched Tarsgo, and we have applied to Tencent map application,  YingYongbao application, Internet plus and other projects.
+- Tarsgo is high performance RPC framework in Golang programing language using the tars protocol.
+- Go has become popular for programming with the rise of containerization technology such as docker, k8s, and etcd.
+- Go's goroutine concurrency mechanism means Go is very suitable for large-scale high-concurrency back-end server program development. The Go language has near C/C++ performance and near Python productivity.
+- At Tencent, part of the existing C++ development team has gradually turned into Go developers. Tars, a widely used RPC framework, supports C++, Java, NodeJS, and PHP, and now Go. The combination with Go language has become a general trend. Therefore, in the voice of users, we launched Tarsgo, and we have applied to Tencent map application, YingYongbao application, Internet plus and other projects.
 
-- Learn more about whole Tars architecture and design,  see https://github.com/TarsCloud/Tars/blob/master/Introduction.en.md
+- Learn more about the whole Tars architecture and design at [Introduction](https://github.com/TarsCloud/Tars/blob/master/Introduction.en.md).
 
 
 ## Functional characteristics
-- Tars2go tool: tars file is automatically generated and converted into go language, contains RPC server/client  code, implemented in go language .
-- Serialization and deserialization of tars in go language
-- The server supports heartbeat report, stat monitoring report, custom command processing, basic log
-- The client supports direct connection and route access, automatic reconnection, periodic refresh of node status, and support for UDP/TCP protocol.
-- The support of remote log
-- The support of property report
-- The support of set division
+- Tars2go tool: tars file is automatically generated and converted into Go language, contains RPC server/client code; implemented in Go.
+- Serialization and deserialization of tars in Go.
+- The server supports heartbeat report, stat monitoring report, custom command processing, basic logging.
+- The client supports direct connection and route access, automatic reconnection, periodic refresh of node status, and also support for UDP/TCP protocol.
+- The support of remote log.
+- The support of property report.
+- The support of set division.
 
 
 
 ## Install
-- For install OSS and other basic server, see more in https://github.com/TarsCloud/Tars/blob/master/Install.md
-- Require Go 1.9.x or above, see https://golang.org/doc/install
+- For install OSS and other basic servers, see the [Installation](https://github.com/TarsCloud/Tars/blob/master/Install.md) document.
+For quick install OSS and other basic servers, see more about [Deploy](https://github.com/TarsCloud/Tars/tree/master/deploy)
+- Requires Go 1.9.x or above (see https://golang.org/doc/install for help installing Go)
 - go get -u github.com/TarsCloud/TarsGo/tars
 
 
 ## Quickstart
-- for quickstart ,see [tars_go_quickstart_en.md](docs/tars_go_quickstart_en.md)
+- For quickstart ,see [tars_go_quickstart_en.md](docs/tars_go_quickstart_en.md)
 - 快速开始，请查看 [tars_go_quickstart.md](docs/tars_go_quickstart.md)
 
 
 ## Usage
 ### 1 server
- - Below is a full example to illustrate how to use tarsgo to build a server.
+ - Below is a full example illustrating how to use tarsgo to build a server.
   
 #### 1.1 interface definition
 
-write a tars file, like hello.tars ,under $GOPATH/src , like $GOPATH/src/TestApp/TestServer/hello.tars
-For Getting more detail about tars protocol , see https://github.com/TarsCloud/TarsProtocol/blob/master/docs-en/tars_protocol.md 
+Create a tars file, like hello.tars, under $GOPATH/src (for example, $GOPATH/src/TestApp/TestServer/hello.tars).
+
+For more detail about tars protocol, see [tars_protocol](https://github.com/TarsCloud/TarsProtocol/blob/master/docs-en/tars_protocol.md)
+Tars protocol is a binary ,IDL-based protocol similar to protocolbuffers.
 	
 ```
 	
@@ -56,9 +62,9 @@ For Getting more detail about tars protocol , see https://github.com/TarsCloud/T
 #### 1.2 compile interface definition file
 
 ##### 1.2.1 build tars2go
-compile the tars2go tools and copy tars2go binary to $PATH
+Compile the tars2go tools and copy tars2go binary to into a directory in your $PATH.
 
-	cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go && go build . 
+    cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go && go build . 
     cp tarsgo $GOPTAH/bin 
 
 ##### 1.2.2 compile the tars file and translate into go file
