@@ -280,4 +280,3 @@ func main() {
 ![service_ok](../docs/images/tars_go_quickstart_service_ok.png)
 
 
-
