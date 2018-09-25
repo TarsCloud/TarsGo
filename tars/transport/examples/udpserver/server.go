@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
-	"tars/transport"
+	"github.com/TarsCloud/TarsGo/tars/transport"
 	"time"
 )
 
@@ -44,7 +44,7 @@ func main() {
 	conf := &transport.TarsServerConf{
 		Proto:         "udp",
 		Address:       "127.0.0.1:3333",
-		MaxAccept:     500,
+		//MaxAccept:     500,
 		MaxInvoke:     20,
 		AcceptTimeout: time.Millisecond * 500,
 		ReadTimeout:   time.Millisecond * 100,
