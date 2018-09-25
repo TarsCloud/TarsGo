@@ -601,7 +601,7 @@ tars.reportNotifyInfo("Get data from mysql error!")
 
 Info是一个字符串，可以直接将字符串上报给tarsnotify。 上报的字符串可以在页面上看到，随后，我们可以根据上报的信息进行报警。
 
-### 8 属性统计
+### 8 特性监控
 
 为了便于业务统计，TARS框架还支持在Web管理平台上显示信息。
 
