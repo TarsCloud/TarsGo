@@ -721,3 +721,7 @@ const (
 
 
 ```
+
+## Performance
+
+For performance ,see [tars_go_performance.md](docs/tars_go_performance.md)
