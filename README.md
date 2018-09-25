@@ -21,7 +21,8 @@
 
 
 ## Install
-- For install OSS and other basic server, see the [Installation](https://github.com/TarsCloud/Tars/blob/master/Install.md) document.
+- For install OSS and other basic servers, see the [Installation](https://github.com/TarsCloud/Tars/blob/master/Install.md) document.
+For quick install OSS and other basic servers, see more about [Deploy](https://github.com/TarsCloud/Tars/tree/master/deploy)
 - Requires Go 1.9.x or above (see https://golang.org/doc/install for help installing Go)
 - go get -u github.com/TarsCloud/TarsGo/tars
 
@@ -39,7 +40,8 @@
 
 Create a tars file, like hello.tars, under $GOPATH/src (for example, $GOPATH/src/TestApp/TestServer/hello.tars).
 
-For more detail about tars protocol, see https://github.com/TarsCloud/TarsProtocol/blob/master/docs-en/tars_protocol.md 
+For more detail about tars protocol, see [tars_protocol](https://github.com/TarsCloud/TarsProtocol/blob/master/docs-en/tars_protocol.md)
+Tars protocol is a binary ,IDL-based protocol similar to protocolbuffers.
 	
 ```
 	
