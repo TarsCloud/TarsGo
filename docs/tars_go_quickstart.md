@@ -2,7 +2,7 @@
 
 ## 环境搭建
 
-tars基础组件安装参考tars_install.sh
+tars基础组件安装参考[部署](https://github.com/TarsCloud/Tars/tree/master/deploy)
 
 Golang环境准备，tarsgo要求golang版本在1.9.x及以上。
 
