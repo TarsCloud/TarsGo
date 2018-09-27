@@ -44,10 +44,9 @@ Create a tars file, like hello.tars, under $GOPATH/src (for example, $GOPATH/src
 For more detail about tars protocol, see [tars_protocol](https://github.com/TarsCloud/TarsProtocol/blob/master/docs-en/tars_protocol.md)
 Tars protocol is a binary ,IDL-based protocol similar to protocolbuffers.
 	
-```
-	
-	module TestApp
-	{
+```go
+module TestApp
+{
 	
 	interface Hello
 	{
@@ -55,8 +54,7 @@ Tars protocol is a binary ,IDL-based protocol similar to protocolbuffers.
 	    int testHello(string sReq, out string sRsp);
 	};
 	
-	}; 
-	
+};	
 ```
 	
 
@@ -71,7 +69,7 @@ Compile the tars2go tools and copy tars2go binary to into a directory in your $P
 ##### 1.2.2 compile the tars file and translate into go file
 	tars2go --outdir=./vendor hello.tars
 #### 1.3 implement the interface
-```
+```go
 package main
 
 import (
@@ -103,8 +101,6 @@ func main() { //Init servant
     app.AddServant(imp, cfg.App+"."+cfg.Server+".HelloObj") //Register Servant
     tars.Run()
 }
-
-
 ```
 
 illustration:
@@ -118,7 +114,7 @@ illustration:
 #### 1.4 ServerConfig
 
 tars.GetServerConfig()  return a server config,which is defined as below:
-```
+```go
 type serverConfig struct {
 	Node      string
 	App       string
@@ -166,7 +162,7 @@ type serverConfig struct {
 - Setdivision: To specify  which set division ,like gray.sz.*
 
 A server side configuration look like:
-```
+```xml
 <tars>
   <application>
       enableset=Y
@@ -199,7 +195,7 @@ app.AddServant(imp, cfg.App+"."+cfg.Server+".HelloObj") in the server implement 
 the adapter configuration and implement for the HelloObj.
 A full example for adapter, see below:
 
-```
+```xml
 <tars>
   <application>
     <server>
@@ -233,13 +229,13 @@ A full example for adapter, see below:
 #### 1.6 start the server 
 
 The command for starting the server：
-```
+```bash
 ./HelloServer --config=config.conf
 ```
 See below for a full example of config.conf ,We will explain the client side configuration later.
 
 
-```
+```xml
 <tars>
   <application>
     enableset=n
@@ -291,7 +287,7 @@ See below for a full example of config.conf ,We will explain the client side con
 User can write a client side code easily without writing any protocol-specified communicating code.
 #### 2.1 client example
 A  client side example:
-```
+```go
 package main
 
 import (
@@ -332,7 +328,7 @@ illustration:
 #### 2.2 communicator
 A communicator represent a group of resources for sending and receiving packages for the client side, which in the end manages the socket communicating for each object.
 U will only need one communicator in a program.
-```
+```go
 var comm *tars.Communicato
 comm = tars.NewCommunicator()
 comm.SetProperty("property", "tars.tarsproperty.PropertyObj")
@@ -357,7 +353,7 @@ Communicator attribute description:
 > * modulename:The module name, the default value is the name of the executable program.
 
 The format of the communicator's configuration file is as follows:
-```
+```xml
 <tars>
   <application>
     #The configuration required by the proxy
@@ -386,10 +382,10 @@ The format of the communicator's configuration file is as follows:
 ```
 #### 2.3 Timeout control
 if u want to use timeout control in the client side, use TarsSetTimeout which in ms.
-```
-    app := new(TestApp.Hello)
-    comm.StringToProxy(obj, app)
-    app.TarsSetTimeout(3000)
+```go
+app := new(TestApp.Hello)
+comm.StringToProxy(obj, app)
+app.TarsSetTimeout(3000)
 ```
 
 #### 2.4  Call interface
@@ -417,17 +413,17 @@ tcp:Tcp protocol
 -p:Port, here is 9985
 
 If HelloServer is running on two servers, app is initialized as follows:
-```
-    obj:= "Test.HelloServer.HelloObj@tcp -h 127.0.0.1 -p 9985:tcp -h 192.168.1.1 -p 9983"
-    app := new(TestApp.Hello)
-    comm.StringToProxy(obj, app)
+```go
+obj:= "Test.HelloServer.HelloObj@tcp -h 127.0.0.1 -p 9985:tcp -h 192.168.1.1 -p 9983"
+app := new(TestApp.Hello)
+comm.StringToProxy(obj, app)
 ```
 The address of HelloObj is set to the address of the two servers. At this point, the request will be distributed to two servers (distribution method can be specified, not introduced here). If one server is down, the request will be automatically assigned to another one, and the server will be restarted periodically.
 
 For services registered in the master, the service is addressed based on the service name. When the client requests the service, it does not need to specify the specific address of the HelloServer, but it needs to specify the address of the `registry` when generating the communicator or initializing the communicator.
 
 The following shows the address of the registry by setting the parameters of the communicator:
-```
+```go
 var *tars.Communicator
 comm = tars.NewCommunicator()
 comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h ... -p ...")
@@ -437,7 +433,7 @@ Since the client needs to rely on the registry's address, the registry must also
 TODO. Unsupported yet in tarsgo.
 
 ##### 2.4.3. Synchronous call
-```
+```go
 package main
 
 import (
@@ -466,7 +462,8 @@ func main() {
 
 ##### 2.4.4 Asynchronous call
 tarsgo can use Asynchronous call easily using go routine. Unlike cpp, we don't need to implement a callback function.
-```
+
+```go
 package main
 
 import (
@@ -504,7 +501,7 @@ Since multiple servers can be deployed, client requests are randomly distributed
 
 
 ### 3   return code defined by tars.
-```
+```go
 //Define the return code given by the TARS service
 const int TARSSERVERSUCCESS       = 0;    //Server-side processing succeeded
 const int TARSSERVERDECODEERR     = -1;   //Server-side decoding exception
@@ -527,7 +524,7 @@ const int TARSSERVERUNKNOWNERR    = -99;  //The server is in an abnormal positio
 ### 4 log
 
 A quick example for using tarsgo rotating log
-```
+```go
 TLOG := tars.GetLogger("TLOG")
 TLOG.Debug("Debug logging")
 ```
@@ -535,13 +532,13 @@ This is will create a *Rogger.Logger ,which was defined in tars/util/rogger, and
 
 if u don't want to rotate log by file size. For example , u want to rotate by day, then use:
 
-```
+```go
 TLOG := tars.GetDayLogger("TLOG",1)
 TLOG.Debug("Debug logging")
 ```
 for rotating by hour, use GetHourLogger("TLOG",1).
 If u  want to log to remote server ,which is defined in config.conf named tars.tarslog.LogObj. A full tars file definition can be found in tars/protocol/res/LogF.tars. U have to setup  a log server before doing this. A log server can be found under Tencent/Tars/cpp/framework/LogServer .A quick  example，
-```
+```go
 TLOG := GetRemoteLogger("TLOG")
 TLOG.Debug("Debug logging")
 
@@ -555,7 +552,7 @@ The Tars server framework supports dynamic receiving commands to handle related 
 tarsgo  currently has tars.viewversion / tars.setloglevel administration commands for now. User can send admin command from oss to see what version is  or setting loglevel mentioned about.
 
 if u want to defined ur own admin commands, see this example
-```
+```go
 func helloAdmin(who string ) (string, error) {
 	return who, nil
 }
@@ -566,7 +563,7 @@ Then u can send self-defined admin command "tars.helloAdmin  tarsgo" and tarsgo
  will be shown in browser.
 
 Illustration:
-```
+```go
 // A function  should be in this format
 type adminFn func(string) (string, error)
 
@@ -582,7 +579,7 @@ Reporting statistics information is the logic of reporting the time-consuming in
 After the client call the reporting interface, it is temporarily stored in memory. When it reaches a certain time point, it is reported to the tarsstat service (the default is once reporting 1 minute). We call the time gap between the two reporting time points as a statistical interval, and perform the operations such as accumulating and comparing the same key in a statistical interval.
 The sample code is as follows:
 
-```
+```go
 //for error
 ReportStat(msg, 0, 1, 0)
 
@@ -606,7 +603,7 @@ after every client call server ，no matter success or failure. And the success 
 For better monitoring, the TARS framework supports reporting abnormal situation directly to tarsnotify in the program and can be viewed on the WEB management page.
 
 The framework provides three macros to report different kinds of exceptions:
-```
+```go
 tars.reportNotifyInfo("Get data from mysql error!")
 ```
 Info is a string, which can directly report the string to tarsnotify. The reported string can be seen on the page, subsequently, we can alarm according to the reported information.
@@ -626,7 +623,7 @@ The types of statistics currently supported include the following:
 > * Count(count) //calculate the count of  report times
 
 The sample code is as follows:
-```
+```go
     sum := tars.NewSum()
     count := tars.NewCount()
     max := tars.NewMax()
@@ -651,7 +648,7 @@ Description:
 User can setup remote configuration from OSS. See more detail in https://github.com/TarsCloud/TarsFramework/blob/master/docs-en/tars_config.md . 
 That is an example to illustrate how to use this api to get configuration file from remote.
 
-```
+```go
 import "github.com/TarsCloud/TarsGo/tars"
 ...
 cfg := tars.GetServerConfig()
@@ -665,7 +662,7 @@ config, _ := remoteConf.GetConfig("test.conf")
 ### 10 setting.go
 setting.go in package tars  is used to control tarsgo performance and characteristics .Some option should be updated from Getserverconfig().
 
-```
+```go
 //number of worker routine to handle client request
 //zero means  no control ,just one goroutine for a client request.
 //runtime.NumCpu() usually best performance in the benchmark.
