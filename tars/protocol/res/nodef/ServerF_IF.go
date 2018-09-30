@@ -10,6 +10,7 @@ import (
 	m "github.com/TarsCloud/TarsGo/tars/model"
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
+	"unsafe"
 )
 
 type ServerF struct {
@@ -34,7 +35,7 @@ func (_obj *ServerF) KeepAlive(ServerInfo *ServerInfo, _opt ...map[string]string
 	if err != nil {
 		return ret, err
 	}
-	_is := codec.NewReader(_resp.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
@@ -73,7 +74,7 @@ func (_obj *ServerF) ReportVersion(App string, ServerName string, Version string
 	if err != nil {
 		return ret, err
 	}
-	_is := codec.NewReader(_resp.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
@@ -93,6 +94,15 @@ func (_obj *ServerF) TarsSetTimeout(t int) {
 	_obj.s.TarsSetTimeout(t)
 }
 
+func (_obj *ServerF) byteToInt8(s []byte) []int8 {
+	d := *(*[]int8)(unsafe.Pointer(&s))
+	return d
+}
+func (_obj *ServerF) int8ToByte(s []int8) []byte {
+	d := *(*[]byte)(unsafe.Pointer(&s))
+	return d
+}
+
 type _impServerF interface {
 	KeepAlive(ServerInfo *ServerInfo) (ret int32, err error)
 	ReportVersion(App string, ServerName string, Version string) (ret int32, err error)
@@ -102,7 +112,7 @@ func (_obj *ServerF) Dispatch(_val interface{}, req *requestf.RequestPacket, res
 	var length int32
 	var have bool
 	var ty byte
-	_is := codec.NewReader(req.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(req.SBuffer))
 	_os := codec.NewBuffer()
 	_imp := _val.(_impServerF)
 	switch req.SFuncName {
@@ -157,7 +167,7 @@ func (_obj *ServerF) Dispatch(_val interface{}, req *requestf.RequestPacket, res
 		IRequestId:   req.IRequestId,
 		IMessageType: 0,
 		IRet:         0,
-		SBuffer:      _os.ToBytes(),
+		SBuffer:      _obj.byteToInt8(_os.ToBytes()),
 		Status:       status,
 		SResultDesc:  "",
 		Context:      req.Context,

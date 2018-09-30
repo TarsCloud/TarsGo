@@ -8,7 +8,7 @@ module requestf
         4  require int          iRequestId;
         5  require string       sServantName = "";
         6  require string       sFuncName    = "";
-        7  require vector<unsigned byte> sBuffer;
+        7  require vector<byte> sBuffer;
         8  require int          iTimeout     = 0;
         9  require map<string, string> context;
         10 require map<string, string> status;
@@ -21,7 +21,7 @@ module requestf
         3 require int           iRequestId;
         4 require int           iMessageType = 0;
         5 require int           iRet         = 0;
-        6 require vector<unsigned byte>  sBuffer;
+        6 require vector<byte>  sBuffer;
         7 require map<string, string> status;
         8 optional string        sResultDesc;
         9 optional map<string, string> context;

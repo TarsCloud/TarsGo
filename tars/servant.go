@@ -1,12 +1,19 @@
 package tars
 
 import (
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+	"unsafe"
+
+	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 )
+
+func byteToInt8(s []byte) []int8 {
+	d := *(*[]int8)(unsafe.Pointer(&s))
+	return d
+}
 
 type ServantProxy struct {
 	sid     int32
@@ -49,7 +56,7 @@ func (s *ServantProxy) Tars_invoke(ctype byte,
 		IRequestId:   atomic.AddInt32(&s.sid, 1),
 		SServantName: s.name,
 		SFuncName:    sFuncName,
-		SBuffer:      buf,
+		SBuffer:      byteToInt8(buf),
 		ITimeout:     ReqDefaultTimeout,
 		Context:      reqContext,
 		Status:       status,

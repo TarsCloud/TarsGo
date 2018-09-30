@@ -166,6 +166,7 @@ func (gen *GenGo) genIFPackage(itf *InterfaceInfo) {
 	gen.code.WriteString(`
 import (
 "fmt"
+"unsafe"
 `)
 	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/res/requestf\"\n")
 	gen.code.WriteString("m \"" + gen.tarsPath + "/model\"\n")
@@ -797,6 +798,16 @@ func (_obj *` + itf.TName + `) TarsSetTimeout(t int) {
 	_obj.s.TarsSetTimeout(t)
 }
 `)
+	c.WriteString(`
+func (_obj *` + itf.TName + `)  byteToInt8(s []byte) []int8 {
+    d := *(*[]int8)(unsafe.Pointer(&s))
+    return d
+}
+func (_obj *` + itf.TName + `) int8ToByte(s []int8) []byte {
+	d := *(*[]byte)(unsafe.Pointer(&s))
+	return d
+}
+	`)
 
 	if *g_add_servant {
 		c.WriteString(`
@@ -851,7 +862,7 @@ err = _obj.s.Tars_invoke(0, "` + fun.NameStr + `", _os.ToBytes(), _status, _cont
 `)
 
 	if isOut || fun.HasRet {
-		c.WriteString("_is := codec.NewReader(_resp.SBuffer)")
+		c.WriteString("_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))")
 	}
 	if fun.HasRet {
 		dummy := &StructMember{}
@@ -938,7 +949,7 @@ func (gen *GenGo) genIFDispatch(itf *InterfaceInfo) {
 	}
 
 	if param {
-		c.WriteString("_is := codec.NewReader(req.SBuffer)")
+		c.WriteString("_is := codec.NewReader(_obj.int8ToByte(req.SBuffer))")
 	}
 	c.WriteString(`
 _os := codec.NewBuffer()
@@ -961,7 +972,7 @@ var status map[string]string
 	IRequestId:   req.IRequestId,
 	IMessageType: 0,
 	IRet:         0,
-	SBuffer:      _os.ToBytes(),
+	SBuffer:      _obj.byteToInt8(_os.ToBytes()),
 	Status:       status,
 	SResultDesc:  "",
 	Context:      req.Context,
