@@ -34,6 +34,7 @@ echo "[create server: $APP.$SERVER ...]"
 
 SRC_DIR=$(cd $(dirname $0); pwd)
 DEMODIR=$SRC_DIR/Demo
+DEBUGDIR=$SRC_DIR/debugtool
 cd $DEMODIR || exit 1
 SRC_FILE=`find . -maxdepth 1 -type f`
 
@@ -43,6 +44,7 @@ cd $TARGET || exit 1
 
 #cp  $SRC_DIR/makefile $APP/$SERVER/
 cp -r $DEMODIR/* $TARGET
+cp -r $DEBUGDIR $TARGET
 
 if [ `uname` == "Darwin" ] # 支持 macOS
 then
@@ -64,7 +66,7 @@ then
         # rename "s/Servant/$SERVANT/" $RENAMEFILE
     done
 else
-    for FILE in $SRC_FILE client/client.go vendor/vendor.json
+    for FILE in $SRC_FILE client/client.go vendor/vendor.json debugtool/dumpstack.go
     do
         echo ">>>Now doing:"$FILE" >>>>"
         sed  -i "s/_APP_/$APP/g"   $FILE
