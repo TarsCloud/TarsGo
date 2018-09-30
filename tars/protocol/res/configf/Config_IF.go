@@ -10,6 +10,7 @@ import (
 	m "github.com/TarsCloud/TarsGo/tars/model"
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
+	"unsafe"
 )
 
 type Config struct {
@@ -39,7 +40,7 @@ func (_obj *Config) ListConfig(App string, Server string, Vf *[]string, _opt ...
 	if err != nil {
 		return ret, err
 	}
-	_is := codec.NewReader(_resp.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
@@ -108,7 +109,7 @@ func (_obj *Config) LoadConfig(App string, Server string, Filename string, Confi
 	if err != nil {
 		return ret, err
 	}
-	_is := codec.NewReader(_resp.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
@@ -152,7 +153,7 @@ func (_obj *Config) LoadConfigByHost(AppServerName string, Filename string, Host
 	if err != nil {
 		return ret, err
 	}
-	_is := codec.NewReader(_resp.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
@@ -196,7 +197,7 @@ func (_obj *Config) CheckConfig(AppServerName string, Filename string, Host stri
 	if err != nil {
 		return ret, err
 	}
-	_is := codec.NewReader(_resp.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
@@ -230,7 +231,7 @@ func (_obj *Config) ListConfigByInfo(ConfigInfo *ConfigInfo, Vf *[]string, _opt 
 	if err != nil {
 		return ret, err
 	}
-	_is := codec.NewReader(_resp.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
@@ -289,7 +290,7 @@ func (_obj *Config) LoadConfigByInfo(ConfigInfo *ConfigInfo, Config *string, _op
 	if err != nil {
 		return ret, err
 	}
-	_is := codec.NewReader(_resp.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
@@ -323,7 +324,7 @@ func (_obj *Config) CheckConfigByInfo(ConfigInfo *ConfigInfo, Result *string, _o
 	if err != nil {
 		return ret, err
 	}
-	_is := codec.NewReader(_resp.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
@@ -357,7 +358,7 @@ func (_obj *Config) ListAllConfigByInfo(ConfigInfo *GetConfigListInfo, Vf *[]str
 	if err != nil {
 		return ret, err
 	}
-	_is := codec.NewReader(_resp.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
@@ -407,6 +408,15 @@ func (_obj *Config) TarsSetTimeout(t int) {
 	_obj.s.TarsSetTimeout(t)
 }
 
+func (_obj *Config) byteToInt8(s []byte) []int8 {
+	d := *(*[]int8)(unsafe.Pointer(&s))
+	return d
+}
+func (_obj *Config) int8ToByte(s []int8) []byte {
+	d := *(*[]byte)(unsafe.Pointer(&s))
+	return d
+}
+
 type _impConfig interface {
 	ListConfig(App string, Server string, Vf *[]string) (ret int32, err error)
 	LoadConfig(App string, Server string, Filename string, Config *string) (ret int32, err error)
@@ -422,7 +432,7 @@ func (_obj *Config) Dispatch(_val interface{}, req *requestf.RequestPacket, resp
 	var length int32
 	var have bool
 	var ty byte
-	_is := codec.NewReader(req.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(req.SBuffer))
 	_os := codec.NewBuffer()
 	_imp := _val.(_impConfig)
 	switch req.SFuncName {
@@ -673,7 +683,7 @@ func (_obj *Config) Dispatch(_val interface{}, req *requestf.RequestPacket, resp
 		IRequestId:   req.IRequestId,
 		IMessageType: 0,
 		IRet:         0,
-		SBuffer:      _os.ToBytes(),
+		SBuffer:      _obj.byteToInt8(_os.ToBytes()),
 		Status:       status,
 		SResultDesc:  "",
 		Context:      req.Context,

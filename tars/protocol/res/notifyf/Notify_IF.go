@@ -10,6 +10,7 @@ import (
 	m "github.com/TarsCloud/TarsGo/tars/model"
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
+	"unsafe"
 )
 
 type Notify struct {
@@ -102,7 +103,7 @@ func (_obj *Notify) GetNotifyInfo(StKey *NotifyKey, StInfo *NotifyInfo, _opt ...
 	if err != nil {
 		return ret, err
 	}
-	_is := codec.NewReader(_resp.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
@@ -151,6 +152,15 @@ func (_obj *Notify) TarsSetTimeout(t int) {
 	_obj.s.TarsSetTimeout(t)
 }
 
+func (_obj *Notify) byteToInt8(s []byte) []int8 {
+	d := *(*[]int8)(unsafe.Pointer(&s))
+	return d
+}
+func (_obj *Notify) int8ToByte(s []int8) []byte {
+	d := *(*[]byte)(unsafe.Pointer(&s))
+	return d
+}
+
 type _impNotify interface {
 	ReportServer(SServerName string, SThreadId string, SMessage string) (err error)
 	NotifyServer(SServerName string, Level NOTIFYLEVEL, SMessage string) (err error)
@@ -162,7 +172,7 @@ func (_obj *Notify) Dispatch(_val interface{}, req *requestf.RequestPacket, resp
 	var length int32
 	var have bool
 	var ty byte
-	_is := codec.NewReader(req.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(req.SBuffer))
 	_os := codec.NewBuffer()
 	_imp := _val.(_impNotify)
 	switch req.SFuncName {
@@ -248,7 +258,7 @@ func (_obj *Notify) Dispatch(_val interface{}, req *requestf.RequestPacket, resp
 		IRequestId:   req.IRequestId,
 		IMessageType: 0,
 		IRet:         0,
-		SBuffer:      _os.ToBytes(),
+		SBuffer:      _obj.byteToInt8(_os.ToBytes()),
 		Status:       status,
 		SResultDesc:  "",
 		Context:      req.Context,

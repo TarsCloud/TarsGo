@@ -10,6 +10,7 @@ import (
 	m "github.com/TarsCloud/TarsGo/tars/model"
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
+	"unsafe"
 )
 
 type PropertyF struct {
@@ -50,7 +51,7 @@ func (_obj *PropertyF) ReportPropMsg(Statmsg map[StatPropMsgHead]StatPropMsgBody
 	if err != nil {
 		return ret, err
 	}
-	_is := codec.NewReader(_resp.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
@@ -70,6 +71,15 @@ func (_obj *PropertyF) TarsSetTimeout(t int) {
 	_obj.s.TarsSetTimeout(t)
 }
 
+func (_obj *PropertyF) byteToInt8(s []byte) []int8 {
+	d := *(*[]int8)(unsafe.Pointer(&s))
+	return d
+}
+func (_obj *PropertyF) int8ToByte(s []int8) []byte {
+	d := *(*[]byte)(unsafe.Pointer(&s))
+	return d
+}
+
 type _impPropertyF interface {
 	ReportPropMsg(Statmsg map[StatPropMsgHead]StatPropMsgBody) (ret int32, err error)
 }
@@ -78,7 +88,7 @@ func (_obj *PropertyF) Dispatch(_val interface{}, req *requestf.RequestPacket, r
 	var length int32
 	var have bool
 	var ty byte
-	_is := codec.NewReader(req.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(req.SBuffer))
 	_os := codec.NewBuffer()
 	_imp := _val.(_impPropertyF)
 	switch req.SFuncName {
@@ -130,7 +140,7 @@ func (_obj *PropertyF) Dispatch(_val interface{}, req *requestf.RequestPacket, r
 		IRequestId:   req.IRequestId,
 		IMessageType: 0,
 		IRet:         0,
-		SBuffer:      _os.ToBytes(),
+		SBuffer:      _obj.byteToInt8(_os.ToBytes()),
 		Status:       status,
 		SResultDesc:  "",
 		Context:      req.Context,

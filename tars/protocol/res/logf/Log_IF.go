@@ -10,6 +10,7 @@ import (
 	m "github.com/TarsCloud/TarsGo/tars/model"
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
+	"unsafe"
 )
 
 type Log struct {
@@ -120,6 +121,15 @@ func (_obj *Log) TarsSetTimeout(t int) {
 	_obj.s.TarsSetTimeout(t)
 }
 
+func (_obj *Log) byteToInt8(s []byte) []int8 {
+	d := *(*[]int8)(unsafe.Pointer(&s))
+	return d
+}
+func (_obj *Log) int8ToByte(s []int8) []byte {
+	d := *(*[]byte)(unsafe.Pointer(&s))
+	return d
+}
+
 type _impLog interface {
 	Logger(App string, Server string, File string, Format string, Buffer []string) (err error)
 	LoggerbyInfo(Info *LogInfo, Buffer []string) (err error)
@@ -129,7 +139,7 @@ func (_obj *Log) Dispatch(_val interface{}, req *requestf.RequestPacket, resp *r
 	var length int32
 	var have bool
 	var ty byte
-	_is := codec.NewReader(req.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(req.SBuffer))
 	_os := codec.NewBuffer()
 	_imp := _val.(_impLog)
 	switch req.SFuncName {
@@ -239,7 +249,7 @@ func (_obj *Log) Dispatch(_val interface{}, req *requestf.RequestPacket, resp *r
 		IRequestId:   req.IRequestId,
 		IMessageType: 0,
 		IRet:         0,
-		SBuffer:      _os.ToBytes(),
+		SBuffer:      _obj.byteToInt8(_os.ToBytes()),
 		Status:       status,
 		SResultDesc:  "",
 		Context:      req.Context,

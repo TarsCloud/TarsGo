@@ -6,11 +6,12 @@
 package queryf
 
 import (
+	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"fmt"
 	m "github.com/TarsCloud/TarsGo/tars/model"
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
+	"unsafe"
 )
 
 type QueryF struct {
@@ -35,7 +36,7 @@ func (_obj *QueryF) FindObjectById(Id string, _opt ...map[string]string) (ret []
 	if err != nil {
 		return ret, err
 	}
-	_is := codec.NewReader(_resp.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))
 	err, have, ty = _is.SkipToNoCheck(0, true)
 	if err != nil {
 		return ret, err
@@ -89,7 +90,7 @@ func (_obj *QueryF) FindObjectById4Any(Id string, ActiveEp *[]endpointf.Endpoint
 	if err != nil {
 		return ret, err
 	}
-	_is := codec.NewReader(_resp.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
@@ -178,7 +179,7 @@ func (_obj *QueryF) FindObjectById4All(Id string, ActiveEp *[]endpointf.Endpoint
 	if err != nil {
 		return ret, err
 	}
-	_is := codec.NewReader(_resp.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
@@ -267,7 +268,7 @@ func (_obj *QueryF) FindObjectByIdInSameGroup(Id string, ActiveEp *[]endpointf.E
 	if err != nil {
 		return ret, err
 	}
-	_is := codec.NewReader(_resp.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
@@ -361,7 +362,7 @@ func (_obj *QueryF) FindObjectByIdInSameStation(Id string, SStation string, Acti
 	if err != nil {
 		return ret, err
 	}
-	_is := codec.NewReader(_resp.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
@@ -455,7 +456,7 @@ func (_obj *QueryF) FindObjectByIdInSameSet(Id string, SetId string, ActiveEp *[
 	if err != nil {
 		return ret, err
 	}
-	_is := codec.NewReader(_resp.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
@@ -535,6 +536,15 @@ func (_obj *QueryF) TarsSetTimeout(t int) {
 	_obj.s.TarsSetTimeout(t)
 }
 
+func (_obj *QueryF) byteToInt8(s []byte) []int8 {
+	d := *(*[]int8)(unsafe.Pointer(&s))
+	return d
+}
+func (_obj *QueryF) int8ToByte(s []int8) []byte {
+	d := *(*[]byte)(unsafe.Pointer(&s))
+	return d
+}
+
 type _impQueryF interface {
 	FindObjectById(Id string) (ret []endpointf.EndpointF, err error)
 	FindObjectById4Any(Id string, ActiveEp *[]endpointf.EndpointF, InactiveEp *[]endpointf.EndpointF) (ret int32, err error)
@@ -548,7 +558,7 @@ func (_obj *QueryF) Dispatch(_val interface{}, req *requestf.RequestPacket, resp
 	var length int32
 	var have bool
 	var ty byte
-	_is := codec.NewReader(req.SBuffer)
+	_is := codec.NewReader(_obj.int8ToByte(req.SBuffer))
 	_os := codec.NewBuffer()
 	_imp := _val.(_impQueryF)
 	switch req.SFuncName {
@@ -844,7 +854,7 @@ func (_obj *QueryF) Dispatch(_val interface{}, req *requestf.RequestPacket, resp
 		IRequestId:   req.IRequestId,
 		IMessageType: 0,
 		IRet:         0,
-		SBuffer:      _os.ToBytes(),
+		SBuffer:      _obj.byteToInt8(_os.ToBytes()),
 		Status:       status,
 		SResultDesc:  "",
 		Context:      req.Context,

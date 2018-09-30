@@ -17,7 +17,7 @@ type RequestPacket struct {
 	IRequestId   int32             `json:"iRequestId"`
 	SServantName string            `json:"sServantName"`
 	SFuncName    string            `json:"sFuncName"`
-	SBuffer      []uint8           `json:"sBuffer"`
+	SBuffer      []int8            `json:"sBuffer"`
 	ITimeout     int32             `json:"iTimeout"`
 	Context      map[string]string `json:"context"`
 	Status       map[string]string `json:"status"`
@@ -78,10 +78,10 @@ func (st *RequestPacket) ReadFrom(_is *codec.Reader) error {
 		if err != nil {
 			return err
 		}
-		st.SBuffer = make([]uint8, length, length)
+		st.SBuffer = make([]int8, length, length)
 		for i0, e0 := int32(0), length; i0 < e0; i0++ {
 
-			err = _is.Read_uint8(&st.SBuffer[i0], 0, false)
+			err = _is.Read_int8(&st.SBuffer[i0], 0, false)
 			if err != nil {
 				return err
 			}
@@ -96,7 +96,7 @@ func (st *RequestPacket) ReadFrom(_is *codec.Reader) error {
 		if err != nil {
 			return err
 		}
-		err = _is.Read_slice_uint8(&st.SBuffer, length, true)
+		err = _is.Read_slice_int8(&st.SBuffer, length, true)
 		if err != nil {
 			return err
 		}
@@ -233,7 +233,11 @@ func (st *RequestPacket) WriteTo(_os *codec.Buffer) error {
 		return err
 	}
 
-	err = _os.WriteHead(codec.LIST, 7)
+	err = _os.WriteHead(codec.SIMPLE_LIST, 7)
+	if err != nil {
+		return err
+	}
+	err = _os.WriteHead(codec.BYTE, 0)
 	if err != nil {
 		return err
 	}
@@ -241,12 +245,9 @@ func (st *RequestPacket) WriteTo(_os *codec.Buffer) error {
 	if err != nil {
 		return err
 	}
-	for _, v := range st.SBuffer {
-
-		err = _os.Write_uint8(v, 0)
-		if err != nil {
-			return err
-		}
+	err = _os.Write_slice_int8(st.SBuffer)
+	if err != nil {
+		return err
 	}
 
 	err = _os.Write_int32(st.ITimeout, 8)
