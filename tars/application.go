@@ -75,8 +75,8 @@ func initConfig() {
 	//svrCfg.Container = c.GetString("/tars/application<container>")
 	//init log
 	svrCfg.LogPath = sMap["logpath"]
-	svrCfg.LogSize = tools.ParseMegaByte(sMap["logsize"])
-	svrCfg.LogNum = tools.ParseUint64(sMap["lognum"])
+	svrCfg.LogSize = tools.ParseLogSizeMb(sMap["logsize"])
+	svrCfg.LogNum = tools.ParseLogNum(sMap["lognum"])
 	svrCfg.LogLevel = sMap["logLevel"]
 	svrCfg.config = sMap["config"]
 	svrCfg.notify = sMap["notify"]

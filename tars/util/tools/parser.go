@@ -39,11 +39,11 @@ var unitMap = map[string]uint64{
 	"EB": E,
 }
 
-// ParseMegaByte translate x(B),xKB,xMB... to uint64 x(MB)
-func ParseMegaByte(oriSize string) (ret uint64) {
-	var defaultRotateSizeMB uint64 = 100
+// ParseLogSizeMb : Translate x(B),xKB,xMB... to uint64 x(MB)
+func ParseLogSizeMb(oriSize string) (ret uint64) {
+	var defaultLogSizeMb uint64 = 100
 	if oriSize == "" {
-		return defaultRotateSizeMB
+		return defaultLogSizeMb
 	}
 	sLogSize := ""
 	sUnit := ""
@@ -55,33 +55,34 @@ func ParseMegaByte(oriSize string) (ret uint64) {
 		}
 	}
 	if sLogSize == "" {
-		return defaultRotateSizeMB
+		return defaultLogSizeMb
 	}
 	iLogSize, err := strconv.Atoi(sLogSize)
 	if err != nil {
-		return defaultRotateSizeMB
+		return defaultLogSizeMb
 	}
 	if sUnit != "" {
 		sUnit = strings.ToUpper(sUnit)
 		iUnit, exists := unitMap[sUnit]
 		if !exists {
-			return defaultRotateSizeMB
+			return defaultLogSizeMb
 		}
 		ret = uint64(iLogSize) * iUnit / 1024 / 1024
 	} else {
 		ret = uint64(iLogSize) / 1024 / 1024
 	}
 	if ret == 0 {
-		ret = defaultRotateSizeMB
+		ret = defaultLogSizeMb
 	}
 	return ret
 }
 
-// ParseUint64 : Parse uint64 from string
-func ParseUint64(strVal string) (ret uint64) {
+// ParseLogNum : Parse uint64 from string
+func ParseLogNum(strVal string) (ret uint64) {
+	var defualtLogNum uint64 = 10
 	ret, err := strconv.ParseUint(strVal, 10, 64)
 	if err != nil {
-		panic(err)
+		return defualtLogNum
 	}
 	return ret
 }
