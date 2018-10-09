@@ -1,5 +1,6 @@
 package tools
 
+// UniqueInts Return unique element list of list a
 func UniqueInts(a []int) (b []int) {
 	m := map[int]bool{}
 	for _, v := range a {

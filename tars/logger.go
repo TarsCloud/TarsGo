@@ -1,15 +1,18 @@
 package tars
 
 import (
-	"github.com/TarsCloud/TarsGo/tars/util/rogger"
 	"path/filepath"
+
+	"github.com/TarsCloud/TarsGo/tars/util/rogger"
+	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
+// GetLogger Get a logger
 func GetLogger(name string) *rogger.Logger {
 	cfg, name := logName(name)
 	lg := rogger.GetLogger(name)
 	logpath := filepath.Join(cfg.LogPath, cfg.App, cfg.Server)
-	lg.SetFileRoller(logpath, defualtRotateN, defaultRotateSizeMB)
+	lg.SetFileRoller(logpath, defualtRotateN, int(tools.ParseMegaByte(cfg.LogSize)))
 	return lg
 }
 
@@ -23,6 +26,7 @@ func logName(name string) (*serverConfig, string) {
 	return cfg, name
 }
 
+// GetDayLogger Get a logger roll by day
 func GetDayLogger(name string, numDay int) *rogger.Logger {
 	cfg, name := logName(name)
 	lg := rogger.GetLogger(name)
@@ -31,6 +35,7 @@ func GetDayLogger(name string, numDay int) *rogger.Logger {
 	return lg
 }
 
+// GetHourLogger Get a logger roll by hour
 func GetHourLogger(name string, numHour int) *rogger.Logger {
 	cfg, name := logName(name)
 	lg := rogger.GetLogger(name)
@@ -39,6 +44,7 @@ func GetHourLogger(name string, numHour int) *rogger.Logger {
 	return lg
 }
 
+// GetRemoteLogger Get a romote logger
 func GetRemoteLogger(name string) *rogger.Logger {
 	cfg := GetServerConfig()
 	lg := rogger.GetLogger(name)
