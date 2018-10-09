@@ -45,6 +45,14 @@ func ParseLogSizeMb(oriSize string) (ret uint64) {
 	if oriSize == "" {
 		return defaultLogSizeMb
 	}
+	iLogSize, err := strconv.ParseUint(oriSize, 10, 64)
+	if err == nil {
+		ret = iLogSize / 1024 / 1024
+		if ret == 0 {
+			return defaultLogSizeMb
+		}
+		return ret
+	}
 	sLogSize := ""
 	sUnit := ""
 	for idx, c := range oriSize {
@@ -57,20 +65,16 @@ func ParseLogSizeMb(oriSize string) (ret uint64) {
 	if sLogSize == "" {
 		return defaultLogSizeMb
 	}
-	iLogSize, err := strconv.Atoi(sLogSize)
+	iLogSize, err = strconv.ParseUint(sLogSize, 10, 64)
 	if err != nil {
 		return defaultLogSizeMb
 	}
-	if sUnit != "" {
-		sUnit = strings.ToUpper(sUnit)
-		iUnit, exists := unitMap[sUnit]
-		if !exists {
-			return defaultLogSizeMb
-		}
-		ret = uint64(iLogSize) * iUnit / 1024 / 1024
-	} else {
-		ret = uint64(iLogSize) / 1024 / 1024
+	sUnit = strings.ToUpper(sUnit)
+	iUnit, exists := unitMap[sUnit]
+	if !exists {
+		return defaultLogSizeMb
 	}
+	ret = iLogSize * iUnit / 1024 / 1024
 	if ret == 0 {
 		ret = defaultLogSizeMb
 	}
