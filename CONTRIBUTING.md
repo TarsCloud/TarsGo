@@ -1,5 +1,6 @@
 # Contributing to TarsGo
 
+## 0 Use English in issue and pull request
 
 ## 1 Create an issue 
   
@@ -40,7 +41,7 @@ Add any other context or screenshots about the feature request here.
 
 ## 2 fork the project
 click the fork button on the right top of the project.
-![fork button](tars/docs/images/fork_button.png)
+![fork button](docs/images/fork_button.png)
 
 ## 3 create a pull request
 if you want to create a pull request, you must create a issue first. 
