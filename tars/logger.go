@@ -2,6 +2,7 @@ package tars
 
 import (
 	"path/filepath"
+	
 	"github.com/TarsCloud/TarsGo/tars/util/rogger"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
@@ -11,7 +12,7 @@ func GetLogger(name string) *rogger.Logger {
 	cfg, name := logName(name)
 	lg := rogger.GetLogger(name)
 	logpath := filepath.Join(cfg.LogPath, cfg.App, cfg.Server)
-	lg.SetFileRoller(logpath, defualtRotateN, int(tools.ParseMegaByte(cfg.LogSize)))
+	lg.SetFileRoller(logpath, int(cfg.LogNum), int(cfg.LogSize))
 	return lg
 }
 
