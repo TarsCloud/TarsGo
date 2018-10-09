@@ -12,12 +12,13 @@ import (
 	"strings"
 )
 
-var g_E = flag.Bool("E", false, "生成未fmt前的代码便于排错")
-var g_add_servant = flag.Bool("add-servant", true, "生成AddServant函数")
+var gE = flag.Bool("E", false, "Generate code before fmt for troubleshooting")
+var gAddServant = flag.Bool("add-servant", true, "Generate AddServant function")
 
+//GenGo record go code information.
 type GenGo struct {
 	code     bytes.Buffer
-	vc       int      // var count. 用于产生唯一变量名
+	vc       int      // var count. Used to generate unique variable names
 	I        []string // imports with path
 	path     string
 	prefix   string
@@ -25,7 +26,7 @@ type GenGo struct {
 	p        *Parse
 }
 
-//首字母大写
+//Initial capitalization
 func upperFirstLatter(s string) string {
 	if len(s) == 0 {
 		return ""
@@ -47,9 +48,9 @@ func (p *Parse) rename() {
 // struct TName { 1 require Mb type}
 func (st *StructInfo) rename() {
 	st.TName = upperFirstLatter(st.TName)
-	for i, _ := range st.Mb {
+	for i := range st.Mb {
 		st.Mb[i].KeyStr = st.Mb[i].Key
-		// 成员变量强制首字母大写
+		// Member variables force initial capitalization.
 		st.Mb[i].Key = upperFirstLatter(st.Mb[i].Key)
 	}
 }
@@ -58,14 +59,14 @@ func (st *StructInfo) rename() {
 // interface TName { Fun }
 func (itf *InterfaceInfo) rename() {
 	itf.TName = upperFirstLatter(itf.TName)
-	for i, _ := range itf.Fun {
+	for i := range itf.Fun {
 		itf.Fun[i].rename()
 	}
 }
 
 func (en *EnumInfo) rename() {
 	en.TName = upperFirstLatter(en.TName)
-	for i, _ := range en.Mb {
+	for i := range en.Mb {
 		en.Mb[i].Key = upperFirstLatter(en.Mb[i].Key)
 	}
 }
@@ -75,17 +76,17 @@ func (cst *ConstInfo) rename() {
 }
 
 // 2. func rename
-// type Fun (arg ArgType), argname 本来不用大写，但是为了防止name=关键字的，
+// type Fun (arg ArgType), argname originally no capitalization，in case of key words name=
 // Fun (type int32)
 func (fun *FunInfo) rename() {
 	fun.NameStr = fun.Name
 	fun.Name = upperFirstLatter(fun.Name)
-	for i, _ := range fun.Args {
+	for i := range fun.Args {
 		fun.Args[i].Name = upperFirstLatter(fun.Args[i].Name)
 	}
 }
 
-// 3. genType 为所有的Type进行rename
+// 3. genType rename all Type
 
 // === rename end ===
 
@@ -98,7 +99,7 @@ func (gen *GenGo) saveToSourceFile(filename string) {
 	var err error
 	prefix := gen.prefix
 
-	if !*g_E {
+	if !*gE {
 		beauty, err = format.Source(gen.code.Bytes())
 		if err != nil {
 			gen.genErr("go fmt fail. " + err.Error())
@@ -154,7 +155,7 @@ import (
 `)
 	//"tars/protocol/codec"
 	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/codec\"\n")
-	for k, _ := range st.DependModule {
+	for k := range st.DependModule {
 		gen.genImport(k)
 	}
 	gen.code.WriteString(")" + "\n")
@@ -172,10 +173,10 @@ import (
 	gen.code.WriteString("m \"" + gen.tarsPath + "/model\"\n")
 	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/codec\"\n")
 
-	if *g_add_servant {
+	if *gAddServant {
 		gen.code.WriteString("\"" + gen.tarsPath + "\"\n")
 	}
-	for k, _ := range itf.DependModule {
+	for k := range itf.DependModule {
 		gen.genImport(k)
 	}
 	gen.code.WriteString(")" + "\n")
@@ -185,47 +186,47 @@ import (
 func (gen *GenGo) genType(ty *VarType) string {
 	ret := ""
 	switch ty.Type {
-	case TK_T_BOOL:
+	case tkTBool:
 		ret = "bool"
-	case TK_T_INT:
+	case tkTInt:
 		if ty.Unsigned {
 			ret = "uint32"
 		} else {
 			ret = "int32"
 		}
-	case TK_T_SHORT:
+	case tkTShort:
 		if ty.Unsigned {
 			ret = "uint16"
 		} else {
 			ret = "int16"
 		}
-	case TK_T_BYTE:
+	case tkTByte:
 		if ty.Unsigned {
 			ret = "uint8"
 		} else {
 			ret = "int8"
 		}
-	case TK_T_LONG:
+	case tkTLong:
 		if ty.Unsigned {
 			ret = "uint64"
 		} else {
 			ret = "int64"
 		}
-	case TK_T_FLOAT:
+	case tkTFloat:
 		ret = "float32"
-	case TK_T_DOUBLE:
+	case tkTDouble:
 		ret = "float64"
-	case TK_T_STRING:
+	case tkTString:
 		ret = "string"
-	case TK_T_VECTOR:
+	case tkTVector:
 		ret = "[]" + gen.genType(ty.TypeK)
-	case TK_T_MAP:
+	case tkTMap:
 		ret = "map[" + gen.genType(ty.TypeK) + "]" + gen.genType(ty.TypeV)
-	case TK_NAME:
+	case tkName:
 		ret = strings.Replace(ty.TypeSt, "::", ".", -1)
 		vec := strings.Split(ty.TypeSt, "::")
-		for i, _ := range vec {
-			if *g_add_servant == true {
+		for i := range vec {
+			if *gAddServant == true {
 				vec[i] = upperFirstLatter(vec[i])
 			} else {
 				if i == (len(vec) - 1) {
@@ -266,14 +267,14 @@ func (gen *GenGo) genFunResetDefault(st *StructInfo) {
 }
 
 func errString(hasRet bool) string {
-	var ret_str string
+	var retStr string
 	if hasRet {
-		ret_str = "return ret, err"
+		retStr = "return ret, err"
 	} else {
-		ret_str = "return err"
+		retStr = "return err"
 	}
 	return `if err != nil {
-  ` + ret_str + `
+  ` + retStr + `
   }`
 }
 
@@ -284,16 +285,16 @@ func (gen *GenGo) genWriteSimpleList(mb *StructMember, prefix string, hasRet boo
 	if mb.Type.TypeK.Unsigned {
 		unsign = "u"
 	}
-	err_str := errString(hasRet)
+	errStr := errString(hasRet)
 	c.WriteString(`
 err = _os.WriteHead(codec.SIMPLE_LIST, ` + tag + `)
-` + err_str + `
+` + errStr + `
 err = _os.WriteHead(codec.BYTE, 0)
-` + err_str + `
+` + errStr + `
 err = _os.Write_int32(int32(len(` + prefix + mb.Key + `)), 0)
-` + err_str + `
+` + errStr + `
 err = _os.Write_slice_` + unsign + `int8(` + prefix + mb.Key + `)
-` + err_str + `
+` + errStr + `
 `)
 }
 
@@ -301,22 +302,22 @@ func (gen *GenGo) genWriteVector(mb *StructMember, prefix string, hasRet bool) {
 	c := &gen.code
 
 	// SIMPLE_LIST
-	if mb.Type.TypeK.Type == TK_T_BYTE && !mb.Type.TypeK.Unsigned {
+	if mb.Type.TypeK.Type == tkTByte && !mb.Type.TypeK.Unsigned {
 		gen.genWriteSimpleList(mb, prefix, hasRet)
 		return
 	}
-	err_str := errString(hasRet)
+	errStr := errString(hasRet)
 
 	// LIST
 	tag := strconv.Itoa(int(mb.Tag))
 	c.WriteString(`
 err = _os.WriteHead(codec.LIST, ` + tag + `)
-` + err_str + `
+` + errStr + `
 err = _os.Write_int32(int32(len(` + prefix + mb.Key + `)), 0)
-` + err_str + `
+` + errStr + `
 for _, v := range ` + prefix + mb.Key + ` {
 `)
-	// for _, v := range 里面再嵌套 for _, v := range也没问题，不会冲突，支持多维数组
+	// for _, v := range can nesting for _, v := range，does not conflict, support multidimensional arrays
 
 	dummy := &StructMember{}
 	dummy.Type = mb.Type.TypeK
@@ -340,15 +341,15 @@ func (gen *GenGo) genWriteMap(mb *StructMember, prefix string, hasRet bool) {
 	tag := strconv.Itoa(int(mb.Tag))
 	vc := strconv.Itoa(gen.vc)
 	gen.vc++
-	err_str := errString(hasRet)
+	errStr := errString(hasRet)
 	c.WriteString(`
 err = _os.WriteHead(codec.MAP, ` + tag + `)
-` + err_str + `
+` + errStr + `
 err = _os.Write_int32(int32(len(` + prefix + mb.Key + `)), 0)
-` + err_str + `
+` + errStr + `
 for k` + vc + `, v` + vc + ` := range ` + prefix + mb.Key + ` {
 `)
-	// for _, v := range 里面再嵌套 for _, v := range也没问题，不会冲突，支持多维数组
+	// for _, v := range can nesting for _, v := range，does not conflict, support multidimensional arrays
 
 	dummy := &StructMember{}
 	dummy.Type = mb.Type.TypeK
@@ -368,13 +369,13 @@ func (gen *GenGo) genWriteVar(v *StructMember, prefix string, hasRet bool) {
 	c := &gen.code
 
 	switch v.Type.Type {
-	case TK_T_VECTOR:
+	case tkTVector:
 		gen.genWriteVector(v, prefix, hasRet)
-	case TK_T_MAP:
+	case tkTMap:
 		gen.genWriteMap(v, prefix, hasRet)
-	case TK_NAME:
-		if v.Type.CType == TK_ENUM {
-			// TK_ENUM 枚举型处理
+	case tkName:
+		if v.Type.CType == tkEnum {
+			// tkEnum enumeration processing
 			tag := strconv.Itoa(int(v.Tag))
 			c.WriteString(`
 err = _os.Write_int32(int32(` + prefix + v.Key + `),` + tag + `)
@@ -395,7 +396,7 @@ err = _os.Write_` + gen.genType(v.Type) + `(` + prefix + v.Key + `, ` + tag + `)
 func (gen *GenGo) genFunWriteBlock(st *StructInfo) {
 	c := &gen.code
 
-	// WriteBlock函数头
+	// WriteBlock function head
 	c.WriteString(`
 func (st *` + st.TName + `) WriteBlock(_os *codec.Buffer, tag byte) error {
 	var err error
@@ -438,15 +439,15 @@ func (gen *GenGo) genReadSimpleList(mb *StructMember, prefix string, hasRet bool
 	if mb.Type.TypeK.Unsigned {
 		unsign = "u"
 	}
-	err_str := errString(hasRet)
+	errStr := errString(hasRet)
 
 	c.WriteString(`
 err, _ = _is.SkipTo(codec.BYTE, 0, true)
-` + err_str + `
+` + errStr + `
 err = _is.Read_int32(&length, 0, true)
-` + err_str + `
+` + errStr + `
 err = _is.Read_slice_` + unsign + `int8(&` + prefix + mb.Key + `, length, true)
-` + err_str + `
+` + errStr + `
 `)
 }
 
@@ -458,7 +459,7 @@ func genForHead(vc string) string {
 
 func (gen *GenGo) genReadVector(mb *StructMember, prefix string, hasRet bool) {
 	c := &gen.code
-	err_str := errString(hasRet)
+	errStr := errString(hasRet)
 
 	// LIST
 	tag := strconv.Itoa(int(mb.Tag))
@@ -470,7 +471,7 @@ func (gen *GenGo) genReadVector(mb *StructMember, prefix string, hasRet bool) {
 	}
 	c.WriteString(`
 err, have, ty = _is.SkipToNoCheck(` + tag + `,` + require + `)
-` + err_str + `
+` + errStr + `
 `)
 	if require == "false" {
 		c.WriteString("if have {")
@@ -479,7 +480,7 @@ err, have, ty = _is.SkipToNoCheck(` + tag + `,` + require + `)
 	c.WriteString(`
 if ty == codec.LIST {
 	err = _is.Read_int32(&length, 0, true)
-  ` + err_str + `
+  ` + errStr + `
   ` + prefix + mb.Key + ` = make(` + gen.genType(mb.Type) + `, length, length)
   ` + genForHead(vc) + `{
 `)
@@ -492,16 +493,16 @@ if ty == codec.LIST {
 	c.WriteString(`}
 } else if ty == codec.SIMPLE_LIST {
 `)
-	if mb.Type.TypeK.Type == TK_T_BYTE {
+	if mb.Type.TypeK.Type == tkTByte {
 		gen.genReadSimpleList(mb, prefix, hasRet)
 	} else {
 		c.WriteString(`err = fmt.Errorf("type not support SIMPLE_LIST.")
-    ` + err_str)
+    ` + errStr)
 	}
 	c.WriteString(`
 } else {
   err = fmt.Errorf("require vector, but not.")
-  ` + err_str + `
+  ` + errStr + `
 }
 `)
 
@@ -526,7 +527,7 @@ err = ` + prefix + mb.Key + `.ReadBlock(_is, ` + tag + `, ` + require + `)
 func (gen *GenGo) genReadMap(mb *StructMember, prefix string, hasRet bool) {
 	c := &gen.code
 	tag := strconv.Itoa(int(mb.Tag))
-	err_str := errString(hasRet)
+	errStr := errString(hasRet)
 	vc := strconv.Itoa(gen.vc)
 	gen.vc++
 	require := "false"
@@ -535,14 +536,14 @@ func (gen *GenGo) genReadMap(mb *StructMember, prefix string, hasRet bool) {
 	}
 	c.WriteString(`
 err, have = _is.SkipTo(codec.MAP, ` + tag + `, ` + require + `)
-` + err_str + `
+` + errStr + `
 `)
 	if require == "false" {
 		c.WriteString("if have {")
 	}
 	c.WriteString(`
 err = _is.Read_int32(&length, 0, true)
-` + err_str + `
+` + errStr + `
 ` + prefix + mb.Key + ` = make(` + gen.genType(mb.Type) + `)
 ` + genForHead(vc) + `{
 	var k` + vc + ` ` + gen.genType(mb.Type.TypeK) + `
@@ -573,12 +574,12 @@ func (gen *GenGo) genReadVar(v *StructMember, prefix string, hasRet bool) {
 	c := &gen.code
 
 	switch v.Type.Type {
-	case TK_T_VECTOR:
+	case tkTVector:
 		gen.genReadVector(v, prefix, hasRet)
-	case TK_T_MAP:
+	case tkTMap:
 		gen.genReadMap(v, prefix, hasRet)
-	case TK_NAME:
-		if v.Type.CType == TK_ENUM {
+	case tkName:
+		if v.Type.CType == tkEnum {
 			tag := strconv.Itoa(int(v.Tag))
 			require := "false"
 			if v.Require {
@@ -737,14 +738,14 @@ func (gen *GenGo) genConst(cst []ConstInfo) {
 
 func (gen *GenGo) genInclude(ps []*Parse) {
 	for _, v := range ps {
-		gen2 := &GenGo{path: v.Source, prefix: gen.prefix, tarsPath: g_tarsPath}
+		gen2 := &GenGo{path: v.Source, prefix: gen.prefix, tarsPath: gTarsPath}
 		gen2.p = v
 		gen2.genAll()
 	}
 }
 
 func (gen *GenGo) genAll() {
-	if *g_add_servant == true {
+	if *gAddServant == true {
 		gen.p.rename()
 	}
 	gen.genInclude(gen.p.IncParse)
@@ -809,7 +810,7 @@ func (_obj *` + itf.TName + `) int8ToByte(s []int8) []byte {
 }
 	`)
 
-	if *g_add_servant {
+	if *gAddServant {
 		c.WriteString(`
 func (_obj *` + itf.TName + `) AddServant(imp _imp` + itf.TName + `, obj string) {
   tars.AddServant(_obj, imp, obj)
@@ -852,13 +853,13 @@ func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo) {
 	}
 	// empty args and below seperate
 	c.WriteString("\n")
-	err_str := errString(fun.HasRet)
+	errStr := errString(fun.HasRet)
 
 	c.WriteString(`var _status map[string]string
 var _context map[string]string
 _resp := new(requestf.ResponsePacket)
 err = _obj.s.Tars_invoke(0, "` + fun.NameStr + `", _os.ToBytes(), _status, _context, _resp)
-` + err_str + `
+` + errStr + `
 `)
 
 	if isOut || fun.HasRet {
@@ -902,7 +903,7 @@ err = _obj.s.Tars_invoke(0, "` + fun.NameStr + `", _os.ToBytes(), _status, _cont
 func (gen *GenGo) genArgs(arg *ArgInfo) {
 	c := &gen.code
 	c.WriteString(arg.Name + " ")
-	if arg.IsOut || arg.Type.CType == TK_STRUCT {
+	if arg.IsOut || arg.Type.CType == tkStruct {
 		c.WriteString("*")
 	}
 
@@ -1009,7 +1010,7 @@ func (gen *GenGo) genSwitchCase(fun *FunInfo) {
 		c.WriteString("err := _imp." + fun.Name + "(")
 	}
 	for _, v := range fun.Args {
-		if v.IsOut || v.Type.CType == TK_STRUCT {
+		if v.IsOut || v.Type.CType == tkStruct {
 			c.WriteString("&" + v.Name + ",")
 		} else {
 			c.WriteString(v.Name + ",")
@@ -1042,6 +1043,7 @@ if err != nil {
 	}
 }
 
+//Gen to parse file.
 func (gen *GenGo) Gen() {
 	defer func() {
 		if err := recover(); err != nil {
@@ -1052,7 +1054,7 @@ func (gen *GenGo) Gen() {
 	gen.p = ParseFile(gen.path)
 	gen.genAll()
 }
-
+//NewGenGo build up a new path
 func NewGenGo(path string, outdir string) *GenGo {
 	if outdir != "" {
 		b := []byte(outdir)
