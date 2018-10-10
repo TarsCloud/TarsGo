@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#判断入参
+# check params
 if [ $# -lt 3 ]
 then
     echo "<Usage: sh $0  App  Server  Servant>"
@@ -42,11 +42,10 @@ echo "[mkdir: $TARGET]"
 mkdir -p $TARGET
 cd $TARGET || exit 1
 
-#cp  $SRC_DIR/makefile $APP/$SERVER/
 cp -r $DEMODIR/* $TARGET
 cp -r $DEBUGDIR $TARGET
 
-if [ `uname` == "Darwin" ] # 支持 macOS
+if [ `uname` == "Darwin" ] # support macOS
 then
     for FILE in $SRC_FILE client/client.go vendor/vendor.json
     do
@@ -58,10 +57,11 @@ then
 
     for RENAMEFILE in `find . -maxdepth 1 -type f`
     do
-        NEWFILE=`echo $RENAMEFILE | sed "s/Server/$SERVER/" | sed "s/Servant/$SERVANT/"` # $SERVER 不能包含 “Servant” 字符串
+        # $SERVER cant contain "Servant" string
+        NEWFILE=`echo $RENAMEFILE | sed "s/Server/$SERVER/" | sed "s/Servant/$SERVANT/"`
         mv $RENAMEFILE $NEWFILE
 
-        # 或者使用 rename，默认不安装 rename，需要手动安装 ``` brew install rename ```
+        # or use `rename`，default not install rename, you should execute ``` brew install rename ```
         # rename "s/Server/$SERVER/" $RENAMEFILE
         # rename "s/Servant/$SERVANT/" $RENAMEFILE
     done
@@ -81,13 +81,13 @@ else
     done
 fi
 
-#尝试编译tars2go 程序
+# try build tars2go
 cd "$GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go"
 go install
 cd "$GOPATH/src/$APP/$SERVER"
 echo ">>> Great！Done! You can jump in "`pwd`
 
-#提示如何转化Tars 到go
-echo ">>> 提示：当编辑完成Tars文件后，使用如下自动生成go文件"
+# show tips: how to convert tars to golang
+echo ">>> Tips: After editing the Tars file, execute the following cmd to automatically generate golang files."
 echo ">>>       $GOPATH/bin/tars2go *.tars"
 
