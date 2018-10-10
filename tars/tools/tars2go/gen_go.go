@@ -1046,6 +1046,8 @@ func (gen *GenGo) Gen() {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Println(err)
+			// set exit code
+			os.Exit(1)
 		}
 	}()
 
