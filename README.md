@@ -17,6 +17,7 @@
 - The support of remote log.
 - The support of property report.
 - The support of set division.
+- The support of protocol buffers. See more in [pb2tarsgo](tars/tools/pb2tarsgo/README.md)
 
 
 
