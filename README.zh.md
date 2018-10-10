@@ -12,6 +12,7 @@
 - 提供远程日志
 - 提供特性监控上报
 - 提供set分组
+- 提供 protocol buffers 支持， 详见 [pb2tarsgo](tars/tools/pb2tarsgo/README.md) 
 
 
 
