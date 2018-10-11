@@ -76,7 +76,7 @@ func (cst *ConstInfo) rename() {
 }
 
 // 2. func rename
-// type Fun (arg ArgType), argname originally no capitalization，in case of key words name=
+// type Fun (arg ArgType), in case keyword and name conflicts,argname need to capitalize.
 // Fun (type int32)
 func (fun *FunInfo) rename() {
 	fun.NameStr = fun.Name
