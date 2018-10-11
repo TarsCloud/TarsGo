@@ -56,8 +56,8 @@ func (c *AdapterProxy) ParsePackage(buff []byte) (int, int) {
 // Recv : Recover read channel when closed for timeout
 func (c *AdapterProxy) Recv(pkg []byte) {
 	defer func() {
-		//TODO readCh在load之后一定几率被超时关闭了,这个时候需要recover恢复
-		//或许有更好的办法吧
+		// TODO readCh has a certain probability to be closed after the load, and we need to recover
+		// Maybe there is a better way
 		if err := recover(); err != nil {
 			TLOG.Error("recv pkg painc:", err)
 		}
@@ -119,7 +119,7 @@ func (c *AdapterProxy) reset() {
 
 func (c *AdapterProxy) checkActive() {
 	loop := time.NewTicker(AdapterProxyTicker)
-	count := 0 //每分钟探测一次死掉的节点是否恢复
+	count := 0 // Detect if a dead node recovers each minute
 	for range loop.C {
 		if c.closed {
 			loop.Stop()
