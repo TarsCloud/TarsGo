@@ -79,7 +79,7 @@ Click "Submit", after successful, the TestApp application under the menu number 
 
 ### Create service
 
-Run the create_tars_server.sh script to automatically create the files necessary for the service.
+Run the create_tars_server.sh script to automatically create the files necessary for the service, If there is a syntax error during execution, try to use `dos2unix create_tars_server.sh` to transcode.
 
 ```shell
 sh $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/create_tars_server.sh [App] [Server] [Servant]
