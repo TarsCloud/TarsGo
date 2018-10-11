@@ -721,3 +721,30 @@ const (
 
 ```
 
+### 11 HTTP Support
+
+`tars.TarsHttpMux` is multiplexer like [http.ServeMux](https://golang.org/pkg/net/http/#ServeMux)，the `pattern` parameter is used as the interface name in monitoring report. 
+
+Here is a sample of http server：
+
+```
+package main
+
+import (
+	"net/http"
+	"tars"
+)
+
+func main() {
+	mux := &tars.TarsHttpMux{}
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Hello tafgo"))
+	})
+
+    cfg := tars.GetServerConfig()
+	tars.AddHttpServant(mux, cfg.App+"."+cfg.Server+".HttpObj") //Register http server
+	tars.Run()
+}
+
+
+```

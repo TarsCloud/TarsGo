@@ -38,7 +38,7 @@
 
 在 $GOPATH/src下编写一个tars文件，如hello.tars , 比如 $GOPATH/src/TestApp/TestServer/hello.tars.
 有关tars协议的更多详细信息, 请查看 https://github.com/TarsCloud/TarsTup/blob/master/docs-en/tars_tup.md
-	
+
 ```
 	
 	module TestApp
@@ -708,6 +708,35 @@ const (
 	TCPWriteBuffer = 128 * 1024 * 1024
 	TCPNoDelay     = false
 )
+
+
+```
+
+
+### http支持
+
+目前的tar.TarsHttpMux和golang内置http.ServeMux使用方式是一致的，其中pattern参数做为监控数据的接口名，后续会参考`github.com/gorilla/mux`实现功能更强大的路由功能。
+
+具体实现可参考下面的例子：
+
+```
+package main
+
+import (
+	"net/http"
+	"tars"
+)
+
+func main() {
+	mux := &tars.TarsHttpMux{}
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Hello tafgo"))
+	})
+
+    cfg := tars.GetServerConfig()
+	tars.AddHttpServant(mux, cfg.App+"."+cfg.Server+".HttpObj") //Register http server
+	tars.Run()
+}
 
 
 ```
