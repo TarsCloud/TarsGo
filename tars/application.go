@@ -15,6 +15,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/util/conf"
 	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 	"github.com/TarsCloud/TarsGo/tars/util/rogger"
+	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
 var tarsConfig map[string]*transport.TarsServerConf
@@ -74,7 +75,8 @@ func initConfig() {
 	//svrCfg.Container = c.GetString("/tars/application<container>")
 	//init log
 	svrCfg.LogPath = sMap["logpath"]
-	svrCfg.LogSize = sMap["logsize"]
+	svrCfg.LogSize = tools.ParseLogSizeMb(sMap["logsize"])
+	svrCfg.LogNum = tools.ParseLogNum(sMap["lognum"])
 	svrCfg.LogLevel = sMap["logLevel"]
 	svrCfg.config = sMap["config"]
 	svrCfg.notify = sMap["notify"]
