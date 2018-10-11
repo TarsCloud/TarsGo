@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+// AdapterProxy : Adapter proxy
 type AdapterProxy struct {
 	resp       sync.Map
 	point      *endpointf.EndpointF
@@ -24,6 +25,7 @@ type AdapterProxy struct {
 	closed     bool
 }
 
+// New : Construct an adapter proxy
 func (c *AdapterProxy) New(point *endpointf.EndpointF, comm *Communicator) error {
 	c.comm = comm
 	c.point = point
@@ -46,14 +48,16 @@ func (c *AdapterProxy) New(point *endpointf.EndpointF, comm *Communicator) error
 	return nil
 }
 
+// ParsePackage : Parse packet from bytes
 func (c *AdapterProxy) ParsePackage(buff []byte) (int, int) {
 	return TarsRequest(buff)
 }
 
+// Recv : Recover read channel when closed for timeout
 func (c *AdapterProxy) Recv(pkg []byte) {
 	defer func() {
-		//TODO readCh在load之后一定几率被超时关闭了,这个时候需要recover恢复
-		//或许有更好的办法吧
+		// TODO readCh has a certain probability to be closed after the load, and we need to recover
+		// Maybe there is a better way
 		if err := recover(); err != nil {
 			TLOG.Error("recv pkg painc:", err)
 		}
@@ -74,6 +78,7 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 	}
 }
 
+// Send : Send packet
 func (c *AdapterProxy) Send(req *requestf.RequestPacket) error {
 	TLOG.Debug("send req:", req.IRequestId)
 	c.sendAdd()
@@ -88,40 +93,45 @@ func (c *AdapterProxy) Send(req *requestf.RequestPacket) error {
 	return c.tarsClient.Send(sbuf.Bytes())
 }
 
+// GetPoint : Get an endpoint
 func (c *AdapterProxy) GetPoint() *endpointf.EndpointF {
 	return c.point
 }
 
+// Close : Close the client
 func (c *AdapterProxy) Close() {
 	c.tarsClient.Close()
 	c.closed = true
 }
 
-func (a *AdapterProxy) sendAdd() {
-	atomic.AddInt32(&a.sendCount, 1)
+func (c *AdapterProxy) sendAdd() {
+	atomic.AddInt32(&c.sendCount, 1)
 }
-func (a *AdapterProxy) failAdd() {
-	atomic.AddInt32(&a.failCount, 1)
+
+func (c *AdapterProxy) failAdd() {
+	atomic.AddInt32(&c.failCount, 1)
 }
-func (a *AdapterProxy) reset() {
-	atomic.SwapInt32(&a.sendCount, 0)
-	atomic.SwapInt32(&a.failCount, 0)
+
+func (c *AdapterProxy) reset() {
+	atomic.SwapInt32(&c.sendCount, 0)
+	atomic.SwapInt32(&c.failCount, 0)
 }
-func (a *AdapterProxy) checkActive() {
+
+func (c *AdapterProxy) checkActive() {
 	loop := time.NewTicker(AdapterProxyTicker)
-	count := 0 //每分钟探测一次死掉的节点是否恢复
+	count := 0 // Detect if a dead node recovers each minute
 	for range loop.C {
-		if a.closed {
+		if c.closed {
 			loop.Stop()
 			return
 		}
-		if a.failCount > a.sendCount/2 {
-			a.status = false
+		if c.failCount > c.sendCount/2 {
+			c.status = false
 		}
-		if !a.status && count > AdapterProxyResetCount {
+		if !c.status && count > AdapterProxyResetCount {
 			//TODO USE TAFPING INSTEAD
-			a.reset()
-			a.status = true
+			c.reset()
+			c.status = true
 			count = 0
 		}
 		count++
