@@ -8,77 +8,82 @@ import (
 	"strings"
 )
 
+// VarType contains variable type(token)
 type VarType struct {
-	Type     TK       // 基础类型
-	Unsigned bool     // 是否是无符号
-	TypeSt   string   // 自定义类型名称，如枚举结构体，此时Type=TK_NAME
-	CType    TK       // 确定自定义类型时哪一种，TK_ENUM, TK_STRUCT
-	TypeK    *VarType // vector的成员变量，map的key
-	TypeV    *VarType // map的value
+	Type     TK       // basic type
+	Unsigned bool     // whether unsigned
+	TypeSt   string   // custom type name, such as an enumerated struct,at this time Type=tkName
+	CType    TK       // make sure which type of custom type is,tkEnum, tkStruct
+	TypeK    *VarType // vector's member variable,the key of map
+	TypeV    *VarType // the value of map
 }
-
+// StructMember member struct.
 type StructMember struct {
 	Tag     int32
 	Require bool
 	Type    *VarType
-	Key     string // 经过大写转换后的key
-	KeyStr  string // 原始key
+	Key     string // after the uppercase converted key
+	KeyStr  string // original key
 	Default string
 	DefType TK
 }
 
-// 序列化时，要保证tag是有序的
+// StructMemberSorter When serializing, make sure the tags are ordered.
 type StructMemberSorter []StructMember
 
 func (a StructMemberSorter) Len() int           { return len(a) }
 func (a StructMemberSorter) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a StructMemberSorter) Less(i, j int) bool { return a[i].Tag < a[j].Tag }
 
+//StructInfo record struct information.
 type StructInfo struct {
 	TName        string
 	Mb           []StructMember
 	DependModule map[string]bool
 }
 
+//ArgInfo record argument information.
 type ArgInfo struct {
 	Name  string
 	IsOut bool
 	Type  *VarType
 }
+//FunInfo record function information.
 type FunInfo struct {
-	Name    string // 经过大写转换后的name
-	NameStr string // 原始name
+	Name    string // after the uppercase converted name
+	NameStr string // original name
 	HasRet  bool
 	RetType *VarType
 	Args    []ArgInfo
 }
-
+//InterfaceInfo record interface information.
 type InterfaceInfo struct {
 	TName        string
 	Fun          []FunInfo
 	DependModule map[string]bool
 }
-
+//EnumMember record member information.
 type EnumMember struct {
 	Key   string
 	Value int32
 }
+//EnumInfo record EnumMember information include name.
 type EnumInfo struct {
 	TName string
 	Mb    []EnumMember
 }
-
+//ConstInfo record const information.
 type ConstInfo struct {
 	Type  *VarType
 	Key   string
 	Value string
 }
-
+//HashKeyInfo record hashkey information.
 type HashKeyInfo struct {
 	Name   string
 	Member []string
 }
-
+//Parse record information of parse file.
 type Parse struct {
 	Source string
 
@@ -92,12 +97,12 @@ type Parse struct {
 	Const     []ConstInfo
 	HashKey   []HashKeyInfo
 
-	// 解析好的include文件
+	// have parsed include file
 	IncParse []*Parse
 
-	lex    *LexState
-	t      *Token
-	last_t *Token
+	lex   *LexState
+	t     *Token
+	lastT *Token
 }
 
 func (p *Parse) parseErr(err string) {
@@ -110,7 +115,7 @@ func (p *Parse) parseErr(err string) {
 }
 
 func (p *Parse) next() {
-	p.last_t = p.t
+	p.lastT = p.t
 	p.t = p.lex.NextToken()
 }
 
@@ -123,10 +128,10 @@ func (p *Parse) expect(t TK) {
 
 func (p *Parse) makeUnsigned(utype *VarType) {
 	switch utype.Type {
-	case TK_T_INT, TK_T_SHORT, TK_T_BYTE:
+	case tkTInt, tkTShort, tkTByte:
 		utype.Unsigned = true
 	default:
-		p.parseErr("type " + TokenMap[utype.Type] + " 不支持unsigned修饰")
+		p.parseErr("type " + TokenMap[utype.Type] + " unsigned decoration is not supported")
 	}
 }
 
@@ -134,24 +139,24 @@ func (p *Parse) parseType() *VarType {
 	vtype := &VarType{Type: p.t.T}
 
 	switch vtype.Type {
-	case TK_NAME:
+	case tkName:
 		vtype.TypeSt = p.t.S.S
-	case TK_T_INT, TK_T_BOOL, TK_T_SHORT, TK_T_LONG, TK_T_BYTE, TK_T_FLOAT, TK_T_DOUBLE, TK_T_STRING:
+	case tkTInt, tkTBool, tkTShort, tkTLong, tkTByte, tkTFloat, tkTDouble, tkTString:
 		// no nothing
-	case TK_T_VECTOR:
-		p.expect(TK_SHL)
+	case tkTVector:
+		p.expect(tkShl)
 		p.next()
 		vtype.TypeK = p.parseType()
-		p.expect(TK_SHR)
-	case TK_T_MAP:
-		p.expect(TK_SHL)
+		p.expect(tkShr)
+	case tkTMap:
+		p.expect(tkShl)
 		p.next()
 		vtype.TypeK = p.parseType()
-		p.expect(TK_COMMA)
+		p.expect(tkComma)
 		p.next()
 		vtype.TypeV = p.parseType()
-		p.expect(TK_SHR)
-	case TK_UNSIGNED:
+		p.expect(tkShr)
+	case tkUnsigned:
 		p.next()
 		utype := p.parseType()
 		p.makeUnsigned(utype)
@@ -164,17 +169,17 @@ func (p *Parse) parseType() *VarType {
 
 func (p *Parse) parseEnum() {
 	enum := EnumInfo{}
-	p.expect(TK_NAME)
+	p.expect(tkName)
 	enum.TName = p.t.S.S
 	for _, v := range p.Enum {
 		if v.TName == enum.TName {
 			p.parseErr(enum.TName + " Redefine.")
 		}
 	}
-	p.expect(TK_BRACEL)
+	p.expect(tkBracel)
 
 	defer func() {
-		p.expect(TK_SEMI)
+		p.expect(tkSemi)
 		p.Enum = append(p.Enum, enum)
 	}()
 
@@ -182,33 +187,31 @@ func (p *Parse) parseEnum() {
 	for {
 		p.next()
 		switch p.t.T {
-		case TK_BRACER:
-			//if p.last_t.T == TK_COMMA {
-			//	p.parseErr("逗号后面不能紧跟右大括号")
-			//}
+		case tkBracer:
+
 			return
-		case TK_NAME:
+		case tkName:
 			k := p.t.S.S
 			p.next()
 			switch p.t.T {
-			case TK_COMMA:
+			case tkComma:
 				m := EnumMember{Key: k, Value: it}
 				enum.Mb = append(enum.Mb, m)
 				it++
-			case TK_BRACER:
+			case tkBracer:
 				m := EnumMember{Key: k, Value: it}
 				enum.Mb = append(enum.Mb, m)
 				return
-			case TK_EQ:
-				p.expect(TK_INTEGER)
+			case tkEq:
+				p.expect(tkInteger)
 				it = int32(p.t.S.I)
 				m := EnumMember{Key: k, Value: it}
 				enum.Mb = append(enum.Mb, m)
 				it++
 				p.next()
-				if p.t.T == TK_BRACER {
+				if p.t.T == tkBracer {
 					return
-				} else if p.t.T == TK_COMMA {
+				} else if p.t.T == tkComma {
 				} else {
 					p.parseErr("expect , or }")
 				}
@@ -220,10 +223,10 @@ func (p *Parse) parseEnum() {
 func (p *Parse) parseStructMember() *StructMember {
 	// tag or end
 	p.next()
-	if p.t.T == TK_BRACER {
+	if p.t.T == tkBracer {
 		return nil
 	}
-	if p.t.T != TK_INTEGER {
+	if p.t.T != tkInteger {
 		p.parseErr("expect tags.")
 	}
 	m := &StructMember{}
@@ -231,9 +234,9 @@ func (p *Parse) parseStructMember() *StructMember {
 
 	// require or optional
 	p.next()
-	if p.t.T == TK_REQUIRE {
+	if p.t.T == tkRequire {
 		m.Require = true
-	} else if p.t.T == TK_OPTIONAL {
+	} else if p.t.T == tkOptional {
 		m.Require = false
 	} else {
 		p.parseErr("expect require or optional")
@@ -241,63 +244,63 @@ func (p *Parse) parseStructMember() *StructMember {
 
 	// type
 	p.next()
-	if !isType(p.t.T) && p.t.T != TK_NAME && p.t.T != TK_UNSIGNED {
+	if !isType(p.t.T) && p.t.T != tkName && p.t.T != tkUnsigned {
 		p.parseErr("expect type")
 	} else {
 		m.Type = p.parseType()
 	}
 
 	// key
-	p.expect(TK_NAME)
+	p.expect(tkName)
 	m.Key = p.t.S.S
 
 	p.next()
-	if p.t.T == TK_SEMI {
+	if p.t.T == tkSemi {
 		return m
 	}
-	if p.t.T != TK_EQ {
+	if p.t.T != tkEq {
 		p.parseErr("expect ; or =")
 	}
-	if p.t.T == TK_T_MAP || p.t.T == TK_T_VECTOR || p.t.T == TK_NAME {
-		p.parseErr("map, vector, 自定义类型 不能设置默认值")
+	if p.t.T == tkTMap || p.t.T == tkTVector || p.t.T == tkName {
+		p.parseErr("map, vector, custom type cannot set default value")
 	}
 
 	// default
 	p.next()
 	m.DefType = p.t.T
 	switch p.t.T {
-	case TK_INTEGER:
-		if !isNumberType(m.Type.Type) && m.Type.Type != TK_NAME {
-			// enum 自定义类型 默认值 也是数字
-			p.parseErr("类型不接受数字")
+	case tkInteger:
+		if !isNumberType(m.Type.Type) && m.Type.Type != tkName {
+			// enum auto defined type ,default value is number.
+			p.parseErr("type does not accept number")
 		}
 		m.Default = p.t.S.S
-	case TK_FLOAT:
+	case tkFloat:
 		if !isNumberType(m.Type.Type) {
-			p.parseErr("类型不接受数字")
+			p.parseErr("type does not accept number")
 		}
 		m.Default = p.t.S.S
-	case TK_STRING:
+	case tkString:
 		if isNumberType(m.Type.Type) {
-			p.parseErr("类型不接受字符串")
+			p.parseErr("type does not accept string")
 		}
 		m.Default = `"` + p.t.S.S + `"`
-	case TK_TRUE:
-		if m.Type.Type != TK_T_BOOL {
-			p.parseErr("默认值格式错误")
+	case tkTrue:
+		if m.Type.Type != tkTBool {
+			p.parseErr("default value format error")
 		}
 		m.Default = "true"
-	case TK_FALSE:
-		if m.Type.Type != TK_T_BOOL {
-			p.parseErr("默认值格式错误")
+	case tkFalse:
+		if m.Type.Type != tkTBool {
+			p.parseErr("default value format error")
 		}
 		m.Default = "false"
-	case TK_NAME:
+	case tkName:
 		m.Default = p.t.S.S
 	default:
-		p.parseErr("默认值格式错误")
+		p.parseErr("default value format error")
 	}
-	p.expect(TK_SEMI)
+	p.expect(tkSemi)
 
 	return m
 }
@@ -306,7 +309,7 @@ func (p *Parse) checkTag(st *StructInfo) {
 	set := make(map[int32]bool)
 	for _, v := range st.Mb {
 		if set[v.Tag] {
-			p.parseErr("tag = " + strconv.Itoa(int(v.Tag)) + ". 有重复")
+			p.parseErr("tag = " + strconv.Itoa(int(v.Tag)) + ". have duplicates")
 		}
 		set[v.Tag] = true
 	}
@@ -318,14 +321,14 @@ func (p *Parse) sortTag(st *StructInfo) {
 
 func (p *Parse) parseStruct() {
 	st := StructInfo{}
-	p.expect(TK_NAME)
+	p.expect(tkName)
 	st.TName = p.t.S.S
 	for _, v := range p.Struct {
 		if v.TName == st.TName {
 			p.parseErr(st.TName + " Redefine.")
 		}
 	}
-	p.expect(TK_BRACEL)
+	p.expect(tkBracel)
 
 	for {
 		m := p.parseStructMember()
@@ -334,7 +337,7 @@ func (p *Parse) parseStruct() {
 		}
 		st.Mb = append(st.Mb, *m)
 	}
-	p.expect(TK_SEMI) //结构体结尾的分号
+	p.expect(tkSemi) //semicolon at the end of the struct.
 
 	p.checkTag(&st)
 	p.sortTag(&st)
@@ -345,35 +348,35 @@ func (p *Parse) parseStruct() {
 func (p *Parse) parseInterfaceFun() *FunInfo {
 	fun := &FunInfo{}
 	p.next()
-	if p.t.T == TK_BRACER {
+	if p.t.T == tkBracer {
 		return nil
 	}
-	if p.t.T == TK_VOID {
+	if p.t.T == tkVoid {
 		fun.HasRet = false
-	} else if !isType(p.t.T) && p.t.T != TK_NAME && p.t.T != TK_UNSIGNED {
+	} else if !isType(p.t.T) && p.t.T != tkName && p.t.T != tkUnsigned {
 		p.parseErr("expect type")
 	} else {
 		fun.HasRet = true
 		fun.RetType = p.parseType()
 	}
-	p.expect(TK_NAME)
+	p.expect(tkName)
 	fun.Name = p.t.S.S
-	p.expect(TK_PTL)
+	p.expect(tkPtl)
 
 	p.next()
-	if p.t.T == TK_SHR {
+	if p.t.T == tkShr {
 		return fun
 	}
 
-	// 无参函数，直接退出
-	if p.t.T == TK_PTR {
-		p.expect(TK_SEMI)
+	// No parameter function, exit directly.
+	if p.t.T == tkPtr {
+		p.expect(tkSemi)
 		return fun
 	}
 
 	for {
 		arg := &ArgInfo{}
-		if p.t.T == TK_OUT {
+		if p.t.T == tkOut {
 			arg.IsOut = true
 			p.next()
 		} else {
@@ -382,17 +385,17 @@ func (p *Parse) parseInterfaceFun() *FunInfo {
 
 		arg.Type = p.parseType()
 		p.next()
-		if p.t.T == TK_NAME {
+		if p.t.T == tkName {
 			arg.Name = p.t.S.S
 			p.next()
 		}
 
 		fun.Args = append(fun.Args, *arg)
 
-		if p.t.T == TK_COMMA {
+		if p.t.T == tkComma {
 			p.next()
-		} else if p.t.T == TK_PTR {
-			p.expect(TK_SEMI)
+		} else if p.t.T == tkPtr {
+			p.expect(tkSemi)
 			break
 		} else {
 			p.parseErr("expect , or )")
@@ -403,14 +406,14 @@ func (p *Parse) parseInterfaceFun() *FunInfo {
 
 func (p *Parse) parseInterface() {
 	itf := &InterfaceInfo{}
-	p.expect(TK_NAME)
+	p.expect(tkName)
 	itf.TName = p.t.S.S
 	for _, v := range p.Interface {
 		if v.TName == itf.TName {
 			p.parseErr(itf.TName + " Redefine.")
 		}
 	}
-	p.expect(TK_BRACEL)
+	p.expect(tkBracel)
 
 	for {
 		fun := p.parseInterfaceFun()
@@ -419,7 +422,7 @@ func (p *Parse) parseInterface() {
 		}
 		itf.Fun = append(itf.Fun, *fun)
 	}
-	p.expect(TK_SEMI) //结构体结尾的分号
+	p.expect(tkSemi) //semicolon at the end of struct.
 	p.Interface = append(p.Interface, *itf)
 }
 
@@ -429,69 +432,69 @@ func (p *Parse) parseConst() {
 	// type
 	p.next()
 	switch p.t.T {
-	case TK_T_VECTOR, TK_T_MAP:
+	case tkTVector, tkTMap:
 		p.parseErr("const no suppost type vector or map.")
-	case TK_T_BOOL, TK_T_BYTE, TK_T_SHORT,
-		TK_T_INT, TK_T_LONG, TK_T_FLOAT,
-		TK_T_DOUBLE, TK_T_STRING, TK_UNSIGNED:
+	case tkTBool, tkTByte, tkTShort,
+		tkTInt, tkTLong, tkTFloat,
+		tkTDouble, tkTString, tkUnsigned:
 		m.Type = p.parseType()
 	default:
 		p.parseErr("expect type.")
 	}
 
-	p.expect(TK_NAME)
+	p.expect(tkName)
 	m.Key = p.t.S.S
 
-	p.expect(TK_EQ)
+	p.expect(tkEq)
 
 	// default
 	p.next()
 	switch p.t.T {
-	case TK_INTEGER, TK_FLOAT:
+	case tkInteger, tkFloat:
 		if !isNumberType(m.Type.Type) {
-			p.parseErr("类型不接受数字")
+			p.parseErr("type does not accept number")
 		}
 		m.Value = p.t.S.S
-	case TK_STRING:
+	case tkString:
 		if isNumberType(m.Type.Type) {
-			p.parseErr("类型不接受字符串")
+			p.parseErr("type does not accept string")
 		}
 		m.Value = `"` + p.t.S.S + `"`
-	case TK_TRUE:
-		if m.Type.Type != TK_T_BOOL {
-			p.parseErr("默认值格式错误")
+	case tkTrue:
+		if m.Type.Type != tkTBool {
+			p.parseErr("default value format error")
 		}
 		m.Value = "true"
-	case TK_FALSE:
-		if m.Type.Type != TK_T_BOOL {
-			p.parseErr("默认值格式错误")
+	case tkFalse:
+		if m.Type.Type != tkTBool {
+			p.parseErr("default value format error")
 		}
 		m.Value = "false"
 	default:
-		p.parseErr("默认值格式错误")
+		p.parseErr("default value format error")
 	}
-	p.expect(TK_SEMI)
+	p.expect(tkSemi)
 
 	p.Const = append(p.Const, m)
 }
 
 func (p *Parse) parseHashKey() {
 	hashKey := HashKeyInfo{}
-	p.expect(TK_SQUAREL)
-	p.expect(TK_NAME)
+	p.expect(tkSquarel)
+	p.expect(tkName)
 	hashKey.Name = p.t.S.S
-	p.expect(TK_COMMA)
+	p.expect(tkComma)
 	for {
-		p.expect(TK_NAME)
+		p.expect(tkName)
 		hashKey.Member = append(hashKey.Member, p.t.S.S)
 		p.next()
 		t := p.t
 		switch t.T {
-		case TK_SQUARER:
-			p.expect(TK_SEMI)
+		case tkSquarer:
+			p.expect(tkSemi)
 			p.HashKey = append(p.HashKey, hashKey)
 			return
-		case TK_COMMA:
+		case tkComma:
 		default:
 			p.parseErr("expect ] or ,")
 		}
@@ -499,24 +502,24 @@ func (p *Parse) parseHashKey() {
 }
 
 func (p *Parse) parseModuleSegment() {
-	p.expect(TK_BRACEL)
+	p.expect(tkBracel)
 
 	for {
 		p.next()
 		t := p.t
 		switch t.T {
-		case TK_BRACER:
-			p.expect(TK_SEMI)
+		case tkBracer:
+			p.expect(tkSemi)
 			return
-		case TK_CONST:
+		case tkConst:
 			p.parseConst()
-		case TK_ENUM:
+		case tkEnum:
 			p.parseEnum()
-		case TK_STRUCT:
+		case tkStruct:
 			p.parseStruct()
-		case TK_INTERFACE:
+		case tkInterface:
 			p.parseInterface()
-		case TK_KEY:
+		case tkKey:
 			p.parseHashKey()
 		default:
 			p.parseErr("not except " + TokenMap[t.T])
@@ -525,10 +528,10 @@ func (p *Parse) parseModuleSegment() {
 }
 
 func (p *Parse) parseModule() {
-	p.expect(TK_NAME)
+	p.expect(tkName)
 
 	if p.Module != "" {
-		p.parseErr("不要重复定义module")
+		p.parseErr("do not repeat define module")
 	}
 	p.Module = p.t.S.S
 
@@ -536,40 +539,40 @@ func (p *Parse) parseModule() {
 }
 
 func (p *Parse) parseInclude() {
-	p.expect(TK_STRING)
+	p.expect(tkString)
 	p.Include = append(p.Include, p.t.S.S)
 }
 
-// 寻找用户自定义标识的真正类型
+// Looking for the true type of user-defined identifier
 func (p *Parse) findTNameType(tname string) (TK, string) {
 	for _, v := range p.Struct {
 		if p.Module+"::"+v.TName == tname {
-			return TK_STRUCT, p.Module
+			return tkStruct, p.Module
 		}
 	}
 
 	for _, v := range p.Enum {
 		if p.Module+"::"+v.TName == tname {
-			return TK_ENUM, p.Module
+			return tkEnum, p.Module
 		}
 	}
 
 	for _, pInc := range p.IncParse {
 		ret, mod := pInc.findTNameType(tname)
-		if ret != TK_NAME {
+		if ret != tkName {
 			return ret, mod
 		}
 	}
 	// not find
-	return TK_NAME, p.Module
+	return tkName, p.Module
 }
 
 func (p *Parse) findEnumName(ename string) (*EnumMember, *EnumInfo) {
 	if strings.Contains(ename, "::") {
 		ename = strings.Split(ename, "::")[1]
 	}
-	var cmb *EnumMember = nil
-	var cenum *EnumInfo = nil
+	var cmb *EnumMember
+	var cenum *EnumInfo
 	for ek, enum := range p.Enum {
 		for mk, mb := range enum.Mb {
 			if mb.Key != ename {
@@ -579,7 +582,7 @@ func (p *Parse) findEnumName(ename string) (*EnumMember, *EnumInfo) {
 				cmb = &enum.Mb[mk]
 				cenum = &p.Enum[ek]
 			} else {
-				p.parseErr(ename + " 名冲突 [" + cenum.TName + "::" + cmb.Key + " 或 " + enum.TName + "::" + mb.Key)
+				p.parseErr(ename + " name conflict [" + cenum.TName + "::" + cmb.Key + " or " + enum.TName + "::" + mb.Key)
 				return nil, nil
 			}
 		}
@@ -602,7 +605,7 @@ func addToSet(m *map[string]bool, module string) {
 }
 
 func (p *Parse) checkDepTName(ty *VarType, dm *map[string]bool) {
-	if ty.Type == TK_NAME {
+	if ty.Type == tkName {
 		name := ty.TypeSt
 		if strings.Count(name, "::") == 0 {
 			name = p.Module + "::" + name
@@ -610,24 +613,24 @@ func (p *Parse) checkDepTName(ty *VarType, dm *map[string]bool) {
 
 		mod := ""
 		ty.CType, mod = p.findTNameType(name)
-		if ty.CType == TK_NAME {
+		if ty.CType == tkName {
 			p.parseErr(ty.TypeSt + " not find define")
 		}
 		if mod != p.Module {
 			addToSet(dm, mod)
 		} else {
-			// 同一个Module 不要加自己
+			// the same Module ,do not add self.
 			ty.TypeSt = strings.Replace(ty.TypeSt, mod+"::", "", 1)
 		}
-	} else if ty.Type == TK_T_VECTOR {
+	} else if ty.Type == tkTVector {
 		p.checkDepTName(ty.TypeK, dm)
-	} else if ty.Type == TK_T_MAP {
+	} else if ty.Type == tkTMap {
 		p.checkDepTName(ty.TypeK, dm)
 		p.checkDepTName(ty.TypeV, dm)
 	}
 }
 
-// 分析自定义类型，是否都有定义
+// analysis custom type，whether have defination
 func (p *Parse) analyzeTName() {
 	for i, v := range p.Struct {
 		for _, v := range v.Mb {
@@ -652,10 +655,10 @@ func (p *Parse) analyzeTName() {
 func (p *Parse) analyzeDefault() {
 	for _, v := range p.Struct {
 		for i, r := range v.Mb {
-			if r.Default != "" && r.DefType == TK_NAME {
+			if r.Default != "" && r.DefType == tkName {
 				mb, enum := p.findEnumName(r.Default)
 				if mb == nil {
-					p.parseErr("找不到默认值" + r.Default)
+					p.parseErr("can not find default value" + r.Default)
 				}
 				v.Mb[i].Default = enum.TName + "_" + mb.Key
 			}
@@ -663,7 +666,7 @@ func (p *Parse) analyzeDefault() {
 	}
 }
 
-// TODO 分析key[]，是否都引用了正确的结构体和成员名
+// TODO analysis key[]，have quoted the correct struct and member name.
 func (p *Parse) analyzeHashKey() {
 
 }
@@ -686,11 +689,11 @@ OUT:
 		p.next()
 		t := p.t
 		switch t.T {
-		case TK_EOS:
+		case tkEos:
 			break OUT
-		case TK_INCLUDE:
+		case tkInclude:
 			p.parseInclude()
-		case TK_MODULE:
+		case tkModule:
 			p.parseModule()
 		default:
 			p.parseErr("Expect include or module.")
@@ -705,11 +708,11 @@ func newParse(s string, b []byte) *Parse {
 	p.lex = NewLexState(s, b)
 	return p
 }
-
+//ParseFile parse a file,return grammer tree.
 func ParseFile(path string) *Parse {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
-		fmt.Println("文件读取错误: " + path + ". " + err.Error())
+		fmt.Println("file read error: " + path + ". " + err.Error())
 	}
 
 	p := newParse(path, b)

@@ -13,19 +13,19 @@ import (
 
 type importPath []string
 
-var g_tarsPath string
+var gTarsPath string
 
-func (self *importPath) String() string {
-	return strings.Join(*self, ":")
+func (t *importPath) String() string {
+	return strings.Join(*t, ":")
 }
 
-func (self *importPath) Set(value string) error {
-	*self = append(*self, value)
+func (t *importPath) Set(value string) error {
+	*t = append(*t, value)
 	return nil
 }
 
-var g_outdir = flag.String("outdir", "", "生成的代码放到哪个目录")
-var g_imports importPath
+var gOutdir = flag.String("outdir", "", "which dir to put generated code")
+var gImports importPath
 
 func printhelp() {
 	bin := os.Args[0]
@@ -39,17 +39,17 @@ func printhelp() {
 
 func main() {
 	flag.Usage = printhelp
-	flag.Var(&g_imports, "I", "指定具体的import路径")
-	flag.StringVar(&g_tarsPath, "tarsPath", "github.com/TarsCloud/TarsGo/tars", "specify the tars source path.")
+	flag.Var(&gImports, "I", "Specify a specific import path")
+	flag.StringVar(&gTarsPath, "tarsPath", "github.com/TarsCloud/TarsGo/tars", "Specify the tars source path.")
 	flag.Parse()
 	if flag.NArg() == 0 {
 		printhelp()
 		os.Exit(0)
 	}
 	for _, filename := range flag.Args() {
-		gen := NewGenGo(filename, *g_outdir)
-		gen.I = g_imports
-		gen.tarsPath = g_tarsPath
+		gen := NewGenGo(filename, *gOutdir)
+		gen.I = gImports
+		gen.tarsPath = gTarsPath
 		gen.Gen()
 	}
 }
