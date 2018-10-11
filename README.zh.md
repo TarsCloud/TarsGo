@@ -719,12 +719,12 @@ const (
 
 具体实现可参考下面的例子：
 
-```
+```go
 package main
 
 import (
 	"net/http"
-	"tars"
+	"github.com/TarsCloud/TarsGo/tars"
 )
 
 func main() {

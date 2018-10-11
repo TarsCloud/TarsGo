@@ -727,12 +727,12 @@ const (
 
 Here is a sample of http server：
 
-```
+```go
 package main
 
 import (
 	"net/http"
-	"tars"
+	"github.com/TarsCloud/TarsGo/tars"
 )
 
 func main() {
