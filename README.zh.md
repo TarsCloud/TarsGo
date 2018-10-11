@@ -713,7 +713,7 @@ const (
 ```
 
 
-### http支持
+### 11 HTTP支持
 
 目前的tar.TarsHttpMux和golang内置http.ServeMux使用方式是一致的，其中pattern参数做为监控数据的接口名，后续会参考`github.com/gorilla/mux`实现功能更强大的路由功能。
 
