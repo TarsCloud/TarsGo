@@ -119,7 +119,7 @@ func (s *StatFHelper) pushBackMsg(stStatInfo StatInfo, fromServer bool) {
 }
 
 func (s *StatFHelper) ReportMicMsg(stStatInfo StatInfo, fromServer bool) {
-	go s.pushBackMsg(stStatInfo, fromServer)
+	s.pushBackMsg(stStatInfo, fromServer)
 }
 
 var StatReport *StatFHelper
