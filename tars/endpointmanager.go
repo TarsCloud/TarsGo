@@ -10,6 +10,7 @@ import (
 	"time"
 )
 
+// EndpointManager is a struct which contains endpoint information.
 type EndpointManager struct {
 	objName         string
 	directproxy     bool
@@ -58,6 +59,7 @@ func (e *EndpointManager) setObjName(objName string) {
 	}
 }
 
+// Init endpoint struct.
 func (e *EndpointManager) Init(objName string, comm *Communicator) error {
 	e.comm = comm
 	e.mlock = new(sync.Mutex)
@@ -67,11 +69,12 @@ func (e *EndpointManager) Init(objName string, comm *Communicator) error {
 	e.refreshInterval = comm.Client.refreshEndpointInterval
 	e.pos = 0
 	e.depth = 0
-	//ObjName要放到最后初始化
+	//ObjName needs to be initialized at last.
 	e.setObjName(objName)
 	return nil
 }
 
+// GetNextValidProxy returns polling adapter information.
 func (e *EndpointManager) GetNextValidProxy() *AdapterProxy {
 	e.mlock.Lock()
 	defer e.mlock.Unlock()
@@ -80,7 +83,7 @@ func (e *EndpointManager) GetNextValidProxy() *AdapterProxy {
 		return nil
 	}
 	if adp, ok := e.adapters[*ep]; ok {
-		//如果递归了所有节点还没有找到可用节点就返回nil
+		// returns nil if recursively all nodes have not found an available node.
 		if adp.status {
 			return adp
 		} else if e.depth > e.pointsSet.Len() {
@@ -98,6 +101,7 @@ func (e *EndpointManager) GetNextValidProxy() *AdapterProxy {
 	return e.adapters[*ep]
 }
 
+// GetNextEndpoint returns the endpoint basic information.
 func (e *EndpointManager) GetNextEndpoint() *endpoint.Endpoint {
 	length := len(e.index)
 	if length <= 0 {
@@ -107,6 +111,17 @@ func (e *EndpointManager) GetNextEndpoint() *endpoint.Endpoint {
 	e.pos = (e.pos + 1) % int32(length)
 	ep = e.index[e.pos].(endpoint.Endpoint)
 	return &ep
+}
+// GetAllEndpoint returns all endpoint information as a array(support not tars service).
+func (e *EndpointManager) GetAllEndpoint() []*endpoint.Endpoint {
+	es := make([]*endpoint.Endpoint,  len(e.index))
+	e.mlock.Lock()
+	defer e.mlock.Unlock()
+	for i,v := range e.index{
+		e:= v.(endpoint.Endpoint)
+		es[i]=&e
+	}
+	return es
 }
 
 func (e *EndpointManager) createProxy(ep endpoint.Endpoint) error {
@@ -122,6 +137,7 @@ func (e *EndpointManager) createProxy(ep endpoint.Endpoint) error {
 	return nil
 }
 
+// GetHashProxy returns hash adapter information.
 func (e *EndpointManager) GetHashProxy(hashcode int64) *AdapterProxy {
 	//非常不安全的hash
 	ep := e.GetHashEndpoint(hashcode)
@@ -139,6 +155,7 @@ func (e *EndpointManager) GetHashProxy(hashcode int64) *AdapterProxy {
 	return e.adapters[*ep]
 }
 
+// GetHashEndpoint returns hash endpoint information.
 func (e *EndpointManager) GetHashEndpoint(hashcode int64) *endpoint.Endpoint {
 	length := len(e.index)
 	if length <= 0 {
@@ -149,6 +166,7 @@ func (e *EndpointManager) GetHashEndpoint(hashcode int64) *endpoint.Endpoint {
 	return &ep
 }
 
+// SelectAdapterProxy returns selected adapter
 func (e *EndpointManager) SelectAdapterProxy(msg *Message) *AdapterProxy {
 	if msg.isHash {
 		return e.GetHashProxy(msg.hashCode)
@@ -160,14 +178,14 @@ func (e *EndpointManager) findAndSetObj(q *queryf.QueryF) {
 	activeEp := new([]endpointf.EndpointF)
 	inactiveEp := new([]endpointf.EndpointF)
 	var setable, ok bool
-	var setId string
+	var setID string
 	var ret int32
 	var err error
 	if setable, ok = e.comm.GetPropertyBool("enableset"); ok {
-		setId, _ = e.comm.GetProperty("setdivision")
+		setID, _ = e.comm.GetProperty("setdivision")
 	}
 	if setable {
-		ret, err = q.FindObjectByIdInSameSet(e.objName, setId, activeEp, inactiveEp)
+		ret, err = q.FindObjectByIdInSameSet(e.objName, setID, activeEp, inactiveEp)
 	} else {
 		ret, err = q.FindObjectByIdInSameGroup(e.objName, activeEp, inactiveEp)
 	}
@@ -196,7 +214,7 @@ func (e *EndpointManager) findAndSetObj(q *queryf.QueryF) {
 		}
 		e.index = e.pointsSet.Slice()
 	}
-	for end, _ := range e.adapters {
+	for end := range e.adapters {
 		//清理掉脏数据
 		if !e.pointsSet.Has(end) {
 			if a, ok := e.adapters[end]; ok {
