@@ -139,7 +139,7 @@ func (e *EndpointManager) createProxy(ep endpoint.Endpoint) error {
 
 // GetHashProxy returns hash adapter information.
 func (e *EndpointManager) GetHashProxy(hashcode int64) *AdapterProxy {
-	//非常不安全的hash
+	//very unsafe
 	ep := e.GetHashEndpoint(hashcode)
 	if ep == nil {
 		return nil
@@ -207,7 +207,7 @@ func (e *EndpointManager) findAndSetObj(q *queryf.QueryF) {
 		}
 	}
 	if (len(*activeEp)) > 0 {
-		e.pointsSet.Clear() //先清空，再加回去，这里导致必须加锁，不清又可能导致泄漏，以后改成remove元素会好
+		e.pointsSet.Clear() // clean it first,then add back .this action must lead to add lock,but if don't clean may lead to leakage.it's better to use remove.
 		for _, ep := range *activeEp {
 			end := endpoint.Tars2endpoint(ep)
 			e.pointsSet.Add(end)
@@ -215,7 +215,7 @@ func (e *EndpointManager) findAndSetObj(q *queryf.QueryF) {
 		e.index = e.pointsSet.Slice()
 	}
 	for end := range e.adapters {
-		//清理掉脏数据
+		// clean up dirty data
 		if !e.pointsSet.Has(end) {
 			if a, ok := e.adapters[end]; ok {
 				delete(e.adapters, end)
