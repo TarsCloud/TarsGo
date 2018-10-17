@@ -17,7 +17,7 @@ func Dail(servant string) *ServantProxy {
 	return c.s.GetServantProxy(servant)
 }
 
-// NewCommunicator returns a new communicator
+// NewCommunicator returns a new communicator. A Communicator is used for communicating with the server side which should only init once and be global!!!
 func NewCommunicator() *Communicator {
 	c := new(Communicator)
 	c.init()
@@ -72,17 +72,20 @@ func (c *Communicator) GetLocator() string {
 	return v
 }
 
-// SetLocator set locator with obj
+// SetLocator sets locator with obj
 func (c *Communicator) SetLocator(obj string) {
 	c.SetProperty("locator", obj)
 }
 
-// StringToProxy set servant with servant string
+// StringToProxy sets the servant of ProxyPrx p with a string servant
 func (c *Communicator) StringToProxy(servant string, p ProxyPrx) {
 	p.SetServant(c.s.GetServantProxy(servant))
 }
 
-// SetProperty set communicator property
+// SetProperty sets communicator property with a string key and an interface value.
+// var comm *tars.Communicator
+// comm = tars.NewCommunicator()
+// e.g. comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h ... -p ...")
 func (c *Communicator) SetProperty(key string, value interface{}) {
 	c.properties.Store(key, value)
 }
