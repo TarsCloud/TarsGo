@@ -3,10 +3,11 @@ package tars
 import (
 	"container/list"
 	"fmt"
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/statf"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/TarsCloud/TarsGo/tars/protocol/res/statf"
 )
 
 type StatInfo struct {
@@ -39,7 +40,6 @@ func (s *StatFHelper) Init(comm *Communicator, node string) {
 }
 
 func (s *StatFHelper) addUpMsg(statList *list.List, fromServer bool) {
-	defer s.mlock.Unlock()
 	s.mlock.Lock()
 	var n *list.Element
 	TLOG.Debug("report statList.size:", statList.Len())
@@ -76,27 +76,17 @@ func (s *StatFHelper) addUpMsg(statList *list.List, fromServer bool) {
 		n = e.Next()
 		statList.Remove(e)
 	}
-
-	for k, v := range s.mStatInfo {
-		c := int32(s.mStatCount[k])
-		v.Count = v.Count / c
-		v.TimeoutCount = v.TimeoutCount / c
-		v.ExecCount = v.ExecCount / c
-		v.TotalRspTime = v.TotalRspTime / int64(c)
-		v.MaxRspTime = v.MaxRspTime / c
-		v.MinRspTime = v.MinRspTime / c
-		//v.WeightValue = v.WeightValue / c
-		//v.WeightCount = v.WeightCount / c
-	}
-
+	s.mlock.Unlock()
 	ret, err := s.sf.ReportMicMsg(s.mStatInfo, !fromServer)
 	if err != nil {
 		TLOG.Debug("report err:", err.Error())
 	}
 	TLOG.Debug("report ret:", ret)
+	s.mlock.Lock()
 	for m := range s.mStatInfo {
 		delete(s.mStatInfo, m)
 	}
+	s.mlock.Unlock()
 }
 
 func (s *StatFHelper) Run() {
