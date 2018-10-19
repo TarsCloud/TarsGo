@@ -58,10 +58,9 @@
 #### 1.2 编译接口定义文件
 
 ##### 1.2.1 构建 tars2go
-编译tars2go工具并将tars2go二进制文件复制到$PATH
+编译并安装tars2go工具
 
-	cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go && go build . 
-    cp tarsgo $GOPTAH/bin 
+	go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
 
 ##### 1.2.2 编译tars文件并转成go文
 	tars2go --outdir=./vendor hello.tars
