@@ -2,30 +2,41 @@ package tars
 
 import (
 	"fmt"
-	"github.com/TarsCloud/TarsGo/tars/transport"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/TarsCloud/TarsGo/tars/transport"
 )
 
-func AddServant(v dispatch, f interface{}, obj string) {
+// AddServant adds a new servant
+func AddServant(dispatcher Dispatcher, implementer Implementer, name string) error {
+	if mux, ok := dispatcher.(*TarsHttpMux); ok {
+		return addHttpServant(mux, name)
+	} else if v, ok := dispatcher.(dispatch); ok {
+		return addTUServant(v, implementer, name)
+	} else {
+		return fmt.Errorf("unsupported servant: %s", name)
+	}
+}
+
+func addTUServant(v dispatch, f interface{}, obj string) error {
 	objRunList = append(objRunList, obj)
 	cfg, ok := tarsConfig[obj]
 	if !ok {
 		TLOG.Debug("servant obj name not found ", obj)
-		return
 	}
 	TLOG.Debug("add:", cfg)
 	jp := NewTarsProtocol(v, f)
 	s := transport.NewTarsServer(jp, cfg)
 	goSvrs[obj] = s
+	return nil
 }
 
-func AddHttpServant(mux *TarsHttpMux, obj string) {
+func addHttpServant(mux *TarsHttpMux, obj string) error {
 	cfg, ok := tarsConfig[obj]
 	if !ok {
 		TLOG.Debug("servant obj name not found ", obj)
-		return
 	}
 	TLOG.Debug("add http server:", cfg)
 	objRunList = append(objRunList, obj)
@@ -46,4 +57,5 @@ func AddHttpServant(mux *TarsHttpMux, obj string) {
 	mux.SetConfig(httpConf)
 	s := &http.Server{Addr: cfg.Address, Handler: mux}
 	httpSvrs[obj] = s
+	return nil
 }

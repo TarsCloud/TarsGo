@@ -3,11 +3,15 @@ package tars
 import (
 	"bytes"
 	"encoding/binary"
+	"time"
+
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
-	"time"
 )
+
+type Dispatcher interface{}
+type Implementer interface{}
 
 type dispatch interface {
 	Dispatch(interface{}, *requestf.RequestPacket, *requestf.ResponsePacket) error
