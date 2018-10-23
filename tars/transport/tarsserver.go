@@ -1,10 +1,11 @@
 package transport
 
 import (
-	"github.com/TarsCloud/TarsGo/tars/util/rogger"
-	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
 	"sync/atomic"
 	"time"
+
+	"github.com/TarsCloud/TarsGo/tars/util/rogger"
+	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
 )
 
 const (
@@ -59,7 +60,7 @@ func NewTarsServer(svr TarsProtoCol, conf *TarsServerConf) *TarsServer {
 
 func (ts *TarsServer) getHandler() (sh ServerHandler) {
 	if ts.conf.Proto == "tcp" {
-		sh = &tcpHandler{conf: ts.conf, ts: ts, jobs: make(chan *connectionHandler, ts.conf.QueueCap)}
+		sh = &tcpHandler{conf: ts.conf, ts: ts}
 	} else if ts.conf.Proto == "udp" {
 		sh = &udpHandler{conf: ts.conf, ts: ts}
 	} else {
