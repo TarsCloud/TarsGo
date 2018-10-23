@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"sync/atomic"
 	"time"
+
+	"github.com/TarsCloud/TarsGo/tars/util/gpool"
 )
 
 type tcpHandler struct {
@@ -19,12 +21,8 @@ type tcpHandler struct {
 	readBuffer  int
 	writeBuffer int
 	tcpNoDelay  bool
-	jobs        chan *connectionHandler
 	idleTime    time.Time
-}
-type connectionHandler struct {
-	conn *net.TCPConn
-	pkg  []byte
+	gpool *gpool.Pool
 }
 
 func (h *tcpHandler) Listen() (err error) {
@@ -38,13 +36,28 @@ func (h *tcpHandler) Listen() (err error) {
 	return
 }
 
-func (h *tcpHandler) Handle() error {
-	cfg := h.conf
-	if cfg.MaxInvoke > 0 {
-		for i := 0; i < int(cfg.MaxInvoke); i++ {
-			go h.worker()
+func (h *tcpHandler) handleConn(conn *net.TCPConn, pkg []byte) {
+	handler := func() {
+		rsp := h.ts.invoke(pkg)
+		if _, err := conn.Write(rsp); err != nil {
+			TLOG.Errorf("send pkg to %v failed %v", conn.RemoteAddr(), err)
 		}
 	}
+
+	cfg := h.conf
+	if cfg.MaxInvoke > 0 { // use goroutine pool
+		if h.gpool == nil {
+			h.gpool = gpool.NewPool(int(cfg.MaxInvoke), cfg.QueueCap)
+		}
+
+		h.gpool.JobQueue <- handler
+	} else {
+		go handler()
+	}
+}
+
+func (h *tcpHandler) Handle() error {
+	cfg := h.conf
 	for !h.ts.isClosed {
 		h.lis.SetDeadline(time.Now().Add(cfg.AcceptTimeout)) // set accept timeout
 		conn, err := h.lis.AcceptTCP()
@@ -66,21 +79,11 @@ func (h *tcpHandler) Handle() error {
 			atomic.AddInt32(&h.acceptNum, -1)
 		}(conn)
 	}
+
+	h.gpool.Release()
 	return nil
 }
 
-func (h *tcpHandler) worker() {
-	for {
-		select {
-		case ch := <-h.jobs:
-			rsp := h.ts.invoke(ch.pkg)
-			if _, err := ch.conn.Write(rsp); err != nil {
-				TLOG.Errorf("send pkg to %v failed %v", ch.conn.RemoteAddr(), err)
-			}
-		}
-	}
-
-}
 func (h *tcpHandler) recv(conn *net.TCPConn) {
 	defer conn.Close()
 	cfg := h.conf
@@ -119,17 +122,7 @@ func (h *tcpHandler) recv(conn *net.TCPConn) {
 				pkg := make([]byte, pkgLen-4)
 				copy(pkg, currBuffer[4:pkgLen])
 				currBuffer = currBuffer[pkgLen:]
-				if h.conf.MaxInvoke > 0 {
-					ch := &connectionHandler{conn: conn, pkg: pkg[:]}
-					h.jobs <- ch
-				} else {
-					go func(pkg []byte) {
-						rsp := h.ts.invoke(pkg)
-						if _, err := conn.Write(rsp); err != nil {
-							TLOG.Errorf("send pkg to %v failed %v", conn.RemoteAddr(), err)
-						}
-					}(pkg[:])
-				}
+				h.handleConn(conn, pkg)
 				if len(currBuffer) > 0 {
 					continue
 				}
