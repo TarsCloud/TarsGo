@@ -62,10 +62,9 @@ module TestApp
 #### 1.2 compile interface definition file
 
 ##### 1.2.1 build tars2go
-Compile the tars2go tools and copy tars2go binary to into a directory in your $PATH.
+Compile and install the tars2go tools.
 
-    cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go && go build . 
-    cp tarsgo $GOPTAH/bin 
+    go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
 
 ##### 1.2.2 compile the tars file and translate into go file
 	tars2go --outdir=./vendor hello.tars
