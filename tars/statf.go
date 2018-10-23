@@ -189,7 +189,7 @@ func ReportStatFromServer(InterfaceName, MasterName string, ReturnValue int32, T
 	//head.SSlaveContainer = cfg.Container
 	if cfg.Enableset {
 		setList := strings.Split(cfg.Setdivision, ".")
-		head.SlaveName = fmt.Sprintf("%s.%s.%s%s%s@%s", cfg.App, cfg.Server, setList[0], setList[1], setList[2], cfg.Version)
+		head.SlaveName = fmt.Sprintf("%s.%s.%s%s%s", cfg.App, cfg.Server, setList[0], setList[1], setList[2])
 		head.SlaveSetName = setList[0]
 		head.SlaveSetArea = setList[1]
 		head.SlaveSetID = setList[2]

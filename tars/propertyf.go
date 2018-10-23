@@ -259,7 +259,7 @@ func (p *PropertyReportHelper) ReportToServer() {
 	if cfg != nil {
 		if cfg.Enableset {
 			setList := strings.Split(cfg.Setdivision, ".")
-			head.ModuleName = cfg.App + "." + cfg.Server + setList[0] + setList[1] + setList[2]
+			head.ModuleName = cfg.App + "." + cfg.Server + "." + setList[0] + setList[1] + setList[2]
 			head.SetName = setList[0]
 			head.SetArea = setList[1]
 			head.SetID = setList[2]
