@@ -238,10 +238,8 @@ func (b *Buffer) Write_float32(data float32, tag byte) error {
 		return err
 	}
 
-	if err = bWriteU32(b.buf, math.Float32bits(data)); err != nil {
-		return err
-	}
-	return nil
+	err = bWriteU32(b.buf, math.Float32bits(data))
+	return err
 }
 
 func (b *Buffer) Write_float64(data float64, tag byte) error {
@@ -250,10 +248,8 @@ func (b *Buffer) Write_float64(data float64, tag byte) error {
 		return err
 	}
 
-	if err = bWriteU64(b.buf, math.Float64bits(data)); err != nil {
-		return err
-	}
-	return nil
+	bWriteU64(b.buf, math.Float64bits(data))
+	return err
 }
 
 func (b *Buffer) Write_string(data string, tag byte) error {

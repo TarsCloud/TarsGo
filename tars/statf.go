@@ -57,7 +57,7 @@ func (s *StatFHelper) addUpMsg(statList *list.List, fromServer bool) {
 			//body.WeightValue = (body.WeightValue + statInfo.Body.WeightValue)
 			//body.WeightCount = (body.WeightCount + statInfo.Body.WeightCount)
 			s.mStatInfo[statInfo.Head] = body
-			s.mStatCount[statInfo.Head] += 1
+			s.mStatCount[statInfo.Head]++
 		} else {
 			headMap := statInfo.Head
 			firstBody := statf.StatMicMsgBody{}
