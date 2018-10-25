@@ -3,11 +3,12 @@ package tars
 import (
 	"errors"
 	"fmt"
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
-	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
+	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
 )
 
 type ObjectProxy struct {
@@ -50,7 +51,7 @@ func (obj *ObjectProxy) Invoke(msg *Message, timeout time.Duration) error {
 		//TODO set resp ret from base.tars
 		//msg.Resp.IRet = -1
 		adp.failAdd()
-		return errors.New(fmt.Sprintf("%s|%s|%d", "request timeout", msg.Req.SServantName, msg.Req.IRequestId))
+		return fmt.Errorf("%s|%s|%d", "request timeout", msg.Req.SServantName, msg.Req.IRequestId)
 	case msg.Resp = <-readCh:
 		TLOG.Debug("recv msg succ ", msg.Req.IRequestId)
 	}
