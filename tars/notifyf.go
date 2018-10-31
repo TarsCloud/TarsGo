@@ -9,8 +9,7 @@ type NotifyHelper struct {
 	tm   notifyf.ReportInfo
 }
 
-// SetNotifyInfo sets the communicator's notify info
-// with Communicator comm, string notify name, string app name, string server name, string comtainer name
+// SetNotifyInfo sets the communicator's notify info with communicator, notify name, app name, server name, and container name
 func (n *NotifyHelper) SetNotifyInfo(comm *Communicator, notify string, app string, server string, container string) {
 	n.comm = comm
 	n.comm.SetProperty("netthread", 1)
@@ -33,7 +32,7 @@ func (n *NotifyHelper) SetNotifyInfo(comm *Communicator, notify string, app stri
 	}
 }
 
-// ReportNotifyInfo reports notify info with string info
+// ReportNotifyInfo reports notify information with info
 func (n *NotifyHelper) ReportNotifyInfo(info string) {
 	n.tm.SMessage = info
 	TLOG.Debug(n.tm)

@@ -20,14 +20,14 @@ type TarsProtocol struct {
 	serverImp  interface{}
 }
 
-// NewTarsProtocol news a jce protocol with a dispatch dispatcher and an interface imp,
+// NewTarsProtocol news a tars protocol with dispatcher and imp,
 // and returns the pointer of the new tars protocol
 func NewTarsProtocol(dispatcher dispatch, imp interface{}) *TarsProtocol {
 	s := &TarsProtocol{dispatcher: dispatcher, serverImp: imp}
 	return s
 }
 
-// Invoke is a member method of TarsProtocol that invokes []byte request req and returns response rsp as []byte
+// Invoke is a member method of TarsProtocol that invokes request and returns response
 func (s *TarsProtocol) Invoke(req []byte) (rsp []byte) {
 	defer checkPanic()
 	reqPackage := requestf.RequestPacket{}
@@ -64,13 +64,13 @@ func (s *TarsProtocol) rsp2Byte(rsp *requestf.ResponsePacket) []byte {
 	return sbuf.Bytes()
 }
 
-// ParsePackage parses package from []byte buffer buff,
-// returns header length as int and package integrity condition (PACKAGE_LESS | PACKAGE_FULL | PACKAGE_ERROR) as int
+// ParsePackage parses package from buffer,
+// returns header length and package integrity condition (PACKAGE_LESS | PACKAGE_FULL | PACKAGE_ERROR)
 func (s *TarsProtocol) ParsePackage(buff []byte) (int, int) {
 	return TarsRequest(buff)
 }
 
-// InvokeTimeout returns server invoke timeout response as []byte
+// InvokeTimeout returns server invoke timeout response, pamameter pkg is to be used in the future
 func (s *TarsProtocol) InvokeTimeout(pkg []byte) []byte {
 	rspPackage := requestf.ResponsePacket{}
 	rspPackage.IRet = 1

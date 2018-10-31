@@ -1,8 +1,9 @@
 package tars
 
 import (
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/nodef"
 	"os"
+
+	"github.com/TarsCloud/TarsGo/tars/protocol/res/nodef"
 )
 
 // NodeFHelper struct
@@ -12,8 +13,7 @@ type NodeFHelper struct {
 	sf   *nodef.ServerF
 }
 
-// SetNodeInfo sets node info
-// with Communicator comm, string node name, string app name, string server
+// SetNodeInfo sets node information with communicator, node name, app name, and server
 func (n *NodeFHelper) SetNodeInfo(comm *Communicator, node string, app string, server string) {
 	n.comm = comm
 	n.sf = new(nodef.ServerF)
@@ -28,7 +28,7 @@ func (n *NodeFHelper) SetNodeInfo(comm *Communicator, node string, app string, s
 	}
 }
 
-// KeepAlive keeps the NodeFHelper's ServerF alive
+// KeepAlive keeps the NodeFHelper's ServerF alive with a parameter adapter
 func (n *NodeFHelper) KeepAlive(adapter string) {
 	n.si.Adapter = adapter
 	_, err := n.sf.KeepAlive(&n.si)
@@ -37,7 +37,7 @@ func (n *NodeFHelper) KeepAlive(adapter string) {
 	}
 }
 
-// ReportVersion reports the version with string verion
+// ReportVersion reports the version with version parameter
 func (n *NodeFHelper) ReportVersion(version string) {
 	_, err := n.sf.ReportVersion(n.si.Application, n.si.ServerName, version)
 	if err != nil {
