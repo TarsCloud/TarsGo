@@ -190,7 +190,7 @@ func (d *Distr) Get() string {
 	d.mlock.Lock()
 	defer d.mlock.Unlock()
 	var s string = ""
-	for i, _ := range d.dataRange {
+	for i := range d.dataRange {
 		if i != 0 {
 			s += ","
 		}
@@ -201,7 +201,7 @@ func (d *Distr) Get() string {
 }
 
 func (d *Distr) clear() {
-	for i, _ := range d.result {
+	for i := range d.result {
 		d.result[i] = 0
 	}
 }

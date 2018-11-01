@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"context"
 	"net"
 )
 
@@ -41,7 +42,8 @@ func (h *udpHandler) Handle() error {
 		pkg := make([]byte, n)
 		copy(pkg, buffer[0:n])
 		go func() {
-			rsp := h.ts.invoke(pkg[4:]) // no need to check package
+			ctx := context.Background()
+			rsp := h.ts.invoke(ctx, pkg[4:]) // no need to check package
 			if _, err := h.conn.WriteToUDP(rsp, udpAddr); err != nil {
 				TLOG.Errorf("send pkg to %v failed %v", udpAddr, err)
 			}

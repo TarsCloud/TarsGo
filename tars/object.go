@@ -1,6 +1,7 @@
 package tars
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
@@ -23,7 +24,7 @@ func (obj *ObjectProxy) Init(comm *Communicator, objName string) {
 	obj.manager.Init(objName, obj.comm)
 }
 
-func (obj *ObjectProxy) Invoke(msg *Message, timeout time.Duration) error {
+func (obj *ObjectProxy) Invoke(ctx context.Context, msg *Message, timeout time.Duration) error {
 	adp := obj.manager.SelectAdapterProxy(msg)
 	if adp == nil {
 		TLOG.Error("no adapter Proxy selected:" + msg.Req.SServantName)

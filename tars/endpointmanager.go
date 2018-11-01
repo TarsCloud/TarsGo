@@ -115,12 +115,12 @@ func (e *EndpointManager) GetNextEndpoint() *endpoint.Endpoint {
 
 // GetAllEndpoint returns all endpoint information as a array(support not tars service).
 func (e *EndpointManager) GetAllEndpoint() []*endpoint.Endpoint {
-	es := make([]*endpoint.Endpoint,  len(e.index))
+	es := make([]*endpoint.Endpoint, len(e.index))
 	e.mlock.Lock()
 	defer e.mlock.Unlock()
-	for i,v := range e.index{
-		e:= v.(endpoint.Endpoint)
-		es[i]=&e
+	for i, v := range e.index {
+		e := v.(endpoint.Endpoint)
+		es[i] = &e
 	}
 	return es
 }
