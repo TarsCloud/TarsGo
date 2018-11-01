@@ -2,28 +2,33 @@ package tars
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
+	"time"
+
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
-	"time"
 )
 
 type dispatch interface {
-	Dispatch(interface{}, *requestf.RequestPacket, *requestf.ResponsePacket) error
+	Dispatch(context.Context, interface{}, *requestf.RequestPacket, *requestf.ResponsePacket, bool) error
 }
 
 type TarsProtocol struct {
-	dispatcher dispatch
-	serverImp  interface{}
+	dispatcher  dispatch
+	serverImp   interface{}
+	withContext bool
 }
 
-func NewTarsProtocol(dispatcher dispatch, imp interface{}) *TarsProtocol {
-	s := &TarsProtocol{dispatcher: dispatcher, serverImp: imp}
+//NewTarsProtocol return a Tarsprotocol with dipatcher and implement interface.
+//withContext explain using context or not.
+func NewTarsProtocol(dispatcher dispatch, imp interface{}, withContext bool) *TarsProtocol {
+	s := &TarsProtocol{dispatcher: dispatcher, serverImp: imp, withContext: withContext}
 	return s
 }
 
-func (s *TarsProtocol) Invoke(req []byte) (rsp []byte) {
+func (s *TarsProtocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 	defer checkPanic()
 	reqPackage := requestf.RequestPacket{}
 	rspPackage := requestf.ResponsePacket{}
@@ -39,7 +44,7 @@ func (s *TarsProtocol) Invoke(req []byte) (rsp []byte) {
 			}
 		}()()
 	}
-	err := s.dispatcher.Dispatch(s.serverImp, &reqPackage, &rspPackage)
+	err := s.dispatcher.Dispatch(ctx, s.serverImp, &reqPackage, &rspPackage, s.withContext)
 	if err != nil {
 		rspPackage.IRet = 1
 		rspPackage.SResultDesc = err.Error()

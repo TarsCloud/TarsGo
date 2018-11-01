@@ -5,25 +5,27 @@ import (
 	"strconv"
 	"strings"
 )
+
 //EOS is byte stream terminator
 const EOS = 0
+
 //TK is a byte type.
 type TK byte
 
 const (
 	tkEos     TK = iota
-	tkBracel   // ({)
-	tkBracer   // }
-	tkSemi     //;
-	tkEq       //=
-	tkShl      //<
-	tkShr      //>
-	tkComma    //,
-	tkPtl      //(
-	tkPtr      //)
-	tkSquarel  //[
-	tkSquarer  //]
-	tkInclude  //#include
+	tkBracel     // ({)
+	tkBracer     // }
+	tkSemi       //;
+	tkEq         //=
+	tkShl        //<
+	tkShr        //>
+	tkComma      //,
+	tkPtl        //(
+	tkPtr        //)
+	tkSquarel    //[
+	tkSquarer    //]
+	tkInclude    //#include
 
 	tkDummyKeywordBegin
 	// keyword
@@ -56,12 +58,13 @@ const (
 	tkTMap
 	tkDummyTypeEnd
 
-	tkName  // variable name
+	tkName // variable name
 	// value
 	tkString
 	tkInteger
 	tkFloat
 )
+
 //TokenMap record token  value.
 var TokenMap = [...]string{
 	tkEos: "<eos>",
@@ -112,18 +115,21 @@ var TokenMap = [...]string{
 	tkInteger: "<INTEGER>",
 	tkFloat:   "<FLOAT>",
 }
+
 //SemInfo is struct.
 type SemInfo struct {
 	I int64
 	F float64
 	S string
 }
+
 //Token record token information.
 type Token struct {
 	T    TK
 	S    *SemInfo
 	Line int
 }
+
 //LexState record lexical state.
 type LexState struct {
 	current    byte
@@ -307,6 +313,7 @@ func (ls *LexState) next() {
 		ls.current = EOS
 	}
 }
+
 // Do lexical analysis.
 func (ls *LexState) llex() (TK, *SemInfo) {
 	for {
@@ -379,6 +386,7 @@ func (ls *LexState) llex() (TK, *SemInfo) {
 		}
 	}
 }
+
 //NextToken return token after lexical analysis.
 func (ls *LexState) NextToken() *Token {
 	tk := &Token{}
