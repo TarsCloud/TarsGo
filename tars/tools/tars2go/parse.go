@@ -17,6 +17,7 @@ type VarType struct {
 	TypeK    *VarType // vector's member variable,the key of map
 	TypeV    *VarType // the value of map
 }
+
 // StructMember member struct.
 type StructMember struct {
 	Tag     int32
@@ -48,6 +49,7 @@ type ArgInfo struct {
 	IsOut bool
 	Type  *VarType
 }
+
 //FunInfo record function information.
 type FunInfo struct {
 	Name    string // after the uppercase converted name
@@ -56,33 +58,39 @@ type FunInfo struct {
 	RetType *VarType
 	Args    []ArgInfo
 }
+
 //InterfaceInfo record interface information.
 type InterfaceInfo struct {
 	TName        string
 	Fun          []FunInfo
 	DependModule map[string]bool
 }
+
 //EnumMember record member information.
 type EnumMember struct {
 	Key   string
 	Value int32
 }
+
 //EnumInfo record EnumMember information include name.
 type EnumInfo struct {
 	TName string
 	Mb    []EnumMember
 }
+
 //ConstInfo record const information.
 type ConstInfo struct {
 	Type  *VarType
 	Key   string
 	Value string
 }
+
 //HashKeyInfo record hashkey information.
 type HashKeyInfo struct {
 	Name   string
 	Member []string
 }
+
 //Parse record information of parse file.
 type Parse struct {
 	Source string
@@ -708,6 +716,7 @@ func newParse(s string, b []byte) *Parse {
 	p.lex = NewLexState(s, b)
 	return p
 }
+
 //ParseFile parse a file,return grammer tree.
 func ParseFile(path string) *Parse {
 	b, err := ioutil.ReadFile(path)

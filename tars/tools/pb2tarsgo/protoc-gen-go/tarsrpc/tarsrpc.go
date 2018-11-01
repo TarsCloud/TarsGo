@@ -48,6 +48,7 @@ const (
 	modelPkgPath   = "github.com/TarsCloud/TarsGo/tars/model"
 	requestPkgPath = "github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	tarsPkgPath    = "github.com/TarsCloud/TarsGo/tars"
+	toolsPath      = "github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
 func init() {
@@ -108,6 +109,7 @@ func (t *tarsrpc) Generate(file *generator.FileDescriptor) {
 	_ = t.gen.AddImport(modelPkgPath)
 	_ = t.gen.AddImport(requestPkgPath)
 	_ = t.gen.AddImport(tarsPkgPath)
+	_ = t.gen.AddImport(toolsPath)
 	_ = t.gen.AddImport("unsafe")
 	for i, service := range file.FileDescriptorProto.Service {
 		t.generateService(file, service, i)
@@ -155,16 +157,6 @@ func (t *tarsrpc) generateService(file *generator.FileDescriptor, service *pb.Se
 	}
 	t.P("}")
 	t.P()
-	//generate the type convert code
-	t.P(fmt.Sprintf(`func (obj *%s) byteToInt8(s []byte) []int8 {
-		d := *(*[]int8)(unsafe.Pointer(&s))
-		return d
-	}
-	func (obj *%s) int8ToByte(s []int8) []byte {
-		d := *(*[]byte)(unsafe.Pointer(&s))
-		return d
-	}	
-	`, serviceName, serviceName))
 
 	//gernerate the dispathcer
 	t.generateDispatch(service)
@@ -192,7 +184,7 @@ func (t *tarsrpc) generateClientCode(service *pb.ServiceDescriptorProto, method 
 			if err != nil {
 				return output, err
 			}
-			if err = proto.Unmarshal(obj.int8ToByte(resp.SBuffer), &output); err != nil{
+			if err = proto.Unmarshal(tools.Int8ToByte(resp.SBuffer), &output); err != nil{
 				return output, err
 			}
 			return output, nil
@@ -203,7 +195,7 @@ func (t *tarsrpc) generateDispatch(service *pb.ServiceDescriptorProto) {
 	serviceName := upperFirstLatter(service.GetName())
 	t.P(fmt.Sprintf(`//Dispatch is used to call the user implement of the defined method.
 	func (obj *%s) Dispatch(val interface{}, req * requestf.RequestPacket, resp *requestf.ResponsePacket)(err error){
-		input := obj.int8ToByte(req.SBuffer)
+		input := tools.Int8ToByte(req.SBuffer)
 		var output []byte
 		imp := val.(imp%s)
 		funcName := req.SFuncName
@@ -235,7 +227,7 @@ func (t *tarsrpc) generateDispatch(service *pb.ServiceDescriptorProto) {
 		IRequestId:   req.IRequestId,
 		IMessageType: 0,
 		IRet:         0,
-		SBuffer:      obj.byteToInt8(output),
+		SBuffer:      tools.ByteToInt8(output),
 		Status:       status,
 		SResultDesc:  "",
 		Context:      req.Context,
