@@ -22,28 +22,28 @@ const (
 	//WriteTimeout zero for not set write deadline for Conn (better performance)
 	WriteTimeout time.Duration = 0 * time.Millisecond
 	//HandleTimeout zero for not set deadline for invoke user interface (better performance)
-	HandleTimeout  time.Duration = 0 * time.Millisecond
+	HandleTimeout time.Duration = 0 * time.Millisecond
 	//IdleTimeout idle timeout
-	IdleTimeout    time.Duration = 600000 * time.Millisecond
+	IdleTimeout time.Duration = 600000 * time.Millisecond
 	//ZombileTimeout zombile timeout
 	ZombileTimeout time.Duration = time.Second * 10
 	//QueueCap queue gap
-	QueueCap       int           = 10000000
+	QueueCap int = 10000000
 
 	//client
 
 	//ClientQueueLen client queue length
-	ClientQueueLen     int           = 10000
+	ClientQueueLen int = 10000
 	//ClientIdleTimeout client idle timeout
-	ClientIdleTimeout  time.Duration = time.Second * 600
+	ClientIdleTimeout time.Duration = time.Second * 600
 	//ClientReadTimeout client read timeout
-	ClientReadTimeout  time.Duration = time.Millisecond * 100
+	ClientReadTimeout time.Duration = time.Millisecond * 100
 	//ClientWriteTimeout client write timeout
 	ClientWriteTimeout time.Duration = time.Millisecond * 3000
 	//ReqDefaultTimeout request default timeout
-	ReqDefaultTimeout  int32         = 3000
+	ReqDefaultTimeout int32 = 3000
 	//ObjQueueMax obj queue max number
-	ObjQueueMax        int32         = 10000
+	ObjQueueMax int32 = 10000
 
 	//log
 	remotelogBuff       int = 500000
@@ -56,7 +56,7 @@ const (
 	//PropertyReportInterval property report interval
 	PropertyReportInterval time.Duration = 10 * time.Second
 	//StatReportInterval stat report interval
-	StatReportInterval     time.Duration = 10 * time.Second
+	StatReportInterval time.Duration = 10 * time.Second
 
 	//mainloop
 
@@ -66,22 +66,22 @@ const (
 	//adapter
 
 	//AdapterProxyTicker adapter proxy ticker
-	AdapterProxyTicker     time.Duration = 10 * time.Second
+	AdapterProxyTicker time.Duration = 10 * time.Second
 	//AdapterProxyResetCount adapter proxy reset count
-	AdapterProxyResetCount int           = 5
+	AdapterProxyResetCount int = 5
 
 	//communicator default ,update from remote config
 	refreshEndpointInterval int = 60000
 	reportInterval          int = 10000
 	//AsyncInvokeTimeout async invoke timeout
-	AsyncInvokeTimeout      int = 3000
+	AsyncInvokeTimeout int = 3000
 
 	//tcp network config
 
 	//TCPReadBuffer tcp read buffer length
-	TCPReadBuffer  = 128 * 1024 * 1024
+	TCPReadBuffer = 128 * 1024 * 1024
 	//TCPWriteBuffer tcp write buffer length
 	TCPWriteBuffer = 128 * 1024 * 1024
 	//TCPNoDelay set tcp no delay
-	TCPNoDelay     = false
+	TCPNoDelay = false
 )

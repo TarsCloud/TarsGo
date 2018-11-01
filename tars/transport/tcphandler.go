@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"context"
 	"io"
 	"net"
 	"reflect"
@@ -22,7 +23,7 @@ type tcpHandler struct {
 	writeBuffer int
 	tcpNoDelay  bool
 	idleTime    time.Time
-	gpool *gpool.Pool
+	gpool       *gpool.Pool
 }
 
 func (h *tcpHandler) Listen() (err error) {
@@ -38,7 +39,8 @@ func (h *tcpHandler) Listen() (err error) {
 
 func (h *tcpHandler) handleConn(conn *net.TCPConn, pkg []byte) {
 	handler := func() {
-		rsp := h.ts.invoke(pkg)
+		ctx := context.Background()
+		rsp := h.ts.invoke(ctx, pkg)
 		if _, err := conn.Write(rsp); err != nil {
 			TLOG.Errorf("send pkg to %v failed %v", conn.RemoteAddr(), err)
 		}

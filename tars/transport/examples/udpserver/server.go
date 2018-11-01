@@ -42,8 +42,8 @@ func (s *MyServer) InvokeTimeout(pkg []byte) []byte {
 
 func main() {
 	conf := &transport.TarsServerConf{
-		Proto:         "udp",
-		Address:       "127.0.0.1:3333",
+		Proto:   "udp",
+		Address: "127.0.0.1:3333",
 		//MaxAccept:     500,
 		MaxInvoke:     20,
 		AcceptTimeout: time.Millisecond * 500,
