@@ -153,13 +153,13 @@ func initConfig() {
 
 	tarsConfig["AdminObj"] = adminCfg
 	svrCfg.Adapters["AdminAdapter"] = adapterConfig{localpoint, "tcp", "AdminObj", 1}
-
+	initReport()
+	initProReport()
 }
 
 func Run() {
 	initOnce.Do(initConfig)
-	initReport()
-	initProReport()
+
 	// add adminF
 	adf := new(adminf.AdminF)
 	ad := new(Admin)
