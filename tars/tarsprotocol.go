@@ -6,6 +6,8 @@ import (
 	"encoding/binary"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/util/current"
+
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
@@ -45,6 +47,16 @@ func (s *TarsProtocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 		}()()
 	}
 	var err error
+	if s.withContext {
+		ok := current.SetRequestStatus(ctx, reqPackage.Status)
+		if !ok {
+			TLOG.Error("Set reqeust status in context fail!")
+		}
+		ok = current.SetRequestContext(ctx, reqPackage.Context)
+		if !ok {
+			TLOG.Error("Set request context in context fail!")
+		}
+	}
 	if allFilters.sf != nil {
 		err = allFilters.sf(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
 	} else {

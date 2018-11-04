@@ -175,6 +175,7 @@ import (
 	gen.code.WriteString("m \"" + gen.tarsPath + "/model\"\n")
 	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/codec\"\n")
 	gen.code.WriteString("\"" + gen.tarsPath + "/util/tools\"\n")
+	gen.code.WriteString("\"" + gen.tarsPath + "/util/current\"\n")
 
 	if *gAddServant {
 		gen.code.WriteString("\"" + gen.tarsPath + "\"\n")
@@ -865,8 +866,15 @@ func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo, withContext boo
 	errStr := errString(fun.HasRet)
 
 	if withContext == false {
-		c.WriteString(`var _status map[string]string
+		c.WriteString(`
+var _status map[string]string
 var _context map[string]string
+if len(_opt) == 1{
+	_context =_opt[0]
+}eles if len(_opt) == 2 {
+	_context = _opt[0]
+	_status = _opt[1]
+}
 _resp := new(requestf.ResponsePacket)
 ctx := context.Background()
 err = _obj.s.Tars_invoke(ctx, 0, "` + fun.NameStr + `", _os.ToBytes(), _status, _context, _resp)
@@ -1009,6 +1017,15 @@ default:
 	return fmt.Errorf("func mismatch")
 }
 var status map[string]string
+s, ok := current.GetResponseStatus(ctx)
+if ok  && s != nil {
+	status = s
+}
+var context map[string]string
+c, ok := current.GetResponseContext(ctx)
+if ok && c != nil  {
+	context = c
+}
 *resp = requestf.ResponsePacket{
 	IVersion:     1,
 	CPacketType:  0,
@@ -1018,7 +1035,7 @@ var status map[string]string
 	SBuffer:      tools.ByteToInt8(_os.ToBytes()),
 	Status:       status,
 	SResultDesc:  "",
-	Context:      req.Context,
+	Context:      context,
 }
 _ = length
 _ = have
