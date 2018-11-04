@@ -12,8 +12,10 @@ import (
 	zipkin "github.com/openzipkin/zipkin-go-opentracing"
 )
 
+var logger = tars.GetLogger("tracing.log")
+
 //Init is use to init opentracing and zipkin
-func Init(zipkinHTTPEndpoint string, samSpan bool, traceID128Bit bool, debug bool,
+func Init(zipkinHTTPEndpoint string, sameSpan bool, traceID128Bit bool, debug bool,
 	hostPort, serviceName string) {
 	//create collector
 	collector, err := zipkin.NewHTTPCollector(zipkinHTTPEndpoint)
@@ -38,10 +40,10 @@ func ZipkinClientFilter() tars.ClientFilter {
 	return func(ctx context.Context, msg *tars.Message, invoke tars.Invoke, timeout time.Duration) (err error) {
 		var pCtx opentracing.SpanContext
 		req := msg.Req
-		if pCtx := opentracing.SpanFromContext(ctx); pCtx != nil {
+		if parent := opentracing.SpanFromContext(ctx); parent != nil {
 			pCtx = parent.Context()
 		}
-		cSpan := tracer.StartSpan(
+		cSpan := opentracing.GlobalTracer().StartSpan(
 			req.SFuncName,
 			opentracing.ChildOf(pCtx),
 			ext.SpanKindRPCClient,
@@ -54,26 +56,23 @@ func ZipkinClientFilter() tars.ClientFilter {
 		cSpan.SetTag("tars.method", req.SFuncName)
 		cSpan.SetTag("tars.protocol", "tars")
 		cSpan.SetTag("tars.client.version", tars.TarsVersion)
-		err := tracer.Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier{req.Status})
+		err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(req.Status))
 		if err != nil {
-			return err
+			logger.Error("inject span to status error:", err)
 		}
 		err = invoke(ctx, msg, timeout)
-		if err != nil {
-			cSpan.Log(err.error())
-		}
 		return err
 	}
 }
 
 //ZipkinServerFilter gets tars server filter for zipkin opentraicng.
 func ZipkinServerFilter() tars.ServerFilter {
-	return func(ctx context.Context, d Dispatch, f interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error) {
-		pCtx, err := tracer.Extract(opentracing.TextMap, opentracing.TextMapCarrier.(req.Status))
+	return func(ctx context.Context, d tars.Dispatch, f interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error) {
+		pCtx, err := opentracing.GlobalTracer().Extract(opentracing.TextMap, opentracing.TextMapCarrier(req.Status))
 		if err != nil && err != opentracing.ErrSpanContextNotFound {
 			return err
 		}
-		serverSpan := tracer.StartSpan(
+		serverSpan := opentracing.GlobalTracer().StartSpan(
 			req.SFuncName,
 			ext.RPCServerOption(pCtx),
 			ext.SpanKindRPCServer,
@@ -89,7 +88,8 @@ func ZipkinServerFilter() tars.ServerFilter {
 		ctx = opentracing.ContextWithSpan(ctx, serverSpan)
 		err = d(ctx, f, req, resp, withContext)
 		if err != nil {
-			serverSpan.Log(err.Error())
+			ext.Error.Set(serverSpan, true)
+			serverSpan.LogEventWithPayload("Dispath error: ", err) // Log the error
 		}
 		return err
 
