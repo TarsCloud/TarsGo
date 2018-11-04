@@ -5,9 +5,11 @@ import (
 	"io"
 	"net"
 	"reflect"
+	"strings"
 	"sync/atomic"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/gpool"
 )
 
@@ -40,9 +42,20 @@ func (h *tcpHandler) Listen() (err error) {
 func (h *tcpHandler) handleConn(conn *net.TCPConn, pkg []byte) {
 	handler := func() {
 		ctx := context.Background()
+		remoteAddr := conn.RemoteAddr().String()
+		ipPort := strings.Split(remoteAddr, ":")
+		ctx = current.ContextWithTarsCurrent(ctx)
+		ok := current.SetClientIPWithContext(ctx, ipPort[0])
+		if !ok {
+			TLOG.Error("Failed to set context with client ip")
+		}
+		ok = current.SetClientPortWithContext(ctx, ipPort[1])
+		if !ok {
+			TLOG.Error("Failed to set context with client port")
+		}
 		rsp := h.ts.invoke(ctx, pkg)
 		if _, err := conn.Write(rsp); err != nil {
-			TLOG.Errorf("send pkg to %v failed %v", conn.RemoteAddr(), err)
+			TLOG.Errorf("send pkg to %v failed %v", remoteAddr, err)
 		}
 	}
 
