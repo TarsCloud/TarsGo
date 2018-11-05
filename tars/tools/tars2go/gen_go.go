@@ -871,7 +871,7 @@ var _status map[string]string
 var _context map[string]string
 if len(_opt) == 1{
 	_context =_opt[0]
-}eles if len(_opt) == 2 {
+}else if len(_opt) == 2 {
 	_context = _opt[0]
 	_status = _opt[1]
 }
