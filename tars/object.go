@@ -12,18 +12,21 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
 )
 
+// ObjectProxy is struct contains proxy information
 type ObjectProxy struct {
 	manager  *EndpointManager
 	comm     *Communicator
 	queueLen int32
 }
 
+// Init proxy
 func (obj *ObjectProxy) Init(comm *Communicator, objName string) {
 	obj.comm = comm
 	obj.manager = new(EndpointManager)
 	obj.manager.Init(objName, obj.comm)
 }
 
+// Invoke get proxy information
 func (obj *ObjectProxy) Invoke(ctx context.Context, msg *Message, timeout time.Duration) error {
 	adp := obj.manager.SelectAdapterProxy(msg)
 	if adp == nil {
@@ -59,18 +62,21 @@ func (obj *ObjectProxy) Invoke(ctx context.Context, msg *Message, timeout time.D
 	return nil
 }
 
+// ObjectProxyFactory is a struct contains proxy information(add)
 type ObjectProxyFactory struct {
 	objs map[string]*ObjectProxy
 	comm *Communicator
 	om   *sync.Mutex
 }
 
+// Init ObjectProxyFactory
 func (o *ObjectProxyFactory) Init(comm *Communicator) {
 	o.om = new(sync.Mutex)
 	o.comm = comm
 	o.objs = make(map[string]*ObjectProxy)
 }
 
+// GetObjectProxy get objectproxy
 func (o *ObjectProxyFactory) GetObjectProxy(objName string) *ObjectProxy {
 	o.om.Lock()
 	defer o.om.Unlock()
