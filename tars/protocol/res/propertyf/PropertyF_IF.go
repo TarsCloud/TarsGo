@@ -9,6 +9,7 @@ import (
 	m "github.com/TarsCloud/TarsGo/tars/model"
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
+	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
@@ -47,6 +48,12 @@ func (_obj *PropertyF) ReportPropMsg(Statmsg map[StatPropMsgHead]StatPropMsgBody
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "reportPropMsg", _os.ToBytes(), _status, _context, _resp)
@@ -59,6 +66,28 @@ func (_obj *PropertyF) ReportPropMsg(Statmsg map[StatPropMsgHead]StatPropMsgBody
 		return ret, err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -95,6 +124,12 @@ func (_obj *PropertyF) ReportPropMsgWithContext(ctx context.Context, Statmsg map
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "reportPropMsg", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
@@ -106,6 +141,28 @@ func (_obj *PropertyF) ReportPropMsgWithContext(ctx context.Context, Statmsg map
 		return ret, err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -192,7 +249,16 @@ func (_obj *PropertyF) Dispatch(ctx context.Context, _val interface{}, req *requ
 	default:
 		return fmt.Errorf("func mismatch")
 	}
-	var status map[string]string
+	var _status map[string]string
+	s, ok := current.GetResponseStatus(ctx)
+	if ok && s != nil {
+		_status = s
+	}
+	var _context map[string]string
+	c, ok := current.GetResponseContext(ctx)
+	if ok && c != nil {
+		_context = c
+	}
 	*resp = requestf.ResponsePacket{
 		IVersion:     1,
 		CPacketType:  0,
@@ -200,9 +266,9 @@ func (_obj *PropertyF) Dispatch(ctx context.Context, _val interface{}, req *requ
 		IMessageType: 0,
 		IRet:         0,
 		SBuffer:      tools.ByteToInt8(_os.ToBytes()),
-		Status:       status,
+		Status:       _status,
 		SResultDesc:  "",
-		Context:      req.Context,
+		Context:      _context,
 	}
 	_ = length
 	_ = have

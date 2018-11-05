@@ -9,6 +9,7 @@ import (
 	m "github.com/TarsCloud/TarsGo/tars/model"
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
+	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
@@ -41,6 +42,12 @@ func (_obj *Notify) ReportServer(SServerName string, SThreadId string, SMessage 
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "reportServer", _os.ToBytes(), _status, _context, _resp)
@@ -48,6 +55,28 @@ func (_obj *Notify) ReportServer(SServerName string, SThreadId string, SMessage 
 		return err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -78,12 +107,40 @@ func (_obj *Notify) ReportServerWithContext(ctx context.Context, SServerName str
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "reportServer", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -114,6 +171,12 @@ func (_obj *Notify) NotifyServer(SServerName string, Level NOTIFYLEVEL, SMessage
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "notifyServer", _os.ToBytes(), _status, _context, _resp)
@@ -121,6 +184,28 @@ func (_obj *Notify) NotifyServer(SServerName string, Level NOTIFYLEVEL, SMessage
 		return err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -151,12 +236,40 @@ func (_obj *Notify) NotifyServerWithContext(ctx context.Context, SServerName str
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "notifyServer", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -177,6 +290,12 @@ func (_obj *Notify) GetNotifyInfo(StKey *NotifyKey, StInfo *NotifyInfo, _opt ...
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "getNotifyInfo", _os.ToBytes(), _status, _context, _resp)
@@ -194,6 +313,28 @@ func (_obj *Notify) GetNotifyInfo(StKey *NotifyKey, StInfo *NotifyInfo, _opt ...
 		return ret, err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -214,6 +355,12 @@ func (_obj *Notify) GetNotifyInfoWithContext(ctx context.Context, StKey *NotifyK
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "getNotifyInfo", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
@@ -230,6 +377,28 @@ func (_obj *Notify) GetNotifyInfoWithContext(ctx context.Context, StKey *NotifyK
 		return ret, err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -250,6 +419,12 @@ func (_obj *Notify) ReportNotifyInfo(Info *ReportInfo, _opt ...map[string]string
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "reportNotifyInfo", _os.ToBytes(), _status, _context, _resp)
@@ -257,6 +432,28 @@ func (_obj *Notify) ReportNotifyInfo(Info *ReportInfo, _opt ...map[string]string
 		return err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -277,12 +474,40 @@ func (_obj *Notify) ReportNotifyInfoWithContext(ctx context.Context, Info *Repor
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "reportNotifyInfo", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -436,7 +661,16 @@ func (_obj *Notify) Dispatch(ctx context.Context, _val interface{}, req *request
 	default:
 		return fmt.Errorf("func mismatch")
 	}
-	var status map[string]string
+	var _status map[string]string
+	s, ok := current.GetResponseStatus(ctx)
+	if ok && s != nil {
+		_status = s
+	}
+	var _context map[string]string
+	c, ok := current.GetResponseContext(ctx)
+	if ok && c != nil {
+		_context = c
+	}
 	*resp = requestf.ResponsePacket{
 		IVersion:     1,
 		CPacketType:  0,
@@ -444,9 +678,9 @@ func (_obj *Notify) Dispatch(ctx context.Context, _val interface{}, req *request
 		IMessageType: 0,
 		IRet:         0,
 		SBuffer:      tools.ByteToInt8(_os.ToBytes()),
-		Status:       status,
+		Status:       _status,
 		SResultDesc:  "",
-		Context:      req.Context,
+		Context:      _context,
 	}
 	_ = length
 	_ = have

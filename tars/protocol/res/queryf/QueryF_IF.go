@@ -5,11 +5,12 @@ package queryf
 
 import (
 	"context"
+	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"fmt"
 	m "github.com/TarsCloud/TarsGo/tars/model"
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
+	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
@@ -32,6 +33,12 @@ func (_obj *QueryF) FindObjectById(Id string, _opt ...map[string]string) (ret []
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectById", _os.ToBytes(), _status, _context, _resp)
@@ -69,6 +76,28 @@ func (_obj *QueryF) FindObjectById(Id string, _opt ...map[string]string) (ret []
 		}
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -89,6 +118,12 @@ func (_obj *QueryF) FindObjectByIdWithContext(ctx context.Context, Id string, _o
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectById", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
@@ -125,6 +160,28 @@ func (_obj *QueryF) FindObjectByIdWithContext(ctx context.Context, Id string, _o
 		}
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -145,6 +202,12 @@ func (_obj *QueryF) FindObjectById4Any(Id string, ActiveEp *[]endpointf.Endpoint
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectById4Any", _os.ToBytes(), _status, _context, _resp)
@@ -217,6 +280,28 @@ func (_obj *QueryF) FindObjectById4Any(Id string, ActiveEp *[]endpointf.Endpoint
 		}
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -237,6 +322,12 @@ func (_obj *QueryF) FindObjectById4AnyWithContext(ctx context.Context, Id string
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectById4Any", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
@@ -308,6 +399,28 @@ func (_obj *QueryF) FindObjectById4AnyWithContext(ctx context.Context, Id string
 		}
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -328,6 +441,12 @@ func (_obj *QueryF) FindObjectById4All(Id string, ActiveEp *[]endpointf.Endpoint
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectById4All", _os.ToBytes(), _status, _context, _resp)
@@ -400,6 +519,28 @@ func (_obj *QueryF) FindObjectById4All(Id string, ActiveEp *[]endpointf.Endpoint
 		}
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -420,6 +561,12 @@ func (_obj *QueryF) FindObjectById4AllWithContext(ctx context.Context, Id string
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectById4All", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
@@ -491,6 +638,28 @@ func (_obj *QueryF) FindObjectById4AllWithContext(ctx context.Context, Id string
 		}
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -511,6 +680,12 @@ func (_obj *QueryF) FindObjectByIdInSameGroup(Id string, ActiveEp *[]endpointf.E
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectByIdInSameGroup", _os.ToBytes(), _status, _context, _resp)
@@ -583,6 +758,28 @@ func (_obj *QueryF) FindObjectByIdInSameGroup(Id string, ActiveEp *[]endpointf.E
 		}
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -603,6 +800,12 @@ func (_obj *QueryF) FindObjectByIdInSameGroupWithContext(ctx context.Context, Id
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectByIdInSameGroup", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
@@ -674,6 +877,28 @@ func (_obj *QueryF) FindObjectByIdInSameGroupWithContext(ctx context.Context, Id
 		}
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -699,6 +924,12 @@ func (_obj *QueryF) FindObjectByIdInSameStation(Id string, SStation string, Acti
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectByIdInSameStation", _os.ToBytes(), _status, _context, _resp)
@@ -771,6 +1002,28 @@ func (_obj *QueryF) FindObjectByIdInSameStation(Id string, SStation string, Acti
 		}
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -796,6 +1049,12 @@ func (_obj *QueryF) FindObjectByIdInSameStationWithContext(ctx context.Context, 
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectByIdInSameStation", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
@@ -867,6 +1126,28 @@ func (_obj *QueryF) FindObjectByIdInSameStationWithContext(ctx context.Context, 
 		}
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -892,6 +1173,12 @@ func (_obj *QueryF) FindObjectByIdInSameSet(Id string, SetId string, ActiveEp *[
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectByIdInSameSet", _os.ToBytes(), _status, _context, _resp)
@@ -964,6 +1251,28 @@ func (_obj *QueryF) FindObjectByIdInSameSet(Id string, SetId string, ActiveEp *[
 		}
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -989,6 +1298,12 @@ func (_obj *QueryF) FindObjectByIdInSameSetWithContext(ctx context.Context, Id s
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectByIdInSameSet", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
@@ -1060,6 +1375,28 @@ func (_obj *QueryF) FindObjectByIdInSameSetWithContext(ctx context.Context, Id s
 		}
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -1481,7 +1818,16 @@ func (_obj *QueryF) Dispatch(ctx context.Context, _val interface{}, req *request
 	default:
 		return fmt.Errorf("func mismatch")
 	}
-	var status map[string]string
+	var _status map[string]string
+	s, ok := current.GetResponseStatus(ctx)
+	if ok && s != nil {
+		_status = s
+	}
+	var _context map[string]string
+	c, ok := current.GetResponseContext(ctx)
+	if ok && c != nil {
+		_context = c
+	}
 	*resp = requestf.ResponsePacket{
 		IVersion:     1,
 		CPacketType:  0,
@@ -1489,9 +1835,9 @@ func (_obj *QueryF) Dispatch(ctx context.Context, _val interface{}, req *request
 		IMessageType: 0,
 		IRet:         0,
 		SBuffer:      tools.ByteToInt8(_os.ToBytes()),
-		Status:       status,
+		Status:       _status,
 		SResultDesc:  "",
-		Context:      req.Context,
+		Context:      _context,
 	}
 	_ = length
 	_ = have
