@@ -883,6 +883,12 @@ err = _obj.s.Tars_invoke(ctx, 0, "` + fun.NameStr + `", _os.ToBytes(), _status, 
 	} else {
 		c.WriteString(`var _status map[string]string
 var _context map[string]string
+if len(_opt) == 1{
+	_context =_opt[0]
+}else if len(_opt) == 2 {
+	_context = _opt[0]
+	_status = _opt[1]
+}
 _resp := new(requestf.ResponsePacket)
 err = _obj.s.Tars_invoke(ctx, 0, "` + fun.NameStr + `", _os.ToBytes(), _status, _context, _resp)
 ` + errStr + `
@@ -913,6 +919,28 @@ err = _obj.s.Tars_invoke(ctx, 0, "` + fun.NameStr + `", _os.ToBytes(), _status, 
 	}
 
 	c.WriteString(`
+if len(_opt) == 1{
+	for k, _ := range(_context){
+		delete(_context, k)
+	}
+	for k, v := range(_resp.Context){
+		_context[k] = v
+	}
+}else if len(_opt) == 2 {
+	for k, _ := range(_context){
+		delete(_context, k)
+	}
+	for k, v := range(_resp.Context){
+		_context[k] = v
+	}
+	for k, _ := range(_status){
+		delete(_status, k)
+	}
+	for k, v := range(_resp.Status){
+		_status[k] = v
+	}
+
+}
   _ = length
   _ = have
   _ = ty
@@ -1016,15 +1044,15 @@ switch req.SFuncName {
 default:
 	return fmt.Errorf("func mismatch")
 }
-var status map[string]string
+var _status map[string]string
 s, ok := current.GetResponseStatus(ctx)
 if ok  && s != nil {
-	status = s
+	_status = s
 }
-var context map[string]string
+var _context map[string]string
 c, ok := current.GetResponseContext(ctx)
 if ok && c != nil  {
-	context = c
+	_context = c
 }
 *resp = requestf.ResponsePacket{
 	IVersion:     1,
@@ -1033,9 +1061,9 @@ if ok && c != nil  {
 	IMessageType: 0,
 	IRet:         0,
 	SBuffer:      tools.ByteToInt8(_os.ToBytes()),
-	Status:       status,
+	Status:       _status,
 	SResultDesc:  "",
-	Context:      context,
+	Context:      _context,
 }
 _ = length
 _ = have

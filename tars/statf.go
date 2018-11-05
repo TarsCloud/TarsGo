@@ -115,6 +115,9 @@ func (s *StatFHelper) ReportMicMsg(stStatInfo StatInfo, fromServer bool) {
 var StatReport *StatFHelper
 
 func initReport() {
+	if GetClientConfig() == nil {
+		return
+	}
 	comm := NewCommunicator()
 	comm.SetProperty("netthread", 1)
 	StatReport = new(StatFHelper)
