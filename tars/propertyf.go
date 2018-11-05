@@ -1,14 +1,15 @@
 package tars
 
 import (
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/propertyf"
-	"github.com/TarsCloud/TarsGo/tars/util/tools"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/TarsCloud/TarsGo/tars/protocol/res/propertyf"
+	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
 type ReportMethod interface {
@@ -344,6 +345,9 @@ func (p *PropertyReportHelper) Init(comm *Communicator, node string) {
 }
 
 func initProReport() {
+	if GetClientConfig() == nil {
+		return
+	}
 	comm := NewCommunicator()
 	comm.SetProperty("netthread", 1)
 	ProHelper = new(PropertyReportHelper)
