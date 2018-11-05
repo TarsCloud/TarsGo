@@ -9,13 +9,11 @@ var cltCfg *clientConfig
 
 // GetServerConfig : Get server config
 func GetServerConfig() *serverConfig {
-	Init() //引用配置前先初始化应用
 	return svrCfg
 }
 
 // GetClientConfig : Get client config
 func GetClientConfig() *clientConfig {
-	Init() //引用配置前先初始化应用
 	return cltCfg
 }
 
