@@ -9,6 +9,7 @@ import (
 	m "github.com/TarsCloud/TarsGo/tars/model"
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
+	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
@@ -36,6 +37,12 @@ func (_obj *Config) ListConfig(App string, Server string, Vf *[]string, _opt ...
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "ListConfig", _os.ToBytes(), _status, _context, _resp)
@@ -78,6 +85,28 @@ func (_obj *Config) ListConfig(App string, Server string, Vf *[]string, _opt ...
 		}
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -103,6 +132,12 @@ func (_obj *Config) ListConfigWithContext(ctx context.Context, App string, Serve
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "ListConfig", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
@@ -144,6 +179,28 @@ func (_obj *Config) ListConfigWithContext(ctx context.Context, App string, Serve
 		}
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -174,6 +231,12 @@ func (_obj *Config) LoadConfig(App string, Server string, Filename string, Confi
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "loadConfig", _os.ToBytes(), _status, _context, _resp)
@@ -191,6 +254,28 @@ func (_obj *Config) LoadConfig(App string, Server string, Filename string, Confi
 		return ret, err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -221,6 +306,12 @@ func (_obj *Config) LoadConfigWithContext(ctx context.Context, App string, Serve
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "loadConfig", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
@@ -237,6 +328,28 @@ func (_obj *Config) LoadConfigWithContext(ctx context.Context, App string, Serve
 		return ret, err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -267,6 +380,12 @@ func (_obj *Config) LoadConfigByHost(AppServerName string, Filename string, Host
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "loadConfigByHost", _os.ToBytes(), _status, _context, _resp)
@@ -284,6 +403,28 @@ func (_obj *Config) LoadConfigByHost(AppServerName string, Filename string, Host
 		return ret, err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -314,6 +455,12 @@ func (_obj *Config) LoadConfigByHostWithContext(ctx context.Context, AppServerNa
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "loadConfigByHost", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
@@ -330,6 +477,28 @@ func (_obj *Config) LoadConfigByHostWithContext(ctx context.Context, AppServerNa
 		return ret, err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -360,6 +529,12 @@ func (_obj *Config) CheckConfig(AppServerName string, Filename string, Host stri
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "checkConfig", _os.ToBytes(), _status, _context, _resp)
@@ -377,6 +552,28 @@ func (_obj *Config) CheckConfig(AppServerName string, Filename string, Host stri
 		return ret, err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -407,6 +604,12 @@ func (_obj *Config) CheckConfigWithContext(ctx context.Context, AppServerName st
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "checkConfig", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
@@ -423,6 +626,28 @@ func (_obj *Config) CheckConfigWithContext(ctx context.Context, AppServerName st
 		return ret, err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -443,6 +668,12 @@ func (_obj *Config) ListConfigByInfo(ConfigInfo *ConfigInfo, Vf *[]string, _opt 
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "ListConfigByInfo", _os.ToBytes(), _status, _context, _resp)
@@ -485,6 +716,28 @@ func (_obj *Config) ListConfigByInfo(ConfigInfo *ConfigInfo, Vf *[]string, _opt 
 		}
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -505,6 +758,12 @@ func (_obj *Config) ListConfigByInfoWithContext(ctx context.Context, ConfigInfo 
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "ListConfigByInfo", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
@@ -546,6 +805,28 @@ func (_obj *Config) ListConfigByInfoWithContext(ctx context.Context, ConfigInfo 
 		}
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -566,6 +847,12 @@ func (_obj *Config) LoadConfigByInfo(ConfigInfo *ConfigInfo, Config *string, _op
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "loadConfigByInfo", _os.ToBytes(), _status, _context, _resp)
@@ -583,6 +870,28 @@ func (_obj *Config) LoadConfigByInfo(ConfigInfo *ConfigInfo, Config *string, _op
 		return ret, err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -603,6 +912,12 @@ func (_obj *Config) LoadConfigByInfoWithContext(ctx context.Context, ConfigInfo 
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "loadConfigByInfo", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
@@ -619,6 +934,28 @@ func (_obj *Config) LoadConfigByInfoWithContext(ctx context.Context, ConfigInfo 
 		return ret, err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -639,6 +976,12 @@ func (_obj *Config) CheckConfigByInfo(ConfigInfo *ConfigInfo, Result *string, _o
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "checkConfigByInfo", _os.ToBytes(), _status, _context, _resp)
@@ -656,6 +999,28 @@ func (_obj *Config) CheckConfigByInfo(ConfigInfo *ConfigInfo, Result *string, _o
 		return ret, err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -676,6 +1041,12 @@ func (_obj *Config) CheckConfigByInfoWithContext(ctx context.Context, ConfigInfo
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "checkConfigByInfo", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
@@ -692,6 +1063,28 @@ func (_obj *Config) CheckConfigByInfoWithContext(ctx context.Context, ConfigInfo
 		return ret, err
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -712,6 +1105,12 @@ func (_obj *Config) ListAllConfigByInfo(ConfigInfo *GetConfigListInfo, Vf *[]str
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
 	err = _obj.s.Tars_invoke(ctx, 0, "ListAllConfigByInfo", _os.ToBytes(), _status, _context, _resp)
@@ -754,6 +1153,28 @@ func (_obj *Config) ListAllConfigByInfo(ConfigInfo *GetConfigListInfo, Vf *[]str
 		}
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -774,6 +1195,12 @@ func (_obj *Config) ListAllConfigByInfoWithContext(ctx context.Context, ConfigIn
 
 	var _status map[string]string
 	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
 	_resp := new(requestf.ResponsePacket)
 	err = _obj.s.Tars_invoke(ctx, 0, "ListAllConfigByInfo", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
@@ -815,6 +1242,28 @@ func (_obj *Config) ListAllConfigByInfoWithContext(ctx context.Context, ConfigIn
 		}
 	}
 
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -1212,7 +1661,16 @@ func (_obj *Config) Dispatch(ctx context.Context, _val interface{}, req *request
 	default:
 		return fmt.Errorf("func mismatch")
 	}
-	var status map[string]string
+	var _status map[string]string
+	s, ok := current.GetResponseStatus(ctx)
+	if ok && s != nil {
+		_status = s
+	}
+	var _context map[string]string
+	c, ok := current.GetResponseContext(ctx)
+	if ok && c != nil {
+		_context = c
+	}
 	*resp = requestf.ResponsePacket{
 		IVersion:     1,
 		CPacketType:  0,
@@ -1220,9 +1678,9 @@ func (_obj *Config) Dispatch(ctx context.Context, _val interface{}, req *request
 		IMessageType: 0,
 		IRet:         0,
 		SBuffer:      tools.ByteToInt8(_os.ToBytes()),
-		Status:       status,
+		Status:       _status,
 		SResultDesc:  "",
-		Context:      req.Context,
+		Context:      _context,
 	}
 	_ = length
 	_ = have
