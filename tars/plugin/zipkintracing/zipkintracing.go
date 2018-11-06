@@ -91,8 +91,7 @@ func ZipkinServerFilter() tars.ServerFilter {
 		defer serverSpan.Finish()
 		cfg := tars.GetServerConfig()
 		serverSpan.SetTag("server.ipv4", cfg.LocalIP)
-		serverSpan.SetTag("server.port", strconv.Itoa(int(cfg.Adapters[req.SServantName].Endpoint.Port)))
-
+		serverSpan.SetTag("server.port", strconv.Itoa(int(cfg.Adapters[req.SServantName+"Adapter"].Endpoint.Port)))
 		if cfg.Enableset {
 			serverSpan.SetTag("tars.set_division", cfg.Setdivision)
 		}
