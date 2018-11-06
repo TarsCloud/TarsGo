@@ -3,6 +3,7 @@ package zipkintracing
 import (
 	"context"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars"
@@ -56,9 +57,19 @@ func ZipkinClientFilter() tars.ClientFilter {
 		cSpan.SetTag("tars.method", req.SFuncName)
 		cSpan.SetTag("tars.protocol", "tars")
 		cSpan.SetTag("tars.client.version", tars.TarsVersion)
-		err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(req.Status))
-		if err != nil {
-			logger.Error("inject span to status error:", err)
+		if req.Status != nil {
+			err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(req.Status))
+			if err != nil {
+				logger.Error("inject span to status error:", err)
+			}
+		} else {
+			s := make(map[string]string)
+			err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(s))
+			if err != nil {
+				logger.Error("inject span to status error:", err)
+			} else {
+				req.Status = s
+			}
 		}
 		err = invoke(ctx, msg, timeout)
 		return err
@@ -80,7 +91,7 @@ func ZipkinServerFilter() tars.ServerFilter {
 		defer serverSpan.Finish()
 		cfg := tars.GetServerConfig()
 		serverSpan.SetTag("server.ipv4", cfg.LocalIP)
-		serverSpan.SetTag("server.port", cfg.Adapters[req.SServantName].Endpoint.Port)
+		serverSpan.SetTag("server.port", strconv.Itoa(int(cfg.Adapters[req.SServantName].Endpoint.Port)))
 
 		if cfg.Enableset {
 			serverSpan.SetTag("tars.set_division", cfg.Setdivision)
