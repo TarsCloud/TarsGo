@@ -10,6 +10,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	oplog "github.com/opentracing/opentracing-go/log"
 	zipkin "github.com/openzipkin/zipkin-go-opentracing"
 )
 
@@ -72,6 +73,11 @@ func ZipkinClientFilter() tars.ClientFilter {
 			}
 		}
 		err = invoke(ctx, msg, timeout)
+		if err != nil {
+			ext.Error.Set(cSpan, true)
+			cSpan.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
+		}
+
 		return err
 	}
 }
@@ -99,7 +105,7 @@ func ZipkinServerFilter() tars.ServerFilter {
 		err = d(ctx, f, req, resp, withContext)
 		if err != nil {
 			ext.Error.Set(serverSpan, true)
-			serverSpan.LogEventWithPayload("Dispath error: ", err) // Log the error
+			serverSpan.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
 		}
 		return err
 
