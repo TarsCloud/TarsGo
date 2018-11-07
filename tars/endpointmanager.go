@@ -1,13 +1,14 @@
 package tars
 
 import (
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/queryf"
 	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 	"github.com/TarsCloud/TarsGo/tars/util/set"
-	"strings"
-	"sync"
-	"time"
 )
 
 // EndpointManager is a struct which contains endpoint information.
@@ -77,7 +78,7 @@ func (e *EndpointManager) Init(objName string, comm *Communicator) error {
 // GetNextValidProxy returns polling adapter information.
 func (e *EndpointManager) GetNextValidProxy() *AdapterProxy {
 	e.mlock.Lock()
-	defer e.mlock.Unlock()
+	e.mlock.Unlock()
 	ep := e.GetNextEndpoint()
 	if ep == nil {
 		return nil
@@ -85,20 +86,26 @@ func (e *EndpointManager) GetNextValidProxy() *AdapterProxy {
 	if adp, ok := e.adapters[*ep]; ok {
 		// returns nil if recursively all nodes have not found an available node.
 		if adp.status {
+			e.mlock.Unlock()
 			return adp
 		} else if e.depth > e.pointsSet.Len() {
+			e.mlock.Unlock()
 			return nil
 		} else {
 			e.depth++
+			e.mlock.Unlock()
 			return e.GetNextValidProxy()
 		}
 	}
 	err := e.createProxy(*ep)
 	if err != nil {
 		TLOG.Error("create adapter fail:", *ep, err)
+		e.mlock.Unlock()
 		return nil
 	}
-	return e.adapters[*ep]
+	a := e.adapters[*ep]
+	e.mlock.Unlock()
+	return a
 }
 
 // GetNextEndpoint returns the endpoint basic information.
