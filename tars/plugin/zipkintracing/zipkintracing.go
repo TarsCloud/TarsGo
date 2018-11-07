@@ -14,7 +14,7 @@ import (
 	zipkin "github.com/openzipkin/zipkin-go-opentracing"
 )
 
-var logger = tars.GetLogger("tracing.log")
+var logger = tars.GetLogger("tracing")
 
 //Init is use to init opentracing and zipkin
 func Init(zipkinHTTPEndpoint string, sameSpan bool, traceID128Bit bool, debug bool,
