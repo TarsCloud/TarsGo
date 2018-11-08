@@ -110,7 +110,7 @@ func (t *tarsrpc) Generate(file *generator.FileDescriptor) {
 	_ = t.gen.AddImport(requestPkgPath)
 	_ = t.gen.AddImport(tarsPkgPath)
 	_ = t.gen.AddImport(toolsPath)
-	_ = t.gen.AddImport("unsafe")
+	_ = t.gen.AddImport("context")
 	for i, service := range file.FileDescriptorProto.Service {
 		t.generateService(file, service, i)
 	}
@@ -172,15 +172,16 @@ func (t *tarsrpc) generateClientCode(service *pb.ServiceDescriptorProto, method 
 	outType := t.typeName(method.GetOutputType())
 	t.P(fmt.Sprintf(`// %s is client rpc method as defined
 		func (obj *%s) %s(input %s)(output %s, err error){
-			var status map[string]string
-			var context map[string]string
+			var _status map[string]string
+			var _context map[string]string
 			var inputMarshal []byte
 			inputMarshal, err = proto.Marshal(&input)
 			if err != nil {
 				return output, err
 			}
 			resp := new(requestf.ResponsePacket)
-			err = obj.s.Tars_invoke(0, "%s", inputMarshal, status, context, resp)
+			ctx := context.Background()
+			err = obj.s.Tars_invoke(ctx, 0, "%s", inputMarshal, _status, _context, resp)
 			if err != nil {
 				return output, err
 			}
@@ -194,7 +195,7 @@ func (t *tarsrpc) generateClientCode(service *pb.ServiceDescriptorProto, method 
 func (t *tarsrpc) generateDispatch(service *pb.ServiceDescriptorProto) {
 	serviceName := upperFirstLatter(service.GetName())
 	t.P(fmt.Sprintf(`//Dispatch is used to call the user implement of the defined method.
-	func (obj *%s) Dispatch(val interface{}, req * requestf.RequestPacket, resp *requestf.ResponsePacket)(err error){
+	func (obj *%s) Dispatch(ctx context.Context, val interface{}, req * requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool)(err error){
 		input := tools.Int8ToByte(req.SBuffer)
 		var output []byte
 		imp := val.(imp%s)
