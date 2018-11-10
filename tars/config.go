@@ -9,11 +9,13 @@ var cltCfg *clientConfig
 
 // GetServerConfig : Get server config
 func GetServerConfig() *serverConfig {
+	Init()
 	return svrCfg
 }
 
 // GetClientConfig : Get client config
 func GetClientConfig() *clientConfig {
+	Init()
 	return cltCfg
 }
 
