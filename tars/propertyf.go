@@ -249,6 +249,7 @@ type PropertyReportHelper struct {
 }
 
 var ProHelper *PropertyReportHelper
+var proInited = make(chan struct{}, 1)
 
 func (p *PropertyReportHelper) ReportToServer() {
 	p.mlock.Lock()
@@ -346,12 +347,14 @@ func (p *PropertyReportHelper) Init(comm *Communicator, node string) {
 
 func initProReport() {
 	if GetClientConfig() == nil {
+		proInited <- struct{}{}
 		return
 	}
 	comm := NewCommunicator()
 	comm.SetProperty("netthread", 1)
 	ProHelper = new(PropertyReportHelper)
 	ProHelper.Init(comm, GetClientConfig().property)
+	proInited <- struct{}{}
 	go ProHelper.Run()
 
 }
