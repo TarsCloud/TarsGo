@@ -65,7 +65,7 @@
 ##### 1.2.2 编译tars文件并转成go文
 	tars2go --outdir=./vendor hello.tars
 #### 1.3 接口实现
-```
+```go
 package main
 
 import (
@@ -114,7 +114,7 @@ func main() { //Init servant
 
 tars.GetServerConfig()返回服务端配置，其定义如下:
 
-```
+```go
 type serverConfig struct {
 	Node      string
 	App       string
@@ -162,7 +162,7 @@ type serverConfig struct {
 - Setdivision: 指定哪个set，如gray.sz.*
 
 如下是一个服务端配置的例子:
-```
+```xml
 <tars>
   <application>
       enableset=Y
@@ -193,7 +193,7 @@ type serverConfig struct {
 适配器为每个对象绑定ip和端口.在服务端代码实现的例子中， 
 app.AddServant(imp, cfg.App+"."+cfg.Server+".HelloObj")完成HelloObj的适配器配置和实现的绑定。适配器的完整例子如下：
 
-```
+```xml
 <tars>
   <application>
     <server>
@@ -233,7 +233,7 @@ app.AddServant(imp, cfg.App+"."+cfg.Server+".HelloObj")完成HelloObj的适配�
 请参阅下面的config.conf的完整示例，稍后我们将解释客户端配置。
 
 
-```
+```xml
 <tars>
   <application>
     enableset=n
@@ -286,7 +286,7 @@ app.AddServant(imp, cfg.App+"."+cfg.Server+".HelloObj")完成HelloObj的适配�
 #### 2.1 客户端例子
 请参阅下面的一个客户端例子:
 
-```
+```go
 
 package main
 
@@ -352,7 +352,7 @@ comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h ... -p ...")
 > * modulename: 模块名称，默认值是可执行程序的名称。
 
 通信器配置文件的格式如下：
-```
+```xml
 <tars>
   <application>
     #The configuration required by the proxy
@@ -381,7 +381,7 @@ comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h ... -p ...")
 ```
 #### 2.3 超时控制
 如果你想在客户端使用超时控制，请使用以ms为单位的TarsSetTimeout。
-```
+```go
     app := new(TestApp.Hello)
     comm.StringToProxy(obj, app)
     app.TarsSetTimeout(3000)
@@ -430,7 +430,7 @@ comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h ... -p ...")
 TODO. tarsgo暂未支持.
 
 ##### 2.4.3. 同步调用
-```
+```go
 package main
 
 import (
@@ -459,7 +459,7 @@ func main() {
 ##### 2.4.4 异步调用
 tarsgo可以使用goroutine轻松使用异步调用。 与cpp不同，我们不需要实现回调函数。
 
-```
+```go
 package main
 
 import (
@@ -497,7 +497,7 @@ func main() {
 由于可以部署多个服务端，因此客户端的请求会随机分发到服务端上，但在某些情况下，希望始终将某些请求发送到特定的服务端。 在这种情况下，Tars提供了一种简单的实现方法，称为hash调用。 Tarsgo很快将支持此功能。
 
 ### 3   tars定义的返回码.
-```
+```go
 //Define the return code given by the TARS service
 const int TARSSERVERSUCCESS       = 0;    //Server-side processing succeeded
 const int TARSSERVERDECODEERR     = -1;   //Server-side decoding exception
@@ -520,7 +520,7 @@ const int TARSSERVERUNKNOWNERR    = -99;  //The server is in an abnormal positio
 ### 4 日志
 使用tarsgo轮换日志的快速示例：
 
-```
+```go
 TLOG := tars.GetLogger("TLOG")
 TLOG.Debug("Debug logging")
 ```
@@ -528,12 +528,12 @@ TLOG.Debug("Debug logging")
 
 如果你不想按文件大小轮换日志。 例如，你想要按天轮换，使用：
 
-```
+```go
 TLOG := tars.GetDayLogger("TLOG",1)
 TLOG.Debug("Debug logging")
 ```
 使用GetHourLogger("TLOG",1)按小时轮换日志。如果你想打日志到config.conf中定义的名为tars.tarslog.LogObj的远程服务器上，你不得不先配置一个日志服务器。可以在tars/protocol/res/LogF.tars中找到完整的tars文件定义，可以在Tencent/Tars/cpp/framework/LogServer中查找日志服务器。快速示例如下：
-```
+```go
 TLOG := GetRemoteLogger("TLOG")
 TLOG.Debug("Debug logging")
 
@@ -547,7 +547,7 @@ Tars服务框架支持动态接收命令来处理相关的业务逻辑，例如�
 tarsgo目前有tars.viewversion / tars.setloglevel管理命令。 用户可以从oss发送管理命令来查看版本或设置日志等级。
 
 如果你想定义你自己的管理命令，请看下面的例子：
-```
+```go
 func helloAdmin(who string ) (string, error) {
 	return who, nil
 }
@@ -558,7 +558,7 @@ tars.RegisterAdmin("tars.helloAdmin",  helloAdmin)
 然后你可以发送自定义的管理命令“tars.helloAdmin tarsgo”，tarsgo将在浏览器中显示。
 
 举例:
-```
+```go
 // A function  should be in this format
 type adminFn func(string) (string, error)
 
@@ -573,7 +573,7 @@ func RegisterAdmin(name string, fn adminFn)
 
 客户端调用上报接口后，会暂时将信息存储在内存中，当到达某个时间点时，会向tarsstat服务上报（默认为1分钟上报一次）。 我们将两个上报时间点之间的时间间隔称为统计间隔，在统计间隔中会执行诸如聚合和比较相同key的一些操作。
 示例代码如下：
-```
+```go
 //for error
 ReportStat(msg, 0, 1, 0)
 
@@ -614,7 +614,7 @@ Info是一个字符串，可以直接将字符串上报给tarsnotify。 上报�
 > * Count(count) //计算上报次数
 
 示例代码如下：
-```
+```go
     sum := tars.NewSum()
     count := tars.NewCount()
     max := tars.NewMax()
@@ -639,7 +639,7 @@ Info是一个字符串，可以直接将字符串上报给tarsnotify。 上报�
 用户可以从OSS设置远程配置。详情请查看https://github.com/TarsCloud/TarsFramework/blob/master/docs-en/tars_config.md . 
 如下示例用于说明如何使用此api从远程获取配置文件。
 
-```
+```go
 import "github.com/TarsCloud/TarsGo/tars"
 ...
 cfg := tars.GetServerConfig()
@@ -653,7 +653,7 @@ config, _ := remoteConf.GetConfig("test.conf")
 ### 10 setting.go
 tars包中的setting.go用于控制tarsgo性能和特性。有些选项应该从Getserverconfig()中更新。
 
-```
+```go
 //number of woker routine to handle client request
 //zero means  no contorl ,just one goroutine for a client request.
 //runtime.NumCpu() usually best performance in the benchmark.
@@ -745,7 +745,7 @@ TarsGo 之前在生成的客户端代码，或者用户传入的实现代码里�
 
 服务端使用context
 
-```golang
+```go
 type ContextTestImp struct {
 }
 //只需在接口上添加 ctx context.Context参数
@@ -763,7 +763,7 @@ app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+".ContextTestObj")
 
 客户端使用context
 
-```
+```golang
 
     ctx := context.Background()
     c := make(map[string]string)
@@ -779,7 +779,7 @@ app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+".ContextTestObj")
 ### 13 filter机制（插件） 和 zipkin opentracing
 为了支持用户编写插件，我们支持了filter机制，分为服务端的过滤器和客户端过滤器
 
-```golang
+```go
 //服务端过滤器， 传入dispatch，和f， 用于调用用户代码， req， 和resp为传入的用户请求和服务端相应包体
 type ServerFilter func(ctx context.Context, d Dispatch, f interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error)
 //客户端过滤器， 传入msg（包含obj信息，adapter信息，req和resp包体）， 还有用户设定的调用超时
@@ -793,7 +793,7 @@ type ClientFilter func(ctx context.Context, msg *Message, invoke Invoke, timeout
 
 有了过滤器，我们就能对服务端和客户端的请求做一些过滤，比如使用 hook用于分布式追踪的opentracing 的span。 
 我们来看下客户端filter的例子：
-```
+```go
 //生成客户端tars filter，通过注册这个filter来实现span的注入
 func ZipkinClientFilter() tars.ClientFilter {
 	return func(ctx context.Context, msg *tars.Message, invoke tars.Invoke, timeout time.Duration) (err error) {

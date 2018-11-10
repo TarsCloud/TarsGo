@@ -756,7 +756,7 @@ In the past, TarsGo did not use context in the generated client code, or in the 
 
 Server use context
 
-```golang
+```go
 type ContextTestImp struct {
 }
 //only need to add  ctx context.Context parameter
@@ -775,7 +775,7 @@ app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+".ContextTestObj")
 
 Client use context
 
-```
+```go
 
     ctx := context.Background()
     c := make(map[string]string)
@@ -791,7 +791,7 @@ Read full demo client and server under  examples/ContextTestServer
 ### 13 filter & zipkin plugin 
 For supporting writing plugin，we add filter to the framework. We have client filter and server filter. 
 
-```golang
+```go
 //ServerFilter ,dispatch and f is passed as parameter ， for dispatching user's implement. 
 //req and resp is  
 type ServerFilter func(ctx context.Context, d Dispatch, f interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error)
@@ -806,7 +806,7 @@ type ClientFilter func(ctx context.Context, msg *Message, invoke Invoke, timeout
 
 Having these filters ，now we can add opentracing for every request.
 Let's take a look at client side filter for opentracing.
-```
+```go
 //ZipkinClientFilter returns a client side tars filter, for hooking zipking opentracing.
 func ZipkinClientFilter() tars.ClientFilter {
 	return func(ctx context.Context, msg *tars.Message, invoke tars.Invoke, timeout time.Duration) (err error) {
