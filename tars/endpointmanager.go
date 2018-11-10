@@ -78,7 +78,6 @@ func (e *EndpointManager) Init(objName string, comm *Communicator) error {
 // GetNextValidProxy returns polling adapter information.
 func (e *EndpointManager) GetNextValidProxy() *AdapterProxy {
 	e.mlock.Lock()
-	e.mlock.Unlock()
 	ep := e.GetNextEndpoint()
 	if ep == nil {
 		return nil
