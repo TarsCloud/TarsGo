@@ -1,0 +1,7 @@
+module ZipkinTraceApp{
+interface ZipkinTrace{
+
+    int Add(int a,int b,out int c); // Some example function
+    int Sub(int a,int b,out int c); // Some example function
+};
+};
