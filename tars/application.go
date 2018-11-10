@@ -26,8 +26,6 @@ var serList []string
 var objRunList []string
 var TLOG = rogger.GetLogger("TLOG")
 var initOnce sync.Once
-var initReportOnce sync.Once
-var initProReportOnce sync.Once
 
 type adminFn func(string) (string, error)
 
@@ -49,8 +47,6 @@ func init() {
 //AddServant时使用了全局配置等等。
 func Init() {
 	initOnce.Do(initConfig)
-	initReportOnce.Do(initReport)
-	initProReportOnce.Do(initProReport)
 }
 
 //服务的初始化函数,默认会在Run的时候启动
@@ -158,10 +154,14 @@ func initConfig() {
 
 	tarsConfig["AdminObj"] = adminCfg
 	svrCfg.Adapters["AdminAdapter"] = adapterConfig{localpoint, "tcp", "AdminObj", 1}
+	go initReport()
+	go initProReport()
 }
 
 func Run() {
-	initOnce.Do(initConfig)
+	Init()
+	<-statInited
+	<-proInited
 
 	// add adminF
 	adf := new(adminf.AdminF)
