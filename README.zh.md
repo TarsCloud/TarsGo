@@ -739,3 +739,115 @@ func main() {
 
 
 ```
+
+### 12 Context 支持
+TarsGo 之前在生成的客户端代码，或者用户传入的实现代码里面，都没有使用context。 这使得我们想传递一些框架的信息，比如客户端ip，端口等，或者用户传递一些调用链的信息给框架，都很难于实现。  通过接口的一次重构，支持了context，这些上下文的信息，将都通过context来实现。 这次重构为了兼容老的用户行为，采用了完全兼容的设计。
+
+服务端使用context
+
+```golang
+type ContextTestImp struct {
+}
+//只需在接口上添加 ctx context.Context参数
+func (imp *ContextTestImp) Add(ctx context.Context, a int32, b int32, c *int32) (int32, error) {
+	//我们可以通过context 获取框架传递的信息，比如下面的获取ip， 甚至返回一些信息给框架，详见tars/util/current下面的接口
+	ip, ok := current.GetClientIPFromContext(ctx)
+    if !ok {
+        logger.Error("Error getting ip from context")
+    }  
+	return 0, nil
+}
+//以前使用AddServant ，现在只需改成AddServantWithContext
+app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+".ContextTestObj")
+```
+
+客户端使用context
+
+```
+
+    ctx := context.Background()
+    c := make(map[string]string)
+    c["a"] = "b" 
+//以前使用app.Add 进行客户端调用，这里只要变成app.AddWithContext ，就可以传递context给框架，如果要设置给tars请求的context
+//可以多传入参数，比如c，参数c是可选的，格式是 ...[string]string
+    ret, err := app.AddWithContext(ctx, i, i*2, &out, c)
+
+```
+服务端和客户端的完整例子，详见 TarGo/examples
+
+
+### 13 filter机制（插件） 和 zipkin opentracing
+为了支持用户编写插件，我们支持了filter机制，分为服务端的过滤器和客户端过滤器
+
+```golang
+//服务端过滤器， 传入dispatch，和f， 用于调用用户代码， req， 和resp为传入的用户请求和服务端相应包体
+type ServerFilter func(ctx context.Context, d Dispatch, f interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error)
+//客户端过滤器， 传入msg（包含obj信息，adapter信息，req和resp包体）， 还有用户设定的调用超时
+type ClientFilter func(ctx context.Context, msg *Message, invoke Invoke, timeout time.Duration) (err error)
+//注册服务端过滤器
+//func RegisterServerFilter(f ServerFilter)
+//注册客户端过滤器
+//func RegisterClientFilter(f ClientFilter)
+
+```
+
+有了过滤器，我们就能对服务端和客户端的请求做一些过滤，比如使用 hook用于分布式追踪的opentracing 的span。 
+我们来看下客户端filter的例子：
+```
+//生成客户端tars filter，通过注册这个filter来实现span的注入
+func ZipkinClientFilter() tars.ClientFilter {
+	return func(ctx context.Context, msg *tars.Message, invoke tars.Invoke, timeout time.Duration) (err error) {
+		var pCtx opentracing.SpanContext
+		req := msg.Req
+		//先从客户端调用的context 里面看下有没有传递来调用链的信息，
+		//如果有，则以这个做为父span，如果没有，则起一个新的span，span名字是RPC请求的函数名
+		if parent := opentracing.SpanFromContext(ctx); parent != nil {
+			pCtx = parent.Context()
+		}
+		cSpan := opentracing.GlobalTracer().StartSpan(
+			req.SFuncName,
+			opentracing.ChildOf(pCtx),
+			ext.SpanKindRPCClient,
+		)
+		defer cSpan.Finish()
+		cfg := tars.GetServerConfig()
+
+		//设置span的信息，比如我们调用的客户端的ip地址，请求的接口，方法，协议，客户端版本等信息
+		cSpan.SetTag("client.ipv4", cfg.LocalIP)
+		cSpan.SetTag("tars.interface", req.SServantName)
+		cSpan.SetTag("tars.method", req.SFuncName)
+		cSpan.SetTag("tars.protocol", "tars")
+		cSpan.SetTag("tars.client.version", tars.TarsVersion)
+
+		//将span注入到 请求包体的  Status里面，status 是一个map[strint]string 的结构体
+		if req.Status != nil {
+			err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(req.Status))
+			if err != nil {
+				logger.Error("inject span to status error:", err)
+			}
+		} else {
+			s := make(map[string]string)
+			err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(s))
+			if err != nil {
+				logger.Error("inject span to status error:", err)
+			} else {
+				req.Status = s
+			}
+		}
+		//没什么其他需要修改的，就进行客户端调用
+		err = invoke(ctx, msg, timeout)
+		if err != nil {
+			//调用错误，则记录span的错误信息
+			ext.Error.Set(cSpan, true)
+			cSpan.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
+		}
+
+		return err
+	}
+```
+
+
+服务端也会注册一个filter，主要功能就是从request包体的status 提取调用链的上下文，以这个作为父span，进行调用信息的记录。
+
+详细代码参见 TarsGo/tars/plugin/zipkintracing
+完整的zipkin tracing的客户端和服务端例子，详见 TarsGo/examples下面的ZipkinTraceClient和ZipkinTraceServer
