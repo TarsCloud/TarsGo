@@ -51,13 +51,13 @@ func (c *AdapterProxy) ParsePackage(buff []byte) (int, int) {
 }
 
 func (c *AdapterProxy) Recv(pkg []byte) {
-	defer func() {
-		//TODO readCh在load之后一定几率被超时关闭了,这个时候需要recover恢复
-		//或许有更好的办法吧
-		if err := recover(); err != nil {
-			TLOG.Error("recv pkg painc:", err)
-		}
-	}()
+	// defer func() {
+	// 	//TODO readCh在load之后一定几率被超时关闭了,这个时候需要recover恢复
+	// 	//或许有更好的办法吧
+	// 	if err := recover(); err != nil {
+	// 		TLOG.Error("recv pkg painc:", err)
+	// 	}
+	// }()
 	packet := requestf.ResponsePacket{}
 	err := packet.ReadFrom(codec.NewReader(pkg))
 	if err != nil {
@@ -68,7 +68,11 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 	if ok {
 		ch := chIF.(chan *requestf.ResponsePacket)
 		TLOG.Debug("IN:", packet)
-		ch <- &packet
+		select {
+		case ch <- &packet:
+		default:
+			// close(ch)
+		}
 	} else {
 		TLOG.Error("timeout resp,drop it:", packet.IRequestId)
 	}
