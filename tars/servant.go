@@ -1,19 +1,15 @@
 package tars
 
 import (
+	"context"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
-	"unsafe"
 
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
+	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
-
-func byteToInt8(s []byte) []int8 {
-	d := *(*[]int8)(unsafe.Pointer(&s))
-	return d
-}
 
 type ServantProxy struct {
 	sid     int32
@@ -41,7 +37,7 @@ func (s *ServantProxy) TarsSetTimeout(t int) {
 	s.timeout = t
 }
 
-func (s *ServantProxy) Tars_invoke(ctype byte,
+func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	sFuncName string,
 	buf []byte,
 	status map[string]string,
@@ -56,14 +52,19 @@ func (s *ServantProxy) Tars_invoke(ctype byte,
 		IRequestId:   atomic.AddInt32(&s.sid, 1),
 		SServantName: s.name,
 		SFuncName:    sFuncName,
-		SBuffer:      byteToInt8(buf),
+		SBuffer:      tools.ByteToInt8(buf),
 		ITimeout:     ReqDefaultTimeout,
 		Context:      reqContext,
 		Status:       status,
 	}
 	msg := &Message{Req: &req, Ser: s, Obj: s.obj}
 	msg.Init()
-	err := s.obj.Invoke(msg, time.Duration(s.timeout)*time.Millisecond)
+	var err error
+	if allFilters.cf != nil {
+		err = allFilters.cf(ctx, msg, s.obj.Invoke, time.Duration(s.timeout)*time.Millisecond)
+	}else{
+		err = s.obj.Invoke(ctx, msg, time.Duration(s.timeout)*time.Millisecond)
+	}
 	if err != nil {
 		TLOG.Error("Invoke error:", s.name, sFuncName, err.Error())
 		//TODO report exec

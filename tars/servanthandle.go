@@ -2,13 +2,24 @@ package tars
 
 import (
 	"fmt"
-	"github.com/TarsCloud/TarsGo/tars/transport"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/TarsCloud/TarsGo/tars/transport"
 )
 
+//AddServant add dispatch and interface for object.
 func AddServant(v dispatch, f interface{}, obj string) {
+	addServantCommon(v, f, obj, false)
+}
+
+//AddServantWithContext add dispatch and interface for object, which have ctx,context
+func AddServantWithContext(v dispatch, f interface{}, obj string) {
+	addServantCommon(v, f, obj, true)
+}
+
+func addServantCommon(v dispatch, f interface{}, obj string, withContext bool) {
 	objRunList = append(objRunList, obj)
 	cfg, ok := tarsConfig[obj]
 	if !ok {
@@ -16,11 +27,12 @@ func AddServant(v dispatch, f interface{}, obj string) {
 		return
 	}
 	TLOG.Debug("add:", cfg)
-	jp := NewTarsProtocol(v, f)
+	jp := NewTarsProtocol(v, f, withContext)
 	s := transport.NewTarsServer(jp, cfg)
 	goSvrs[obj] = s
 }
 
+//AddHttpServant add http servant handler for obj.
 func AddHttpServant(mux *TarsHttpMux, obj string) {
 	cfg, ok := tarsConfig[obj]
 	if !ok {

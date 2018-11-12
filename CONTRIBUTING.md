@@ -1,8 +1,10 @@
 # Contributing to TarsGo
 
-## 0 Use English in issue and pull request
+## 0 All pull request must go to dev branch, not master.
+All pull request must use dev branch as base branch, not master , master is used for publishing.
 
 ## 1 Create an issue 
+Use English as u can.
   
 if you want to report a bug, use this template in issue:
 ```

@@ -7,13 +7,15 @@ import (
 var svrCfg *serverConfig
 var cltCfg *clientConfig
 
+// GetServerConfig : Get server config
 func GetServerConfig() *serverConfig {
-	Init() //引用配置前先初始化应用
+	Init()
 	return svrCfg
 }
 
+// GetClientConfig : Get client config
 func GetClientConfig() *clientConfig {
-	Init() //引用配置前先初始化应用
+	Init()
 	return cltCfg
 }
 
@@ -29,7 +31,8 @@ type serverConfig struct {
 	App       string
 	Server    string
 	LogPath   string
-	LogSize   string
+	LogSize   uint64
+	LogNum    uint64
 	LogLevel  string
 	Version   string
 	LocalIP   string

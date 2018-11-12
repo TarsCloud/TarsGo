@@ -38,7 +38,7 @@
 
 在 $GOPATH/src下编写一个tars文件，如hello.tars , 比如 $GOPATH/src/TestApp/TestServer/hello.tars.
 有关tars协议的更多详细信息, 请查看 https://github.com/TarsCloud/TarsTup/blob/master/docs-en/tars_tup.md
-	
+
 ```
 	
 	module TestApp
@@ -58,15 +58,14 @@
 #### 1.2 编译接口定义文件
 
 ##### 1.2.1 构建 tars2go
-编译tars2go工具并将tars2go二进制文件复制到$PATH
+编译并安装tars2go工具
 
-	cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go && go build . 
-    cp tarsgo $GOPTAH/bin 
+	go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
 
 ##### 1.2.2 编译tars文件并转成go文
 	tars2go --outdir=./vendor hello.tars
 #### 1.3 接口实现
-```
+```go
 package main
 
 import (
@@ -115,7 +114,7 @@ func main() { //Init servant
 
 tars.GetServerConfig()返回服务端配置，其定义如下:
 
-```
+```go
 type serverConfig struct {
 	Node      string
 	App       string
@@ -163,7 +162,7 @@ type serverConfig struct {
 - Setdivision: 指定哪个set，如gray.sz.*
 
 如下是一个服务端配置的例子:
-```
+```xml
 <tars>
   <application>
       enableset=Y
@@ -194,7 +193,7 @@ type serverConfig struct {
 适配器为每个对象绑定ip和端口.在服务端代码实现的例子中， 
 app.AddServant(imp, cfg.App+"."+cfg.Server+".HelloObj")完成HelloObj的适配器配置和实现的绑定。适配器的完整例子如下：
 
-```
+```xml
 <tars>
   <application>
     <server>
@@ -234,7 +233,7 @@ app.AddServant(imp, cfg.App+"."+cfg.Server+".HelloObj")完成HelloObj的适配�
 请参阅下面的config.conf的完整示例，稍后我们将解释客户端配置。
 
 
-```
+```xml
 <tars>
   <application>
     enableset=n
@@ -287,7 +286,7 @@ app.AddServant(imp, cfg.App+"."+cfg.Server+".HelloObj")完成HelloObj的适配�
 #### 2.1 客户端例子
 请参阅下面的一个客户端例子:
 
-```
+```go
 
 package main
 
@@ -353,7 +352,7 @@ comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h ... -p ...")
 > * modulename: 模块名称，默认值是可执行程序的名称。
 
 通信器配置文件的格式如下：
-```
+```xml
 <tars>
   <application>
     #The configuration required by the proxy
@@ -382,7 +381,7 @@ comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h ... -p ...")
 ```
 #### 2.3 超时控制
 如果你想在客户端使用超时控制，请使用以ms为单位的TarsSetTimeout。
-```
+```go
     app := new(TestApp.Hello)
     comm.StringToProxy(obj, app)
     app.TarsSetTimeout(3000)
@@ -431,7 +430,7 @@ comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h ... -p ...")
 TODO. tarsgo暂未支持.
 
 ##### 2.4.3. 同步调用
-```
+```go
 package main
 
 import (
@@ -460,7 +459,7 @@ func main() {
 ##### 2.4.4 异步调用
 tarsgo可以使用goroutine轻松使用异步调用。 与cpp不同，我们不需要实现回调函数。
 
-```
+```go
 package main
 
 import (
@@ -498,7 +497,7 @@ func main() {
 由于可以部署多个服务端，因此客户端的请求会随机分发到服务端上，但在某些情况下，希望始终将某些请求发送到特定的服务端。 在这种情况下，Tars提供了一种简单的实现方法，称为hash调用。 Tarsgo很快将支持此功能。
 
 ### 3   tars定义的返回码.
-```
+```go
 //Define the return code given by the TARS service
 const int TARSSERVERSUCCESS       = 0;    //Server-side processing succeeded
 const int TARSSERVERDECODEERR     = -1;   //Server-side decoding exception
@@ -521,7 +520,7 @@ const int TARSSERVERUNKNOWNERR    = -99;  //The server is in an abnormal positio
 ### 4 日志
 使用tarsgo轮换日志的快速示例：
 
-```
+```go
 TLOG := tars.GetLogger("TLOG")
 TLOG.Debug("Debug logging")
 ```
@@ -529,12 +528,12 @@ TLOG.Debug("Debug logging")
 
 如果你不想按文件大小轮换日志。 例如，你想要按天轮换，使用：
 
-```
+```go
 TLOG := tars.GetDayLogger("TLOG",1)
 TLOG.Debug("Debug logging")
 ```
 使用GetHourLogger("TLOG",1)按小时轮换日志。如果你想打日志到config.conf中定义的名为tars.tarslog.LogObj的远程服务器上，你不得不先配置一个日志服务器。可以在tars/protocol/res/LogF.tars中找到完整的tars文件定义，可以在Tencent/Tars/cpp/framework/LogServer中查找日志服务器。快速示例如下：
-```
+```go
 TLOG := GetRemoteLogger("TLOG")
 TLOG.Debug("Debug logging")
 
@@ -548,7 +547,7 @@ Tars服务框架支持动态接收命令来处理相关的业务逻辑，例如�
 tarsgo目前有tars.viewversion / tars.setloglevel管理命令。 用户可以从oss发送管理命令来查看版本或设置日志等级。
 
 如果你想定义你自己的管理命令，请看下面的例子：
-```
+```go
 func helloAdmin(who string ) (string, error) {
 	return who, nil
 }
@@ -559,7 +558,7 @@ tars.RegisterAdmin("tars.helloAdmin",  helloAdmin)
 然后你可以发送自定义的管理命令“tars.helloAdmin tarsgo”，tarsgo将在浏览器中显示。
 
 举例:
-```
+```go
 // A function  should be in this format
 type adminFn func(string) (string, error)
 
@@ -574,7 +573,7 @@ func RegisterAdmin(name string, fn adminFn)
 
 客户端调用上报接口后，会暂时将信息存储在内存中，当到达某个时间点时，会向tarsstat服务上报（默认为1分钟上报一次）。 我们将两个上报时间点之间的时间间隔称为统计间隔，在统计间隔中会执行诸如聚合和比较相同key的一些操作。
 示例代码如下：
-```
+```go
 //for error
 ReportStat(msg, 0, 1, 0)
 
@@ -615,7 +614,7 @@ Info是一个字符串，可以直接将字符串上报给tarsnotify。 上报�
 > * Count(count) //计算上报次数
 
 示例代码如下：
-```
+```go
     sum := tars.NewSum()
     count := tars.NewCount()
     max := tars.NewMax()
@@ -640,7 +639,7 @@ Info是一个字符串，可以直接将字符串上报给tarsnotify。 上报�
 用户可以从OSS设置远程配置。详情请查看https://github.com/TarsCloud/TarsFramework/blob/master/docs-en/tars_config.md . 
 如下示例用于说明如何使用此api从远程获取配置文件。
 
-```
+```go
 import "github.com/TarsCloud/TarsGo/tars"
 ...
 cfg := tars.GetServerConfig()
@@ -654,7 +653,7 @@ config, _ := remoteConf.GetConfig("test.conf")
 ### 10 setting.go
 tars包中的setting.go用于控制tarsgo性能和特性。有些选项应该从Getserverconfig()中更新。
 
-```
+```go
 //number of woker routine to handle client request
 //zero means  no contorl ,just one goroutine for a client request.
 //runtime.NumCpu() usually best performance in the benchmark.
@@ -711,3 +710,144 @@ const (
 
 
 ```
+
+
+### 11 HTTP支持
+
+目前的tar.TarsHttpMux和golang内置http.ServeMux使用方式是一致的，其中pattern参数做为监控数据的接口名，后续会参考`github.com/gorilla/mux`实现功能更强大的路由功能。
+
+具体实现可参考下面的例子：
+
+```go
+package main
+
+import (
+	"net/http"
+	"github.com/TarsCloud/TarsGo/tars"
+)
+
+func main() {
+	mux := &tars.TarsHttpMux{}
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Hello tafgo"))
+	})
+
+    cfg := tars.GetServerConfig()
+	tars.AddHttpServant(mux, cfg.App+"."+cfg.Server+".HttpObj") //Register http server
+	tars.Run()
+}
+
+
+```
+
+### 12 Context 支持
+TarsGo 之前在生成的客户端代码，或者用户传入的实现代码里面，都没有使用context。 这使得我们想传递一些框架的信息，比如客户端ip，端口等，或者用户传递一些调用链的信息给框架，都很难于实现。  通过接口的一次重构，支持了context，这些上下文的信息，将都通过context来实现。 这次重构为了兼容老的用户行为，采用了完全兼容的设计。
+
+服务端使用context
+
+```go
+type ContextTestImp struct {
+}
+//只需在接口上添加 ctx context.Context参数
+func (imp *ContextTestImp) Add(ctx context.Context, a int32, b int32, c *int32) (int32, error) {
+	//我们可以通过context 获取框架传递的信息，比如下面的获取ip， 甚至返回一些信息给框架，详见tars/util/current下面的接口
+	ip, ok := current.GetClientIPFromContext(ctx)
+    if !ok {
+        logger.Error("Error getting ip from context")
+    }  
+	return 0, nil
+}
+//以前使用AddServant ，现在只需改成AddServantWithContext
+app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+".ContextTestObj")
+```
+
+客户端使用context
+
+```golang
+
+    ctx := context.Background()
+    c := make(map[string]string)
+    c["a"] = "b" 
+//以前使用app.Add 进行客户端调用，这里只要变成app.AddWithContext ，就可以传递context给框架，如果要设置给tars请求的context
+//可以多传入参数，比如c，参数c是可选的，格式是 ...[string]string
+    ret, err := app.AddWithContext(ctx, i, i*2, &out, c)
+
+```
+服务端和客户端的完整例子，详见 TarGo/examples
+
+
+### 13 filter机制（插件） 和 zipkin opentracing
+为了支持用户编写插件，我们支持了filter机制，分为服务端的过滤器和客户端过滤器
+
+```go
+//服务端过滤器， 传入dispatch，和f， 用于调用用户代码， req， 和resp为传入的用户请求和服务端相应包体
+type ServerFilter func(ctx context.Context, d Dispatch, f interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error)
+//客户端过滤器， 传入msg（包含obj信息，adapter信息，req和resp包体）， 还有用户设定的调用超时
+type ClientFilter func(ctx context.Context, msg *Message, invoke Invoke, timeout time.Duration) (err error)
+//注册服务端过滤器
+//func RegisterServerFilter(f ServerFilter)
+//注册客户端过滤器
+//func RegisterClientFilter(f ClientFilter)
+
+```
+
+有了过滤器，我们就能对服务端和客户端的请求做一些过滤，比如使用 hook用于分布式追踪的opentracing 的span。 
+我们来看下客户端filter的例子：
+```go
+//生成客户端tars filter，通过注册这个filter来实现span的注入
+func ZipkinClientFilter() tars.ClientFilter {
+	return func(ctx context.Context, msg *tars.Message, invoke tars.Invoke, timeout time.Duration) (err error) {
+		var pCtx opentracing.SpanContext
+		req := msg.Req
+		//先从客户端调用的context 里面看下有没有传递来调用链的信息，
+		//如果有，则以这个做为父span，如果没有，则起一个新的span，span名字是RPC请求的函数名
+		if parent := opentracing.SpanFromContext(ctx); parent != nil {
+			pCtx = parent.Context()
+		}
+		cSpan := opentracing.GlobalTracer().StartSpan(
+			req.SFuncName,
+			opentracing.ChildOf(pCtx),
+			ext.SpanKindRPCClient,
+		)
+		defer cSpan.Finish()
+		cfg := tars.GetServerConfig()
+
+		//设置span的信息，比如我们调用的客户端的ip地址，请求的接口，方法，协议，客户端版本等信息
+		cSpan.SetTag("client.ipv4", cfg.LocalIP)
+		cSpan.SetTag("tars.interface", req.SServantName)
+		cSpan.SetTag("tars.method", req.SFuncName)
+		cSpan.SetTag("tars.protocol", "tars")
+		cSpan.SetTag("tars.client.version", tars.TarsVersion)
+
+		//将span注入到 请求包体的  Status里面，status 是一个map[strint]string 的结构体
+		if req.Status != nil {
+			err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(req.Status))
+			if err != nil {
+				logger.Error("inject span to status error:", err)
+			}
+		} else {
+			s := make(map[string]string)
+			err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(s))
+			if err != nil {
+				logger.Error("inject span to status error:", err)
+			} else {
+				req.Status = s
+			}
+		}
+		//没什么其他需要修改的，就进行客户端调用
+		err = invoke(ctx, msg, timeout)
+		if err != nil {
+			//调用错误，则记录span的错误信息
+			ext.Error.Set(cSpan, true)
+			cSpan.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
+		}
+
+		return err
+	}
+```
+
+
+服务端也会注册一个filter，主要功能就是从request包体的status 提取调用链的上下文，以这个作为父span，进行调用信息的记录。
+
+详细代码参见 TarsGo/tars/plugin/zipkintracing
+完整的zipkin tracing的客户端和服务端例子，详见 TarsGo/examples下面的ZipkinTraceClient和ZipkinTraceServer

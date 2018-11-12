@@ -81,7 +81,7 @@ TARS管理系统的菜单树下，有以下功能：
 
 ### 创建服务
 
-运行create_tars_server.sh脚本，自动创建服务必须的文件。
+运行create_tars_server.sh脚本，自动创建服务必须的文件, 执行过程中如果出现语法错误尝试使用`dos2unix create_tars_server.sh`进行转码。
 
 ```shell
 sh $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/create_tars_server.sh [App] [Server] [Servant]

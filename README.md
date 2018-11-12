@@ -1,4 +1,4 @@
-# Tarsgo  Document
+# TarsGo  Document
 [点我查看中文版](README.zh.md)
 ## About
 - Tarsgo is high performance RPC framework in Golang programing language using the tars protocol.
@@ -9,16 +9,17 @@
 - Learn more about the whole Tars architecture and design at [Introduction](https://github.com/TarsCloud/Tars/blob/master/Introduction.en.md).
 
 
-## Functional characteristics
-- Tars2go tool: tars file is automatically generated and converted into Go language, contains RPC server/client code; implemented in Go.
-- Serialization and deserialization of tars in Go.
-- The server supports heartbeat report, stat monitoring report, custom command processing, basic logging.
-- The client supports direct connection and route access, automatic reconnection, periodic refresh of node status, and also support for UDP/TCP protocol.
-- The support of remote log.
-- The support of property report.
+## Function & features
+- Tars2go tool: tars file is automatically generated and converted into Go language, contains RPC server/client code; 
+- Serialization and deserialization of tars protocol in Go.
+- Auto service discovery.
+- TCP/UDP/Http server & Client.
+- The support of local logging and remote logging.
+- The support of statistical reporting,  property statistics,and anormaly reporting.
 - The support of set division.
 - The support of protocol buffers. See more in [pb2tarsgo](tars/tools/pb2tarsgo/README.md)
-
+- The support of filter.
+- The support of zipkin opentracing.
 
 
 ## Install
@@ -62,10 +63,9 @@ module TestApp
 #### 1.2 compile interface definition file
 
 ##### 1.2.1 build tars2go
-Compile the tars2go tools and copy tars2go binary to into a directory in your $PATH.
+Compile and install the tars2go tools.
 
-    cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go && go build . 
-    cp tarsgo $GOPTAH/bin 
+    go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
 
 ##### 1.2.2 compile the tars file and translate into go file
 	tars2go --outdir=./vendor hello.tars
@@ -721,3 +721,146 @@ const (
 
 ```
 
+### 11 HTTP Support
+
+`tars.TarsHttpMux` is multiplexer like [http.ServeMux](https://golang.org/pkg/net/http/#ServeMux)，the `pattern` parameter is used as the interface name in monitoring report. 
+
+Here is a sample of http server：
+
+```go
+package main
+
+import (
+	"net/http"
+	"github.com/TarsCloud/TarsGo/tars"
+)
+
+func main() {
+	mux := &tars.TarsHttpMux{}
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Hello tafgo"))
+	})
+
+    cfg := tars.GetServerConfig()
+	tars.AddHttpServant(mux, cfg.App+"."+cfg.Server+".HttpObj") //Register http server
+	tars.Run()
+}
+
+
+```
+
+###  12 Using Context
+### context
+In the past, TarsGo did not use context in the generated client code, or in the implementation code passed in by the user. This makes us want to pass some framework information, such as client ip, port, etc., or the user passes some information about the call chain to the framework, which is difficult to implement. Through a refactoring of the interface, the context is supported, and the these information  will be implemented through the context. This refactoring is designed to be compatible with older user behavior and is fully compatible.
+
+
+Server use context
+
+```go
+type ContextTestImp struct {
+}
+//only need to add  ctx context.Context parameter
+func (imp *ContextTestImp) Add(ctx context.Context, a int32, b int32, c *int32) (int32, error) {
+	//We can use context to get some usefull infomation we need ,such Client ,ip ,port and tracing infomation
+	//read more detail under tars/util/current
+	ip, ok := current.GetClientIPFromContext(ctx)
+    if !ok {
+        logger.Error("Error getting ip from context")
+    }  
+	return 0, nil
+}
+//just change AddServant into AddServantWithContext
+app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+".ContextTestObj")
+```
+
+Client use context
+
+```go
+
+    ctx := context.Background()
+    c := make(map[string]string)
+    c["a"] = "b" 
+// juse change app.Add into app.AddWithContext, now u can pass context to framework, 
+//if u want to setting request package's context,u can pass a optional parameter ,just like c，which is  ...[string]string
+    ret, err := app.AddWithContext(ctx, i, i*2, &out, c)
+
+```
+Read full demo client and server under  examples/ContextTestServer
+
+
+### 13 filter & zipkin plugin 
+For supporting writing plugin，we add filter to the framework. We have client filter and server filter. 
+
+```go
+//ServerFilter ,dispatch and f is passed as parameter ， for dispatching user's implement. 
+//req and resp is  
+type ServerFilter func(ctx context.Context, d Dispatch, f interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error)
+//
+type ClientFilter func(ctx context.Context, msg *Message, invoke Invoke, timeout time.Duration) (err error)
+//RegisterServerFilter registers the server side filter
+//func RegisterServerFilter(f ServerFilter)
+//RegisterClientFilter registers the client side filter
+//func RegisterClientFilter(f ClientFilter)
+
+```
+
+Having these filters ，now we can add opentracing for every request.
+Let's take a look at client side filter for opentracing.
+```go
+//ZipkinClientFilter returns a client side tars filter, for hooking zipking opentracing.
+func ZipkinClientFilter() tars.ClientFilter {
+	return func(ctx context.Context, msg *tars.Message, invoke tars.Invoke, timeout time.Duration) (err error) {
+		var pCtx opentracing.SpanContext
+		req := msg.Req
+		//If span context is passed in the context, we use this context as parent span ,else start a new span.
+		//The method name of the rpc request , is used as span's name .
+		if parent := opentracing.SpanFromContext(ctx); parent != nil {
+			pCtx = parent.Context()
+		}
+		cSpan := opentracing.GlobalTracer().StartSpan(
+			req.SFuncName,
+			opentracing.ChildOf(pCtx),
+			ext.SpanKindRPCClient,
+		)
+		defer cSpan.Finish()
+		cfg := tars.GetServerConfig()
+
+		//set additional information for the span ,like method, interface, protocol, vesion, ip and port etc.
+		cSpan.SetTag("client.ipv4", cfg.LocalIP)
+		cSpan.SetTag("tars.interface", req.SServantName)
+		cSpan.SetTag("tars.method", req.SFuncName)
+		cSpan.SetTag("tars.protocol", "tars")
+		cSpan.SetTag("tars.client.version", tars.TarsVersion)
+
+		//inject the span context into the request package's status ,which is map[string]string
+		if req.Status != nil {
+			err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(req.Status))
+			if err != nil {
+				logger.Error("inject span to status error:", err)
+			}
+		} else {
+			s := make(map[string]string)
+			err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(s))
+			if err != nil {
+				logger.Error("inject span to status error:", err)
+			} else {
+				req.Status = s
+			}
+		}
+		//Nothing tho change , just invoke the request.
+		err = invoke(ctx, msg, timeout)
+		if err != nil {
+			//invoke error ,logging the error information to the span.
+			ext.Error.Set(cSpan, true)
+			cSpan.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
+		}
+
+		return err
+	}
+```
+
+
+Server will add a filters ,which exact the span context from the reqeust pacakge's status, and start a new span.
+
+Reqed more under TarsGo/tars/plugin/zipkintracing
+For client side and server side example code , read ZipkinTraceClient & ZipkinTraceServer under the examples.

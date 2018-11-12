@@ -1,0 +1,5 @@
+module StressTest{
+interface EchoTest{
+	int echo(vector<byte> sIn, out vector<byte> sOut);
+};
+};

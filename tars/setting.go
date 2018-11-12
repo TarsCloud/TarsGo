@@ -2,37 +2,48 @@ package tars
 
 import "time"
 
-//number of woker routine to handle client request
+//MaxInvoke number of woker routine to handle client request
 //zero means  no contorl ,just one goroutine for a client request.
 //runtime.NumCpu() usually best performance in the benchmark.
-var MaxInvoke int = 0
+var MaxInvoke = 0
 
 const (
 	//for now ,some option shuold update from remote config
 
-	//version
-	TarsVersion string = "1.0.0"
+	//TarsVsersion version
+	TarsVersion string = "1.1.0"
 
 	//server
 
+	//AcceptTimeout accept timeout
 	AcceptTimeout time.Duration = 500 * time.Millisecond
-	//zero for not set read deadline for Conn (better  performance)
+	//ReadTimeout zero for not set read deadline for Conn (better  performance)
 	ReadTimeout time.Duration = 0 * time.Millisecond
-	//zero for not set write deadline for Conn (better performance)
+	//WriteTimeout zero for not set write deadline for Conn (better performance)
 	WriteTimeout time.Duration = 0 * time.Millisecond
-	//zero for not set deadline for invoke user interface (better performance)
-	HandleTimeout  time.Duration = 0 * time.Millisecond
-	IdleTimeout    time.Duration = 600000 * time.Millisecond
+	//HandleTimeout zero for not set deadline for invoke user interface (better performance)
+	HandleTimeout time.Duration = 0 * time.Millisecond
+	//IdleTimeout idle timeout
+	IdleTimeout time.Duration = 600000 * time.Millisecond
+	//ZombileTimeout zombile timeout
 	ZombileTimeout time.Duration = time.Second * 10
-	QueueCap       int           = 10000000
+	//QueueCap queue gap
+	QueueCap int = 10000000
 
 	//client
-	ClientQueueLen     int           = 10000
-	ClientIdleTimeout  time.Duration = time.Second * 600
-	ClientReadTimeout  time.Duration = time.Millisecond * 100
+
+	//ClientQueueLen client queue length
+	ClientQueueLen int = 10000
+	//ClientIdleTimeout client idle timeout
+	ClientIdleTimeout time.Duration = time.Second * 600
+	//ClientReadTimeout client read timeout
+	ClientReadTimeout time.Duration = time.Millisecond * 100
+	//ClientWriteTimeout client write timeout
 	ClientWriteTimeout time.Duration = time.Millisecond * 3000
-	ReqDefaultTimeout  int32         = 3000
-	ObjQueueMax        int32         = 10000
+	//ReqDefaultTimeout request default timeout
+	ReqDefaultTimeout int32 = 3000
+	//ObjQueueMax obj queue max number
+	ObjQueueMax int32 = 10000
 
 	//log
 	remotelogBuff       int = 500000
@@ -41,23 +52,36 @@ const (
 	defaultRotateSizeMB     = 100
 
 	//report
+
+	//PropertyReportInterval property report interval
 	PropertyReportInterval time.Duration = 10 * time.Second
-	StatReportInterval     time.Duration = 10 * time.Second
+	//StatReportInterval stat report interval
+	StatReportInterval time.Duration = 10 * time.Second
 
 	//mainloop
+
+	//MainLoopTicker main loop ticker
 	MainLoopTicker time.Duration = 10 * time.Second
 
 	//adapter
-	AdapterProxyTicker     time.Duration = 10 * time.Second
-	AdapterProxyResetCount int           = 5
+
+	//AdapterProxyTicker adapter proxy ticker
+	AdapterProxyTicker time.Duration = 10 * time.Second
+	//AdapterProxyResetCount adapter proxy reset count
+	AdapterProxyResetCount int = 5
 
 	//communicator default ,update from remote config
 	refreshEndpointInterval int = 60000
 	reportInterval          int = 10000
-	AsyncInvokeTimeout      int = 3000
+	//AsyncInvokeTimeout async invoke timeout
+	AsyncInvokeTimeout int = 3000
 
 	//tcp network config
-	TCPReadBuffer  = 128 * 1024 * 1024
+
+	//TCPReadBuffer tcp read buffer length
+	TCPReadBuffer = 128 * 1024 * 1024
+	//TCPWriteBuffer tcp write buffer length
 	TCPWriteBuffer = 128 * 1024 * 1024
-	TCPNoDelay     = false
+	//TCPNoDelay set tcp no delay
+	TCPNoDelay = false
 )

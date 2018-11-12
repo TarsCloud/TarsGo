@@ -6,126 +6,131 @@ import (
 	"strings"
 )
 
-const EOS = 0 //字节流结束符
+//EOS is byte stream terminator
+const EOS = 0
 
+//TK is a byte type.
 type TK byte
 
 const (
-	TK_EOS TK = iota
+	tkEos     TK = iota
+	tkBracel     // ({)
+	tkBracer     // }
+	tkSemi       //;
+	tkEq         //=
+	tkShl        //<
+	tkShr        //>
+	tkComma      //,
+	tkPtl        //(
+	tkPtr        //)
+	tkSquarel    //[
+	tkSquarer    //]
+	tkInclude    //#include
 
-	TK_BRACEL  // {
-	TK_BRACER  // }
-	TK_SEMI    //;
-	TK_EQ      //=
-	TK_SHL     //<
-	TK_SHR     //>
-	TK_COMMA   //,
-	TK_PTL     //(
-	TK_PTR     //)
-	TK_SQUAREL //[
-	TK_SQUARER //]
-	TK_INCLUDE //#include
-
-	TK_DUMMY_KEYWORD_BEGIN
+	tkDummyKeywordBegin
 	// keyword
-	TK_MODULE
-	TK_ENUM
-	TK_STRUCT
-	TK_INTERFACE
-	TK_REQUIRE
-	TK_OPTIONAL
-	TK_CONST
-	TK_UNSIGNED
-	TK_VOID
-	TK_OUT
-	TK_KEY
-	TK_TRUE
-	TK_FALSE
-	TK_DUMMY_KEYWORD_END
+	tkModule
+	tkEnum
+	tkStruct
+	tkInterface
+	tkRequire
+	tkOptional
+	tkConst
+	tkUnsigned
+	tkVoid
+	tkOut
+	tkKey
+	tkTrue
+	tkFalse
+	tkDummyKeywordEnd
 
-	TK_DUMMY_TYPE_BEGIN
+	tkDummyTypeBegin
 	// type
-	TK_T_INT
-	TK_T_BOOL
-	TK_T_SHORT
-	TK_T_BYTE
-	TK_T_LONG
-	TK_T_FLOAT
-	TK_T_DOUBLE
-	TK_T_STRING
-	TK_T_VECTOR
-	TK_T_MAP
-	TK_DUMMY_TYPE_END
+	tkTInt
+	tkTBool
+	tkTShort
+	tkTByte
+	tkTLong
+	tkTFloat
+	tkTDouble
+	tkTString
+	tkTVector
+	tkTMap
+	tkDummyTypeEnd
 
-	TK_NAME // 变量名
-	// 值
-	TK_STRING
-	TK_INTEGER
-	TK_FLOAT
+	tkName // variable name
+	// value
+	tkString
+	tkInteger
+	tkFloat
 )
 
+//TokenMap record token  value.
 var TokenMap = [...]string{
-	TK_EOS: "<eos>",
+	tkEos: "<eos>",
 
-	TK_BRACEL:  "{",
-	TK_BRACER:  "}",
-	TK_SEMI:    ";",
-	TK_EQ:      "=",
-	TK_SHL:     "<",
-	TK_SHR:     ">",
-	TK_COMMA:   ",",
-	TK_PTL:     "(",
-	TK_PTR:     ")",
-	TK_SQUAREL: "[",
-	TK_SQUARER: "]",
-	TK_INCLUDE: "#include",
+	tkBracel:  "{",
+	tkBracer:  "}",
+	tkSemi:    ";",
+	tkEq:      "=",
+	tkShl:     "<",
+	tkShr:     ">",
+	tkComma:   ",",
+	tkPtl:     "(",
+	tkPtr:     ")",
+	tkSquarel: "[",
+	tkSquarer: "]",
+	tkInclude: "#include",
 
 	// keyword
-	TK_MODULE:    "module",
-	TK_ENUM:      "enum",
-	TK_STRUCT:    "struct",
-	TK_INTERFACE: "interface",
-	TK_REQUIRE:   "require",
-	TK_OPTIONAL:  "optional",
-	TK_CONST:     "const",
-	TK_UNSIGNED:  "unsigned",
-	TK_VOID:      "void",
-	TK_OUT:       "out",
-	TK_KEY:       "key",
-	TK_TRUE:      "true",
-	TK_FALSE:     "false",
+	tkModule:    "module",
+	tkEnum:      "enum",
+	tkStruct:    "struct",
+	tkInterface: "interface",
+	tkRequire:   "require",
+	tkOptional:  "optional",
+	tkConst:     "const",
+	tkUnsigned:  "unsigned",
+	tkVoid:      "void",
+	tkOut:       "out",
+	tkKey:       "key",
+	tkTrue:      "true",
+	tkFalse:     "false",
 
 	// type
-	TK_T_INT:    "int",
-	TK_T_BOOL:   "bool",
-	TK_T_SHORT:  "short",
-	TK_T_BYTE:   "byte",
-	TK_T_LONG:   "long",
-	TK_T_FLOAT:  "float",
-	TK_T_DOUBLE: "double",
-	TK_T_STRING: "string",
-	TK_T_VECTOR: "vector",
-	TK_T_MAP:    "map",
+	tkTInt:    "int",
+	tkTBool:   "bool",
+	tkTShort:  "short",
+	tkTByte:   "byte",
+	tkTLong:   "long",
+	tkTFloat:  "float",
+	tkTDouble: "double",
+	tkTString: "string",
+	tkTVector: "vector",
+	tkTMap:    "map",
 
-	TK_NAME: "<name>",
-	// 值
-	TK_STRING:  "<string>",
-	TK_INTEGER: "<INTEGER>",
-	TK_FLOAT:   "<FLOAT>",
+	tkName: "<name>",
+	// value
+	tkString:  "<string>",
+	tkInteger: "<INTEGER>",
+	tkFloat:   "<FLOAT>",
 }
 
+//SemInfo is struct.
 type SemInfo struct {
 	I int64
 	F float64
 	S string
 }
 
+//Token record token information.
 type Token struct {
 	T    TK
 	S    *SemInfo
 	Line int
 }
 
+//LexState record lexical state.
 type LexState struct {
 	current    byte
 	linenumber int
@@ -156,12 +161,12 @@ func isLetter(b byte) bool {
 }
 
 func isType(t TK) bool {
-	return t > TK_DUMMY_TYPE_BEGIN && t < TK_DUMMY_TYPE_END
+	return t > tkDummyTypeBegin && t < tkDummyTypeEnd
 }
 
 func isNumberType(t TK) bool {
 	switch t {
-	case TK_T_INT, TK_T_BOOL, TK_T_SHORT, TK_T_BYTE, TK_T_LONG, TK_T_FLOAT, TK_T_DOUBLE:
+	case tkTInt, tkTBool, tkTShort, tkTByte, tkTLong, tkTFloat, tkTDouble:
 		return true
 	default:
 		return false
@@ -202,25 +207,24 @@ func (ls *LexState) readNumber() (TK, *SemInfo) {
 			ls.lexErr(err.Error())
 		}
 		sem.F = f
-		return TK_FLOAT, sem
-	} else {
-		i, err := strconv.ParseInt(sem.S, 0, 64)
-		if err != nil {
-			ls.lexErr(err.Error())
-		}
-		sem.I = i
-		return TK_INTEGER, sem
+		return tkFloat, sem
 	}
+	i, err := strconv.ParseInt(sem.S, 0, 64)
+	if err != nil {
+		ls.lexErr(err.Error())
+	}
+	sem.I = i
+	return tkInteger, sem
 }
 
 func (ls *LexState) readIdent() (TK, *SemInfo) {
 	sem := &SemInfo{}
 	var last byte
 
-	// :: 点号处理命名空间
+	// :: Point number processing namespace
 	for isLetter(ls.current) || isNumber(ls.current) || ls.current == ':' {
 		if isNumber(ls.current) && last == ':' {
-			ls.lexErr("标识不合法")
+			ls.lexErr("the identification is illegal.")
 		}
 		last = ls.current
 		ls.tokenBuff.WriteByte(ls.current)
@@ -229,22 +233,22 @@ func (ls *LexState) readIdent() (TK, *SemInfo) {
 	sem.S = ls.tokenBuff.String()
 	if strings.Count(sem.S, ":") > 0 {
 		if strings.Count(sem.S, "::") != 1 || strings.Count(sem.S, ":") != 2 {
-			ls.lexErr("命名空间限定符::不合法")
+			ls.lexErr("namespace qualifier::is illegal")
 		}
 	}
 
-	for i := TK_DUMMY_KEYWORD_BEGIN + 1; i < TK_DUMMY_KEYWORD_END; i++ {
+	for i := tkDummyKeywordBegin + 1; i < tkDummyKeywordEnd; i++ {
 		if TokenMap[i] == sem.S {
 			return i, nil
 		}
 	}
-	for i := TK_DUMMY_TYPE_BEGIN + 1; i < TK_DUMMY_TYPE_END; i++ {
+	for i := tkDummyTypeBegin + 1; i < tkDummyTypeEnd; i++ {
 		if TokenMap[i] == sem.S {
 			return i, nil
 		}
 	}
 
-	return TK_NAME, sem
+	return tkName, sem
 }
 
 func (ls *LexState) readSharp() (TK, *SemInfo) {
@@ -257,7 +261,7 @@ func (ls *LexState) readSharp() (TK, *SemInfo) {
 		ls.lexErr("not #include")
 	}
 
-	return TK_INCLUDE, nil
+	return tkInclude, nil
 }
 
 func (ls *LexState) readString() (TK, *SemInfo) {
@@ -277,14 +281,14 @@ func (ls *LexState) readString() (TK, *SemInfo) {
 	}
 	sem.S = ls.tokenBuff.String()
 
-	return TK_STRING, sem
+	return tkString, sem
 }
 
 func (ls *LexState) readLongComment() {
 	for {
 		switch ls.current {
 		case EOS:
-			ls.lexErr("期待 */")
+			ls.lexErr("respect */")
 			return
 		case '\n', '\r':
 			ls.incLine()
@@ -310,17 +314,18 @@ func (ls *LexState) next() {
 	}
 }
 
+// Do lexical analysis.
 func (ls *LexState) llex() (TK, *SemInfo) {
 	for {
 		ls.tokenBuff.Reset()
 		switch ls.current {
 		case EOS:
-			return TK_EOS, nil
+			return tkEos, nil
 		case ' ', '\t', '\f', '\v':
 			ls.next()
 		case '\n', '\r':
 			ls.incLine()
-		case '/': // 注释处理
+		case '/': // Comment processing
 			ls.next()
 			if ls.current == '/' {
 				for !isNewLine(ls.current) && ls.current != EOS {
@@ -330,41 +335,41 @@ func (ls *LexState) llex() (TK, *SemInfo) {
 				ls.next()
 				ls.readLongComment()
 			} else {
-				ls.lexErr("词法错误，/")
+				ls.lexErr("lexical error，/")
 			}
 		case '{':
 			ls.next()
-			return TK_BRACEL, nil
+			return tkBracel, nil
 		case '}':
 			ls.next()
-			return TK_BRACER, nil
+			return tkBracer, nil
 		case ';':
 			ls.next()
-			return TK_SEMI, nil
+			return tkSemi, nil
 		case '=':
 			ls.next()
-			return TK_EQ, nil
+			return tkEq, nil
 		case '<':
 			ls.next()
-			return TK_SHL, nil
+			return tkShl, nil
 		case '>':
 			ls.next()
-			return TK_SHR, nil
+			return tkShr, nil
 		case ',':
 			ls.next()
-			return TK_COMMA, nil
+			return tkComma, nil
 		case '(':
 			ls.next()
-			return TK_PTL, nil
+			return tkPtl, nil
 		case ')':
 			ls.next()
-			return TK_PTR, nil
+			return tkPtr, nil
 		case '[':
 			ls.next()
-			return TK_SQUAREL, nil
+			return tkSquarel, nil
 		case ']':
 			ls.next()
-			return TK_SQUARER, nil
+			return tkSquarer, nil
 		case '"':
 			return ls.readString()
 		case '#':
@@ -376,12 +381,13 @@ func (ls *LexState) llex() (TK, *SemInfo) {
 			case isLetter(ls.current):
 				return ls.readIdent()
 			default:
-				ls.lexErr("不认识的字符, " + string(ls.current))
+				ls.lexErr("unrecognized characters, " + string(ls.current))
 			}
 		}
 	}
 }
 
+//NextToken return token after lexical analysis.
 func (ls *LexState) NextToken() *Token {
 	tk := &Token{}
 	tk.T, tk.S = ls.llex()
@@ -389,6 +395,7 @@ func (ls *LexState) NextToken() *Token {
 	return tk
 }
 
+//NewLexState to update LexState struct.
 func NewLexState(source string, buff []byte) *LexState {
 	return &LexState{
 		current:    ' ',
