@@ -1,10 +1,12 @@
 package transport
 
 import (
-	"github.com/TarsCloud/TarsGo/tars/util/rogger"
-	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
+	"context"
 	"sync/atomic"
 	"time"
+
+	"github.com/TarsCloud/TarsGo/tars/util/rogger"
+	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
 )
 
 const (
@@ -16,7 +18,7 @@ const (
 var TLOG = rogger.GetLogger("transport")
 
 type TarsProtoCol interface {
-	Invoke(pkg []byte) []byte
+	Invoke(ctx context.Context, pkg []byte) []byte
 	ParsePackage(buff []byte) (int, int)
 	InvokeTimeout(pkg []byte) []byte
 }
@@ -59,7 +61,7 @@ func NewTarsServer(svr TarsProtoCol, conf *TarsServerConf) *TarsServer {
 
 func (ts *TarsServer) getHandler() (sh ServerHandler) {
 	if ts.conf.Proto == "tcp" {
-		sh = &tcpHandler{conf: ts.conf, ts: ts, jobs: make(chan *connectionHandler, ts.conf.QueueCap)}
+		sh = &tcpHandler{conf: ts.conf, ts: ts}
 	} else if ts.conf.Proto == "udp" {
 		sh = &udpHandler{conf: ts.conf, ts: ts}
 	} else {
@@ -89,16 +91,16 @@ func (ts *TarsServer) IsZombie(timeout time.Duration) bool {
 	return conf.MaxInvoke != 0 && ts.numInvoke == conf.MaxInvoke && ts.lastInvoke.Add(timeout).Before(time.Now())
 }
 
-func (ts *TarsServer) invoke(pkg []byte) []byte {
+func (ts *TarsServer) invoke(ctx context.Context, pkg []byte) []byte {
 	cfg := ts.conf
 	atomic.AddInt32(&ts.numInvoke, 1)
 	var rsp []byte
 	if cfg.HandleTimeout == 0 {
-		rsp = ts.svr.Invoke(pkg)
+		rsp = ts.svr.Invoke(ctx, pkg)
 	} else {
 		done := make(chan struct{})
 		go func() {
-			rsp = ts.svr.Invoke(pkg)
+			rsp = ts.svr.Invoke(ctx, pkg)
 			done <- struct{}{}
 		}()
 		select {

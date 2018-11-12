@@ -1,14 +1,15 @@
 package tars
 
 import (
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/propertyf"
-	"github.com/TarsCloud/TarsGo/tars/util/tools"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/TarsCloud/TarsGo/tars/protocol/res/propertyf"
+	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
 type ReportMethod interface {
@@ -190,7 +191,7 @@ func (d *Distr) Get() string {
 	d.mlock.Lock()
 	defer d.mlock.Unlock()
 	var s string = ""
-	for i, _ := range d.dataRange {
+	for i := range d.dataRange {
 		if i != 0 {
 			s += ","
 		}
@@ -201,7 +202,7 @@ func (d *Distr) Get() string {
 }
 
 func (d *Distr) clear() {
-	for i, _ := range d.result {
+	for i := range d.result {
 		d.result[i] = 0
 	}
 }
@@ -248,6 +249,7 @@ type PropertyReportHelper struct {
 }
 
 var ProHelper *PropertyReportHelper
+var proInited = make(chan struct{}, 1)
 
 func (p *PropertyReportHelper) ReportToServer() {
 	p.mlock.Lock()
@@ -259,7 +261,7 @@ func (p *PropertyReportHelper) ReportToServer() {
 	if cfg != nil {
 		if cfg.Enableset {
 			setList := strings.Split(cfg.Setdivision, ".")
-			head.ModuleName = cfg.App + "." + cfg.Server + setList[0] + setList[1] + setList[2]
+			head.ModuleName = cfg.App + "." + cfg.Server + "." + setList[0] + setList[1] + setList[2]
 			head.SetName = setList[0]
 			head.SetArea = setList[1]
 			head.SetID = setList[2]
@@ -344,10 +346,15 @@ func (p *PropertyReportHelper) Init(comm *Communicator, node string) {
 }
 
 func initProReport() {
+	if GetClientConfig() == nil {
+		proInited <- struct{}{}
+		return
+	}
 	comm := NewCommunicator()
 	comm.SetProperty("netthread", 1)
 	ProHelper = new(PropertyReportHelper)
 	ProHelper.Init(comm, GetClientConfig().property)
+	proInited <- struct{}{}
 	go ProHelper.Run()
 
 }

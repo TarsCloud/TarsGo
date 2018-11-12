@@ -15,6 +15,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/util/conf"
 	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 	"github.com/TarsCloud/TarsGo/tars/util/rogger"
+	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
 var tarsConfig map[string]*transport.TarsServerConf
@@ -38,6 +39,7 @@ func init() {
 	adminMethods = make(map[string]adminFn)
 	//在配置初始化前将日志关闭，减少独立客户端日志
 	rogger.SetLevel(rogger.ERROR)
+	Init()
 }
 
 //有些场景下需要提前初始化时调用:
@@ -74,7 +76,8 @@ func initConfig() {
 	//svrCfg.Container = c.GetString("/tars/application<container>")
 	//init log
 	svrCfg.LogPath = sMap["logpath"]
-	svrCfg.LogSize = sMap["logsize"]
+	svrCfg.LogSize = tools.ParseLogSizeMb(sMap["logsize"])
+	svrCfg.LogNum = tools.ParseLogNum(sMap["lognum"])
 	svrCfg.LogLevel = sMap["logLevel"]
 	svrCfg.config = sMap["config"]
 	svrCfg.notify = sMap["notify"]
@@ -156,7 +159,10 @@ func initConfig() {
 }
 
 func Run() {
-	initOnce.Do(initConfig)
+	Init()
+	<-statInited
+	<-proInited
+
 	// add adminF
 	adf := new(adminf.AdminF)
 	ad := new(Admin)
