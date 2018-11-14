@@ -13,12 +13,13 @@ func init() {
 	runtime.GOMAXPROCS(numCPUs)
 }
 
+//TestNewPool test new goroutine pool
 func TestNewPool(t *testing.T) {
 	pool := NewPool(1000, 10000)
 	defer pool.Release()
 
 	iterations := 1000000
-	var counter uint64 = 0
+	var counter uint64
 
 	wg := sync.WaitGroup{}
 	wg.Add(iterations)

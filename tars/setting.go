@@ -10,7 +10,7 @@ var MaxInvoke = 0
 const (
 	//for now ,some option shuold update from remote config
 
-	//TarsVsersion version
+	//TarsVersion is tars vesion
 	TarsVersion string = "1.1.0"
 
 	//server
@@ -46,7 +46,8 @@ const (
 	ObjQueueMax int32 = 10000
 
 	//log
-	remotelogBuff       int = 500000
+	remotelogBuff int = 500000
+	//MaxlogOneTime is the max logs for reporting in one time.
 	MaxlogOneTime       int = 2000
 	defualtRotateN          = 10
 	defaultRotateSizeMB     = 100

@@ -5,6 +5,7 @@ import (
 	"testing"
 )
 
+//TestParse tests pasing the endpoint.
 func TestParse(t *testing.T) {
 	e := Parse("tcp -h 127.0.0.1 -p 19386 -t 60000")
 	fmt.Println(e)

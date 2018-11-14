@@ -16,6 +16,7 @@ func demoTask() {
 	time.Sleep(time.Millisecond * 10)
 }
 
+//BenchmarkGoroutine benchmark the goroutine doing tasks.
 func BenchmarkGoroutine(b *testing.B) {
 	var wg sync.WaitGroup
 	for i := 0; i < b.N; i++ {
@@ -32,6 +33,7 @@ func BenchmarkGoroutine(b *testing.B) {
 	}
 }
 
+//BenchmarkGpool benchmarks the goroutine pool.
 func BenchmarkGpool(b *testing.B) {
 	pool := NewPool(poolSize, queueSize)
 	defer pool.Release()

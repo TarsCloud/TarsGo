@@ -17,6 +17,7 @@ type dispatch interface {
 	Dispatch(context.Context, interface{}, *requestf.RequestPacket, *requestf.ResponsePacket, bool) error
 }
 
+//TarsProtocol is struct for dispatch with tars protocol.
 type TarsProtocol struct {
 	dispatcher  dispatch
 	serverImp   interface{}
@@ -30,6 +31,7 @@ func NewTarsProtocol(dispatcher dispatch, imp interface{}, withContext bool) *Ta
 	return s
 }
 
+//Invoke puts the request as []byte and call the dispather, and then return the response as []byte.
 func (s *TarsProtocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 	defer checkPanic()
 	reqPackage := requestf.RequestPacket{}
@@ -81,10 +83,12 @@ func (s *TarsProtocol) rsp2Byte(rsp *requestf.ResponsePacket) []byte {
 	return sbuf.Bytes()
 }
 
+//ParsePackage parse the []byte according to the tars protocol.
 func (s *TarsProtocol) ParsePackage(buff []byte) (int, int) {
 	return TarsRequest(buff)
 }
 
+//InvokeTimeout indicates how to deal with timeout.
 func (s *TarsProtocol) InvokeTimeout(pkg []byte) []byte {
 	rspPackage := requestf.ResponsePacket{}
 	rspPackage.IRet = 1
