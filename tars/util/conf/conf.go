@@ -99,7 +99,7 @@ func (e *elem) analysisPath(path string) []string {
 	return ret
 }
 
-//路径类似于/A/B/C或/A/B/C/
+// path like /A/B/C or /A/B/C/
 func (e *elem) getDomain(path string) ([]string, error) {
 	pathVec := e.analysisPath(path)
 	var domain []string
@@ -130,7 +130,7 @@ func (e *elem) getMap(path string) (map[string]string, error) {
 	return kvMap, nil
 }
 
-//路径类似于/A/B/C/<data>或/A/B/C<data>
+// path like /A/B/C/<data> or /A/B/C<data>
 func (e *elem) getValue(path string) (string, error) {
 	pathVec := e.analysisPath(path)
 	targetNode, err := e.getElem(pathVec)
@@ -195,7 +195,9 @@ func (c *Conf) InitFromBytes(content []byte) error {
 			lineDecoder.Split(bufio.ScanLines)
 			for lineDecoder.Scan() {
 				line := strings.Trim(lineDecoder.Text(), whiteSpaceChars)
-				line = strings.SplitN(line, "#", 2)[0]
+				if len(line) > 0 && line[0] == '#' {
+					continue
+				}
 				kv := strings.SplitN(line, "=", 2)
 				if len(kv) != 2 {
 					continue
