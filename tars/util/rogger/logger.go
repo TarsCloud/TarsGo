@@ -56,8 +56,6 @@ func init() {
 	currDateDay = now.Format("20060102")
 	go func() {
 		tm := time.NewTimer(time.Second)
-		if err := recover(); err != nil { // avoid timer panic
-		}
 		for {
 			now := time.Now()
 			d := time.Second - time.Duration(now.Nanosecond())
