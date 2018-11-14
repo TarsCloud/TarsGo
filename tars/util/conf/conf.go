@@ -165,7 +165,7 @@ func NewConf(fileName string) (*Conf, error) {
 func (c *Conf) InitFromFile(fileName string) error {
 	content, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		return fmt.Errorf("read file %s rrror:%v", fileName, err)
+		return fmt.Errorf("read file %s error:%v", fileName, err)
 	}
 	return c.InitFromBytes(content)
 }
