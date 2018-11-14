@@ -1,8 +1,9 @@
 package tars
 
 import (
-	"github.com/TarsCloud/TarsGo/tars/util/rogger"
 	"path/filepath"
+
+	"github.com/TarsCloud/TarsGo/tars/util/rogger"
 )
 
 // GetLogger Get a logger
@@ -42,6 +43,7 @@ func GetHourLogger(name string, numHour int) *rogger.Logger {
 	return lg
 }
 
+//GetRemoteLogger returns a remote logger
 func GetRemoteLogger(name string) *rogger.Logger {
 	cfg := GetServerConfig()
 	lg := rogger.GetLogger(name)
@@ -49,7 +51,7 @@ func GetRemoteLogger(name string) *rogger.Logger {
 		return lg
 	}
 	remoteWriter := NewRemoteTimeWriter()
-	var set string = ""
+	var set string
 	if cfg.Enableset {
 		set = cfg.Setdivision
 	}

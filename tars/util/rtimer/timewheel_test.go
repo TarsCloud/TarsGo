@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+//TestTimeWheel test timewheel.
 func TestTimeWheel(t *testing.T) {
 	var deviation int64
 	var num int64 = 100
@@ -33,11 +34,14 @@ func TestTimeWheel(t *testing.T) {
 	fmt.Println(float64(deviation) / float64(num*int64(sleepTime)))
 }
 
+//BenchmarkTimeWheel benchmarks timewheel.
 func BenchmarkTimeWheel(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		After(time.Millisecond * 100)
 	}
 }
+
+//BenchmarkTimeBase benchmark origin timer.
 func BenchmarkTimeBase(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		time.After(time.Millisecond * 100)

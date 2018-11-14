@@ -8,10 +8,13 @@ import (
 	"time"
 )
 
+//TarsClientProtocol interface for handling tars client package.
 type TarsClientProtocol interface {
 	Recv(pkg []byte)
 	ParsePackage(buff []byte) (int, int)
 }
+
+//TarsClientConf is tars client side config
 type TarsClientConf struct {
 	Proto        string
 	ClientProto  TarsClientProtocol
@@ -21,6 +24,7 @@ type TarsClientConf struct {
 	WriteTimeout time.Duration
 }
 
+//TarsClient is struct for tars client.
 type TarsClient struct {
 	address string
 	//TODO remove it
@@ -43,6 +47,7 @@ type connection struct {
 	invokeNum int32
 }
 
+//NewTarsClient new tars client and init it .
 func NewTarsClient(address string, cp TarsClientProtocol, conf *TarsClientConf) *TarsClient {
 	if conf.QueueLen <= 0 {
 		conf.QueueLen = 100
@@ -53,6 +58,7 @@ func NewTarsClient(address string, cp TarsClientProtocol, conf *TarsClientConf) 
 	return tc
 }
 
+//Send sends the request to the server as []byte.
 func (tc *TarsClient) Send(req []byte) error {
 	w := tc.conn
 	if err := w.reConnect(); err != nil {
@@ -62,6 +68,7 @@ func (tc *TarsClient) Send(req []byte) error {
 	return nil
 }
 
+//Close close the client connection with the server.
 func (tc *TarsClient) Close() {
 	w := tc.conn
 	if !w.isClosed && w.conn != nil {

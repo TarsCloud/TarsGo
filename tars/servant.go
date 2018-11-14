@@ -11,6 +11,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
+//ServantProxy is the struct for proxy servants.
 type ServantProxy struct {
 	sid     int32
 	name    string
@@ -19,6 +20,7 @@ type ServantProxy struct {
 	timeout int
 }
 
+//Init init the ServantProxy struct.
 func (s *ServantProxy) Init(comm *Communicator, objName string) {
 	pos := strings.Index(objName, "@")
 	if pos > 0 {
@@ -33,10 +35,12 @@ func (s *ServantProxy) Init(comm *Communicator, objName string) {
 	s.obj = of.GetObjectProxy(objName)
 }
 
+//TarsSetTimeout sets the timeout for client calling the server , which is in ms.
 func (s *ServantProxy) TarsSetTimeout(t int) {
 	s.timeout = t
 }
 
+//Tars_invoke is use for client inoking server.
 func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	sFuncName string,
 	buf []byte,
@@ -62,7 +66,7 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	var err error
 	if allFilters.cf != nil {
 		err = allFilters.cf(ctx, msg, s.obj.Invoke, time.Duration(s.timeout)*time.Millisecond)
-	}else{
+	} else {
 		err = s.obj.Invoke(ctx, msg, time.Duration(s.timeout)*time.Millisecond)
 	}
 	if err != nil {
@@ -79,18 +83,21 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	return err
 }
 
+//ServantProxyFactory is ServantProxy' factory struct.
 type ServantProxyFactory struct {
 	objs map[string]*ServantProxy
 	comm *Communicator
 	fm   *sync.Mutex
 }
 
+//Init init the  ServantProxyFactory.
 func (o *ServantProxyFactory) Init(comm *Communicator) {
 	o.fm = new(sync.Mutex)
 	o.comm = comm
 	o.objs = make(map[string]*ServantProxy)
 }
 
+//GetServantProxy gets the ServanrProxy for the object.
 func (o *ServantProxyFactory) GetServantProxy(objName string) *ServantProxy {
 	o.fm.Lock()
 	if obj, ok := o.objs[objName]; ok {

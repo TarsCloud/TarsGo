@@ -24,6 +24,8 @@ var httpSvrs map[string]*http.Server
 var shutdown chan bool
 var serList []string
 var objRunList []string
+
+//TLOG is the logger for tars framework.
 var TLOG = rogger.GetLogger("TLOG")
 var initOnce sync.Once
 
@@ -37,20 +39,16 @@ func init() {
 	httpSvrs = make(map[string]*http.Server)
 	shutdown = make(chan bool, 1)
 	adminMethods = make(map[string]adminFn)
-	//在配置初始化前将日志关闭，减少独立客户端日志
 	rogger.SetLevel(rogger.ERROR)
 	Init()
 }
 
-//有些场景下需要提前初始化时调用:
-//比如Imp里调用了通信器、
-//AddServant时使用了全局配置等等。
+//Init should run before GetServerConfig & GetClientConfig , or before run
+// and Init should be only run once
 func Init() {
 	initOnce.Do(initConfig)
 }
 
-//服务的初始化函数,默认会在Run的时候启动
-//
 func initConfig() {
 	confPath := flag.String("config", "", "init config path")
 	flag.Parse()
@@ -158,6 +156,7 @@ func initConfig() {
 	go initProReport()
 }
 
+//Run the application
 func Run() {
 	Init()
 	<-statInited
