@@ -38,12 +38,13 @@ func (obj *ObjectProxy) Invoke(ctx context.Context, msg *Message, timeout time.D
 	}
 	msg.Adp = adp
 	atomic.AddInt32(&obj.queueLen, 1)
-	readCh := make(chan *requestf.ResponsePacket)
+	readCh := make(chan *requestf.ResponsePacket, 1)
 	adp.resp.Store(msg.Req.IRequestId, readCh)
 	defer func() {
 		checkPanic()
 		atomic.AddInt32(&obj.queueLen, -1)
 		adp.resp.Delete(msg.Req.IRequestId)
+		close(readCh)
 	}()
 	if err := adp.Send(msg.Req); err != nil {
 		return err
