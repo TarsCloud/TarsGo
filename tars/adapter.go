@@ -68,7 +68,7 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 		select {
 		case ch <- &packet:
 		default:
-			close(ch)
+			// close(ch)
 		}
 	} else {
 		TLOG.Error("timeout resp,drop it:", packet.IRequestId)
