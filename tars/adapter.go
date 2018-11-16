@@ -55,6 +55,13 @@ func (c *AdapterProxy) ParsePackage(buff []byte) (int, int) {
 
 // Recv : Recover read channel when closed for timeout
 func (c *AdapterProxy) Recv(pkg []byte) {
+	defer func() {
+		// TODO readCh has a certain probability to be closed after the load, and we need to recover
+		// Maybe there is a better way
+		if err := recover(); err != nil {
+			TLOG.Error("recv pkg painc:", err)
+		}
+	}()
 	packet := requestf.ResponsePacket{}
 	err := packet.ReadFrom(codec.NewReader(pkg))
 	if err != nil {
@@ -65,11 +72,7 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 	if ok {
 		ch := chIF.(chan *requestf.ResponsePacket)
 		TLOG.Debug("IN:", packet)
-		select {
-		case ch <- &packet:
-		default:
-			close(ch)
-		}
+		ch <- &packet
 	} else {
 		TLOG.Error("timeout resp,drop it:", packet.IRequestId)
 	}
