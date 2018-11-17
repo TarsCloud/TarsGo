@@ -77,20 +77,20 @@ func (_obj *Log) Logger(App string, Server string, File string, Format string, B
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -162,20 +162,20 @@ func (_obj *Log) LoggerWithContext(ctx context.Context, App string, Server strin
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -233,20 +233,20 @@ func (_obj *Log) LoggerbyInfo(Info *LogInfo, Buffer []string, _opt ...map[string
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -303,20 +303,20 @@ func (_obj *Log) LoggerbyInfoWithContext(ctx context.Context, Info *LogInfo, Buf
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {

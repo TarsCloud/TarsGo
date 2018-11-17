@@ -56,20 +56,20 @@ func (_obj *Notify) ReportServer(SServerName string, SThreadId string, SMessage 
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -120,20 +120,20 @@ func (_obj *Notify) ReportServerWithContext(ctx context.Context, SServerName str
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -185,20 +185,20 @@ func (_obj *Notify) NotifyServer(SServerName string, Level NOTIFYLEVEL, SMessage
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -249,20 +249,20 @@ func (_obj *Notify) NotifyServerWithContext(ctx context.Context, SServerName str
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -314,20 +314,20 @@ func (_obj *Notify) GetNotifyInfo(StKey *NotifyKey, StInfo *NotifyInfo, _opt ...
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -378,20 +378,20 @@ func (_obj *Notify) GetNotifyInfoWithContext(ctx context.Context, StKey *NotifyK
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -433,20 +433,20 @@ func (_obj *Notify) ReportNotifyInfo(Info *ReportInfo, _opt ...map[string]string
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -487,20 +487,20 @@ func (_obj *Notify) ReportNotifyInfoWithContext(ctx context.Context, Info *Repor
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
