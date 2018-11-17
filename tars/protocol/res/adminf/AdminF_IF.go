@@ -42,20 +42,20 @@ func (_obj *AdminF) Shutdown(_opt ...map[string]string) (err error) {
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -91,20 +91,20 @@ func (_obj *AdminF) ShutdownWithContext(ctx context.Context, _opt ...map[string]
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -151,20 +151,20 @@ func (_obj *AdminF) Notify(Command string, _opt ...map[string]string) (ret strin
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -210,20 +210,20 @@ func (_obj *AdminF) NotifyWithContext(ctx context.Context, Command string, _opt 
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {

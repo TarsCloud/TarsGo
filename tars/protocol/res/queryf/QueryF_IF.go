@@ -5,10 +5,10 @@ package queryf
 
 import (
 	"context"
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"fmt"
 	m "github.com/TarsCloud/TarsGo/tars/model"
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
+	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
@@ -77,20 +77,20 @@ func (_obj *QueryF) FindObjectById(Id string, _opt ...map[string]string) (ret []
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -161,20 +161,20 @@ func (_obj *QueryF) FindObjectByIdWithContext(ctx context.Context, Id string, _o
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -281,20 +281,20 @@ func (_obj *QueryF) FindObjectById4Any(Id string, ActiveEp *[]endpointf.Endpoint
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -400,20 +400,20 @@ func (_obj *QueryF) FindObjectById4AnyWithContext(ctx context.Context, Id string
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -520,20 +520,20 @@ func (_obj *QueryF) FindObjectById4All(Id string, ActiveEp *[]endpointf.Endpoint
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -639,20 +639,20 @@ func (_obj *QueryF) FindObjectById4AllWithContext(ctx context.Context, Id string
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -759,20 +759,20 @@ func (_obj *QueryF) FindObjectByIdInSameGroup(Id string, ActiveEp *[]endpointf.E
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -878,20 +878,20 @@ func (_obj *QueryF) FindObjectByIdInSameGroupWithContext(ctx context.Context, Id
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -1003,20 +1003,20 @@ func (_obj *QueryF) FindObjectByIdInSameStation(Id string, SStation string, Acti
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -1127,20 +1127,20 @@ func (_obj *QueryF) FindObjectByIdInSameStationWithContext(ctx context.Context, 
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -1252,20 +1252,20 @@ func (_obj *QueryF) FindObjectByIdInSameSet(Id string, SetId string, ActiveEp *[
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -1376,20 +1376,20 @@ func (_obj *QueryF) FindObjectByIdInSameSetWithContext(ctx context.Context, Id s
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {

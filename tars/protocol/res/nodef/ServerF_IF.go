@@ -51,20 +51,20 @@ func (_obj *ServerF) KeepAlive(ServerInfo *ServerInfo, _opt ...map[string]string
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -110,20 +110,20 @@ func (_obj *ServerF) KeepAliveWithContext(ctx context.Context, ServerInfo *Serve
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -180,20 +180,20 @@ func (_obj *ServerF) ReportVersion(App string, ServerName string, Version string
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {
@@ -249,20 +249,20 @@ func (_obj *ServerF) ReportVersionWithContext(ctx context.Context, App string, S
 	}
 
 	if len(_opt) == 1 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
 	} else if len(_opt) == 2 {
-		for k, _ := range _context {
+		for k := range _context {
 			delete(_context, k)
 		}
 		for k, v := range _resp.Context {
 			_context[k] = v
 		}
-		for k, _ := range _status {
+		for k := range _status {
 			delete(_status, k)
 		}
 		for k, v := range _resp.Status {

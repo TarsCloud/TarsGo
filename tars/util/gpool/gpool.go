@@ -41,6 +41,7 @@ type Pool struct {
 	WorkerQueue chan *Worker
 	stop        chan struct{}
 }
+
 //NewPool news gotouine pool
 func NewPool(numWorkers int, jobQueueLen int) *Pool {
 	jobQueue := make(chan Job, jobQueueLen)
@@ -54,6 +55,7 @@ func NewPool(numWorkers int, jobQueueLen int) *Pool {
 	pool.Start()
 	return pool
 }
+
 //Start starts all workers
 func (p *Pool) Start() {
 	for i := 0; i < cap(p.WorkerQueue); i++ {
@@ -83,6 +85,7 @@ func (p *Pool) dispatch() {
 		}
 	}
 }
+
 //Release release all workers
 func (p *Pool) Release() {
 	p.stop <- struct{}{}
