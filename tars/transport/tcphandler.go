@@ -94,8 +94,9 @@ func (h *tcpHandler) Handle() error {
 			atomic.AddInt32(&h.acceptNum, -1)
 		}(conn)
 	}
-
-	h.gpool.Release()
+	if h.gpool != nil {
+		h.gpool.Release()
+	}
 	return nil
 }
 
