@@ -65,6 +65,9 @@ func (s *TarsProtocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 		err = s.dispatcher.Dispatch(ctx, s.serverImp, &reqPackage, &rspPackage, s.withContext)
 	}
 	if err != nil {
+		rspPackage.IVersion = basef.TARSVERSION
+		rspPackage.CPacketType = basef.TARSNORMAL
+		rspPackage.IRequestId = reqPackage.IRequestId
 		rspPackage.IRet = 1
 		rspPackage.SResultDesc = err.Error()
 	}

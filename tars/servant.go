@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
@@ -71,9 +72,13 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	}
 	if err != nil {
 		TLOG.Error("Invoke error:", s.name, sFuncName, err.Error())
-		//TODO report exec
-		msg.End()
-		ReportStat(msg, 0, 1, 0)
+		if msg.Resp == nil {
+			ReportStat(msg, 0, 0, 1)
+		} else if msg.Status == basef.TARSINVOKETIMEOUT {
+			ReportStat(msg, 0, 1, 0)
+		} else {
+			ReportStat(msg, 0, 0, 1)
+		}
 		return err
 	}
 	msg.End()
