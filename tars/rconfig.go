@@ -1,7 +1,6 @@
 package tars
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 
@@ -51,7 +50,7 @@ func (c *RConf) GetConfigList() (flist []string, err error) {
 		return flist, err
 	}
 	if ret != 0 {
-		return flist, errors.New(fmt.Sprintln("ret:%d", ret))
+		return flist, fmt.Errorf("ret:%d", ret)
 	}
 	return flist, nil
 }
@@ -73,7 +72,7 @@ func (c *RConf) GetConfig(filename string) (config string, err error) {
 		return config, err
 	}
 	if ret != 0 {
-		return config, errors.New(fmt.Sprintln("ret:%d", ret))
+		return config, fmt.Errorf("ret %d", ret)
 	}
 	err = saveFile(c.path, filename, config)
 	if err != nil {
