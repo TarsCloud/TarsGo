@@ -41,8 +41,10 @@ func (s *Set) Remove(e interface{}) {
 //Clear clear the set.
 func (s *Set) Clear() {
 	atomic.SwapInt32(&s.length, 0)
-	var newEl sync.Map
-	s.el = newEl
+	s.el.Range(func(key interface{}, value interface{}) bool {
+		s.el.Delete(key)
+		return true
+	})
 }
 
 //Slice init set from []interface.
