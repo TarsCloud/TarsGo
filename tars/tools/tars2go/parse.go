@@ -441,7 +441,7 @@ func (p *Parse) parseConst() {
 	p.next()
 	switch p.t.T {
 	case tkTVector, tkTMap:
-		p.parseErr("const no suppost type vector or map.")
+		p.parseErr("const no supports type vector or map.")
 	case tkTBool, tkTByte, tkTShort,
 		tkTInt, tkTLong, tkTFloat,
 		tkTDouble, tkTString, tkUnsigned:
@@ -638,7 +638,7 @@ func (p *Parse) checkDepTName(ty *VarType, dm *map[string]bool) {
 	}
 }
 
-// analysis custom type，whether have defination
+// analysis custom type，whether have definition
 func (p *Parse) analyzeTName() {
 	for i, v := range p.Struct {
 		for _, v := range v.Mb {
@@ -717,7 +717,7 @@ func newParse(s string, b []byte) *Parse {
 	return p
 }
 
-//ParseFile parse a file,return grammer tree.
+//ParseFile parse a file,return grammar tree.
 func ParseFile(path string) *Parse {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {

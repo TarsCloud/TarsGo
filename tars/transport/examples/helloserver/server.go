@@ -37,7 +37,7 @@ func (s *MyServer) ParsePackage(buff []byte) (pkgLen, status int) {
 	return int(length), transport.PACKAGE_FULL
 }
 
-//InvokeTimeout how to detail with timeout pacakge.
+//InvokeTimeout how to detail with timeout package.
 func (s *MyServer) InvokeTimeout(pkg []byte) []byte {
 	payload := []byte("timeout")
 	ret := make([]byte, 4+len(payload))
