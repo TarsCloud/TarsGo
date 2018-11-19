@@ -3,19 +3,24 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/TarsCloud/TarsGo/tars/transport"
 	"strconv"
 	"time"
+
+	"github.com/TarsCloud/TarsGo/tars/transport"
 )
 
+//MyClient is a example client for tars client testing.
 type MyClient struct {
 	recvCount int
 }
 
+//Recv print pkg and count
 func (c *MyClient) Recv(pkg []byte) {
 	fmt.Println("recv", string(pkg))
 	c.recvCount++
 }
+
+//ParsePackage parse package from buff
 func (c *MyClient) ParsePackage(buff []byte) (pkgLen, status int) {
 	if len(buff) < 4 {
 		return 0, transport.PACKAGE_LESS
