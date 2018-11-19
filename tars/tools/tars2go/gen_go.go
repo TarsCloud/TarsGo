@@ -861,7 +861,7 @@ func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo, withContext boo
 			gen.genWriteVar(dummy, "", fun.HasRet)
 		}
 	}
-	// empty args and below seperate
+	// empty args and below separate
 	c.WriteString("\n")
 	errStr := errString(fun.HasRet)
 

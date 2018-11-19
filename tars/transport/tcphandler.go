@@ -124,7 +124,7 @@ func (h *tcpHandler) recv(conn *net.TCPConn) {
 			if err == io.EOF {
 				TLOG.Debug("connection closed by remote:", conn.RemoteAddr())
 			} else {
-				TLOG.Error("read packge error:", reflect.TypeOf(err), err)
+				TLOG.Error("read package error:", reflect.TypeOf(err), err)
 			}
 			return
 		}
@@ -145,7 +145,7 @@ func (h *tcpHandler) recv(conn *net.TCPConn) {
 				currBuffer = nil
 				break
 			}
-			TLOG.Errorf("parse packge error %s %v", conn.RemoteAddr(), err)
+			TLOG.Errorf("parse package error %s %v", conn.RemoteAddr(), err)
 			return
 		}
 	}
