@@ -11,7 +11,7 @@ import (
 )
 
 func main() { //Init servant
-	f, err := os.Create("/usr/local/app/taf/app_log/cpu.profile")
+	f, err := os.Create("/usr/local/app/tars/app_log/cpu.profile")
 	if err != nil {
 		log.Fatal("could not create CPU profile: ", err)
 	}
