@@ -3,6 +3,8 @@ package transport
 import (
 	"context"
 	"net"
+
+	"github.com/TarsCloud/TarsGo/tars/util/grace"
 )
 
 type udpHandler struct {
@@ -15,11 +17,7 @@ type udpHandler struct {
 
 func (h *udpHandler) Listen() error {
 	cfg := h.conf
-	addr, err := net.ResolveUDPAddr("udp4", cfg.Address)
-	if err != nil {
-		return err
-	}
-	h.conn, err = net.ListenUDP("udp4", addr)
+	h.conn, err = grace.CreateUDPConn(cfg.Address)
 	if err != nil {
 		return err
 	}

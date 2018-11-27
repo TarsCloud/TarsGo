@@ -11,6 +11,7 @@ import (
 
 	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/gpool"
+	"github.com/TarsCloud/TarsGo/tars/util/grace"
 )
 
 type tcpHandler struct {
@@ -30,7 +31,7 @@ type tcpHandler struct {
 
 func (h *tcpHandler) Listen() (err error) {
 	cfg := h.conf
-	ln, err := createListener("tcp", cfg.Address)
+	ln, err := grace.CreateListener("tcp", cfg.Address)
 	if err == nil {
 		TLOG.Infof("Listening on %s", cfg.Address)
 		h.lis = ln.(*net.TCPListener)
