@@ -3,14 +3,15 @@
 package tars
 
 import (
+	"context"
 	"flag"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/adminf"
@@ -19,7 +20,6 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 	"github.com/TarsCloud/TarsGo/tars/util/grace"
 	"github.com/TarsCloud/TarsGo/tars/util/rogger"
-	"github.com/TarsCloud/TarsGo/tars/util/signal"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
@@ -168,6 +168,9 @@ func Run() {
 	<-statInited
 	<-proInited
 
+	for _, env := range os.Environ() {
+		TLOG.Infof("env %s", env)
+	}
 	// add adminF
 	adf := new(adminf.AdminF)
 	ad := new(Admin)
@@ -177,22 +180,20 @@ func Run() {
 		if s, ok := httpSvrs[obj]; ok {
 			go func(obj string) {
 				fmt.Println(obj, "http server start")
-
 				addr := s.Addr
 				if addr == "" {
 					addr = ":http"
 				}
-				ln, err := net.Listen("tcp", addr)
+				ln, err := grace.CreateListener("tcp", addr)
 				if err != nil {
 					fmt.Println(obj, "server start failed", err)
 					os.Exit(1)
 				}
-				err := s.Serve(ln)
+				err = s.Serve(ln)
 				if err != nil {
 					fmt.Println(obj, "server start failed", err)
 					os.Exit(1)
 				}
-				activeListeners = append(activeListeners, ln)
 			}(obj)
 			continue
 		}
@@ -209,54 +210,77 @@ func Run() {
 				fmt.Println(obj, "server start failed", err)
 				os.Exit(1)
 			}
-			activeListeners = append(activeListeners, ln)
 		}(obj)
 	}
 	go reportNotifyInfo("restart")
+
 	if os.Getenv("GRACE_RESTART") == "1" {
 		ppid := os.Getppid()
-		process, err := os.FindProcess(ppid)
 		TLOG.Infof("stop ppid %d", ppid)
-		if ppid > 1 && err != nil {
-			process.Signal(os.SIGKILL)
+		if ppid > 1 {
+			syscall.Kill(ppid, syscall.SIGUSR2)
 		}
 	}
 	mainloop()
 }
 
-func graceRestart() error {
-	TLOG.Debug("grace start server begin")
+func graceRestart() {
+	pid := os.Getpid()
+	TLOG.Debugf("grace start server begin %d", pid)
 	os.Setenv("GRACE_RESTART", "1")
 	envs := os.Environ()
-	prefix := grace.ListenFdEnvPrefix
-	files := make([]*os.File, 0)
+	files := []*os.File{os.Stdin, os.Stdout, os.Stderr}
 	for i, env := range envs {
-		if strings.Startswith(env, prefix) && strings.Contains(env, "=") {
-			val := strings.SplitN(env, "=", 2)[1]
-			fd, _ = strconv.ParseUint(val, 10, 64)
+		if strings.HasPrefix(env, grace.ListenFdEnvPrefix) && strings.Contains(env, "=") {
+			tmp := strings.SplitN(env, "=", 2)
+			key, val := tmp[0], tmp[1]
+
+			newFd := len(files)
+			envs[i] = fmt.Sprintf("%s=%d", key, newFd)
+
+			fd, _ := strconv.ParseUint(val, 10, 64)
 			file := os.NewFile(uintptr(fd), "listener")
 			files = append(files, file)
 		}
 	}
 
-	allFiles := append([]*os.File{os.Stdin, os.Stdout, os.Stderr}, files...)
 	process, err := os.StartProcess(os.Args[0], os.Args, &os.ProcAttr{
 		Env:   envs,
-		Files: allFiles,
+		Files: files,
 	})
+	if err != nil {
+		TLOG.Errorf("start supprocess failed %v", err)
+		return
+	}
 	TLOG.Infof("subprocess start %d", process.Pid)
-	return err
+	go process.Wait()
+}
+
+func graceShutdown() {
+	pid := os.Getpid()
+	TLOG.Infof("grace shutdown start %d", pid)
+	timeout := time.Second * 30
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	for _, obj := range objRunList {
+		if s, ok := httpSvrs[obj]; ok {
+			s.Shutdown(ctx)
+		}
+		if s, ok := goSvrs[obj]; ok {
+			s.Shutdown(ctx)
+		}
+	}
+	_, ok := ctx.Deadline()
+	if ok {
+		TLOG.Infof("grace shutdown succ %d", pid)
+	} else {
+		TLOG.Info("grace shutdown failed within %d seconds", timeout/time.Second)
+	}
+	shutdown <- true
 }
 
 func handleSignal() {
-	signal.GraceHandler(func() {
-		// grace stop
-		TLOG.Debug("stop server begin")
-		shutdown <- true
-	}, func() {
-		// start subprocess
-		graceRestart()
-	})
+	usrFun, killFunc := graceRestart, graceShutdown
+	grace.GraceHandler(usrFun, killFunc)
 }
 
 func mainloop() {

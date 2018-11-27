@@ -92,7 +92,7 @@ func (ts *TarsServer) Serve() error {
 }
 
 //Shutdown shutdown the server.
-func (ts *TarsServer) Shutdown() {
+func (ts *TarsServer) Shutdown(ctx context.Context) {
 	ts.isClosed = true
 }
 

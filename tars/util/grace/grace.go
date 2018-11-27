@@ -23,6 +23,7 @@ func CreateListener(proto string, addr string) (net.Listener, error) {
 			file.Close()
 			break
 		}
+		file.Close()
 		return ln, nil
 	}
 	ln, err := net.Listen(proto, addr)

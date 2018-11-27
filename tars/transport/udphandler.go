@@ -15,7 +15,7 @@ type udpHandler struct {
 	numInvoke int32
 }
 
-func (h *udpHandler) Listen() error {
+func (h *udpHandler) Listen() (err error) {
 	cfg := h.conf
 	h.conn, err = grace.CreateUDPConn(cfg.Address)
 	if err != nil {

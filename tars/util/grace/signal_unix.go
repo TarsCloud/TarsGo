@@ -1,26 +1,25 @@
 // +build linux darwin
-// package grace
+package grace
 
-// import (
-// 	"os"
-// 	"os/signal"
-// 	"syscall"
-// )
+import (
+	"os"
+	"os/signal"
+	"syscall"
+)
 
-// type handlerFunc func()
+type handlerFunc func()
 
-// func GraceHandler(stopFunc, userFunc handlerFunc) {
-// 	ch := make(chan os.Signal, 10)
-// 	signal.Notify(ch, syscall.SIGINT, syscall.SIGUSR2)
-// 	for {
-// 		sig := <-ch
-// 		switch sig {
-// 		case syscall.SIGKILL:
-// 			signal.Stop(ch)
-// 			stopFunc()
-// 			return
-// 		case syscall.SIGUSR2:
-// 			userFunc()
-// 		}
-// 	}
-// }
+func GraceHandler(userFunc, stopFunc handlerFunc) {
+	ch := make(chan os.Signal, 10)
+	signal.Notify(ch, syscall.SIGUSR1, syscall.SIGUSR2, syscall.SIGKILL, syscall.SIGTERM)
+	for {
+		sig := <-ch
+		switch sig {
+		case syscall.SIGUSR1:
+			userFunc()
+		case syscall.SIGUSR2, syscall.SIGKILL, syscall.SIGTERM:
+			signal.Stop(ch)
+			stopFunc()
+		}
+	}
+}
