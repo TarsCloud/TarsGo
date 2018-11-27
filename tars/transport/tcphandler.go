@@ -30,13 +30,14 @@ type tcpHandler struct {
 
 func (h *tcpHandler) Listen() (err error) {
 	cfg := h.conf
-	addr, err := net.ResolveTCPAddr("tcp4", cfg.Address)
-	if err != nil {
-		return err
+	ln, err := createListener("tcp", cfg.Address)
+	if err == nil {
+		TLOG.Infof("Listening on %s", cfg.Address)
+		h.lis = ln.(*net.TCPListener)
+	} else {
+		TLOG.Infof("Listening on %s error: %v", cfg.Address, err)
 	}
-	h.lis, err = net.ListenTCP("tcp4", addr)
-	TLOG.Info("Listening on", cfg.Address)
-	return
+	return err
 }
 
 func (h *tcpHandler) handleConn(conn *net.TCPConn, pkg []byte) {

@@ -2,6 +2,7 @@ package transport
 
 import (
 	"context"
+	"net"
 	"sync/atomic"
 	"time"
 
@@ -52,6 +53,7 @@ type TarsServerConf struct {
 
 //TarsServer tars server struct.
 type TarsServer struct {
+	Listener   net.Listener
 	svr        TarsProtoCol
 	conf       *TarsServerConf
 	lastInvoke time.Time
@@ -85,6 +87,7 @@ func (ts *TarsServer) Serve() error {
 	if err := h.Listen(); err != nil {
 		return err
 	}
+
 	return h.Handle()
 }
 

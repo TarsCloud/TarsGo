@@ -5,8 +5,11 @@ package tars
 import (
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -14,13 +17,16 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/transport"
 	"github.com/TarsCloud/TarsGo/tars/util/conf"
 	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
+	"github.com/TarsCloud/TarsGo/tars/util/grace"
 	"github.com/TarsCloud/TarsGo/tars/util/rogger"
+	"github.com/TarsCloud/TarsGo/tars/util/signal"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
 var tarsConfig map[string]*transport.TarsServerConf
 var goSvrs map[string]*transport.TarsServer
 var httpSvrs map[string]*http.Server
+var listenFds []*os.File
 var shutdown chan bool
 var serList []string
 var objRunList []string
@@ -171,11 +177,22 @@ func Run() {
 		if s, ok := httpSvrs[obj]; ok {
 			go func(obj string) {
 				fmt.Println(obj, "http server start")
-				err := s.ListenAndServe()
+
+				addr := s.Addr
+				if addr == "" {
+					addr = ":http"
+				}
+				ln, err := net.Listen("tcp", addr)
 				if err != nil {
 					fmt.Println(obj, "server start failed", err)
 					os.Exit(1)
 				}
+				err := s.Serve(ln)
+				if err != nil {
+					fmt.Println(obj, "server start failed", err)
+					os.Exit(1)
+				}
+				activeListeners = append(activeListeners, ln)
 			}(obj)
 			continue
 		}
@@ -192,10 +209,54 @@ func Run() {
 				fmt.Println(obj, "server start failed", err)
 				os.Exit(1)
 			}
+			activeListeners = append(activeListeners, ln)
 		}(obj)
 	}
 	go reportNotifyInfo("restart")
+	if os.Getenv("GRACE_RESTART") == "1" {
+		ppid := os.Getppid()
+		process, err := os.FindProcess(ppid)
+		TLOG.Infof("stop ppid %d", ppid)
+		if ppid > 1 && err != nil {
+			process.Signal(os.SIGKILL)
+		}
+	}
 	mainloop()
+}
+
+func graceRestart() error {
+	TLOG.Debug("grace start server begin")
+	os.Setenv("GRACE_RESTART", "1")
+	envs := os.Environ()
+	prefix := grace.ListenFdEnvPrefix
+	files := make([]*os.File, 0)
+	for i, env := range envs {
+		if strings.Startswith(env, prefix) && strings.Contains(env, "=") {
+			val := strings.SplitN(env, "=", 2)[1]
+			fd, _ = strconv.ParseUint(val, 10, 64)
+			file := os.NewFile(uintptr(fd), "listener")
+			files = append(files, file)
+		}
+	}
+
+	allFiles := append([]*os.File{os.Stdin, os.Stdout, os.Stderr}, files...)
+	process, err := os.StartProcess(os.Args[0], os.Args, &os.ProcAttr{
+		Env:   envs,
+		Files: allFiles,
+	})
+	TLOG.Infof("subprocess start %d", process.Pid)
+	return err
+}
+
+func handleSignal() {
+	signal.GraceHandler(func() {
+		// grace stop
+		TLOG.Debug("stop server begin")
+		shutdown <- true
+	}, func() {
+		// start subprocess
+		graceRestart()
+	})
 }
 
 func mainloop() {
@@ -210,6 +271,9 @@ func mainloop() {
 
 	go ha.ReportVersion(GetServerConfig().Version)
 	go ha.KeepAlive("") //first start
+
+	go handleSignal()
+
 	loop := time.NewTicker(MainLoopTicker)
 	for {
 		select {
