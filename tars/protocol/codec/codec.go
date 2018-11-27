@@ -410,6 +410,9 @@ func (b *Reader) skipField(ty byte) error {
 		if tyCur != BYTE {
 			return fmt.Errorf("simple list need byte head. but get %d", tyCur)
 		}
+		if err != nil {
+			return err
+		}
 		var len int32
 		err = b.Read_int32(&len, 0, true)
 		if err != nil {

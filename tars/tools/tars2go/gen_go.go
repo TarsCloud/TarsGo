@@ -227,7 +227,8 @@ func (gen *GenGo) genType(ty *VarType) string {
 	case tkTMap:
 		ret = "map[" + gen.genType(ty.TypeK) + "]" + gen.genType(ty.TypeV)
 	case tkName:
-		ret = strings.Replace(ty.TypeSt, "::", ".", -1)
+		//Actrually ret is useless here
+		//ret = strings.Replace(ty.TypeSt, "::", ".", -1)
 		vec := strings.Split(ty.TypeSt, "::")
 		for i := range vec {
 			if *gAddServant == true {
@@ -473,12 +474,18 @@ func (gen *GenGo) genReadVector(mb *StructMember, prefix string, hasRet bool) {
 	if mb.Require {
 		require = "true"
 	}
-	c.WriteString(`
-err, have, ty = _is.SkipToNoCheck(` + tag + `,` + require + `)
-` + errStr + `
-`)
+
 	if require == "false" {
+		c.WriteString(`
+		err, have, ty = _is.SkipToNoCheck(` + tag + `,` + require + `)
+		` + errStr + `
+		`)
 		c.WriteString("if have {")
+	} else {
+		c.WriteString(`
+		err, _, ty = _is.SkipToNoCheck(` + tag + `,` + require + `)
+		` + errStr + `
+		`)
 	}
 
 	c.WriteString(`
