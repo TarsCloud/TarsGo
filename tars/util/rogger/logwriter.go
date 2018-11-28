@@ -125,8 +125,19 @@ func (w *RollFileWriter) NeedPrefix() bool {
 	return true
 }
 
+func (w *DateWriter) isExpired() bool {
+	currDate := w.getCurrDate()
+	return w.currDate != currDate
+}
+
 //Write method implement for the DateWriter
 func (w *DateWriter) Write(v []byte) {
+	if w.isExpired() {
+		w.currDate = w.getCurrDate()
+		w.cleanOldLogs()
+		fullPath := filepath.Join(w.logpath, w.name+"_"+w.currDate+".log")
+		reOpenFile(fullPath, &w.currFile, &w.openTime)
+	}
 	if w.currFile == nil || w.openTime+10 < currUnixTime {
 		fullPath := filepath.Join(w.logpath, w.name+"_"+w.currDate+".log")
 		reOpenFile(fullPath, &w.currFile, &w.openTime)
@@ -134,15 +145,7 @@ func (w *DateWriter) Write(v []byte) {
 	if w.currFile == nil {
 		return
 	}
-
 	w.currFile.Write(v)
-	currDate := w.getCurrDate()
-	if w.currDate != currDate {
-		w.currDate = currDate
-		w.cleanOldLogs()
-		fullPath := filepath.Join(w.logpath, w.name+"_"+w.currDate+".log")
-		reOpenFile(fullPath, &w.currFile, &w.openTime)
-	}
 }
 
 //NeedPrefix shows whether needs prefix info for DateWriter or not.
