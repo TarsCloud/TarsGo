@@ -75,7 +75,7 @@ func (h *tcpHandler) Handle() error {
 	cfg := h.conf
 	for {
 		if atomic.LoadInt32(&h.ts.isClosed) == 1 {
-			return
+			return nil
 		}
 		if cfg.AcceptTimeout > 0 {
 			// set accept timeout
