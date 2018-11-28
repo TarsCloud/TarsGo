@@ -170,7 +170,9 @@ func Run() {
 	<-proInited
 
 	for _, env := range os.Environ() {
-		TLOG.Infof("env %s", env)
+		if strings.HasPrefix(env, grace.InheritFdPrefix) {
+			TLOG.Infof("env %s", env)
+		}
 	}
 	// add adminF
 	adf := new(adminf.AdminF)
