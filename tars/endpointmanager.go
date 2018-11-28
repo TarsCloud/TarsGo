@@ -203,7 +203,7 @@ func (e *EndpointManager) findAndSetObj(q *queryf.QueryF) {
 	TLOG.Debug("find obj endpoint:", e.objName, ret, *activeEp, *inactiveEp)
 
 	e.mlock.Lock()
-	if (len(*inactiveEp)) > 0 {
+	if (len(*inactiveEp)) >= 0 {
 		for _, ep := range *inactiveEp {
 			end := endpoint.Tars2endpoint(ep)
 			e.pointsSet.Remove(end)
@@ -213,7 +213,7 @@ func (e *EndpointManager) findAndSetObj(q *queryf.QueryF) {
 			}
 		}
 	}
-	if (len(*activeEp)) > 0 {
+	if (len(*activeEp)) >= 0 {
 		e.pointsSet.Clear() // clean it first,then add back .this action must lead to add lock,but if don't clean may lead to leakage.it's better to use remove.
 		for _, ep := range *activeEp {
 			end := endpoint.Tars2endpoint(ep)
