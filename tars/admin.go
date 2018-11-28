@@ -2,9 +2,10 @@ package tars
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/TarsCloud/TarsGo/tars/util/debug"
 	logger "github.com/TarsCloud/TarsGo/tars/util/rogger"
-	"strings"
 )
 
 //Admin struct
@@ -25,6 +26,7 @@ func (a *Admin) Shutdown() error {
 //Notify handler for cmds from admin
 func (a *Admin) Notify(command string) (string, error) {
 	cmd := strings.Split(command, " ")
+	go reportNotifyInfo("AdminServant::notify:" + cmd[0])
 	switch cmd[0] {
 	case "tars.viewversion":
 		return GetServerConfig().Version, nil
