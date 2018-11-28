@@ -31,15 +31,17 @@ func CreateListener(proto string, addr string) (net.Listener, error) {
 			file.Close()
 			break
 		}
-		os.Setenv(nowKey, val)
 		file.Close()
+		file, _ = ln.(filer).File()
+		val = fmt.Sprint(file.Fd())
+		os.Setenv(nowKey, val)
 		return ln, nil
 	}
 	// not inherit, create new
 	ln, err := net.Listen(proto, addr)
 	if err == nil {
-		f, _ := ln.(filer).File()
-		val = fmt.Sprint(f.Fd())
+		file, _ := ln.(filer).File()
+		val = fmt.Sprint(file.Fd())
 		os.Setenv(nowKey, val)
 	}
 	return ln, err
@@ -60,12 +62,14 @@ func CreateUDPConn(addr string) (*net.UDPConn, error) {
 		file := os.NewFile(uintptr(fd), "listener")
 		conn, err := net.FileConn(file)
 		if err != nil {
-			file.Close()
 			break
 		}
-		os.Setenv(nowKey, val)
 		file.Close()
-		return conn.(*net.UDPConn), nil
+		udpConn := conn.(*net.UDPConn)
+		file, _ = udpConn.File()
+		val = fmt.Sprint(file.Fd())
+		os.Setenv(nowKey, val)
+		return udpConn, nil
 	}
 	// not inherit, create new
 	uaddr, err := net.ResolveUDPAddr("udp4", addr)
@@ -73,12 +77,9 @@ func CreateUDPConn(addr string) (*net.UDPConn, error) {
 		return nil, err
 	}
 	conn, err := net.ListenUDP("udp4", uaddr)
-	if err != nil {
-		return nil, err
-	}
 	if err == nil {
-		f, _ := conn.File()
-		val = fmt.Sprint(f.Fd())
+		file, _ := conn.File()
+		val = fmt.Sprint(file.Fd())
 		os.Setenv(nowKey, val)
 	}
 	return conn, err

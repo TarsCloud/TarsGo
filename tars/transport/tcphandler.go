@@ -75,9 +75,9 @@ func (h *tcpHandler) Handle() error {
 	cfg := h.conf
 	for {
 		if atomic.LoadInt32(&h.ts.isClosed) == 1 {
-			// set short deadline to clear connection buffer
-			h.lis.SetDeadline(time.Now().Add(time.Millisecond * 10))
-		} else if cfg.AcceptTimeout > 0 {
+			return
+		}
+		if cfg.AcceptTimeout > 0 {
 			// set accept timeout
 			h.lis.SetDeadline(time.Now().Add(cfg.AcceptTimeout))
 		}

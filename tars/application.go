@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"sync"
@@ -231,7 +232,7 @@ func graceRestart() {
 	envs := os.Environ()
 	files := []*os.File{os.Stdin, os.Stdout, os.Stderr}
 	newEnvs := make([]string, 0)
-	for i, env := range envs {
+	for _, env := range envs {
 		// skip fd inherited from parent process
 		if strings.HasPrefix(env, grace.InheritFdPrefix) {
 			continue
@@ -242,8 +243,10 @@ func graceRestart() {
 
 			newFd := len(files)
 			// replace key
-			key = strings.Replace(key, grace.ListenFdPrefix, grace.InheritFdPrefix, 1)
-			newEnvs = append(newEnvs, fmt.Sprintf("%s=%d", key, newFd))
+			newKey := strings.Replace(key, grace.ListenFdPrefix, grace.InheritFdPrefix, 1)
+			newEnvs = append(newEnvs, fmt.Sprintf("%s=%d", newKey, newFd))
+
+			TLOG.Debugf("tranlate %s=%s to %s=%d", key, val, newKey, newFd)
 
 			fd, _ := strconv.ParseUint(val, 10, 64)
 			file := os.NewFile(uintptr(fd), "listener")
@@ -252,8 +255,13 @@ func graceRestart() {
 			newEnvs = append(newEnvs, env)
 		}
 	}
+	exePath, err := exec.LookPath(os.Args[0])
+	if err != nil {
+		TLOG.Errorf("LookPath failed %v", err)
+		return
+	}
 
-	process, err := os.StartProcess(os.Args[0], os.Args, &os.ProcAttr{
+	process, err := os.StartProcess(exePath, os.Args, &os.ProcAttr{
 		Env:   newEnvs,
 		Files: files,
 	})

@@ -4,7 +4,6 @@ import (
 	"context"
 	"net"
 	"sync/atomic"
-	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/util/grace"
 )
@@ -33,8 +32,7 @@ func (h *udpHandler) Handle() error {
 	buffer := make([]byte, 65535)
 	for {
 		if atomic.LoadInt32(&h.ts.isClosed) == 1 {
-			// set short deadline to clear connection buffer
-			h.conn.SetDeadline(time.Now().Add(time.Millisecond * 10))
+			return nil
 		}
 		n, udpAddr, err := h.conn.ReadFromUDP(buffer)
 		if err != nil {
