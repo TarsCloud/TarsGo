@@ -7,10 +7,18 @@ import (
 	"strconv"
 )
 
-var ListenFdEnvPrefix = "LISTEN_FDS"
+var (
+	// InheritFdPrefix marks the fd inherited from parent process
+	InheritFdPrefix = "LISTEN_FD_INHERIT"
+	// ListenFdPrefix marks the fd listened by current process
+	ListenFdPrefix = "LISTEN_FD_CURRENT"
+)
 
+// CreateListener creates a listener from inherited fd
+// if there is no inherited fd, create a now one.
 func CreateListener(proto string, addr string) (net.Listener, error) {
-	key := fmt.Sprintf("%s_%s_%s", ListenFdEnvPrefix, proto, addr)
+	key := fmt.Sprintf("%s_%s_%s", InheritFdPrefix, proto, addr)
+	nowKey := fmt.Sprintf("%s_%s_%s", ListenFdPrefix, proto, addr)
 	val := os.Getenv(key)
 	for val != "" {
 		fd, err := strconv.Atoi(val)
@@ -23,21 +31,26 @@ func CreateListener(proto string, addr string) (net.Listener, error) {
 			file.Close()
 			break
 		}
+		os.Setenv(nowKey, val)
 		file.Close()
 		return ln, nil
 	}
+	// not inherit, create new
 	ln, err := net.Listen(proto, addr)
 	if err == nil {
 		f, _ := ln.(filer).File()
-		fd := uint64(f.Fd())
-		val = fmt.Sprint(fd)
-		os.Setenv(key, val)
+		val = fmt.Sprint(f.Fd())
+		os.Setenv(nowKey, val)
 	}
 	return ln, err
 }
 
+// CreateUDPConn creates a udp connection from inherited fd
+// if there is no inherited fd, create a now one.
 func CreateUDPConn(addr string) (*net.UDPConn, error) {
-	key := fmt.Sprintf("%s_%s_%s", ListenFdEnvPrefix, "udp", addr)
+	proto := "udp"
+	key := fmt.Sprintf("%s_%s_%s", InheritFdPrefix, proto, addr)
+	nowKey := fmt.Sprintf("%s_%s_%s", ListenFdPrefix, proto, addr)
 	val := os.Getenv(key)
 	for val != "" {
 		fd, err := strconv.Atoi(val)
@@ -50,8 +63,11 @@ func CreateUDPConn(addr string) (*net.UDPConn, error) {
 			file.Close()
 			break
 		}
+		os.Setenv(nowKey, val)
+		file.Close()
 		return conn.(*net.UDPConn), nil
 	}
+	// not inherit, create new
 	uaddr, err := net.ResolveUDPAddr("udp4", addr)
 	if err != nil {
 		return nil, err
@@ -63,7 +79,7 @@ func CreateUDPConn(addr string) (*net.UDPConn, error) {
 	if err == nil {
 		f, _ := conn.File()
 		val = fmt.Sprint(f.Fd())
-		os.Setenv(key, val)
+		os.Setenv(nowKey, val)
 	}
 	return conn, err
 }

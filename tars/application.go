@@ -230,22 +230,31 @@ func graceRestart() {
 	os.Setenv("GRACE_RESTART", "1")
 	envs := os.Environ()
 	files := []*os.File{os.Stdin, os.Stdout, os.Stderr}
+	newEnvs := make([]string, 0)
 	for i, env := range envs {
-		if strings.HasPrefix(env, grace.ListenFdEnvPrefix) && strings.Contains(env, "=") {
+		// skip fd inherited from parent process
+		if strings.HasPrefix(env, grace.InheritFdPrefix) {
+			continue
+		}
+		if strings.HasPrefix(env, grace.ListenFdPrefix) && strings.Contains(env, "=") {
 			tmp := strings.SplitN(env, "=", 2)
 			key, val := tmp[0], tmp[1]
 
 			newFd := len(files)
-			envs[i] = fmt.Sprintf("%s=%d", key, newFd)
+			// replace key
+			key = strings.Replace(key, grace.ListenFdPrefix, grace.InheritFdPrefix, 1)
+			newEnvs = append(newEnvs, fmt.Sprintf("%s=%d", key, newFd))
 
 			fd, _ := strconv.ParseUint(val, 10, 64)
 			file := os.NewFile(uintptr(fd), "listener")
 			files = append(files, file)
+		} else {
+			newEnvs = append(newEnvs, env)
 		}
 	}
 
 	process, err := os.StartProcess(os.Args[0], os.Args, &os.ProcAttr{
-		Env:   envs,
+		Env:   newEnvs,
 		Files: files,
 	})
 	if err != nil {
@@ -260,20 +269,20 @@ func graceShutdown() {
 	pid := os.Getpid()
 	TLOG.Infof("grace shutdown start %d", pid)
 	timeout := time.Second * 30
+	var err error
 	ctx, _ := context.WithTimeout(context.Background(), timeout)
 	for _, obj := range objRunList {
 		if s, ok := httpSvrs[obj]; ok {
-			s.Shutdown(ctx)
+			err = s.Shutdown(ctx)
 		}
 		if s, ok := goSvrs[obj]; ok {
-			s.Shutdown(ctx)
+			err = s.Shutdown(ctx)
 		}
 	}
-	_, ok := ctx.Deadline()
-	if ok {
+	if err == nil {
 		TLOG.Infof("grace shutdown succ %d", pid)
 	} else {
-		TLOG.Info("grace shutdown failed within %d seconds", timeout/time.Second)
+		TLOG.Infof("grace shutdown failed within %d seconds: %v", timeout/time.Second, err)
 	}
 	shutdown <- true
 }

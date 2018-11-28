@@ -3,6 +3,6 @@ package grace
 
 type handlerFunc func()
 
-// GraceHandler is now supported in windows
+// GraceHandler is not supported in windows
 func GraceHandler(stopFunc, userFunc handlerFunc) {
 }

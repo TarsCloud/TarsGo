@@ -2,6 +2,7 @@ package transport
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"sync/atomic"
 	"time"
@@ -58,14 +59,15 @@ type TarsServer struct {
 	conf       *TarsServerConf
 	lastInvoke time.Time
 	idleTime   time.Time
-	isClosed   bool
+	isClosed   int32
 	numInvoke  int32
+	numConn    int32
 }
 
 //NewTarsServer new TarsServer and init with conf.
 func NewTarsServer(svr TarsProtoCol, conf *TarsServerConf) *TarsServer {
 	ts := &TarsServer{svr: svr, conf: conf}
-	ts.isClosed = false
+	ts.isClosed = 0
 	ts.lastInvoke = time.Now()
 	return ts
 }
@@ -87,13 +89,34 @@ func (ts *TarsServer) Serve() error {
 	if err := h.Listen(); err != nil {
 		return err
 	}
-
 	return h.Handle()
 }
 
-//Shutdown shutdown the server.
-func (ts *TarsServer) Shutdown(ctx context.Context) {
-	ts.isClosed = true
+//Shutdown try to shutdown server gracefully.
+func (ts *TarsServer) Shutdown(ctx context.Context) error {
+	atomic.StoreInt32(&ts.isClosed, 1)
+	watchDone := make(chan bool, 1)
+	go func() {
+		watchInterval := time.Millisecond * 500
+		for range time.NewTicker(watchInterval).C {
+			if atomic.LoadInt32(&ts.numConn) == 0 && atomic.LoadInt32(&ts.numInvoke) == 0 {
+				watchDone <- true
+				return
+			}
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				TLOG.Debugf("wait %d conn %d invoke exit", ts.numConn, ts.numInvoke)
+			}
+		}
+	}()
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("wait shutdown timeout")
+	case <-watchDone:
+		return nil
+	}
 }
 
 //GetConfig gets the tars server config.
