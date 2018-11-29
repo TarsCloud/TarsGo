@@ -10,15 +10,18 @@ import (
 var (
 	// InheritFdPrefix marks the fd inherited from parent process
 	InheritFdPrefix = "LISTEN_FD_INHERIT"
-	// ListenFdPrefix marks the fd listened by current process
-	ListenFdPrefix = "LISTEN_FD_CURRENT"
+
+	allListenFds map[string]filer
 )
+
+func init() {
+	allListenFds = make(map[string]filer)
+}
 
 // CreateListener creates a listener from inherited fd
 // if there is no inherited fd, create a now one.
 func CreateListener(proto string, addr string) (net.Listener, error) {
 	key := fmt.Sprintf("%s_%s_%s", InheritFdPrefix, proto, addr)
-	nowKey := fmt.Sprintf("%s_%s_%s", ListenFdPrefix, proto, addr)
 	val := os.Getenv(key)
 	for val != "" {
 		fd, err := strconv.Atoi(val)
@@ -31,18 +34,15 @@ func CreateListener(proto string, addr string) (net.Listener, error) {
 			file.Close()
 			break
 		}
-		file.Close()
-		file, _ = ln.(filer).File()
-		val = fmt.Sprint(file.Fd())
-		os.Setenv(nowKey, val)
+		tcpLn := ln.(*net.TCPListener)
+		allListenFds[key] = tcpLn
 		return ln, nil
 	}
 	// not inherit, create new
 	ln, err := net.Listen(proto, addr)
 	if err == nil {
-		file, _ := ln.(filer).File()
-		val = fmt.Sprint(file.Fd())
-		os.Setenv(nowKey, val)
+		tcpLn := ln.(*net.TCPListener)
+		allListenFds[key] = tcpLn
 	}
 	return ln, err
 }
@@ -52,7 +52,6 @@ func CreateListener(proto string, addr string) (net.Listener, error) {
 func CreateUDPConn(addr string) (*net.UDPConn, error) {
 	proto := "udp"
 	key := fmt.Sprintf("%s_%s_%s", InheritFdPrefix, proto, addr)
-	nowKey := fmt.Sprintf("%s_%s_%s", ListenFdPrefix, proto, addr)
 	val := os.Getenv(key)
 	for val != "" {
 		fd, err := strconv.Atoi(val)
@@ -66,9 +65,7 @@ func CreateUDPConn(addr string) (*net.UDPConn, error) {
 		}
 		file.Close()
 		udpConn := conn.(*net.UDPConn)
-		file, _ = udpConn.File()
-		val = fmt.Sprint(file.Fd())
-		os.Setenv(nowKey, val)
+		allListenFds[key] = udpConn
 		return udpConn, nil
 	}
 	// not inherit, create new
@@ -78,11 +75,20 @@ func CreateUDPConn(addr string) (*net.UDPConn, error) {
 	}
 	conn, err := net.ListenUDP("udp4", uaddr)
 	if err == nil {
-		file, _ := conn.File()
-		val = fmt.Sprint(file.Fd())
-		os.Setenv(nowKey, val)
+		allListenFds[key] = conn
 	}
 	return conn, err
+}
+
+// GetAllLisenFiles returns all listen files
+func GetAllLisenFiles() map[string]*os.File {
+	files := make(map[string]*os.File)
+	for k, v := range allListenFds {
+		if file, err := v.File(); err != nil {
+			files[k] = file
+		}
+	}
+	return files
 }
 
 type filer interface {

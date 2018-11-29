@@ -1,4 +1,5 @@
 // +build linux darwin
+
 package grace
 
 import (
@@ -23,4 +24,9 @@ func GraceHandler(userFunc, stopFunc handlerFunc) {
 			stopFunc()
 		}
 	}
+}
+
+// GraceHandler send signal USR2 to pid
+func SignalUSR2(pid int) {
+	syscall.Kill(pid, syscall.SIGUSR2)
 }

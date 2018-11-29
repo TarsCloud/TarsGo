@@ -9,10 +9,8 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/adminf"
@@ -221,7 +219,7 @@ func Run() {
 		ppid := os.Getppid()
 		TLOG.Infof("stop ppid %d", ppid)
 		if ppid > 1 {
-			syscall.Kill(ppid, syscall.SIGUSR2)
+			grace.SignalUSR2(ppid)
 		}
 	}
 	mainloop()
@@ -232,31 +230,24 @@ func graceRestart() {
 	TLOG.Debugf("grace start server begin %d", pid)
 	os.Setenv("GRACE_RESTART", "1")
 	envs := os.Environ()
-	files := []*os.File{os.Stdin, os.Stdout, os.Stderr}
 	newEnvs := make([]string, 0)
 	for _, env := range envs {
 		// skip fd inherited from parent process
 		if strings.HasPrefix(env, grace.InheritFdPrefix) {
 			continue
 		}
-		if strings.HasPrefix(env, grace.ListenFdPrefix) && strings.Contains(env, "=") {
-			tmp := strings.SplitN(env, "=", 2)
-			key, val := tmp[0], tmp[1]
-
-			newFd := len(files)
-			// replace key
-			newKey := strings.Replace(key, grace.ListenFdPrefix, grace.InheritFdPrefix, 1)
-			newEnvs = append(newEnvs, fmt.Sprintf("%s=%d", newKey, newFd))
-
-			TLOG.Debugf("tranlate %s=%s to %s=%d", key, val, newKey, newFd)
-
-			fd, _ := strconv.ParseUint(val, 10, 64)
-			file := os.NewFile(uintptr(fd), "listener")
-			files = append(files, file)
-		} else {
-			newEnvs = append(newEnvs, env)
-		}
+		newEnvs = append(newEnvs, env)
 	}
+
+	files := []*os.File{os.Stdin, os.Stdout, os.Stderr}
+	for key, file := range grace.GetAllLisenFiles() {
+		fd := fmt.Sprint(file.Fd())
+		newFd := len(files)
+		TLOG.Debugf("tranlate %s=%s to %s=%d", key, fd, key, newFd)
+		newEnvs = append(newEnvs, fmt.Sprintf("%s=%d", key, newFd))
+		files = append(files, file)
+	}
+
 	exePath, err := exec.LookPath(os.Args[0])
 	if err != nil {
 		TLOG.Errorf("LookPath failed %v", err)

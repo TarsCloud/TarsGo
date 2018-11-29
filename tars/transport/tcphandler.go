@@ -107,6 +107,7 @@ func (h *tcpHandler) Handle() error {
 }
 
 func (h *tcpHandler) recv(conn *net.TCPConn) {
+	//TODO: wait invoke done
 	defer conn.Close()
 	cfg := h.conf
 	buffer := make([]byte, 1024*4)
