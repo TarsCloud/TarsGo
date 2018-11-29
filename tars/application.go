@@ -227,7 +227,7 @@ func Run() {
 
 func graceRestart() {
 	pid := os.Getpid()
-	TLOG.Debugf("grace start server begin %d", pid)
+	TLOG.Debugf("grace restart server begin %d", pid)
 	os.Setenv("GRACE_RESTART", "1")
 	envs := os.Environ()
 	newEnvs := make([]string, 0)

@@ -5,17 +5,18 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"sync"
 )
 
 var (
 	// InheritFdPrefix marks the fd inherited from parent process
 	InheritFdPrefix = "LISTEN_FD_INHERIT"
 
-	allListenFds map[string]filer
+	allListenFds *sync.Map
 )
 
 func init() {
-	allListenFds = make(map[string]filer)
+	allListenFds = &sync.Map{}
 }
 
 // CreateListener creates a listener from inherited fd
@@ -34,15 +35,13 @@ func CreateListener(proto string, addr string) (net.Listener, error) {
 			file.Close()
 			break
 		}
-		tcpLn := ln.(*net.TCPListener)
-		allListenFds[key] = tcpLn
+		allListenFds.Store(key, ln)
 		return ln, nil
 	}
 	// not inherit, create new
 	ln, err := net.Listen(proto, addr)
 	if err == nil {
-		tcpLn := ln.(*net.TCPListener)
-		allListenFds[key] = tcpLn
+		allListenFds.Store(key, ln)
 	}
 	return ln, err
 }
@@ -65,7 +64,7 @@ func CreateUDPConn(addr string) (*net.UDPConn, error) {
 		}
 		file.Close()
 		udpConn := conn.(*net.UDPConn)
-		allListenFds[key] = udpConn
+		allListenFds.Store(key, udpConn)
 		return udpConn, nil
 	}
 	// not inherit, create new
@@ -75,7 +74,7 @@ func CreateUDPConn(addr string) (*net.UDPConn, error) {
 	}
 	conn, err := net.ListenUDP("udp4", uaddr)
 	if err == nil {
-		allListenFds[key] = conn
+		allListenFds.Store(key, conn)
 	}
 	return conn, err
 }
@@ -83,11 +82,14 @@ func CreateUDPConn(addr string) (*net.UDPConn, error) {
 // GetAllLisenFiles returns all listen files
 func GetAllLisenFiles() map[string]*os.File {
 	files := make(map[string]*os.File)
-	for k, v := range allListenFds {
-		if file, err := v.File(); err != nil {
-			files[k] = file
+	allListenFds.Range(func(k, v interface{}) bool {
+		key := k.(string)
+		val := v.(filer)
+		if file, err := val.File(); err == nil {
+			files[key] = file
 		}
-	}
+		return true
+	})
 	return files
 }
 
