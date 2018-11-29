@@ -48,6 +48,8 @@ type serverConfig struct {
 	Isdocker    bool
 	Enableset   bool
 	Setdivision string
+
+	graceTimeout int
 }
 
 type clientConfig struct {

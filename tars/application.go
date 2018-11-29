@@ -89,6 +89,8 @@ func initConfig() {
 	//svrCfg.netThread = sMap["netthread"]
 	svrCfg.netThread = c.GetInt("/tars/application/server<netthread>")
 
+	svrCfg.graceTimeout = c.GetIntWithDef("/tars/application/server<grace_timeout>", 60)
+
 	svrCfg.log = sMap["log"]
 	//add version info
 	svrCfg.Version = TarsVersion
@@ -269,9 +271,9 @@ func graceRestart() {
 func graceShutdown() {
 	pid := os.Getpid()
 	TLOG.Infof("grace shutdown start %d", pid)
-	timeout := time.Second * 30
 	var err error
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	cfg := GetServerConfig()
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*time.Duration(cfg.graceTimeout))
 	for _, obj := range objRunList {
 		if s, ok := httpSvrs[obj]; ok {
 			err = s.Shutdown(ctx)
@@ -283,7 +285,7 @@ func graceShutdown() {
 	if err == nil {
 		TLOG.Infof("grace shutdown succ %d", pid)
 	} else {
-		TLOG.Infof("grace shutdown failed within %d seconds: %v", timeout/time.Second, err)
+		TLOG.Infof("grace shutdown failed within %d seconds: %v", cfg.graceTimeout, err)
 	}
 	shutdown <- true
 }
