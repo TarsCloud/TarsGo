@@ -56,3 +56,7 @@ func reportNotifyInfo(info string) {
 	}()
 	ha.ReportNotifyInfo(info)
 }
+
+func ReportNotifyInfo(info string) {
+	reportNotifyInfo(info)
+}
