@@ -70,6 +70,7 @@ clean:
 
 cleanall:
 	rm -vf $(DEPEND_TARS_H) $(DEPEND_TARS_CPP) $(DEPEND_TARS_OBJ) $(LOCAL_OBJ) $(HCE_H) $(HCE_CPP) $(TARGET) $(TARGETS) $(DEP_FILE) ${CLEANFILE} *.o .*.d.tmp .*.d gmon.out
+	rm -vf *$(TARGET)*.tgz
 
 HELP += $(HELP_CLEAN)
 HELP += $(HELP_CLEANALL)
