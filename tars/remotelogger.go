@@ -1,6 +1,8 @@
 package tars
 
 import (
+	"time"
+
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/logf"
 )
 
@@ -69,7 +71,7 @@ func (rw *RemoteTimeWriter) Sync2remote() {
 			}
 			rw.reportSuccPtr.Report(len(v))
 		}
-
+		time.Sleep(remoteLogInterval)
 	}
 }
 
