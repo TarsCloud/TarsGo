@@ -227,6 +227,41 @@ func (p *Parse) parseEnum() {
 		}
 	}
 }
+func (p *Parse) parseStructMemberDefault(m *StructMember) {
+	m.DefType = p.t.T
+	switch p.t.T {
+	case tkInteger:
+		if !isNumberType(m.Type.Type) && m.Type.Type != tkName {
+			// enum auto defined type ,default value is number.
+			p.parseErr("type does not accept number")
+		}
+		m.Default = p.t.S.S
+	case tkFloat:
+		if !isNumberType(m.Type.Type) {
+			p.parseErr("type does not accept number")
+		}
+		m.Default = p.t.S.S
+	case tkString:
+		if isNumberType(m.Type.Type) {
+			p.parseErr("type does not accept string")
+		}
+		m.Default = `"` + p.t.S.S + `"`
+	case tkTrue:
+		if m.Type.Type != tkTBool {
+			p.parseErr("default value format error")
+		}
+		m.Default = "true"
+	case tkFalse:
+		if m.Type.Type != tkTBool {
+			p.parseErr("default value format error")
+		}
+		m.Default = "false"
+	case tkName:
+		m.Default = p.t.S.S
+	default:
+		p.parseErr("default value format error")
+	}
+}
 
 func (p *Parse) parseStructMember() *StructMember {
 	// tag or end
@@ -275,39 +310,7 @@ func (p *Parse) parseStructMember() *StructMember {
 
 	// default
 	p.next()
-	m.DefType = p.t.T
-	switch p.t.T {
-	case tkInteger:
-		if !isNumberType(m.Type.Type) && m.Type.Type != tkName {
-			// enum auto defined type ,default value is number.
-			p.parseErr("type does not accept number")
-		}
-		m.Default = p.t.S.S
-	case tkFloat:
-		if !isNumberType(m.Type.Type) {
-			p.parseErr("type does not accept number")
-		}
-		m.Default = p.t.S.S
-	case tkString:
-		if isNumberType(m.Type.Type) {
-			p.parseErr("type does not accept string")
-		}
-		m.Default = `"` + p.t.S.S + `"`
-	case tkTrue:
-		if m.Type.Type != tkTBool {
-			p.parseErr("default value format error")
-		}
-		m.Default = "true"
-	case tkFalse:
-		if m.Type.Type != tkTBool {
-			p.parseErr("default value format error")
-		}
-		m.Default = "false"
-	case tkName:
-		m.Default = p.t.S.S
-	default:
-		p.parseErr("default value format error")
-	}
+	p.parseStructMemberDefault(m)
 	p.expect(tkSemi)
 
 	return m
