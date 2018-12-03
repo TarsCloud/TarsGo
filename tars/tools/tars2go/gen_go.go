@@ -815,6 +815,30 @@ func (_obj *` + itf.TName + `) TarsSetTimeout(t int) {
 	_obj.s.TarsSetTimeout(t)
 }
 `)
+	c.WriteString(`func setMap(l int, res *requestf.ResponsePacket,  ctx map[string]string, sts map[string][string]) {
+		if l == 1{
+			for k, _ := range(ctx){
+				delete(ctx, k)
+			}
+			for k, v := range(res.Context){
+				ctx[k] = v
+			}
+		}else if l == 2 {
+			for k, _ := range(ctx){
+				delete(ctx, k)
+			}
+			for k, v := range(res.Context){
+				ctx[k] = v
+			}
+			for k, _ := range(sts){
+				delete(sts, k)
+			}
+			for k, v := range(res.Status){
+				sts[k] = v
+			}
+		}
+		}
+	`)
 
 	if *gAddServant {
 		c.WriteString(`//AddServant adds servant  for the service.
@@ -926,28 +950,7 @@ err = _obj.s.Tars_invoke(ctx, 0, "` + fun.NameStr + `", _os.ToBytes(), _status, 
 	}
 
 	c.WriteString(`
-if len(_opt) == 1{
-	for k, _ := range(_context){
-		delete(_context, k)
-	}
-	for k, v := range(_resp.Context){
-		_context[k] = v
-	}
-}else if len(_opt) == 2 {
-	for k, _ := range(_context){
-		delete(_context, k)
-	}
-	for k, v := range(_resp.Context){
-		_context[k] = v
-	}
-	for k, _ := range(_status){
-		delete(_status, k)
-	}
-	for k, v := range(_resp.Status){
-		_status[k] = v
-	}
-
-}
+	setMap(len(_opt), _resp,_context,_status )
   _ = length
   _ = have
   _ = ty
@@ -1018,71 +1021,9 @@ func (gen *GenGo) genIFServerFunWithContext(fun *FunInfo) {
 	c.WriteString("err error)" + "\n")
 }
 
-func (gen *GenGo) genIFDispatch(itf *InterfaceInfo) {
+func (gen *GenGo) genSwitchCaseBody(tname string, fun *FunInfo) {
 	c := &gen.code
-	c.WriteString("//Dispatch is used to call the server side implemnet for the method defined in the tars file. withContext shows using context or not.  \n")
-	c.WriteString("func(_obj *" + itf.TName + `) Dispatch(ctx context.Context, _val interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket,withContext bool) (err error) {
-	var length int32
-	var have bool
-	var ty byte
-  `)
-
-	var param bool
-	for _, v := range itf.Fun {
-		if len(v.Args) > 0 {
-			param = true
-			break
-		}
-	}
-
-	if param {
-		c.WriteString("_is := codec.NewReader(tools.Int8ToByte(req.SBuffer))")
-	}
-	c.WriteString(`
-_os := codec.NewBuffer()
-switch req.SFuncName {
-`)
-
-	for _, v := range itf.Fun {
-		gen.genSwitchCase(itf.TName, &v)
-	}
-
-	c.WriteString(`
-default:
-	return fmt.Errorf("func mismatch")
-}
-var _status map[string]string
-s, ok := current.GetResponseStatus(ctx)
-if ok  && s != nil {
-	_status = s
-}
-var _context map[string]string
-c, ok := current.GetResponseContext(ctx)
-if ok && c != nil  {
-	_context = c
-}
-*resp = requestf.ResponsePacket{
-	IVersion:     1,
-	CPacketType:  0,
-	IRequestId:   req.IRequestId,
-	IMessageType: 0,
-	IRet:         0,
-	SBuffer:      tools.ByteToInt8(_os.ToBytes()),
-	Status:       _status,
-	SResultDesc:  "",
-	Context:      _context,
-}
-_ = length
-_ = have
-_ = ty
-return nil
-}
-`)
-}
-
-func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
-	c := &gen.code
-	c.WriteString(`case "` + fun.NameStr + `":` + "\n")
+	c.WriteString(`func` + fun.NameStr + `(_val interface{},_os *codec.Buffer, _is *codec.Reader, withContext bool)error{`)
 
 	for k, v := range fun.Args {
 		c.WriteString("var " + v.Name + " " + gen.genType(v.Type))
@@ -1182,6 +1123,8 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 		`)
 		c.WriteString("}\n")
 	}
+	c.WriteString(`return nil 
+	}\n`)
 
 	for k, v := range fun.Args {
 		if v.IsOut {
@@ -1193,6 +1136,81 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 			gen.genWriteVar(dummy, "", false)
 		}
 	}
+
+}
+func (gen *GenGo) genIFDispatch(itf *InterfaceInfo) {
+	c := &gen.code
+	for _, v := range itf.Fun {
+		gen.genSwitchCase(itf.TName, &v)
+	}
+	c.WriteString("//Dispatch is used to call the server side implemnet for the method defined in the tars file. withContext shows using context or not.  \n")
+	c.WriteString("func(_obj *" + itf.TName + `) Dispatch(ctx context.Context, _val interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket,withContext bool) (err error) {
+	var length int32
+	var have bool
+	var ty byte
+  `)
+
+	var param bool
+	for _, v := range itf.Fun {
+		if len(v.Args) > 0 {
+			param = true
+			break
+		}
+	}
+
+	if param {
+		c.WriteString("_is := codec.NewReader(tools.Int8ToByte(req.SBuffer))")
+	}
+	c.WriteString(`
+_os := codec.NewBuffer()
+switch req.SFuncName {
+`)
+
+	for _, v := range itf.Fun {
+		gen.genSwitchCase(itf.TName, &v)
+	}
+
+	c.WriteString(`
+default:
+	return fmt.Errorf("func mismatch")
+}
+var _status map[string]string
+s, ok := current.GetResponseStatus(ctx)
+if ok  && s != nil {
+	_status = s
+}
+var _context map[string]string
+c, ok := current.GetResponseContext(ctx)
+if ok && c != nil  {
+	_context = c
+}
+*resp = requestf.ResponsePacket{
+	IVersion:     1,
+	CPacketType:  0,
+	IRequestId:   req.IRequestId,
+	IMessageType: 0,
+	IRet:         0,
+	SBuffer:      tools.ByteToInt8(_os.ToBytes()),
+	Status:       _status,
+	SResultDesc:  "",
+	Context:      _context,
+}
+_ = length
+_ = have
+_ = ty
+return nil
+}
+`)
+}
+
+func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
+	c := &gen.code
+	c.WriteString(`case "` + fun.NameStr + `":` + "\n")
+	c.WriteString(`err := ` + fun.NameStr + `(_val, _os, _is, withContext)
+		if err != nil {
+			return err
+		}
+	`)
 }
 
 //Gen to parse file.
