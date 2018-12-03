@@ -5,10 +5,10 @@ package queryf
 
 import (
 	"context"
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"fmt"
 	m "github.com/TarsCloud/TarsGo/tars/model"
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
+	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
@@ -1162,20 +1162,20 @@ func (_obj *QueryF) TarsSetTimeout(t int) {
 }
 func setMap(l int, res *requestf.ResponsePacket, ctx map[string]string, sts map[string]string) {
 	if l == 1 {
-		for k, _ := range ctx {
+		for k := range ctx {
 			delete(ctx, k)
 		}
 		for k, v := range res.Context {
 			ctx[k] = v
 		}
 	} else if l == 2 {
-		for k, _ := range ctx {
+		for k := range ctx {
 			delete(ctx, k)
 		}
 		for k, v := range res.Context {
 			ctx[k] = v
 		}
-		for k, _ := range sts {
+		for k := range sts {
 			delete(sts, k)
 		}
 		for k, v := range res.Status {

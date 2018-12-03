@@ -257,20 +257,20 @@ func (_obj *Log) TarsSetTimeout(t int) {
 }
 func setMap(l int, res *requestf.ResponsePacket, ctx map[string]string, sts map[string]string) {
 	if l == 1 {
-		for k, _ := range ctx {
+		for k := range ctx {
 			delete(ctx, k)
 		}
 		for k, v := range res.Context {
 			ctx[k] = v
 		}
 	} else if l == 2 {
-		for k, _ := range ctx {
+		for k := range ctx {
 			delete(ctx, k)
 		}
 		for k, v := range res.Context {
 			ctx[k] = v
 		}
-		for k, _ := range sts {
+		for k := range sts {
 			delete(sts, k)
 		}
 		for k, v := range res.Status {
