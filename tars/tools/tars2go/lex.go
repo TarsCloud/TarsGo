@@ -321,6 +321,7 @@ func (ls *LexState) llexDefault() (TK, *SemInfo) {
 		return ls.readIdent()
 	default:
 		ls.lexErr("unrecognized characters, " + string(ls.current))
+		return '0', nil
 	}
 }
 
