@@ -68,7 +68,7 @@ func (st *RequestPacket) ReadFrom(_is *codec.Reader) error {
 		return err
 	}
 
-	err, have, ty = _is.SkipToNoCheck(7, true)
+	err, _, ty = _is.SkipToNoCheck(7, true)
 	if err != nil {
 		return err
 	}

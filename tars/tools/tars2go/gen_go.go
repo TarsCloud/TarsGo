@@ -712,6 +712,7 @@ func (gen *GenGo) genEnum(en *EnumInfo) {
 	c.WriteString("type " + en.TName + " int32\n")
 	c.WriteString("const (\n")
 	for _, v := range en.Mb {
+		c.WriteString("//" + gen.makeEnumName(en, &v) + " enum")
 		c.WriteString(gen.makeEnumName(en, &v) + ` = ` + strconv.Itoa(int(v.Value)) + "\n")
 	}
 
@@ -815,7 +816,7 @@ func (_obj *` + itf.TName + `) TarsSetTimeout(t int) {
 	_obj.s.TarsSetTimeout(t)
 }
 `)
-	c.WriteString(`func setMap(l int, res *requestf.ResponsePacket,  ctx map[string]string, sts map[string][string]) {
+	c.WriteString(`func (_obj *` + itf.TName + `) setMap(l int, res *requestf.ResponsePacket,  ctx map[string]string, sts map[string]string) {
 		if l == 1{
 			for k, _ := range(ctx){
 				delete(ctx, k)
@@ -950,7 +951,7 @@ err = _obj.s.Tars_invoke(ctx, 0, "` + fun.NameStr + `", _os.ToBytes(), _status, 
 	}
 
 	c.WriteString(`
-	setMap(len(_opt), _resp,_context,_status )
+	_obj.setMap(len(_opt), _resp,_context,_status )
   _ = length
   _ = have
   _ = ty
@@ -1023,7 +1024,12 @@ func (gen *GenGo) genIFServerFunWithContext(fun *FunInfo) {
 
 func (gen *GenGo) genSwitchCaseBody(tname string, fun *FunInfo) {
 	c := &gen.code
-	c.WriteString(`func` + fun.NameStr + `(_val interface{},_os *codec.Buffer, _is *codec.Reader, withContext bool)error{`)
+	c.WriteString(`func ` + fun.NameStr + `(ctx context.Context, _val interface{},_os *codec.Buffer, _is *codec.Reader, withContext bool)(err error){`)
+	c.WriteString(`
+	var length int32
+	var have bool
+	var ty byte
+	`)
 
 	for k, v := range fun.Args {
 		c.WriteString("var " + v.Name + " " + gen.genType(v.Type))
@@ -1123,8 +1129,6 @@ func (gen *GenGo) genSwitchCaseBody(tname string, fun *FunInfo) {
 		`)
 		c.WriteString("}\n")
 	}
-	c.WriteString(`return nil 
-	}\n`)
 
 	for k, v := range fun.Args {
 		if v.IsOut {
@@ -1136,18 +1140,23 @@ func (gen *GenGo) genSwitchCaseBody(tname string, fun *FunInfo) {
 			gen.genWriteVar(dummy, "", false)
 		}
 	}
+	c.WriteString(`
+_ = length
+_ = have
+_ = ty
+`)
+	c.WriteString(`return nil 
+	}`)
+	c.WriteString("\n")
 
 }
 func (gen *GenGo) genIFDispatch(itf *InterfaceInfo) {
 	c := &gen.code
 	for _, v := range itf.Fun {
-		gen.genSwitchCase(itf.TName, &v)
+		gen.genSwitchCaseBody(itf.TName, &v)
 	}
 	c.WriteString("//Dispatch is used to call the server side implemnet for the method defined in the tars file. withContext shows using context or not.  \n")
 	c.WriteString("func(_obj *" + itf.TName + `) Dispatch(ctx context.Context, _val interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket,withContext bool) (err error) {
-	var length int32
-	var have bool
-	var ty byte
   `)
 
 	var param bool
@@ -1195,9 +1204,6 @@ if ok && c != nil  {
 	SResultDesc:  "",
 	Context:      _context,
 }
-_ = length
-_ = have
-_ = ty
 return nil
 }
 `)
@@ -1206,7 +1212,7 @@ return nil
 func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 	c := &gen.code
 	c.WriteString(`case "` + fun.NameStr + `":` + "\n")
-	c.WriteString(`err := ` + fun.NameStr + `(_val, _os, _is, withContext)
+	c.WriteString(`err := ` + fun.NameStr + `(ctx, _val, _os, _is, withContext)
 		if err != nil {
 			return err
 		}
