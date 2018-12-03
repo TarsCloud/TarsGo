@@ -6,6 +6,7 @@ package configf
 import (
 	"context"
 	"fmt"
+
 	m "github.com/TarsCloud/TarsGo/tars/model"
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
@@ -1210,6 +1211,8 @@ func checkConfig(ctx context.Context, _val interface{}, _os *codec.Buffer, _is *
 	_ = ty
 	return nil
 }
+
+//ListConfigByInfo body function
 func ListConfigByInfo(ctx context.Context, _val interface{}, _os *codec.Buffer, _is *codec.Reader, withContext bool) (err error) {
 	var length int32
 	var have bool
@@ -1353,6 +1356,8 @@ func checkConfigByInfo(ctx context.Context, _val interface{}, _os *codec.Buffer,
 	_ = ty
 	return nil
 }
+
+//ListAllConfigByInfo body function
 func ListAllConfigByInfo(ctx context.Context, _val interface{}, _os *codec.Buffer, _is *codec.Reader, withContext bool) (err error) {
 	var length int32
 	var have bool
