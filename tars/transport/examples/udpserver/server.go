@@ -20,7 +20,7 @@ func (s *MyServer) Invoke(req []byte) (rsp []byte) {
 	return
 }
 
-//ParsePackage parse full tars pacakge.
+//ParsePackage parse full tars package.
 func (s *MyServer) ParsePackage(buff []byte) (pkgLen, status int) {
 	if len(buff) < 4 {
 		return 0, transport.PACKAGE_LESS

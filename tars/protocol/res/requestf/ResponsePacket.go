@@ -5,6 +5,7 @@ package requestf
 
 import (
 	"fmt"
+
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 )
 
@@ -100,7 +101,7 @@ func (st *ResponsePacket) ReadFrom(_is *codec.Reader) error {
 		}
 	}
 
-	err, have = _is.SkipTo(codec.MAP, 7, true)
+	err, _ = _is.SkipTo(codec.MAP, 7, true)
 	if err != nil {
 		return err
 	}
