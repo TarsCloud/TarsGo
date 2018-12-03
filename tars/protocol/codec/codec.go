@@ -340,6 +340,55 @@ func (b *Reader) Skip(n int) {
 	b.buf.Seek(int64(n), io.SeekCurrent)
 }
 
+func (b *Reader) skipFieldMap() error {
+	var len int32
+	err := b.Read_int32(&len, 0, true)
+	if err != nil {
+		return err
+	}
+
+	for i := int32(0); i < len*2; i++ {
+		tyCur, _, err := b.readHead()
+		if err != nil {
+			return err
+		}
+		b.skipField(tyCur)
+	}
+	return nil
+}
+func (b *Reader) skipFieldList() error {
+	var len int32
+	err := b.Read_int32(&len, 0, true)
+	if err != nil {
+		return err
+	}
+	for i := int32(0); i < len; i++ {
+		tyCur, _, err := b.readHead()
+		if err != nil {
+			return err
+		}
+		b.skipField(tyCur)
+	}
+	return nil
+}
+func (b *Reader) skipFieldSimpleList() error {
+	tyCur, _, err := b.readHead()
+	if tyCur != BYTE {
+		return fmt.Errorf("simple list need byte head. but get %d", tyCur)
+	}
+	if err != nil {
+		return err
+	}
+	var len int32
+	err = b.Read_int32(&len, 0, true)
+	if err != nil {
+		return err
+	}
+
+	b.Skip(int(len))
+	return nil
+}
+
 func (b *Reader) skipField(ty byte) error {
 	switch ty {
 	case BYTE:
@@ -377,46 +426,22 @@ func (b *Reader) skipField(ty byte) error {
 		b.Skip(int(l))
 		break
 	case MAP:
-		var len int32
-		err := b.Read_int32(&len, 0, true)
+		err := b.skipFieldMap()
 		if err != nil {
 			return err
-		}
-
-		for i := int32(0); i < len*2; i++ {
-			tyCur, _, err := b.readHead()
-			if err != nil {
-				return err
-			}
-			b.skipField(tyCur)
 		}
 		break
 	case LIST:
-		var len int32
-		err := b.Read_int32(&len, 0, true)
+		err := b.skipFieldList()
 		if err != nil {
 			return err
-		}
-		for i := int32(0); i < len; i++ {
-			tyCur, _, err := b.readHead()
-			if err != nil {
-				return err
-			}
-			b.skipField(tyCur)
 		}
 		break
 	case SIMPLE_LIST:
-		tyCur, _, err := b.readHead()
-		if tyCur != BYTE {
-			return fmt.Errorf("simple list need byte head. but get %d", tyCur)
-		}
-		var len int32
-		err = b.Read_int32(&len, 0, true)
+		err := b.skipFieldSimpleList()
 		if err != nil {
 			return err
 		}
-
-		b.Skip(int(len))
 		break
 	case STRUCT_BEGIN:
 		err := b.SkipToStructEnd()

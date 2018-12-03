@@ -26,6 +26,9 @@ func (imp *ContextTestImp) Add(ctx context.Context, a int32, b int32, c *int32) 
 	k := make(map[string]string)
 	k["resp"] = "respform context"
 	ok = current.SetResponseContext(ctx, k)
+	if !ok {
+		logger.Error("error setting respose context")
+	}
 	//Doing something in your function
 	//...
 	*c = a * b

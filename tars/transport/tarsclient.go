@@ -133,7 +133,7 @@ func (c *connection) recv(conn net.Conn) {
 			if err == io.EOF {
 				TLOG.Debug("connection closed by remote:", conn.RemoteAddr())
 			} else {
-				TLOG.Error("read packge error:", err)
+				TLOG.Error("read package error:", err)
 			}
 			c.close(conn)
 			return

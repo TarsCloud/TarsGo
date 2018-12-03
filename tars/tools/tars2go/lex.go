@@ -313,6 +313,17 @@ func (ls *LexState) next() {
 		ls.current = EOS
 	}
 }
+func (ls *LexState) llexDefault() (TK, *SemInfo) {
+	switch {
+	case isNumber(ls.current):
+		return ls.readNumber()
+	case isLetter(ls.current):
+		return ls.readIdent()
+	default:
+		ls.lexErr("unrecognized characters, " + string(ls.current))
+		return '0', nil
+	}
+}
 
 // Do lexical analysis.
 func (ls *LexState) llex() (TK, *SemInfo) {
@@ -375,14 +386,8 @@ func (ls *LexState) llex() (TK, *SemInfo) {
 		case '#':
 			return ls.readSharp()
 		default:
-			switch {
-			case isNumber(ls.current):
-				return ls.readNumber()
-			case isLetter(ls.current):
-				return ls.readIdent()
-			default:
-				ls.lexErr("unrecognized characters, " + string(ls.current))
-			}
+			return ls.llexDefault()
+
 		}
 	}
 }

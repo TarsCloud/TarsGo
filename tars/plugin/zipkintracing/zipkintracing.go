@@ -22,7 +22,7 @@ func Init(zipkinHTTPEndpoint string, sameSpan bool, traceID128Bit bool, debug bo
 	//create collector
 	collector, err := zipkin.NewHTTPCollector(zipkinHTTPEndpoint)
 	if err != nil {
-		log.Fatal("Fail to create Zipkin HTTP collector: %+v\n", err)
+		log.Fatal("Fail to create Zipkin HTTP collector:", err)
 	}
 	//create recorder
 	recorder := zipkin.NewRecorder(collector, debug, hostPort, serviceName)
