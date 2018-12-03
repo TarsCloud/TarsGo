@@ -21,7 +21,7 @@ const (
 //TLOG  is logger for transport.
 var TLOG = rogger.GetLogger("TLOG")
 
-//TarsProtoCol is interface for handling the server side tars pacakge.
+//TarsProtoCol is interface for handling the server side tars package.
 type TarsProtoCol interface {
 	Invoke(ctx context.Context, pkg []byte) []byte
 	ParsePackage(buff []byte) (int, int)

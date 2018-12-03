@@ -10,7 +10,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/statf"
 )
 
-//StatInfo struct containes stat info' head and body.
+//StatInfo struct contains stat info' head and body.
 type StatInfo struct {
 	Head statf.StatMicMsgHead
 	Body statf.StatMicMsgBody
