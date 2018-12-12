@@ -39,7 +39,8 @@ func (n *NotifyHelper) ReportNotifyInfo(info string) {
 	n.tn.ReportNotifyInfo(&n.tm)
 }
 
-func reportNotifyInfo(info string) {
+//ReportNotifyInfo report the info to the notify server.
+func ReportNotifyInfo(info string) {
 	ha := new(NotifyHelper)
 	comm := NewCommunicator()
 	comm.SetProperty("netthread", 1)

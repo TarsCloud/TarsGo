@@ -192,7 +192,7 @@ func Run() {
 			}
 		}(obj)
 	}
-	go reportNotifyInfo("restart")
+	go ReportNotifyInfo("restart")
 	mainloop()
 }
 
@@ -212,7 +212,7 @@ func mainloop() {
 	for {
 		select {
 		case <-shutdown:
-			reportNotifyInfo("stop")
+			ReportNotifyInfo("stop")
 			return
 		case <-loop.C:
 			for name, adapter := range svrCfg.Adapters {
