@@ -271,21 +271,25 @@ func graceRestart() {
 func graceShutdown() {
 	pid := os.Getpid()
 	TLOG.Infof("grace shutdown start %d", pid)
-	var err error
 	cfg := GetServerConfig()
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*time.Duration(cfg.graceTimeout))
 	for _, obj := range objRunList {
 		if s, ok := httpSvrs[obj]; ok {
-			err = s.Shutdown(ctx)
+			err := s.Shutdown(ctx)
+			if err == nil {
+				TLOG.Infof("grace shutdown %s succ %d", obj, pid)
+			} else {
+				TLOG.Infof("grace shutdown %s failed within %d seconds: %v", obj, cfg.graceTimeout, err)
+			}
 		}
 		if s, ok := goSvrs[obj]; ok {
-			err = s.Shutdown(ctx)
+			err := s.Shutdown(ctx)
+			if err == nil {
+				TLOG.Infof("grace shutdown %s succ %d", obj, pid)
+			} else {
+				TLOG.Infof("grace shutdown %s failed within %d seconds: %v", obj, cfg.graceTimeout, err)
+			}
 		}
-	}
-	if err == nil {
-		TLOG.Infof("grace shutdown succ %d", pid)
-	} else {
-		TLOG.Infof("grace shutdown failed within %d seconds: %v", cfg.graceTimeout, err)
 	}
 	shutdown <- true
 }

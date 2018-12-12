@@ -99,7 +99,7 @@ func (ts *TarsServer) Shutdown(ctx context.Context) error {
 	go func() {
 		watchInterval := time.Millisecond * 500
 		for range time.NewTicker(watchInterval).C {
-			if atomic.LoadInt32(&ts.numConn) == 0 && atomic.LoadInt32(&ts.numInvoke) == 0 {
+			if atomic.LoadInt32(&ts.numConn) == 0 {
 				watchDone <- true
 				return
 			}
@@ -132,7 +132,6 @@ func (ts *TarsServer) IsZombie(timeout time.Duration) bool {
 
 func (ts *TarsServer) invoke(ctx context.Context, pkg []byte) []byte {
 	cfg := ts.conf
-	atomic.AddInt32(&ts.numInvoke, 1)
 	var rsp []byte
 	if cfg.HandleTimeout == 0 {
 		rsp = ts.svr.Invoke(ctx, pkg)
@@ -148,6 +147,5 @@ func (ts *TarsServer) invoke(ctx context.Context, pkg []byte) []byte {
 		case <-done:
 		}
 	}
-	atomic.AddInt32(&ts.numInvoke, -1)
 	return rsp
 }

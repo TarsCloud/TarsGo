@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"sync/atomic"
+	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/util/grace"
 )
@@ -28,7 +29,17 @@ func (h *udpHandler) Listen() (err error) {
 
 func (h *udpHandler) Handle() error {
 	atomic.AddInt32(&h.ts.numConn, 1)
-	defer atomic.AddInt32(&h.ts.numConn, -1)
+	///wait invoke done
+	defer func() {
+		tick := time.NewTicker(time.Second)
+		defer tick.Stop()
+		for atomic.LoadInt32(&h.ts.numInvoke) > 0 {
+			select {
+			case <-tick.C:
+			}
+		}
+		atomic.AddInt32(&h.ts.numConn, -1)
+	}()
 	buffer := make([]byte, 65535)
 	for {
 		if atomic.LoadInt32(&h.ts.isClosed) == 1 {
@@ -50,10 +61,12 @@ func (h *udpHandler) Handle() error {
 		copy(pkg, buffer[0:n])
 		go func() {
 			ctx := context.Background()
+			atomic.AddInt32(&h.ts.numInvoke, 1)
 			rsp := h.ts.invoke(ctx, pkg[4:]) // no need to check package
 			if _, err := h.conn.WriteToUDP(rsp, udpAddr); err != nil {
 				TLOG.Errorf("send pkg to %v failed %v", udpAddr, err)
 			}
+			atomic.AddInt32(&h.ts.numInvoke, -1)
 		}()
 	}
 	return nil

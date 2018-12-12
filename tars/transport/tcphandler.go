@@ -41,6 +41,7 @@ func (h *tcpHandler) Listen() (err error) {
 
 func (h *tcpHandler) handleConn(conn *net.TCPConn, pkg []byte) {
 	handler := func() {
+		atomic.AddInt32(&h.ts.numInvoke, 1)
 		ctx := context.Background()
 		remoteAddr := conn.RemoteAddr().String()
 		ipPort := strings.Split(remoteAddr, ":")
@@ -57,6 +58,7 @@ func (h *tcpHandler) handleConn(conn *net.TCPConn, pkg []byte) {
 		if _, err := conn.Write(rsp); err != nil {
 			TLOG.Errorf("send pkg to %v failed %v", remoteAddr, err)
 		}
+		atomic.AddInt32(&h.ts.numInvoke, -1)
 	}
 
 	cfg := h.conf
@@ -107,8 +109,17 @@ func (h *tcpHandler) Handle() error {
 }
 
 func (h *tcpHandler) recv(conn *net.TCPConn) {
-	//TODO: wait invoke done
-	defer conn.Close()
+	//wait invoke done
+	defer func() {
+		tick := time.NewTicker(time.Second)
+		defer tick.Stop()
+		for atomic.LoadInt32(&h.ts.numInvoke) > 0 {
+			select {
+			case <-tick.C:
+			}
+		}
+		conn.Close()
+	}()
 	cfg := h.conf
 	buffer := make([]byte, 1024*4)
 	var currBuffer []byte // need a deep copy of buffer
