@@ -160,14 +160,12 @@ func initConfig() {
 	tarsConfig["AdminObj"] = adminCfg
 	svrCfg.Adapters["AdminAdapter"] = adapterConfig{localpoint, "tcp", "AdminObj", 1}
 	go initReport()
-	go initProReport()
 }
 
 //Run the application
 func Run() {
 	Init()
 	<-statInited
-	<-proInited
 
 	for _, env := range os.Environ() {
 		if strings.HasPrefix(env, grace.InheritFdPrefix) {

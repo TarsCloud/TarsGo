@@ -289,7 +289,7 @@ type PropertyReportHelper struct {
 
 //ProHelper is global.
 var ProHelper *PropertyReportHelper
-var proInited = make(chan struct{}, 1)
+var proOnce sync.Once
 
 //ReportToServer report to the remote propertyreport server.
 func (p *PropertyReportHelper) ReportToServer() {
@@ -389,14 +389,12 @@ func (p *PropertyReportHelper) Init(comm *Communicator, node string) {
 
 func initProReport() {
 	if GetClientConfig() == nil {
-		proInited <- struct{}{}
 		return
 	}
 	comm := NewCommunicator()
 	comm.SetProperty("netthread", 1)
 	ProHelper = new(PropertyReportHelper)
 	ProHelper.Init(comm, GetClientConfig().property)
-	proInited <- struct{}{}
 	go ProHelper.Run()
 
 }
@@ -424,6 +422,7 @@ type PropertyReport struct {
 
 //CreatePropertyReport creats the property report instance with the key.
 func CreatePropertyReport(key string, argvs ...ReportMethod) (ptr *PropertyReport) {
+	proOnce.Do(initProReport)
 	for _, v := range ProHelper.reportPtrs {
 		if v.key == key {
 			ptr = v

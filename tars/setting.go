@@ -58,6 +58,7 @@ const (
 	PropertyReportInterval time.Duration = 10 * time.Second
 	//StatReportInterval stat report interval
 	StatReportInterval time.Duration = 10 * time.Second
+	remoteLogInterval  time.Duration = 5 * time.Second
 
 	//mainloop
 
