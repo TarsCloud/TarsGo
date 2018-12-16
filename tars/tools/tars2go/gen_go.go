@@ -712,7 +712,7 @@ func (gen *GenGo) genEnum(en *EnumInfo) {
 	c.WriteString("type " + en.TName + " int32\n")
 	c.WriteString("const (\n")
 	for _, v := range en.Mb {
-		c.WriteString("//" + gen.makeEnumName(en, &v) + " enum")
+		c.WriteString("//" + gen.makeEnumName(en, &v) + " enum\n")
 		c.WriteString(gen.makeEnumName(en, &v) + ` = ` + strconv.Itoa(int(v.Value)) + "\n")
 	}
 
