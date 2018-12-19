@@ -12,7 +12,6 @@ type NotifyHelper struct {
 //SetNotifyInfo sets the notify server location for the Communicator.
 func (n *NotifyHelper) SetNotifyInfo(comm *Communicator, notify string, app string, server string, container string) {
 	n.comm = comm
-	n.comm.SetProperty("netthread", 1)
 	n.tn = new(notifyf.Notify)
 	comm.StringToProxy(notify, n.tn)
 	//TODO:params
@@ -43,7 +42,6 @@ func (n *NotifyHelper) ReportNotifyInfo(info string) {
 func ReportNotifyInfo(info string) {
 	ha := new(NotifyHelper)
 	comm := NewCommunicator()
-	comm.SetProperty("netthread", 1)
 	notify := GetServerConfig().notify
 	app := GetServerConfig().App
 	server := GetServerConfig().Server
