@@ -37,10 +37,10 @@ func (c *AdapterProxy) New(point *endpointf.EndpointF, comm *Communicator) error
 	conf := &transport.TarsClientConf{
 		Proto: proto,
 		//NumConnect:   netthread,
-		QueueLen:     ClientQueueLen,
-		IdleTimeout:  ClientIdleTimeout,
-		ReadTimeout:  ClientReadTimeout,
-		WriteTimeout: ClientWriteTimeout,
+		QueueLen:     comm.Client.ClientQueueLen,
+		IdleTimeout:  comm.Client.ClientIdleTimeout,
+		ReadTimeout:  comm.Client.ClientReadTimeout,
+		WriteTimeout: comm.Client.ClientWriteTimeout,
 	}
 	c.tarsClient = transport.NewTarsClient(fmt.Sprintf("%s:%d", point.Host, point.Port), c, conf)
 	c.status = true
@@ -118,7 +118,7 @@ func (c *AdapterProxy) reset() {
 }
 
 func (c *AdapterProxy) checkActive() {
-	loop := time.NewTicker(AdapterProxyTicker)
+	loop := time.NewTicker(c.comm.Client.AdapterProxyTicker)
 	count := 0 // Detect if a dead node recovers each minute
 	for range loop.C {
 		if c.closed {
@@ -128,7 +128,7 @@ func (c *AdapterProxy) checkActive() {
 		if c.failCount > c.sendCount/2 {
 			c.status = false
 		}
-		if !c.status && count > AdapterProxyResetCount {
+		if !c.status && count > c.comm.Client.AdapterProxyResetCount {
 			//TODO USE TAFPING INSTEAD
 			c.reset()
 			c.status = true

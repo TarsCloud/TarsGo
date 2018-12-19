@@ -26,7 +26,7 @@ func (a *Admin) Shutdown() error {
 //Notify handler for cmds from admin
 func (a *Admin) Notify(command string) (string, error) {
 	cmd := strings.Split(command, " ")
-	go reportNotifyInfo("AdminServant::notify:" + cmd[0])
+	go ReportNotifyInfo("AdminServant::notify:" + cmd[0])
 	switch cmd[0] {
 	case "tars.viewversion":
 		return GetServerConfig().Version, nil

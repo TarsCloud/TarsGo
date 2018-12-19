@@ -58,7 +58,7 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 		SServantName: s.name,
 		SFuncName:    sFuncName,
 		SBuffer:      tools.ByteToInt8(buf),
-		ITimeout:     ReqDefaultTimeout,
+		ITimeout:     s.comm.Client.ReqDefaultTimeout,
 		Context:      reqContext,
 		Status:       status,
 	}
