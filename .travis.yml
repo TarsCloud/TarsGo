@@ -2,7 +2,8 @@ language: go
 go:
   - '1.9'
   - 1.10.x
+  - 1.11.x
 install:
   - echo "$GOPATH"
 script:
-  - go build tars
+  - go build github.com/TarsCloud/TarsGo/tars
