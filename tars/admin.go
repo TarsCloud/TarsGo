@@ -28,7 +28,7 @@ func (a *Admin) Notify(command string) (string, error) {
 	cmd := strings.Split(command, " ")
 	go ReportNotifyInfo("AdminServant::notify:" + cmd[0])
 	switch cmd[0] {
-	case "tars.viewversion":
+	case "tars.viewversion"
 		return GetServerConfig().Version, nil
 	case "tars.setloglevel":
 		switch cmd[1] {
