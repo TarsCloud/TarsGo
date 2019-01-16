@@ -234,9 +234,10 @@ func (l *Logger) writef(level LogLevel, format string, v []interface{}) {
 			}
 			fmt.Fprintf(buf, "%s:%d|", file, line)
 		}
+		
+		buf.WriteString(level.String())
+		buf.WriteByte('|')
 	}
-	buf.WriteString(level.String())
-	buf.WriteByte('|')
 
 	if format == "" {
 		fmt.Fprint(buf, v...)

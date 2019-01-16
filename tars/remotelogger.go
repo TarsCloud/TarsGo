@@ -135,7 +135,11 @@ func (rw *RemoteTimeWriter) InitFormat(s string) {
 
 //NeedPrefix return if need prefix for the logger.
 func (rw *RemoteTimeWriter) NeedPrefix() bool {
-	return false
+	return rw.hasPrefix
+}
+
+func (rw *RemoteTimeWriter) SetPrefix(enable bool) {
+	rw.hasPrefix = enable
 }
 
 //Write Writes the logs to the buffer.
