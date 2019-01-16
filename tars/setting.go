@@ -16,15 +16,15 @@ const (
 	//server
 
 	//AcceptTimeout accept timeout,defaultvalue is 500 milliseconds
-	AcceptTimeout = 500 
+	AcceptTimeout = 500
 	//ReadTimeout zero millisecond for not set read deadline for Conn (better  performance)
-	ReadTimeout  = 0 
+	ReadTimeout = 0
 	//WriteTimeout zero millisecond for not set write deadline for Conn (better performance)
-	WriteTimeout  = 0 
+	WriteTimeout = 0
 	//HandleTimeout zero millisecond for not set deadline for invoke user interface (better performance)
-	HandleTimeout = 0 
+	HandleTimeout = 0
 	//IdleTimeout idle timeout,defaultvalue is 600000 milliseconds
-	IdleTimeout = 600000 
+	IdleTimeout = 600000
 	//ZombileTimeout zombile timeout,defaultvalue is 10000 milliseconds
 	ZombileTimeout = 10000
 	//QueueCap queue gap
@@ -57,7 +57,7 @@ const (
 	//PropertyReportInterval property report interval,defaultvalue is 10000 milliseconds
 	PropertyReportInterval = 10000
 	//StatReportInterval stat report interval,defaultvalue is 10000 milliseconds
-	StatReportInterval = 10000
+	StatReportInterval               = 10000
 	remoteLogInterval  time.Duration = 5 * time.Second
 
 	//mainloop
@@ -86,4 +86,8 @@ const (
 	TCPWriteBuffer = 128 * 1024 * 1024
 	//TCPNoDelay set tcp no delay
 	TCPNoDelay = false
+
+	//GracedownTimeout set timeout (second) for grace shutdown
+	GracedownTimeout   = 60
+	graceCheckInterval = time.Millisecond * 500
 )

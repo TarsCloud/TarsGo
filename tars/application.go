@@ -3,10 +3,13 @@
 package tars
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
+	"strings"
 	"sync"
 	"time"
 
@@ -14,6 +17,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/transport"
 	"github.com/TarsCloud/TarsGo/tars/util/conf"
 	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
+	"github.com/TarsCloud/TarsGo/tars/util/grace"
 	"github.com/TarsCloud/TarsGo/tars/util/rogger"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
@@ -21,6 +25,7 @@ import (
 var tarsConfig map[string]*transport.TarsServerConf
 var goSvrs map[string]*transport.TarsServer
 var httpSvrs map[string]*http.Server
+var listenFds []*os.File
 var shutdown chan bool
 var serList []string
 var objRunList []string
@@ -132,7 +137,6 @@ func initConfig() {
 	cltCfg.AdapterProxyTicker = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/client<adapterproxyticker>", AdapterProxyTicker))
 	cltCfg.AdapterProxyResetCount = c.GetIntWithDef("/tars/application/client<adapterproxyresetcount>", AdapterProxyResetCount)
 
-
 	for _, adapter := range serList {
 		endString := c.GetString("/tars/application/server/" + adapter + "<endpoint>")
 		end := endpoint.Parse(endString)
@@ -190,6 +194,11 @@ func Run() {
 	Init()
 	<-statInited
 
+	for _, env := range os.Environ() {
+		if strings.HasPrefix(env, grace.InheritFdPrefix) {
+			TLOG.Infof("env %s", env)
+		}
+	}
 	// add adminF
 	adf := new(adminf.AdminF)
 	ad := new(Admin)
@@ -199,7 +208,16 @@ func Run() {
 		if s, ok := httpSvrs[obj]; ok {
 			go func(obj string) {
 				fmt.Println(obj, "http server start")
-				err := s.ListenAndServe()
+				addr := s.Addr
+				if addr == "" {
+					addr = ":http"
+				}
+				ln, err := grace.CreateListener("tcp", addr)
+				if err != nil {
+					fmt.Println(obj, "server start failed", err)
+					os.Exit(1)
+				}
+				err = s.Serve(ln)
 				if err != nil {
 					fmt.Println(obj, "server start failed", err)
 					os.Exit(1)
@@ -223,7 +241,86 @@ func Run() {
 		}(obj)
 	}
 	go ReportNotifyInfo("restart")
+
+	if os.Getenv("GRACE_RESTART") == "1" {
+		ppid := os.Getppid()
+		TLOG.Infof("stop ppid %d", ppid)
+		if ppid > 1 {
+			grace.SignalUSR2(ppid)
+		}
+	}
 	mainloop()
+}
+
+func graceRestart() {
+	pid := os.Getpid()
+	TLOG.Debugf("grace restart server begin %d", pid)
+	os.Setenv("GRACE_RESTART", "1")
+	envs := os.Environ()
+	newEnvs := make([]string, 0)
+	for _, env := range envs {
+		// skip fd inherited from parent process
+		if strings.HasPrefix(env, grace.InheritFdPrefix) {
+			continue
+		}
+		newEnvs = append(newEnvs, env)
+	}
+
+	files := []*os.File{os.Stdin, os.Stdout, os.Stderr}
+	for key, file := range grace.GetAllLisenFiles() {
+		fd := fmt.Sprint(file.Fd())
+		newFd := len(files)
+		TLOG.Debugf("tranlate %s=%s to %s=%d", key, fd, key, newFd)
+		newEnvs = append(newEnvs, fmt.Sprintf("%s=%d", key, newFd))
+		files = append(files, file)
+	}
+
+	exePath, err := exec.LookPath(os.Args[0])
+	if err != nil {
+		TLOG.Errorf("LookPath failed %v", err)
+		return
+	}
+
+	process, err := os.StartProcess(exePath, os.Args, &os.ProcAttr{
+		Env:   newEnvs,
+		Files: files,
+	})
+	if err != nil {
+		TLOG.Errorf("start supprocess failed %v", err)
+		return
+	}
+	TLOG.Infof("subprocess start %d", process.Pid)
+	go process.Wait()
+}
+
+func graceShutdown() {
+	pid := os.Getpid()
+	TLOG.Infof("grace shutdown start %d", pid)
+	ctx, _ := context.WithTimeout(context.Background(), GracedownTimeout*time.Second)
+	for _, obj := range objRunList {
+		if s, ok := httpSvrs[obj]; ok {
+			err := s.Shutdown(ctx)
+			if err == nil {
+				TLOG.Infof("grace shutdown %s succ %d", obj, pid)
+			} else {
+				TLOG.Infof("grace shutdown %s failed within %d seconds: %v", obj, GracedownTimeout, err)
+			}
+		}
+		if s, ok := goSvrs[obj]; ok {
+			err := s.Shutdown(ctx)
+			if err == nil {
+				TLOG.Infof("grace shutdown %s succ %d", obj, pid)
+			} else {
+				TLOG.Infof("grace shutdown %s failed within %d seconds: %v", obj, GracedownTimeout, err)
+			}
+		}
+	}
+	shutdown <- true
+}
+
+func handleSignal() {
+	usrFun, killFunc := graceRestart, graceShutdown
+	grace.GraceHandler(usrFun, killFunc)
 }
 
 func mainloop() {
@@ -237,7 +334,9 @@ func mainloop() {
 
 	go ha.ReportVersion(GetServerConfig().Version)
 	go ha.KeepAlive("") //first start
+	go handleSignal()
 	loop := time.NewTicker(GetServerConfig().MainLoopTicker)
+
 	for {
 		select {
 		case <-shutdown:
