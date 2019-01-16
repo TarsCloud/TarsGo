@@ -13,6 +13,7 @@ type RemoteTimeWriter struct {
 	logPtr        *logf.Log
 	reportSuccPtr *PropertyReport
 	reportFailPtr *PropertyReport
+	hasPrefix     bool
 }
 
 //NewRemoteTimeWriter new and init RemoteTimeWriter
