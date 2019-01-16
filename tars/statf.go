@@ -163,7 +163,7 @@ func ReportStatFromClient(msg *Message, succ int32, timeout int32, exec int32) {
 	head.InterfaceName = msg.Req.SFuncName
 	sNames := strings.Split(msg.Req.SServantName, ".")
 	if len(sNames) < 2 {
-		TLOG.Debug("report err:servant name (%s) format error", msg.Req.SServantName)
+		TLOG.Debugf("report err:servant name (%s) format error", msg.Req.SServantName)
 		return
 	}
 	head.SlaveName = fmt.Sprintf("%s.%s", sNames[0], sNames[1])
