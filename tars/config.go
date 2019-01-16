@@ -1,8 +1,9 @@
 package tars
 
 import (
-	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 	"time"
+
+	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 )
 
 var svrCfg *serverConfig
@@ -28,45 +29,44 @@ type adapterConfig struct {
 }
 
 type serverConfig struct {
-	Node      string
-	App       string
-	Server    string
-	LogPath   string
-	LogSize   uint64
-	LogNum    uint64
-	LogLevel  string
-	Version   string
-	LocalIP   string
-	BasePath  string
-	DataPath  string
-	config    string
-	notify    string
-	log       string
-	Adapters  map[string]adapterConfig
+	Node     string
+	App      string
+	Server   string
+	LogPath  string
+	LogSize  uint64
+	LogNum   uint64
+	LogLevel string
+	Version  string
+	LocalIP  string
+	BasePath string
+	DataPath string
+	config   string
+	notify   string
+	log      string
+	Adapters map[string]adapterConfig
 
 	Container   string
 	Isdocker    bool
 	Enableset   bool
 	Setdivision string
 	//add server timeout
-	AcceptTimeout time.Duration
-	ReadTimeout   time.Duration
-	WriteTimeout  time.Duration
-	HandleTimeout time.Duration
-	IdleTimeout   time.Duration
+	AcceptTimeout  time.Duration
+	ReadTimeout    time.Duration
+	WriteTimeout   time.Duration
+	HandleTimeout  time.Duration
+	IdleTimeout    time.Duration
 	ZombileTimeout time.Duration
-	QueueCap      int
+	QueueCap       int
 	//add tcp config
-	TCPReadBuffer int
+	TCPReadBuffer  int
 	TCPWriteBuffer int
-	TCPNoDelay bool
+	TCPNoDelay     bool
 	//add routine number
 	MaxInvoke int32
 	//add adapter & report config
 	PropertyReportInterval time.Duration
-	StatReportInterval time.Duration
-	MainLoopTicker time.Duration
-
+	StatReportInterval     time.Duration
+	MainLoopTicker         time.Duration
 }
 
 type clientConfig struct {
@@ -78,12 +78,12 @@ type clientConfig struct {
 	reportInterval          int
 	AsyncInvokeTimeout      int
 	//add client timeout
-	ClientQueueLen          int
-	ClientIdleTimeout       time.Duration
-	ClientReadTimeout	    time.Duration
-	ClientWriteTimeout      time.Duration
-	ReqDefaultTimeout       int32
-	ObjQueueMax             int32
-	AdapterProxyTicker      time.Duration
-	AdapterProxyResetCount  int	
+	ClientQueueLen         int
+	ClientIdleTimeout      time.Duration
+	ClientReadTimeout      time.Duration
+	ClientWriteTimeout     time.Duration
+	ReqDefaultTimeout      int32
+	ObjQueueMax            int32
+	AdapterProxyTicker     time.Duration
+	AdapterProxyResetCount int
 }

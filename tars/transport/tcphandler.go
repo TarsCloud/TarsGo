@@ -11,6 +11,7 @@ import (
 
 	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/gpool"
+	"github.com/TarsCloud/TarsGo/tars/util/grace"
 )
 
 type tcpHandler struct {
@@ -19,8 +20,6 @@ type tcpHandler struct {
 	lis *net.TCPListener
 	ts  *TarsServer
 
-	acceptNum   int32
-	invokeNum   int32
 	readBuffer  int
 	writeBuffer int
 	tcpNoDelay  bool
@@ -30,17 +29,19 @@ type tcpHandler struct {
 
 func (h *tcpHandler) Listen() (err error) {
 	cfg := h.conf
-	addr, err := net.ResolveTCPAddr("tcp4", cfg.Address)
-	if err != nil {
-		return err
+	ln, err := grace.CreateListener("tcp", cfg.Address)
+	if err == nil {
+		TLOG.Infof("Listening on %s", cfg.Address)
+		h.lis = ln.(*net.TCPListener)
+	} else {
+		TLOG.Infof("Listening on %s error: %v", cfg.Address, err)
 	}
-	h.lis, err = net.ListenTCP("tcp4", addr)
-	TLOG.Info("Listening on", cfg.Address)
-	return
+	return err
 }
 
 func (h *tcpHandler) handleConn(conn *net.TCPConn, pkg []byte) {
 	handler := func() {
+		atomic.AddInt32(&h.ts.numInvoke, 1)
 		ctx := context.Background()
 		remoteAddr := conn.RemoteAddr().String()
 		ipPort := strings.Split(remoteAddr, ":")
@@ -57,6 +58,7 @@ func (h *tcpHandler) handleConn(conn *net.TCPConn, pkg []byte) {
 		if _, err := conn.Write(rsp); err != nil {
 			TLOG.Errorf("send pkg to %v failed %v", remoteAddr, err)
 		}
+		atomic.AddInt32(&h.ts.numInvoke, -1)
 	}
 
 	cfg := h.conf
@@ -73,8 +75,14 @@ func (h *tcpHandler) handleConn(conn *net.TCPConn, pkg []byte) {
 
 func (h *tcpHandler) Handle() error {
 	cfg := h.conf
-	for !h.ts.isClosed {
-		h.lis.SetDeadline(time.Now().Add(cfg.AcceptTimeout)) // set accept timeout
+	for {
+		if atomic.LoadInt32(&h.ts.isClosed) == 1 {
+			return nil
+		}
+		if cfg.AcceptTimeout > 0 {
+			// set accept timeout
+			h.lis.SetDeadline(time.Now().Add(cfg.AcceptTimeout))
+		}
 		conn, err := h.lis.AcceptTCP()
 		if err != nil {
 			if !isNoDataError(err) {
@@ -84,14 +92,14 @@ func (h *tcpHandler) Handle() error {
 			}
 			continue
 		}
+		atomic.AddInt32(&h.ts.numConn, 1)
 		go func(conn *net.TCPConn) {
 			TLOG.Debug("TCP accept:", conn.RemoteAddr())
-			atomic.AddInt32(&h.acceptNum, 1)
 			conn.SetReadBuffer(cfg.TCPReadBuffer)
 			conn.SetWriteBuffer(cfg.TCPWriteBuffer)
 			conn.SetNoDelay(cfg.TCPNoDelay)
 			h.recv(conn)
-			atomic.AddInt32(&h.acceptNum, -1)
+			atomic.AddInt32(&h.ts.numConn, -1)
 		}(conn)
 	}
 	if h.gpool != nil {
@@ -101,19 +109,35 @@ func (h *tcpHandler) Handle() error {
 }
 
 func (h *tcpHandler) recv(conn *net.TCPConn) {
-	defer conn.Close()
+	//wait invoke done
+	defer func() {
+		tick := time.NewTicker(time.Second)
+		defer tick.Stop()
+		for atomic.LoadInt32(&h.ts.numInvoke) > 0 {
+			select {
+			case <-tick.C:
+			}
+		}
+		conn.Close()
+	}()
 	cfg := h.conf
 	buffer := make([]byte, 1024*4)
 	var currBuffer []byte // need a deep copy of buffer
 	h.idleTime = time.Now()
 	var n int
 	var err error
-	for !h.ts.isClosed {
-		if cfg.ReadTimeout != 0 {
+	for {
+		if atomic.LoadInt32(&h.ts.isClosed) == 1 {
+			// set short deadline to clear connection buffer
+			conn.SetReadDeadline(time.Now().Add(time.Millisecond * 10))
+		} else if cfg.ReadTimeout > 0 {
 			conn.SetReadDeadline(time.Now().Add(cfg.ReadTimeout))
 		}
 		n, err = conn.Read(buffer)
 		if err != nil {
+			if atomic.LoadInt32(&h.ts.isClosed) == 1 && len(currBuffer) == 0 {
+				return
+			}
 			if len(currBuffer) == 0 && h.ts.numInvoke == 0 && h.idleTime.Add(cfg.IdleTimeout).Before(time.Now()) {
 				return
 			}
