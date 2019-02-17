@@ -4,7 +4,6 @@ import (
 	"context"
 	"net"
 	"sync/atomic"
-	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/util/grace"
 )
@@ -28,18 +27,6 @@ func (h *udpHandler) Listen() (err error) {
 }
 
 func (h *udpHandler) Handle() error {
-	atomic.AddInt32(&h.ts.numConn, 1)
-	///wait invoke done
-	defer func() {
-		tick := time.NewTicker(time.Second)
-		defer tick.Stop()
-		for atomic.LoadInt32(&h.ts.numInvoke) > 0 {
-			select {
-			case <-tick.C:
-			}
-		}
-		atomic.AddInt32(&h.ts.numConn, -1)
-	}()
 	buffer := make([]byte, 65535)
 	for {
 		if atomic.LoadInt32(&h.ts.isClosed) == 1 {
@@ -70,4 +57,15 @@ func (h *udpHandler) Handle() error {
 		}()
 	}
 	return nil
+}
+
+func (h *udpHandler) OnShutdown() {
+}
+
+func (h *udpHandler) CloseIdles(n int64) bool {
+	if h.ts.numInvoke == 0 {
+		h.conn.Close()
+		return true
+	}
+	return false
 }

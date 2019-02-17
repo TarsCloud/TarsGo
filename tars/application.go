@@ -295,7 +295,7 @@ func graceRestart() {
 
 func graceShutdown() {
 	pid := os.Getpid()
-	TLOG.Infof("grace shutdown start %d", pid)
+	TLOG.Infof("grace shutdown start %d in %d seconds", pid, GracedownTimeout)
 	ctx, _ := context.WithTimeout(context.Background(), GracedownTimeout*time.Second)
 	for _, obj := range objRunList {
 		if s, ok := httpSvrs[obj]; ok {

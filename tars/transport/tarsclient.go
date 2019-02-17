@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"context"
 	"io"
 	"net"
 	"sync"
@@ -204,4 +205,22 @@ func (c *connection) close(conn net.Conn) {
 		conn.Close()
 	}
 	c.connLock.Unlock()
+}
+
+// GraceClose close client gracefully
+func (c *TarsClient) GraceClose(ctx context.Context) {
+	tk := time.NewTicker(time.Millisecond * 500)
+	defer tk.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-tk.C:
+			TLOG.Debugf("wait grace invoke %d", c.conn.invokeNum)
+			if atomic.LoadInt32(&c.conn.invokeNum) <= 0 {
+				c.Close()
+				return
+			}
+		}
+	}
 }
