@@ -2,6 +2,7 @@ package transport
 
 import (
 	"context"
+	"net"
 	"sync/atomic"
 	"time"
 
@@ -55,6 +56,7 @@ type TarsServerConf struct {
 
 //TarsServer tars server struct.
 type TarsServer struct {
+	Listener   net.Listener
 	svr        TarsProtoCol
 	conf       *TarsServerConf
 	handle     ServerHandler
@@ -62,6 +64,7 @@ type TarsServer struct {
 	idleTime   time.Time
 	isClosed   int32
 	numInvoke  int32
+	numConn    int32
 }
 
 //NewTarsServer new TarsServer and init with conf.
@@ -94,7 +97,7 @@ func (ts *TarsServer) Serve() error {
 
 //Shutdown try to shutdown server gracefully.
 func (ts *TarsServer) Shutdown(ctx context.Context) error {
-	// step 1: close listeners
+	// step 1: close listeners, notify client reconnect
 	atomic.StoreInt32(&ts.isClosed, 1)
 	ts.handle.OnShutdown()
 	// step 2: wait and close idle connections

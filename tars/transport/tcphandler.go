@@ -104,6 +104,7 @@ func (h *tcpHandler) Handle() error {
 			}
 			continue
 		}
+		atomic.AddInt32(&h.ts.numConn, 1)
 		go func(conn *net.TCPConn) {
 			fd, _ := conn.File()
 			key := fmt.Sprintf("%v", fd.Fd())
@@ -116,7 +117,6 @@ func (h *tcpHandler) Handle() error {
 			h.conns.Store(key, cf)
 			h.recv(cf)
 			h.conns.Delete(key)
-
 		}(conn)
 	}
 	if h.gpool != nil {
@@ -126,8 +126,9 @@ func (h *tcpHandler) Handle() error {
 }
 
 func (h *tcpHandler) OnShutdown() {
-	// send close-package
+	// close listeners
 	h.lis.SetDeadline(time.Now())
+	// send close-package
 	h.conns.Range(func(key, val interface{}) bool {
 		conn := val.(*connInfo)
 		conn.conn.SetReadDeadline(time.Now())
