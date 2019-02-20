@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # check params
 if [ $# -lt 3 ]
@@ -73,12 +73,18 @@ else
         sed  -i "s/_SERVER_/$SERVER/g" $FILE
         sed  -i "s/_SERVANT_/$SERVANT/g" $FILE
     done
-
-    for RENAMEFILE in `ls `
-    do
-        rename "Server" "$SERVER" $RENAMEFILE
-        rename "Servant" "$SERVANT" $RENAMEFILE
-    done
+    ISUBUNTU=`uname -a | grep -i ubuntu | wc -l`
+        for RENAMEFILE in `ls `
+        do
+            if [[ $ISUBUNTU -ge 1 ]]
+            then
+                rename "s/Server/$SERVER/" $RENAMEFILE
+                rename "s/Servant/$SERVANT/" $RENAMEFILE
+            else
+                rename "Server" "$SERVER" $RENAMEFILE
+                rename "Servant" "$SERVANT" $RENAMEFILE
+            fi
+        done
 fi
 
 # try build tars2go
