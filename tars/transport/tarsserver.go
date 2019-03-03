@@ -2,7 +2,6 @@ package transport
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"sync/atomic"
 	"time"
@@ -28,12 +27,15 @@ type TarsProtoCol interface {
 	Invoke(ctx context.Context, pkg []byte) []byte
 	ParsePackage(buff []byte) (int, int)
 	InvokeTimeout(pkg []byte) []byte
+	GetCloseMsg() []byte
 }
 
 //ServerHandler  is interface with listen and handler method
 type ServerHandler interface {
 	Listen() error
 	Handle() error
+	OnShutdown()
+	CloseIdles(n int64) bool
 }
 
 //TarsServerConf server config for tars server side.
@@ -57,6 +59,7 @@ type TarsServer struct {
 	Listener   net.Listener
 	svr        TarsProtoCol
 	conf       *TarsServerConf
+	handle     ServerHandler
 	lastInvoke time.Time
 	idleTime   time.Time
 	isClosed   int32
@@ -85,37 +88,31 @@ func (ts *TarsServer) getHandler() (sh ServerHandler) {
 
 //Serve listen and handle
 func (ts *TarsServer) Serve() error {
-	h := ts.getHandler()
-	if err := h.Listen(); err != nil {
+	ts.handle = ts.getHandler()
+	if err := ts.handle.Listen(); err != nil {
 		return err
 	}
-	return h.Handle()
+	return ts.handle.Handle()
 }
 
 //Shutdown try to shutdown server gracefully.
 func (ts *TarsServer) Shutdown(ctx context.Context) error {
+	// step 1: close listeners, notify client reconnect
 	atomic.StoreInt32(&ts.isClosed, 1)
-	watchDone := make(chan bool, 1)
-	go func() {
-		watchInterval := time.Millisecond * 500
-		for range time.NewTicker(watchInterval).C {
-			if atomic.LoadInt32(&ts.numConn) == 0 {
-				watchDone <- true
-				return
-			}
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				TLOG.Debugf("wait %d conn %d invoke exit", ts.numConn, ts.numInvoke)
+	ts.handle.OnShutdown()
+	// step 2: wait and close idle connections
+	watchInterval := time.Millisecond * 500
+	tk := time.NewTicker(watchInterval)
+	defer tk.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-tk.C:
+			if ts.handle.CloseIdles(2) {
+				return nil
 			}
 		}
-	}()
-	select {
-	case <-ctx.Done():
-		return fmt.Errorf("wait shutdown timeout")
-	case <-watchDone:
-		return nil
 	}
 }
 
