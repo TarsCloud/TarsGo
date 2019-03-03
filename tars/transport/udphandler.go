@@ -71,3 +71,14 @@ func (h *udpHandler) Handle() error {
 	}
 	return nil
 }
+
+func (h *udpHandler) OnShutdown() {
+}
+
+func (h *udpHandler) CloseIdles(n int64) bool {
+	if h.ts.numInvoke == 0 {
+		h.conn.Close()
+		return true
+	}
+	return false
+}

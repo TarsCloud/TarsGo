@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/adminf"
@@ -29,10 +30,12 @@ var listenFds []*os.File
 var shutdown chan bool
 var serList []string
 var objRunList []string
+var isShudowning int32
 
 //TLOG is the logger for tars framework.
 var TLOG = rogger.GetLogger("TLOG")
 var initOnce sync.Once
+var shutdownOnce sync.Once
 
 type adminFn func(string) (string, error)
 
@@ -191,6 +194,7 @@ func initConfig() {
 
 //Run the application
 func Run() {
+	isShudowning = 0
 	Init()
 	<-statInited
 
@@ -207,20 +211,20 @@ func Run() {
 	for _, obj := range objRunList {
 		if s, ok := httpSvrs[obj]; ok {
 			go func(obj string) {
-				fmt.Println(obj, "http server start")
 				addr := s.Addr
+				TLOG.Info("http server starting %s %s", obj, addr)
 				if addr == "" {
-					addr = ":http"
+					teerDown(fmt.Errorf("empty addr for %s", obj))
+					return
 				}
 				ln, err := grace.CreateListener("tcp", addr)
 				if err != nil {
-					fmt.Println(obj, "server start failed", err)
-					os.Exit(1)
+					teerDown(fmt.Errorf("start http server for %s failed: %v", obj, err))
+					return
 				}
 				err = s.Serve(ln)
 				if err != nil {
-					fmt.Println(obj, "server start failed", err)
-					os.Exit(1)
+					TLOG.Infof("server stop: %v", err)
 				}
 			}(obj)
 			continue
@@ -235,8 +239,8 @@ func Run() {
 		go func(obj string) {
 			err := s.Serve()
 			if err != nil {
-				fmt.Println(obj, "server start failed", err)
-				os.Exit(1)
+				teerDown(fmt.Errorf("server obj for %s failed: %v", obj, err))
+				return
 			}
 		}(obj)
 	}
@@ -294,8 +298,9 @@ func graceRestart() {
 }
 
 func graceShutdown() {
+	atomic.StoreInt32(&isShudowning, 1)
 	pid := os.Getpid()
-	TLOG.Infof("grace shutdown start %d", pid)
+	TLOG.Infof("grace shutdown start %d in %d seconds", pid, GracedownTimeout)
 	ctx, _ := context.WithTimeout(context.Background(), GracedownTimeout*time.Second)
 	for _, obj := range objRunList {
 		if s, ok := httpSvrs[obj]; ok {
@@ -315,7 +320,18 @@ func graceShutdown() {
 			}
 		}
 	}
-	shutdown <- true
+	teerDown(nil)
+}
+
+func teerDown(err error) {
+	shutdownOnce.Do(func() {
+		if err != nil {
+			ReportNotifyInfo("server is fatal: " + err.Error())
+			fmt.Println(err)
+			TLOG.Error(err)
+		}
+		shutdown <- true
+	})
 }
 
 func handleSignal() {
@@ -324,6 +340,7 @@ func handleSignal() {
 }
 
 func mainloop() {
+	defer rogger.FlushLogger()
 	ha := new(NodeFHelper)
 	comm := NewCommunicator()
 	node := GetServerConfig().Node
@@ -343,6 +360,9 @@ func mainloop() {
 			ReportNotifyInfo("stop")
 			return
 		case <-loop.C:
+			if atomic.LoadInt32(&isShudowning) == 1 {
+				continue
+			}
 			for name, adapter := range svrCfg.Adapters {
 				if adapter.Protocol == "not_tars" {
 					//TODO not_tars support

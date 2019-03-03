@@ -98,3 +98,11 @@ func (s *TarsProtocol) InvokeTimeout(pkg []byte) []byte {
 	rspPackage.SResultDesc = "server invoke timeout"
 	return s.rsp2Byte(&rspPackage)
 }
+
+//GetCloseMsg return a package to close connection
+func (s *TarsProtocol) GetCloseMsg() []byte {
+	rspPackage := requestf.ResponsePacket{}
+	rspPackage.IRequestId = 0
+	rspPackage.SResultDesc = reconnectMsg
+	return s.rsp2Byte(&rspPackage)
+}
