@@ -40,7 +40,13 @@ func init() {
 	shutdown = make(chan bool, 1)
 	adminMethods = make(map[string]adminFn)
 	rogger.SetLevel(rogger.ERROR)
-	Init()
+	registerFlag()
+}
+
+var confPath string
+
+func registerFlag() {
+	flag.StringVar(&confPath, "config", "", "init config path")
 }
 
 //Init should run before GetServerConfig & GetClientConfig , or before run
@@ -50,12 +56,10 @@ func Init() {
 }
 
 func initConfig() {
-	confPath := flag.String("config", "", "init config path")
-	flag.Parse()
-	if len(*confPath) == 0 {
+	if len(confPath) == 0 {
 		return
 	}
-	c, err := conf.NewConf(*confPath)
+	c, err := conf.NewConf(confPath)
 	if err != nil {
 		TLOG.Error("open app config fail")
 	}
