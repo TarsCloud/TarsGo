@@ -53,11 +53,13 @@ func initConfig() {
 	confPath := flag.String("config", "", "init config path")
 	flag.Parse()
 	if len(*confPath) == 0 {
+		os.Exit(1)
 		return
 	}
 	c, err := conf.NewConf(*confPath)
 	if err != nil {
 		TLOG.Error("open app config fail")
+		os.Exit(1)
 	}
 	//Config.go
 	//Server
