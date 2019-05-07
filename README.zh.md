@@ -311,6 +311,7 @@ func main() {
         return
     }   
     fmt.Println(ret, out)
+}
 
 ```
 
@@ -453,6 +454,7 @@ func main() {
         return
     }   
     fmt.Println(ret, out)
+}
 
 ```
 
@@ -485,6 +487,7 @@ func main() {
 		fmt.Println(ret, out)
 	}()
     time.Sleep(1)  
+}
 
 ```
 
