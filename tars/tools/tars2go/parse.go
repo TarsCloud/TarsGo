@@ -69,7 +69,9 @@ type InterfaceInfo struct {
 //EnumMember record member information.
 type EnumMember struct {
 	Key   string
-	Value int32
+	Type  int
+	Value int32  //type 0
+	Name  string //type 1
 }
 
 //EnumInfo record EnumMember information include name.
@@ -186,39 +188,38 @@ func (p *Parse) parseEnum() {
 	}
 	p.expect(tkBracel)
 
-	defer func() {
-		p.expect(tkSemi)
-		p.Enum = append(p.Enum, enum)
-	}()
-
-	var it int32
+LFOR:
 	for {
 		p.next()
 		switch p.t.T {
 		case tkBracer:
-
-			return
+			break LFOR
 		case tkName:
 			k := p.t.S.S
 			p.next()
 			switch p.t.T {
 			case tkComma:
-				m := EnumMember{Key: k, Value: it}
+				m := EnumMember{Key: k, Type: 2}
 				enum.Mb = append(enum.Mb, m)
-				it++
 			case tkBracer:
-				m := EnumMember{Key: k, Value: it}
+				m := EnumMember{Key: k, Type: 2}
 				enum.Mb = append(enum.Mb, m)
-				return
+				break LFOR
 			case tkEq:
-				p.expect(tkInteger)
-				it = int32(p.t.S.I)
-				m := EnumMember{Key: k, Value: it}
-				enum.Mb = append(enum.Mb, m)
-				it++
+				p.next()
+				switch p.t.T {
+				case tkInteger:
+					m := EnumMember{Key: k, Value: int32(p.t.S.I)}
+					enum.Mb = append(enum.Mb, m)
+				case tkName:
+					m := EnumMember{Key: k, Type: 1, Name: p.t.S.S}
+					enum.Mb = append(enum.Mb, m)
+				default:
+					p.parseErr("not expect " + TokenMap[p.t.T])
+				}
 				p.next()
 				if p.t.T == tkBracer {
-					return
+					break LFOR
 				} else if p.t.T == tkComma {
 				} else {
 					p.parseErr("expect , or }")
@@ -226,6 +227,8 @@ func (p *Parse) parseEnum() {
 			}
 		}
 	}
+	p.expect(tkSemi)
+	p.Enum = append(p.Enum, enum)
 }
 func (p *Parse) parseStructMemberDefault(m *StructMember) {
 	m.DefType = p.t.T

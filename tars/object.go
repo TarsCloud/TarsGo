@@ -33,7 +33,7 @@ func (obj *ObjectProxy) Invoke(ctx context.Context, msg *Message, timeout time.D
 	if adp == nil {
 		return errors.New("no adapter Proxy selected:" + msg.Req.SServantName)
 	}
-	if obj.queueLen > ObjQueueMax {
+	if obj.queueLen > obj.comm.Client.ObjQueueMax {
 		return errors.New("invoke queue is full:" + msg.Req.SServantName)
 	}
 	msg.Adp = adp
