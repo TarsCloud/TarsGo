@@ -741,7 +741,6 @@ func (gen *GenGo) genEnum(en *EnumInfo) {
 			c.WriteString(gen.makeEnumName(en, &v) + ` = ` + strconv.Itoa(int(it)) + "\n")
 			it++
 		}
-
 	}
 
 	c.WriteString(")\n")
