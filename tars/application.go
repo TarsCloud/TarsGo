@@ -64,6 +64,9 @@ func Init() {
 }
 
 func initConfig() {
+	if !flag.Parsed() {
+		flag.Parse()
+	}
 	if len(confPath) == 0 {
 		TLOG.Error("app config not found")
 		os.Exit(1)
