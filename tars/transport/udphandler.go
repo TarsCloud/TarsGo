@@ -3,9 +3,11 @@ package transport
 import (
 	"context"
 	"net"
+	"strconv"
 	"sync/atomic"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/grace"
 )
 
@@ -61,6 +63,9 @@ func (h *udpHandler) Handle() error {
 		copy(pkg, buffer[0:n])
 		go func() {
 			ctx := context.Background()
+			ctx = current.ContextWithTarsCurrent(ctx)
+			current.SetClientIPWithContext(ctx, udpAddr.IP.String())
+			current.SetClientPortWithContext(ctx, strconv.Itoa(udpAddr.Port))
 			atomic.AddInt32(&h.ts.numInvoke, 1)
 			rsp := h.ts.invoke(ctx, pkg[4:]) // no need to check package
 			if _, err := h.conn.WriteToUDP(rsp, udpAddr); err != nil {
