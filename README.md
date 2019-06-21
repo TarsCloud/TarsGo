@@ -6,7 +6,7 @@
 - Go's goroutine concurrency mechanism means Go is very suitable for large-scale high-concurrency back-end server program development. The Go language has near C/C++ performance and near Python productivity.
 - At Tencent, part of the existing C++ development team has gradually turned into Go developers. Tars, a widely used RPC framework, supports C++, Java, NodeJS, and PHP, and now Go. The combination with Go language has become a general trend. Therefore, in the voice of users, we launched Tarsgo, and we have applied to Tencent map application, YingYongbao application, Internet plus and other projects.
 
-- Learn more about the whole Tars architecture and design at [Introduction](https://github.com/TarsCloud/Tars/blob/master/Introduction.en.md).
+- Learn more about the whole Tars architecture and design at [Introduction](https://github.com/TarsCloud/Tars/blob/master/Introduction.md).
 
 
 ## Function & features
