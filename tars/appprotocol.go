@@ -15,11 +15,15 @@ const (
 
 //TarsRequest parse full tars request from package
 func TarsRequest(rev []byte) (int, int) {
+	maxLength := iMaxLength
+	if svrCfg.MaxPackageLength > 0 {
+		maxLength = svrCfg.MaxPackageLength
+	}
 	if len(rev) < 4 {
 		return 0, PACKAGE_LESS
 	}
 	iHeaderLen := int(binary.BigEndian.Uint32(rev[0:4]))
-	if iHeaderLen < 4 || iHeaderLen > iMaxLength {
+	if iHeaderLen < 4 || iHeaderLen > maxLength {
 		return 0, PACKAGE_ERROR
 	}
 	if len(rev) < iHeaderLen {

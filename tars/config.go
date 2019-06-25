@@ -44,10 +44,11 @@ type serverConfig struct {
 	netThread int
 	Adapters  map[string]adapterConfig
 
-	Container   string
-	Isdocker    bool
-	Enableset   bool
-	Setdivision string
+	Container        string
+	Isdocker         bool
+	Enableset        bool
+	Setdivision      string
+	MaxPackageLength int
 }
 
 type clientConfig struct {

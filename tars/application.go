@@ -83,6 +83,8 @@ func initConfig() {
 	svrCfg.DataPath = sMap["datapath"]
 	//svrCfg.netThread = sMap["netthread"]
 	svrCfg.netThread = c.GetInt("/tars/application/server<netthread>")
+	// max package length, default is 1M
+	svrCfg.MaxPackageLength = c.GetInt("/tars/application/server<maxPackageLength>")
 
 	svrCfg.log = sMap["log"]
 	//add version info
