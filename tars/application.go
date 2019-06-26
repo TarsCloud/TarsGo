@@ -128,6 +128,7 @@ func initConfig() {
 	svrCfg.StatReportInterval = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/server<statreportinterval>", StatReportInterval))
 	svrCfg.MainLoopTicker = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/server<mainloopticker>", MainLoopTicker))
 
+	svrCfg.MaxPackageLength = c.GetIntWithDef("/tars/application/server<maxPackageLength>", iMaxLength)
 	//client
 	cltCfg = new(clientConfig)
 	cMap := c.GetMap("/tars/application/client")
