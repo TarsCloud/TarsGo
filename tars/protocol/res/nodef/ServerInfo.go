@@ -5,7 +5,7 @@ package nodef
 
 import (
 	"fmt"
-	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
+	"tars/protocol/codec"
 )
 
 //ServerInfo strcut implement

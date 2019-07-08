@@ -1,7 +1,7 @@
 package tars
 
 import (
-	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
+	"tars/util/endpoint"
 )
 
 var svrCfg *serverConfig

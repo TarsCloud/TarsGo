@@ -1,5 +1,8 @@
 # TarsGo  Document
-[点我查看中文版](README.zh.md)
+
+* [版本特性Wiki](https://github.com/tars-go/TarsGo/wiki)
+* [点我查看中文版](README.zh.md)
+
 ## About
 - Tarsgo is high performance RPC framework in Golang programing language using the tars protocol.
 - Go has become popular for programming with the rise of containerization technology such as docker, k8s, and etcd.

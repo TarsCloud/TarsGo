@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/TarsCloud/TarsGo/tars"
+	"tars"
 
 	"_APP_"
 )

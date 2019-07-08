@@ -8,15 +8,18 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
-	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
+	"tars/model"
+	"tars/protocol"
+	"tars/protocol/res/basef"
+	"tars/protocol/res/requestf"
+	"tars/util/rtimer"
 )
 
 // ObjectProxy is struct contains proxy information
 type ObjectProxy struct {
 	manager  *EndpointManager
 	comm     *Communicator
+	proto    model.Protocol
 	queueLen int32
 }
 
@@ -25,6 +28,11 @@ func (obj *ObjectProxy) Init(comm *Communicator, objName string) {
 	obj.comm = comm
 	obj.manager = new(EndpointManager)
 	obj.manager.Init(objName, obj.comm)
+	obj.proto = &protocol.TarsProtocol{}
+}
+
+func (obj *ObjectProxy) TarsSetProtocol(proto model.Protocol) {
+	obj.proto = proto
 }
 
 // Invoke get proxy information
@@ -36,6 +44,7 @@ func (obj *ObjectProxy) Invoke(ctx context.Context, msg *Message, timeout time.D
 	if obj.queueLen > ObjQueueMax {
 		return errors.New("invoke queue is full:" + msg.Req.SServantName)
 	}
+	adp.proto = obj.proto
 	msg.Adp = adp
 	atomic.AddInt32(&obj.queueLen, 1)
 	readCh := make(chan *requestf.ResponsePacket, 1)

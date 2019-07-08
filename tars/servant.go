@@ -7,14 +7,20 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
-	"github.com/TarsCloud/TarsGo/tars/util/tools"
+	"tars/model"
+
+	"tars/protocol/res/basef"
+	"tars/protocol/res/requestf"
+	"tars/util/tools"
+)
+
+var (
+	maxInt32 int32 = 1<<31 - 1
+	msgID    int32
 )
 
 //ServantProxy is the struct for proxy servants.
 type ServantProxy struct {
-	sid     int32
 	name    string
 	comm    *Communicator
 	obj     *ObjectProxy
@@ -41,6 +47,11 @@ func (s *ServantProxy) TarsSetTimeout(t int) {
 	s.timeout = t
 }
 
+//TarsSetProtocol tars set model protocol
+func (s *ServantProxy) TarsSetProtocol(proto model.Protocol) {
+	s.obj.TarsSetProtocol(proto)
+}
+
 //Tars_invoke is use for client inoking server.
 func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	sFuncName string,
@@ -50,11 +61,11 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	Resp *requestf.ResponsePacket) error {
 	defer checkPanic()
 	//TODO 重置sid，防止溢出
-	atomic.CompareAndSwapInt32(&s.sid, 1<<31-1, 1)
+	atomic.CompareAndSwapInt32(&msgID, maxInt32, 1)
 	req := requestf.RequestPacket{
 		IVersion:     1,
 		CPacketType:  0,
-		IRequestId:   atomic.AddInt32(&s.sid, 1),
+		IRequestId:   atomic.AddInt32(&msgID, 1),
 		SServantName: s.name,
 		SFuncName:    sFuncName,
 		SBuffer:      tools.ByteToInt8(buf),

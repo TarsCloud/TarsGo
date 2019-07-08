@@ -10,12 +10,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/adminf"
-	"github.com/TarsCloud/TarsGo/tars/transport"
-	"github.com/TarsCloud/TarsGo/tars/util/conf"
-	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
-	"github.com/TarsCloud/TarsGo/tars/util/rogger"
-	"github.com/TarsCloud/TarsGo/tars/util/tools"
+	"tars/protocol/res/adminf"
+	"tars/transport"
+	"tars/util/conf"
+	"tars/util/endpoint"
+	"tars/util/rogger"
+	"tars/util/tools"
 )
 
 var tarsConfig map[string]*transport.TarsServerConf

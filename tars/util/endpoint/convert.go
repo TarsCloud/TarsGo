@@ -1,6 +1,6 @@
 package endpoint
 
-import "github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
+import "tars/protocol/res/endpointf"
 
 //Tars2endpoint make endpointf.EndpointF to Endpoint struct.
 func Tars2endpoint(end endpointf.EndpointF) Endpoint {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/configf"
+	"tars/protocol/res/configf"
 )
 
 func saveFile(path string, filename string, content string) error {

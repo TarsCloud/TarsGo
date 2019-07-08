@@ -1,16 +1,16 @@
 package tars
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
-	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
-	"github.com/TarsCloud/TarsGo/tars/transport"
 	"sync"
 	"sync/atomic"
+	"tars/protocol/res/basef"
 	"time"
+
+	"tars/model"
+	"tars/protocol/res/endpointf"
+	"tars/protocol/res/requestf"
+	"tars/transport"
 )
 
 // AdapterProxy : Adapter proxy
@@ -19,6 +19,7 @@ type AdapterProxy struct {
 	point      *endpointf.EndpointF
 	tarsClient *transport.TarsClient
 	comm       *Communicator
+	proto      model.Protocol
 	failCount  int32
 	sendCount  int32
 	status     bool
@@ -50,7 +51,7 @@ func (c *AdapterProxy) New(point *endpointf.EndpointF, comm *Communicator) error
 
 // ParsePackage : Parse packet from bytes
 func (c *AdapterProxy) ParsePackage(buff []byte) (int, int) {
-	return TarsRequest(buff)
+	return c.proto.ParsePackage(buff)
 }
 
 // Recv : Recover read channel when closed for timeout
@@ -62,17 +63,20 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 			TLOG.Error("recv pkg painc:", err)
 		}
 	}()
-	packet := requestf.ResponsePacket{}
-	err := packet.ReadFrom(codec.NewReader(pkg))
+	packet, err := c.proto.ResponseUnpack(pkg)
 	if err != nil {
 		TLOG.Error("decode packet error", err.Error())
 		return
 	}
+	if packet.CPacketType == basef.TARSONEWAY {
+		return
+	}
+
 	chIF, ok := c.resp.Load(packet.IRequestId)
 	if ok {
 		ch := chIF.(chan *requestf.ResponsePacket)
 		TLOG.Debug("IN:", packet)
-		ch <- &packet
+		ch <- packet
 	} else {
 		TLOG.Error("timeout resp,drop it:", packet.IRequestId)
 	}
@@ -82,15 +86,12 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 func (c *AdapterProxy) Send(req *requestf.RequestPacket) error {
 	TLOG.Debug("send req:", req.IRequestId)
 	c.sendAdd()
-	sbuf := bytes.NewBuffer(nil)
-	sbuf.Write(make([]byte, 4))
-	os := codec.NewBuffer()
-	req.WriteTo(os)
-	bs := os.ToBytes()
-	sbuf.Write(bs)
-	len := sbuf.Len()
-	binary.BigEndian.PutUint32(sbuf.Bytes(), uint32(len))
-	return c.tarsClient.Send(sbuf.Bytes())
+	sbuf, err := c.proto.RequestPack(req)
+	if err != nil {
+		TLOG.Debug("protocol wrong:", req.IRequestId)
+		return err
+	}
+	return c.tarsClient.Send(sbuf)
 }
 
 // GetPoint : Get an endpoint

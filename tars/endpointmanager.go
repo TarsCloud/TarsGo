@@ -5,10 +5,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/queryf"
-	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
-	"github.com/TarsCloud/TarsGo/tars/util/set"
+	"tars/protocol/res/endpointf"
+	"tars/protocol/res/queryf"
+	"tars/util/endpoint"
+	"tars/util/set"
 )
 
 // EndpointManager is a struct which contains endpoint information.

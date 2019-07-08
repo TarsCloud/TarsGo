@@ -6,11 +6,11 @@ import (
 	"encoding/binary"
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/util/current"
+	"tars/util/current"
 
-	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
+	"tars/protocol/codec"
+	"tars/protocol/res/basef"
+	"tars/protocol/res/requestf"
 )
 
 type dispatch interface {

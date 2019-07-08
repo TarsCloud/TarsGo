@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/transport"
+	"tars/transport"
 )
 
 //MyClient is a example client for tars client testing.

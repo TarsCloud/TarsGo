@@ -3,7 +3,7 @@ package tars
 import (
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
+	"tars/protocol/res/requestf"
 )
 
 // Message is a struct contains servant information

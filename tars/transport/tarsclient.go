@@ -146,8 +146,8 @@ func (c *connection) recv(conn net.Conn) {
 			}
 			if status == PACKAGE_FULL {
 				atomic.AddInt32(&c.invokeNum, -1)
-				pkg := make([]byte, pkgLen-4)
-				copy(pkg, currBuffer[4:pkgLen])
+				pkg := make([]byte, pkgLen)
+				copy(pkg, currBuffer[0:pkgLen])
 				currBuffer = currBuffer[pkgLen:]
 				go c.tc.cp.Recv(pkg)
 				if len(currBuffer) > 0 {

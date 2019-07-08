@@ -40,7 +40,7 @@ func printhelp() {
 func main() {
 	flag.Usage = printhelp
 	flag.Var(&gImports, "I", "Specify a specific import path")
-	flag.StringVar(&gTarsPath, "tarsPath", "github.com/TarsCloud/TarsGo/tars", "Specify the tars source path.")
+	flag.StringVar(&gTarsPath, "tarsPath", "tars", "Specify the tars source path.")
 	flag.Parse()
 	if flag.NArg() == 0 {
 		printhelp()

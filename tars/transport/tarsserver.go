@@ -5,8 +5,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/util/rogger"
-	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
+	"tars/util/rogger"
+	"tars/util/rtimer"
 )
 
 const (

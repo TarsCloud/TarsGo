@@ -5,7 +5,7 @@ package logf
 
 import (
 	"fmt"
-	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
+	"tars/protocol/codec"
 )
 
 //LogInfo strcut implement

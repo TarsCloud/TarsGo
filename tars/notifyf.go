@@ -1,6 +1,6 @@
 package tars
 
-import "github.com/TarsCloud/TarsGo/tars/protocol/res/notifyf"
+import "tars/protocol/res/notifyf"
 
 //NotifyHelper is the helper struct for the Notify service.
 type NotifyHelper struct {

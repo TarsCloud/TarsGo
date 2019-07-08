@@ -5,7 +5,7 @@ package statf
 
 import (
 	"fmt"
-	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
+	"tars/protocol/codec"
 )
 
 //StatMicMsgBody strcut implement
