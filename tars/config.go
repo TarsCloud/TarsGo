@@ -67,6 +67,7 @@ type serverConfig struct {
 	PropertyReportInterval time.Duration
 	StatReportInterval     time.Duration
 	MainLoopTicker         time.Duration
+	MaxPackageLength int
 }
 
 type clientConfig struct {
