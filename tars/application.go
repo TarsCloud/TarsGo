@@ -79,7 +79,8 @@ func initConfig() {
 	//Config.go
 	//Server
 	svrCfg = new(serverConfig)
-	if c.GetString("/tars/application<enableset>") == "Y" {
+
+	if strings.EqualFold(c.GetString("/tars/application<enableset>"), "Y") {
 		svrCfg.Enableset = true
 		svrCfg.Setdivision = c.GetString("/tars/application<setdivision>")
 	}
