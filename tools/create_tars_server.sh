@@ -17,7 +17,8 @@ fi
 APP=$1
 SERVER=$2
 SERVANT=$3
-TARGET="$GOPATH/src/$APP/$SERVER/"
+# TARGET="$GOPATH/src/$APP/$SERVER/"
+TARGET="$(pwd)/$APP/$SERVER/"
 
 if [ -d $TARGET ];then
     echo "! Already have some file in $TARGET! Please clear files in prevent of overwrite!"
@@ -47,7 +48,7 @@ cp -r $DEBUGDIR $TARGET
 
 if [ `uname` == "Darwin" ] # support macOS
 then
-    for FILE in $SRC_FILE client/client.go vendor/vendor.json
+    for FILE in $SRC_FILE client/client.go
     do
         echo ">>>Now doing:"$FILE" >>>>"
         sed  -i "" "s/_APP_/$APP/g"   $FILE
@@ -66,7 +67,7 @@ then
         # rename "s/Servant/$SERVANT/" $RENAMEFILE
     done
 else
-    for FILE in $SRC_FILE client/client.go vendor/vendor.json debugtool/dumpstack.go
+    for FILE in $SRC_FILE client/client.go debugtool/dumpstack.go
     do
         echo ">>>Now doing:"$FILE" >>>>"
         sed  -i "s/_APP_/$APP/g"   $FILE
@@ -82,8 +83,9 @@ else
 fi
 
 # try build tars2go
-cd "$GOPATH/src/tars/tools/tars2go"
-go install
+# cd "$GOPATH/src/tars/tools/tars2go"
+# go install
+go install github.com/tars-go/tars/tools/tars2go
 cd "$GOPATH/src/$APP/$SERVER"
 echo ">>> Great！Done! You can jump in "`pwd`
 
