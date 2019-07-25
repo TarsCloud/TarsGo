@@ -3,7 +3,7 @@ package main
 import (
 	"tars"
 
-	"_APP_"
+	"_SERVER_/_APP_"
 )
 
 func main() { //Init servant
