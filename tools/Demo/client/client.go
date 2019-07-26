@@ -5,7 +5,7 @@ import (
 
 	"tars"
 
-	"_APP_"
+	"_SERVER_/_APP_"
 )
 
 func main() {
@@ -13,6 +13,7 @@ func main() {
 	obj := fmt.Sprintf("_APP_._SERVER_._SERVANT_Obj@tcp -h 127.0.0.1 -p 10015 -t 60000")
 	app := new(_APP_._SERVANT_)
 	comm.StringToProxy(obj, app)
+
 	var out, i int32
 	i = 123
 	ret, err := app.Add(i, i*2, &out)
