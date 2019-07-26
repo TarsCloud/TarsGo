@@ -75,15 +75,25 @@ else
         sed  -i "s/_SERVANT_/$SERVANT/g" $FILE
     done
 
+    RENAME_TYPE=$(rename --version | grep -q "util-linux" && echo "true" || echo "false")
     for RENAMEFILE in `ls `
     do
-        rename "Server" "$SERVER" $RENAMEFILE
-        rename "Servant" "$SERVANT" $RENAMEFILE
+        if [ "$RENAME_TYPE" != "true" ];
+        then
+            rename "s/Server/$SERVER/" $RENAMEFILE
+            rename "s/Servant/$SERVANT/" $RENAMEFILE
+        else
+            rename "Server" "$SERVER" $RENAMEFILE
+            rename "Servant" "$SERVANT" $RENAMEFILE
+        fi
     done
 fi
 
 # try build tars2go
-go install github.com/tars-go/tars/tools/tars2go
+# go install github.com/tars-go/tars/tools/tars2go
+cd ${SRC_DIR}/tars2go
+go install
+
 cd ${TARGET}
 echo ">>> Great！Done! You can jump in "`pwd`
 

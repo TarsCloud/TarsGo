@@ -4,6 +4,11 @@
 version: 2
 jobs:
   build:
+    branches:
+      only:
+        - master
+        - dev
+
     docker:
       # specify the version
       - image: circleci/golang:1.12
@@ -12,23 +17,31 @@ jobs:
     #### expecting it in the form of
     ####   /go/src/github.com/circleci/go-tool
     ####   /go/src/bitbucket.org/circleci/go-tool
-    working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+    working_directory: /go/src/github.com/tars-go/tars
     steps:
       # clone into github.com/tars-go/tars
       - checkout
+      - run: sudo apt install rename
 
       # specify any bash command here prefixed with `run: `
       - run:
-        name: Check source can build
-        command: |
-          ln -s /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}} /go/src/{{REPO_NAME}}
-          go build
+          name: Check source can build
+          command: |
+            ln -s /go/src/github.com/tars-go/tars /go/src/tars
+            go build
 
       - run:
-        name: Create and compile DemoProject
-        command: |
-          mkdir -p /outside_gopath/tars-go/
-          cd /outside_gopath/tars-go/
-          /go/src/github.com/tars-go/tars/tools/create_tars_server.sh DemoGroup DemoProject DemoServant
-          cd DemoProject/DemoServant/
-          make tar
+          name: Create DemoProject
+          command: |
+            mkdir -p $HOME/outside_gopath/tars-go/
+            cd $HOME/outside_gopath/tars-go/
+            bash +x /go/src/github.com/tars-go/tars/tools/create_tars_server.sh DemoGroup DemoProject DemoServant
+
+      - run:
+          name: Compile server and client
+          command: |
+            cd $HOME/outside_gopath/tars-go/DemoGroup/DemoProject/
+            make tar
+            cd client/
+            go build
+
