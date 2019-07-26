@@ -1,3 +1,4 @@
+GOROOT := $(shell go env GOROOT)
 GOPATH := $(shell go env GOPATH)
 #-------------------------------------------------------------------------------
 #fix cgo compile error
