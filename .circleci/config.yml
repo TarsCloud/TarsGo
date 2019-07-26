@@ -40,7 +40,7 @@ jobs:
       - run:
           name: Compile server and client
           command: |
-            cd DemoGroup/DemoProject/
+            cd $HOME/outside_gopath/tars-go/DemoGroup/DemoProject/
             make tar
             cd client/
             go build
