@@ -50,12 +50,34 @@ func (_obj *Notify) ReportServer(SServerName string, SThreadId string, SMessage 
 	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
+
 	err = _obj.s.Tars_invoke(ctx, 0, "reportServer", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return err
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -93,12 +115,99 @@ func (_obj *Notify) ReportServerWithContext(ctx context.Context, SServerName str
 		_status = _opt[1]
 	}
 	_resp := new(requestf.ResponsePacket)
+
 	err = _obj.s.Tars_invoke(ctx, 0, "reportServer", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return err
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
+	_ = length
+	_ = have
+	_ = ty
+	return nil
+}
+
+//ReportServerOneWayWithContext is the proxy function for the method defined in the tars file, with the context
+func (_obj *Notify) ReportServerOneWayWithContext(ctx context.Context, SServerName string, SThreadId string, SMessage string, _opt ...map[string]string) (err error) {
+
+	var length int32
+	var have bool
+	var ty byte
+	_os := codec.NewBuffer()
+	err = _os.Write_string(SServerName, 1)
+	if err != nil {
+		return err
+	}
+
+	err = _os.Write_string(SThreadId, 2)
+	if err != nil {
+		return err
+	}
+
+	err = _os.Write_string(SMessage, 3)
+	if err != nil {
+		return err
+	}
+
+	var _status map[string]string
+	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
+	_resp := new(requestf.ResponsePacket)
+
+	err = _obj.s.Tars_invoke(ctx, 1, "reportServer", _os.ToBytes(), _status, _context, _resp)
+	if err != nil {
+		return err
+	}
+
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -137,12 +246,34 @@ func (_obj *Notify) NotifyServer(SServerName string, Level NOTIFYLEVEL, SMessage
 	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
+
 	err = _obj.s.Tars_invoke(ctx, 0, "notifyServer", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return err
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -180,12 +311,99 @@ func (_obj *Notify) NotifyServerWithContext(ctx context.Context, SServerName str
 		_status = _opt[1]
 	}
 	_resp := new(requestf.ResponsePacket)
+
 	err = _obj.s.Tars_invoke(ctx, 0, "notifyServer", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return err
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
+	_ = length
+	_ = have
+	_ = ty
+	return nil
+}
+
+//NotifyServerOneWayWithContext is the proxy function for the method defined in the tars file, with the context
+func (_obj *Notify) NotifyServerOneWayWithContext(ctx context.Context, SServerName string, Level NOTIFYLEVEL, SMessage string, _opt ...map[string]string) (err error) {
+
+	var length int32
+	var have bool
+	var ty byte
+	_os := codec.NewBuffer()
+	err = _os.Write_string(SServerName, 1)
+	if err != nil {
+		return err
+	}
+
+	err = _os.Write_int32(int32(Level), 2)
+	if err != nil {
+		return err
+	}
+
+	err = _os.Write_string(SMessage, 3)
+	if err != nil {
+		return err
+	}
+
+	var _status map[string]string
+	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
+	_resp := new(requestf.ResponsePacket)
+
+	err = _obj.s.Tars_invoke(ctx, 1, "notifyServer", _os.ToBytes(), _status, _context, _resp)
+	if err != nil {
+		return err
+	}
+
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -204,6 +422,11 @@ func (_obj *Notify) GetNotifyInfo(StKey *NotifyKey, StInfo *NotifyInfo, _opt ...
 		return ret, err
 	}
 
+	err = (*StInfo).WriteBlock(_os, 2)
+	if err != nil {
+		return ret, err
+	}
+
 	var _status map[string]string
 	var _context map[string]string
 	if len(_opt) == 1 {
@@ -214,10 +437,12 @@ func (_obj *Notify) GetNotifyInfo(StKey *NotifyKey, StInfo *NotifyInfo, _opt ...
 	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
+
 	err = _obj.s.Tars_invoke(ctx, 0, "getNotifyInfo", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return ret, err
 	}
+
 	_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
@@ -229,7 +454,28 @@ func (_obj *Notify) GetNotifyInfo(StKey *NotifyKey, StInfo *NotifyInfo, _opt ...
 		return ret, err
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -248,6 +494,11 @@ func (_obj *Notify) GetNotifyInfoWithContext(ctx context.Context, StKey *NotifyK
 		return ret, err
 	}
 
+	err = (*StInfo).WriteBlock(_os, 2)
+	if err != nil {
+		return ret, err
+	}
+
 	var _status map[string]string
 	var _context map[string]string
 	if len(_opt) == 1 {
@@ -257,10 +508,12 @@ func (_obj *Notify) GetNotifyInfoWithContext(ctx context.Context, StKey *NotifyK
 		_status = _opt[1]
 	}
 	_resp := new(requestf.ResponsePacket)
+
 	err = _obj.s.Tars_invoke(ctx, 0, "getNotifyInfo", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return ret, err
 	}
+
 	_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
@@ -272,7 +525,88 @@ func (_obj *Notify) GetNotifyInfoWithContext(ctx context.Context, StKey *NotifyK
 		return ret, err
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
+	_ = length
+	_ = have
+	_ = ty
+	return ret, nil
+}
+
+//GetNotifyInfoOneWayWithContext is the proxy function for the method defined in the tars file, with the context
+func (_obj *Notify) GetNotifyInfoOneWayWithContext(ctx context.Context, StKey *NotifyKey, StInfo *NotifyInfo, _opt ...map[string]string) (ret int32, err error) {
+
+	var length int32
+	var have bool
+	var ty byte
+	_os := codec.NewBuffer()
+	err = StKey.WriteBlock(_os, 1)
+	if err != nil {
+		return ret, err
+	}
+
+	err = (*StInfo).WriteBlock(_os, 2)
+	if err != nil {
+		return ret, err
+	}
+
+	var _status map[string]string
+	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
+	_resp := new(requestf.ResponsePacket)
+
+	err = _obj.s.Tars_invoke(ctx, 1, "getNotifyInfo", _os.ToBytes(), _status, _context, _resp)
+	if err != nil {
+		return ret, err
+	}
+
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -301,12 +635,34 @@ func (_obj *Notify) ReportNotifyInfo(Info *ReportInfo, _opt ...map[string]string
 	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
+
 	err = _obj.s.Tars_invoke(ctx, 0, "reportNotifyInfo", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return err
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -334,12 +690,89 @@ func (_obj *Notify) ReportNotifyInfoWithContext(ctx context.Context, Info *Repor
 		_status = _opt[1]
 	}
 	_resp := new(requestf.ResponsePacket)
+
 	err = _obj.s.Tars_invoke(ctx, 0, "reportNotifyInfo", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return err
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
+	_ = length
+	_ = have
+	_ = ty
+	return nil
+}
+
+//ReportNotifyInfoOneWayWithContext is the proxy function for the method defined in the tars file, with the context
+func (_obj *Notify) ReportNotifyInfoOneWayWithContext(ctx context.Context, Info *ReportInfo, _opt ...map[string]string) (err error) {
+
+	var length int32
+	var have bool
+	var ty byte
+	_os := codec.NewBuffer()
+	err = Info.WriteBlock(_os, 1)
+	if err != nil {
+		return err
+	}
+
+	var _status map[string]string
+	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
+	_resp := new(requestf.ResponsePacket)
+
+	err = _obj.s.Tars_invoke(ctx, 1, "reportNotifyInfo", _os.ToBytes(), _status, _context, _resp)
+	if err != nil {
+		return err
+	}
+
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -355,29 +788,6 @@ func (_obj *Notify) SetServant(s m.Servant) {
 func (_obj *Notify) TarsSetTimeout(t int) {
 	_obj.s.TarsSetTimeout(t)
 }
-func setMap(l int, res *requestf.ResponsePacket, ctx map[string]string, sts map[string]string) {
-	if l == 1 {
-		for k := range ctx {
-			delete(ctx, k)
-		}
-		for k, v := range res.Context {
-			ctx[k] = v
-		}
-	} else if l == 2 {
-		for k := range ctx {
-			delete(ctx, k)
-		}
-		for k, v := range res.Context {
-			ctx[k] = v
-		}
-		for k := range sts {
-			delete(sts, k)
-		}
-		for k, v := range res.Status {
-			sts[k] = v
-		}
-	}
-}
 
 type _impNotify interface {
 	ReportServer(SServerName string, SThreadId string, SMessage string) (err error)
@@ -392,179 +802,141 @@ type _impNotifyWithContext interface {
 	ReportNotifyInfo(ctx context.Context, Info *ReportInfo) (err error)
 }
 
-func reportServer(ctx context.Context, _val interface{}, _os *codec.Buffer, _is *codec.Reader, withContext bool) (err error) {
-	var length int32
-	var have bool
-	var ty byte
-	var SServerName string
-	err = _is.Read_string(&SServerName, 1, true)
-	if err != nil {
-		return err
-	}
-	var SThreadId string
-	err = _is.Read_string(&SThreadId, 2, true)
-	if err != nil {
-		return err
-	}
-	var SMessage string
-	err = _is.Read_string(&SMessage, 3, true)
-	if err != nil {
-		return err
-	}
-	if withContext == false {
-		_imp := _val.(_impNotify)
-		err = _imp.ReportServer(SServerName, SThreadId, SMessage)
-		if err != nil {
-			return err
-		}
-	} else {
-		_imp := _val.(_impNotifyWithContext)
-		err = _imp.ReportServer(ctx, SServerName, SThreadId, SMessage)
-		if err != nil {
-			return err
-		}
-	}
-
-	_ = length
-	_ = have
-	_ = ty
-	return nil
-}
-func notifyServer(ctx context.Context, _val interface{}, _os *codec.Buffer, _is *codec.Reader, withContext bool) (err error) {
-	var length int32
-	var have bool
-	var ty byte
-	var SServerName string
-	err = _is.Read_string(&SServerName, 1, true)
-	if err != nil {
-		return err
-	}
-	var Level NOTIFYLEVEL
-	err = _is.Read_int32((*int32)(&Level), 2, true)
-	if err != nil {
-		return err
-	}
-	var SMessage string
-	err = _is.Read_string(&SMessage, 3, true)
-	if err != nil {
-		return err
-	}
-	if withContext == false {
-		_imp := _val.(_impNotify)
-		err = _imp.NotifyServer(SServerName, Level, SMessage)
-		if err != nil {
-			return err
-		}
-	} else {
-		_imp := _val.(_impNotifyWithContext)
-		err = _imp.NotifyServer(ctx, SServerName, Level, SMessage)
-		if err != nil {
-			return err
-		}
-	}
-
-	_ = length
-	_ = have
-	_ = ty
-	return nil
-}
-func getNotifyInfo(ctx context.Context, _val interface{}, _os *codec.Buffer, _is *codec.Reader, withContext bool) (err error) {
-	var length int32
-	var have bool
-	var ty byte
-	var StKey NotifyKey
-	err = StKey.ReadBlock(_is, 1, true)
-	if err != nil {
-		return err
-	}
-	var StInfo NotifyInfo
-	if withContext == false {
-		_imp := _val.(_impNotify)
-		ret, err := _imp.GetNotifyInfo(&StKey, &StInfo)
-		if err != nil {
-			return err
-		}
-
-		err = _os.Write_int32(ret, 0)
-		if err != nil {
-			return err
-		}
-	} else {
-		_imp := _val.(_impNotifyWithContext)
-		ret, err := _imp.GetNotifyInfo(ctx, &StKey, &StInfo)
-		if err != nil {
-			return err
-		}
-
-		err = _os.Write_int32(ret, 0)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = StInfo.WriteBlock(_os, 2)
-	if err != nil {
-		return err
-	}
-
-	_ = length
-	_ = have
-	_ = ty
-	return nil
-}
-func reportNotifyInfo(ctx context.Context, _val interface{}, _os *codec.Buffer, _is *codec.Reader, withContext bool) (err error) {
-	var length int32
-	var have bool
-	var ty byte
-	var Info ReportInfo
-	err = Info.ReadBlock(_is, 1, true)
-	if err != nil {
-		return err
-	}
-	if withContext == false {
-		_imp := _val.(_impNotify)
-		err = _imp.ReportNotifyInfo(&Info)
-		if err != nil {
-			return err
-		}
-	} else {
-		_imp := _val.(_impNotifyWithContext)
-		err = _imp.ReportNotifyInfo(ctx, &Info)
-		if err != nil {
-			return err
-		}
-	}
-
-	_ = length
-	_ = have
-	_ = ty
-	return nil
-}
-
 //Dispatch is used to call the server side implemnet for the method defined in the tars file. withContext shows using context or not.
 func (_obj *Notify) Dispatch(ctx context.Context, _val interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error) {
+	var length int32
+	var have bool
+	var ty byte
 	_is := codec.NewReader(tools.Int8ToByte(req.SBuffer))
 	_os := codec.NewBuffer()
 	switch req.SFuncName {
 	case "reportServer":
-		err := reportServer(ctx, _val, _os, _is, withContext)
+		var SServerName string
+		err = _is.Read_string(&SServerName, 1, true)
 		if err != nil {
 			return err
+		}
+
+		var SThreadId string
+		err = _is.Read_string(&SThreadId, 2, true)
+		if err != nil {
+			return err
+		}
+
+		var SMessage string
+		err = _is.Read_string(&SMessage, 3, true)
+		if err != nil {
+			return err
+		}
+
+		if withContext == false {
+			_imp := _val.(_impNotify)
+			err = _imp.ReportServer(SServerName, SThreadId, SMessage)
+			if err != nil {
+				return err
+			}
+		} else {
+			_imp := _val.(_impNotifyWithContext)
+			err = _imp.ReportServer(ctx, SServerName, SThreadId, SMessage)
+			if err != nil {
+				return err
+			}
 		}
 	case "notifyServer":
-		err := notifyServer(ctx, _val, _os, _is, withContext)
+		var SServerName string
+		err = _is.Read_string(&SServerName, 1, true)
 		if err != nil {
 			return err
+		}
+
+		var Level NOTIFYLEVEL
+		err = _is.Read_int32((*int32)(&Level), 2, true)
+		if err != nil {
+			return err
+		}
+
+		var SMessage string
+		err = _is.Read_string(&SMessage, 3, true)
+		if err != nil {
+			return err
+		}
+
+		if withContext == false {
+			_imp := _val.(_impNotify)
+			err = _imp.NotifyServer(SServerName, Level, SMessage)
+			if err != nil {
+				return err
+			}
+		} else {
+			_imp := _val.(_impNotifyWithContext)
+			err = _imp.NotifyServer(ctx, SServerName, Level, SMessage)
+			if err != nil {
+				return err
+			}
 		}
 	case "getNotifyInfo":
-		err := getNotifyInfo(ctx, _val, _os, _is, withContext)
+		var StKey NotifyKey
+		err = StKey.ReadBlock(_is, 1, true)
 		if err != nil {
 			return err
 		}
-	case "reportNotifyInfo":
-		err := reportNotifyInfo(ctx, _val, _os, _is, withContext)
+
+		var StInfo NotifyInfo
+		err = StInfo.ReadBlock(_is, 2, false)
 		if err != nil {
 			return err
+		}
+
+		if withContext == false {
+			_imp := _val.(_impNotify)
+			ret, err := _imp.GetNotifyInfo(&StKey, &StInfo)
+			if err != nil {
+				return err
+			}
+
+			err = _os.Write_int32(ret, 0)
+			if err != nil {
+				return err
+			}
+
+		} else {
+			_imp := _val.(_impNotifyWithContext)
+			ret, err := _imp.GetNotifyInfo(ctx, &StKey, &StInfo)
+			if err != nil {
+				return err
+			}
+
+			err = _os.Write_int32(ret, 0)
+			if err != nil {
+				return err
+			}
+
+		}
+
+		err = StInfo.WriteBlock(_os, 2)
+		if err != nil {
+			return err
+		}
+
+	case "reportNotifyInfo":
+		var Info ReportInfo
+		err = Info.ReadBlock(_is, 1, true)
+		if err != nil {
+			return err
+		}
+
+		if withContext == false {
+			_imp := _val.(_impNotify)
+			err = _imp.ReportNotifyInfo(&Info)
+			if err != nil {
+				return err
+			}
+		} else {
+			_imp := _val.(_impNotifyWithContext)
+			err = _imp.ReportNotifyInfo(ctx, &Info)
+			if err != nil {
+				return err
+			}
 		}
 
 	default:
@@ -581,7 +953,7 @@ func (_obj *Notify) Dispatch(ctx context.Context, _val interface{}, req *request
 		_context = c
 	}
 	*resp = requestf.ResponsePacket{
-		IVersion:     1,
+		IVersion:     req.IVersion,
 		CPacketType:  0,
 		IRequestId:   req.IRequestId,
 		IMessageType: 0,
@@ -591,5 +963,8 @@ func (_obj *Notify) Dispatch(ctx context.Context, _val interface{}, req *request
 		SResultDesc:  "",
 		Context:      _context,
 	}
+	_ = length
+	_ = have
+	_ = ty
 	return nil
 }

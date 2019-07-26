@@ -19,7 +19,7 @@ type StatMicMsgBody struct {
 	MinRspTime    int32           `json:"minRspTime"`
 }
 
-func (st *StatMicMsgBody) resetDefault() {
+func (st *StatMicMsgBody) ResetDefault() {
 }
 
 //ReadFrom reads  from _is and put into struct.
@@ -28,7 +28,7 @@ func (st *StatMicMsgBody) ReadFrom(_is *codec.Reader) error {
 	var length int32
 	var have bool
 	var ty byte
-	st.resetDefault()
+	st.ResetDefault()
 
 	err = _is.Read_int32(&st.Count, 0, true)
 	if err != nil {
@@ -54,6 +54,7 @@ func (st *StatMicMsgBody) ReadFrom(_is *codec.Reader) error {
 	if err != nil {
 		return err
 	}
+
 	st.IntervalCount = make(map[int32]int32)
 	for i0, e0 := int32(0), length; i0 < e0; i0++ {
 		var k0 int32
@@ -97,7 +98,7 @@ func (st *StatMicMsgBody) ReadFrom(_is *codec.Reader) error {
 func (st *StatMicMsgBody) ReadBlock(_is *codec.Reader, tag byte, require bool) error {
 	var err error
 	var have bool
-	st.resetDefault()
+	st.ResetDefault()
 
 	err, have = _is.SkipTo(codec.STRUCT_BEGIN, tag, require)
 	if err != nil {
@@ -144,10 +145,12 @@ func (st *StatMicMsgBody) WriteTo(_os *codec.Buffer) error {
 	if err != nil {
 		return err
 	}
+
 	err = _os.Write_int32(int32(len(st.IntervalCount)), 0)
 	if err != nil {
 		return err
 	}
+
 	for k1, v1 := range st.IntervalCount {
 
 		err = _os.Write_int32(k1, 0)
@@ -159,6 +162,7 @@ func (st *StatMicMsgBody) WriteTo(_os *codec.Buffer) error {
 		if err != nil {
 			return err
 		}
+
 	}
 
 	err = _os.Write_int64(st.TotalRspTime, 4)

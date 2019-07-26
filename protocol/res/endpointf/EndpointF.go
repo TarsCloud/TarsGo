@@ -25,7 +25,7 @@ type EndpointF struct {
 	AuthType    int32  `json:"authType"`
 }
 
-func (st *EndpointF) resetDefault() {
+func (st *EndpointF) ResetDefault() {
 }
 
 //ReadFrom reads  from _is and put into struct.
@@ -34,7 +34,7 @@ func (st *EndpointF) ReadFrom(_is *codec.Reader) error {
 	var length int32
 	var have bool
 	var ty byte
-	st.resetDefault()
+	st.ResetDefault()
 
 	err = _is.Read_string(&st.Host, 0, true)
 	if err != nil {
@@ -111,7 +111,7 @@ func (st *EndpointF) ReadFrom(_is *codec.Reader) error {
 func (st *EndpointF) ReadBlock(_is *codec.Reader, tag byte, require bool) error {
 	var err error
 	var have bool
-	st.resetDefault()
+	st.ResetDefault()
 
 	err, have = _is.SkipTo(codec.STRUCT_BEGIN, tag, require)
 	if err != nil {

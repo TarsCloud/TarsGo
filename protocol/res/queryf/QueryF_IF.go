@@ -41,12 +41,14 @@ func (_obj *QueryF) FindObjectById(Id string, _opt ...map[string]string) (ret []
 	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
+
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectById", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return ret, err
 	}
+
 	_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))
-	err, _, ty = _is.SkipToNoCheck(0, true)
+	err, have, ty = _is.SkipToNoCheck(0, true)
 	if err != nil {
 		return ret, err
 	}
@@ -56,6 +58,7 @@ func (_obj *QueryF) FindObjectById(Id string, _opt ...map[string]string) (ret []
 		if err != nil {
 			return ret, err
 		}
+
 		ret = make([]endpointf.EndpointF, length, length)
 		for i0, e0 := int32(0), length; i0 < e0; i0++ {
 
@@ -63,20 +66,44 @@ func (_obj *QueryF) FindObjectById(Id string, _opt ...map[string]string) (ret []
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -104,12 +131,14 @@ func (_obj *QueryF) FindObjectByIdWithContext(ctx context.Context, Id string, _o
 		_status = _opt[1]
 	}
 	_resp := new(requestf.ResponsePacket)
+
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectById", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return ret, err
 	}
+
 	_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))
-	err, _, ty = _is.SkipToNoCheck(0, true)
+	err, have, ty = _is.SkipToNoCheck(0, true)
 	if err != nil {
 		return ret, err
 	}
@@ -119,6 +148,7 @@ func (_obj *QueryF) FindObjectByIdWithContext(ctx context.Context, Id string, _o
 		if err != nil {
 			return ret, err
 		}
+
 		ret = make([]endpointf.EndpointF, length, length)
 		for i1, e1 := int32(0), length; i1 < e1; i1++ {
 
@@ -126,20 +156,99 @@ func (_obj *QueryF) FindObjectByIdWithContext(ctx context.Context, Id string, _o
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
+	_ = length
+	_ = have
+	_ = ty
+	return ret, nil
+}
+
+//FindObjectByIdOneWayWithContext is the proxy function for the method defined in the tars file, with the context
+func (_obj *QueryF) FindObjectByIdOneWayWithContext(ctx context.Context, Id string, _opt ...map[string]string) (ret []endpointf.EndpointF, err error) {
+
+	var length int32
+	var have bool
+	var ty byte
+	_os := codec.NewBuffer()
+	err = _os.Write_string(Id, 1)
+	if err != nil {
+		return ret, err
+	}
+
+	var _status map[string]string
+	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
+	_resp := new(requestf.ResponsePacket)
+
+	err = _obj.s.Tars_invoke(ctx, 1, "findObjectById", _os.ToBytes(), _status, _context, _resp)
+	if err != nil {
+		return ret, err
+	}
+
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -158,6 +267,44 @@ func (_obj *QueryF) FindObjectById4Any(Id string, ActiveEp *[]endpointf.Endpoint
 		return ret, err
 	}
 
+	err = _os.WriteHead(codec.LIST, 2)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*ActiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *ActiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	err = _os.WriteHead(codec.LIST, 3)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*InactiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *InactiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
 	var _status map[string]string
 	var _context map[string]string
 	if len(_opt) == 1 {
@@ -168,17 +315,19 @@ func (_obj *QueryF) FindObjectById4Any(Id string, ActiveEp *[]endpointf.Endpoint
 	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
+
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectById4Any", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return ret, err
 	}
+
 	_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
 	}
 
-	err, _, ty = _is.SkipToNoCheck(2, true)
+	err, have, ty = _is.SkipToNoCheck(2, true)
 	if err != nil {
 		return ret, err
 	}
@@ -188,6 +337,7 @@ func (_obj *QueryF) FindObjectById4Any(Id string, ActiveEp *[]endpointf.Endpoint
 		if err != nil {
 			return ret, err
 		}
+
 		(*ActiveEp) = make([]endpointf.EndpointF, length, length)
 		for i2, e2 := int32(0), length; i2 < e2; i2++ {
 
@@ -195,20 +345,23 @@ func (_obj *QueryF) FindObjectById4Any(Id string, ActiveEp *[]endpointf.Endpoint
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	err, _, ty = _is.SkipToNoCheck(3, true)
+	err, have, ty = _is.SkipToNoCheck(3, true)
 	if err != nil {
 		return ret, err
 	}
@@ -218,6 +371,7 @@ func (_obj *QueryF) FindObjectById4Any(Id string, ActiveEp *[]endpointf.Endpoint
 		if err != nil {
 			return ret, err
 		}
+
 		(*InactiveEp) = make([]endpointf.EndpointF, length, length)
 		for i3, e3 := int32(0), length; i3 < e3; i3++ {
 
@@ -225,20 +379,44 @@ func (_obj *QueryF) FindObjectById4Any(Id string, ActiveEp *[]endpointf.Endpoint
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -257,6 +435,44 @@ func (_obj *QueryF) FindObjectById4AnyWithContext(ctx context.Context, Id string
 		return ret, err
 	}
 
+	err = _os.WriteHead(codec.LIST, 2)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*ActiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *ActiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	err = _os.WriteHead(codec.LIST, 3)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*InactiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *InactiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
 	var _status map[string]string
 	var _context map[string]string
 	if len(_opt) == 1 {
@@ -266,17 +482,19 @@ func (_obj *QueryF) FindObjectById4AnyWithContext(ctx context.Context, Id string
 		_status = _opt[1]
 	}
 	_resp := new(requestf.ResponsePacket)
+
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectById4Any", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return ret, err
 	}
+
 	_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
 	}
 
-	err, _, ty = _is.SkipToNoCheck(2, true)
+	err, have, ty = _is.SkipToNoCheck(2, true)
 	if err != nil {
 		return ret, err
 	}
@@ -286,6 +504,7 @@ func (_obj *QueryF) FindObjectById4AnyWithContext(ctx context.Context, Id string
 		if err != nil {
 			return ret, err
 		}
+
 		(*ActiveEp) = make([]endpointf.EndpointF, length, length)
 		for i4, e4 := int32(0), length; i4 < e4; i4++ {
 
@@ -293,20 +512,23 @@ func (_obj *QueryF) FindObjectById4AnyWithContext(ctx context.Context, Id string
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	err, _, ty = _is.SkipToNoCheck(3, true)
+	err, have, ty = _is.SkipToNoCheck(3, true)
 	if err != nil {
 		return ret, err
 	}
@@ -316,6 +538,7 @@ func (_obj *QueryF) FindObjectById4AnyWithContext(ctx context.Context, Id string
 		if err != nil {
 			return ret, err
 		}
+
 		(*InactiveEp) = make([]endpointf.EndpointF, length, length)
 		for i5, e5 := int32(0), length; i5 < e5; i5++ {
 
@@ -323,20 +546,137 @@ func (_obj *QueryF) FindObjectById4AnyWithContext(ctx context.Context, Id string
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
+	_ = length
+	_ = have
+	_ = ty
+	return ret, nil
+}
+
+//FindObjectById4AnyOneWayWithContext is the proxy function for the method defined in the tars file, with the context
+func (_obj *QueryF) FindObjectById4AnyOneWayWithContext(ctx context.Context, Id string, ActiveEp *[]endpointf.EndpointF, InactiveEp *[]endpointf.EndpointF, _opt ...map[string]string) (ret int32, err error) {
+
+	var length int32
+	var have bool
+	var ty byte
+	_os := codec.NewBuffer()
+	err = _os.Write_string(Id, 1)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.WriteHead(codec.LIST, 2)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*ActiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *ActiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	err = _os.WriteHead(codec.LIST, 3)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*InactiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *InactiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	var _status map[string]string
+	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
+	_resp := new(requestf.ResponsePacket)
+
+	err = _obj.s.Tars_invoke(ctx, 1, "findObjectById4Any", _os.ToBytes(), _status, _context, _resp)
+	if err != nil {
+		return ret, err
+	}
+
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -355,6 +695,44 @@ func (_obj *QueryF) FindObjectById4All(Id string, ActiveEp *[]endpointf.Endpoint
 		return ret, err
 	}
 
+	err = _os.WriteHead(codec.LIST, 2)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*ActiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *ActiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	err = _os.WriteHead(codec.LIST, 3)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*InactiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *InactiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
 	var _status map[string]string
 	var _context map[string]string
 	if len(_opt) == 1 {
@@ -365,17 +743,19 @@ func (_obj *QueryF) FindObjectById4All(Id string, ActiveEp *[]endpointf.Endpoint
 	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
+
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectById4All", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return ret, err
 	}
+
 	_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
 	}
 
-	err, _, ty = _is.SkipToNoCheck(2, true)
+	err, have, ty = _is.SkipToNoCheck(2, true)
 	if err != nil {
 		return ret, err
 	}
@@ -385,6 +765,7 @@ func (_obj *QueryF) FindObjectById4All(Id string, ActiveEp *[]endpointf.Endpoint
 		if err != nil {
 			return ret, err
 		}
+
 		(*ActiveEp) = make([]endpointf.EndpointF, length, length)
 		for i6, e6 := int32(0), length; i6 < e6; i6++ {
 
@@ -392,20 +773,23 @@ func (_obj *QueryF) FindObjectById4All(Id string, ActiveEp *[]endpointf.Endpoint
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	err, _, ty = _is.SkipToNoCheck(3, true)
+	err, have, ty = _is.SkipToNoCheck(3, true)
 	if err != nil {
 		return ret, err
 	}
@@ -415,6 +799,7 @@ func (_obj *QueryF) FindObjectById4All(Id string, ActiveEp *[]endpointf.Endpoint
 		if err != nil {
 			return ret, err
 		}
+
 		(*InactiveEp) = make([]endpointf.EndpointF, length, length)
 		for i7, e7 := int32(0), length; i7 < e7; i7++ {
 
@@ -422,20 +807,44 @@ func (_obj *QueryF) FindObjectById4All(Id string, ActiveEp *[]endpointf.Endpoint
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -454,6 +863,44 @@ func (_obj *QueryF) FindObjectById4AllWithContext(ctx context.Context, Id string
 		return ret, err
 	}
 
+	err = _os.WriteHead(codec.LIST, 2)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*ActiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *ActiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	err = _os.WriteHead(codec.LIST, 3)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*InactiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *InactiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
 	var _status map[string]string
 	var _context map[string]string
 	if len(_opt) == 1 {
@@ -463,17 +910,19 @@ func (_obj *QueryF) FindObjectById4AllWithContext(ctx context.Context, Id string
 		_status = _opt[1]
 	}
 	_resp := new(requestf.ResponsePacket)
+
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectById4All", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return ret, err
 	}
+
 	_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
 	}
 
-	err, _, ty = _is.SkipToNoCheck(2, true)
+	err, have, ty = _is.SkipToNoCheck(2, true)
 	if err != nil {
 		return ret, err
 	}
@@ -483,6 +932,7 @@ func (_obj *QueryF) FindObjectById4AllWithContext(ctx context.Context, Id string
 		if err != nil {
 			return ret, err
 		}
+
 		(*ActiveEp) = make([]endpointf.EndpointF, length, length)
 		for i8, e8 := int32(0), length; i8 < e8; i8++ {
 
@@ -490,20 +940,23 @@ func (_obj *QueryF) FindObjectById4AllWithContext(ctx context.Context, Id string
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	err, _, ty = _is.SkipToNoCheck(3, true)
+	err, have, ty = _is.SkipToNoCheck(3, true)
 	if err != nil {
 		return ret, err
 	}
@@ -513,6 +966,7 @@ func (_obj *QueryF) FindObjectById4AllWithContext(ctx context.Context, Id string
 		if err != nil {
 			return ret, err
 		}
+
 		(*InactiveEp) = make([]endpointf.EndpointF, length, length)
 		for i9, e9 := int32(0), length; i9 < e9; i9++ {
 
@@ -520,20 +974,137 @@ func (_obj *QueryF) FindObjectById4AllWithContext(ctx context.Context, Id string
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
+	_ = length
+	_ = have
+	_ = ty
+	return ret, nil
+}
+
+//FindObjectById4AllOneWayWithContext is the proxy function for the method defined in the tars file, with the context
+func (_obj *QueryF) FindObjectById4AllOneWayWithContext(ctx context.Context, Id string, ActiveEp *[]endpointf.EndpointF, InactiveEp *[]endpointf.EndpointF, _opt ...map[string]string) (ret int32, err error) {
+
+	var length int32
+	var have bool
+	var ty byte
+	_os := codec.NewBuffer()
+	err = _os.Write_string(Id, 1)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.WriteHead(codec.LIST, 2)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*ActiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *ActiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	err = _os.WriteHead(codec.LIST, 3)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*InactiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *InactiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	var _status map[string]string
+	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
+	_resp := new(requestf.ResponsePacket)
+
+	err = _obj.s.Tars_invoke(ctx, 1, "findObjectById4All", _os.ToBytes(), _status, _context, _resp)
+	if err != nil {
+		return ret, err
+	}
+
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -552,6 +1123,44 @@ func (_obj *QueryF) FindObjectByIdInSameGroup(Id string, ActiveEp *[]endpointf.E
 		return ret, err
 	}
 
+	err = _os.WriteHead(codec.LIST, 2)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*ActiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *ActiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	err = _os.WriteHead(codec.LIST, 3)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*InactiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *InactiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
 	var _status map[string]string
 	var _context map[string]string
 	if len(_opt) == 1 {
@@ -562,17 +1171,19 @@ func (_obj *QueryF) FindObjectByIdInSameGroup(Id string, ActiveEp *[]endpointf.E
 	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
+
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectByIdInSameGroup", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return ret, err
 	}
+
 	_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
 	}
 
-	err, _, ty = _is.SkipToNoCheck(2, true)
+	err, have, ty = _is.SkipToNoCheck(2, true)
 	if err != nil {
 		return ret, err
 	}
@@ -582,6 +1193,7 @@ func (_obj *QueryF) FindObjectByIdInSameGroup(Id string, ActiveEp *[]endpointf.E
 		if err != nil {
 			return ret, err
 		}
+
 		(*ActiveEp) = make([]endpointf.EndpointF, length, length)
 		for i10, e10 := int32(0), length; i10 < e10; i10++ {
 
@@ -589,20 +1201,23 @@ func (_obj *QueryF) FindObjectByIdInSameGroup(Id string, ActiveEp *[]endpointf.E
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	err, _, ty = _is.SkipToNoCheck(3, true)
+	err, have, ty = _is.SkipToNoCheck(3, true)
 	if err != nil {
 		return ret, err
 	}
@@ -612,6 +1227,7 @@ func (_obj *QueryF) FindObjectByIdInSameGroup(Id string, ActiveEp *[]endpointf.E
 		if err != nil {
 			return ret, err
 		}
+
 		(*InactiveEp) = make([]endpointf.EndpointF, length, length)
 		for i11, e11 := int32(0), length; i11 < e11; i11++ {
 
@@ -619,20 +1235,44 @@ func (_obj *QueryF) FindObjectByIdInSameGroup(Id string, ActiveEp *[]endpointf.E
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -651,6 +1291,44 @@ func (_obj *QueryF) FindObjectByIdInSameGroupWithContext(ctx context.Context, Id
 		return ret, err
 	}
 
+	err = _os.WriteHead(codec.LIST, 2)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*ActiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *ActiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	err = _os.WriteHead(codec.LIST, 3)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*InactiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *InactiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
 	var _status map[string]string
 	var _context map[string]string
 	if len(_opt) == 1 {
@@ -660,17 +1338,19 @@ func (_obj *QueryF) FindObjectByIdInSameGroupWithContext(ctx context.Context, Id
 		_status = _opt[1]
 	}
 	_resp := new(requestf.ResponsePacket)
+
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectByIdInSameGroup", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return ret, err
 	}
+
 	_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
 	}
 
-	err, _, ty = _is.SkipToNoCheck(2, true)
+	err, have, ty = _is.SkipToNoCheck(2, true)
 	if err != nil {
 		return ret, err
 	}
@@ -680,6 +1360,7 @@ func (_obj *QueryF) FindObjectByIdInSameGroupWithContext(ctx context.Context, Id
 		if err != nil {
 			return ret, err
 		}
+
 		(*ActiveEp) = make([]endpointf.EndpointF, length, length)
 		for i12, e12 := int32(0), length; i12 < e12; i12++ {
 
@@ -687,20 +1368,23 @@ func (_obj *QueryF) FindObjectByIdInSameGroupWithContext(ctx context.Context, Id
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	err, _, ty = _is.SkipToNoCheck(3, true)
+	err, have, ty = _is.SkipToNoCheck(3, true)
 	if err != nil {
 		return ret, err
 	}
@@ -710,6 +1394,7 @@ func (_obj *QueryF) FindObjectByIdInSameGroupWithContext(ctx context.Context, Id
 		if err != nil {
 			return ret, err
 		}
+
 		(*InactiveEp) = make([]endpointf.EndpointF, length, length)
 		for i13, e13 := int32(0), length; i13 < e13; i13++ {
 
@@ -717,20 +1402,137 @@ func (_obj *QueryF) FindObjectByIdInSameGroupWithContext(ctx context.Context, Id
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
+	_ = length
+	_ = have
+	_ = ty
+	return ret, nil
+}
+
+//FindObjectByIdInSameGroupOneWayWithContext is the proxy function for the method defined in the tars file, with the context
+func (_obj *QueryF) FindObjectByIdInSameGroupOneWayWithContext(ctx context.Context, Id string, ActiveEp *[]endpointf.EndpointF, InactiveEp *[]endpointf.EndpointF, _opt ...map[string]string) (ret int32, err error) {
+
+	var length int32
+	var have bool
+	var ty byte
+	_os := codec.NewBuffer()
+	err = _os.Write_string(Id, 1)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.WriteHead(codec.LIST, 2)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*ActiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *ActiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	err = _os.WriteHead(codec.LIST, 3)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*InactiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *InactiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	var _status map[string]string
+	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
+	_resp := new(requestf.ResponsePacket)
+
+	err = _obj.s.Tars_invoke(ctx, 1, "findObjectByIdInSameGroup", _os.ToBytes(), _status, _context, _resp)
+	if err != nil {
+		return ret, err
+	}
+
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -754,6 +1556,44 @@ func (_obj *QueryF) FindObjectByIdInSameStation(Id string, SStation string, Acti
 		return ret, err
 	}
 
+	err = _os.WriteHead(codec.LIST, 3)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*ActiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *ActiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	err = _os.WriteHead(codec.LIST, 4)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*InactiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *InactiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
 	var _status map[string]string
 	var _context map[string]string
 	if len(_opt) == 1 {
@@ -764,17 +1604,19 @@ func (_obj *QueryF) FindObjectByIdInSameStation(Id string, SStation string, Acti
 	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
+
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectByIdInSameStation", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return ret, err
 	}
+
 	_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
 	}
 
-	err, _, ty = _is.SkipToNoCheck(3, true)
+	err, have, ty = _is.SkipToNoCheck(3, true)
 	if err != nil {
 		return ret, err
 	}
@@ -784,6 +1626,7 @@ func (_obj *QueryF) FindObjectByIdInSameStation(Id string, SStation string, Acti
 		if err != nil {
 			return ret, err
 		}
+
 		(*ActiveEp) = make([]endpointf.EndpointF, length, length)
 		for i14, e14 := int32(0), length; i14 < e14; i14++ {
 
@@ -791,20 +1634,23 @@ func (_obj *QueryF) FindObjectByIdInSameStation(Id string, SStation string, Acti
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	err, _, ty = _is.SkipToNoCheck(4, true)
+	err, have, ty = _is.SkipToNoCheck(4, true)
 	if err != nil {
 		return ret, err
 	}
@@ -814,6 +1660,7 @@ func (_obj *QueryF) FindObjectByIdInSameStation(Id string, SStation string, Acti
 		if err != nil {
 			return ret, err
 		}
+
 		(*InactiveEp) = make([]endpointf.EndpointF, length, length)
 		for i15, e15 := int32(0), length; i15 < e15; i15++ {
 
@@ -821,20 +1668,44 @@ func (_obj *QueryF) FindObjectByIdInSameStation(Id string, SStation string, Acti
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -858,6 +1729,44 @@ func (_obj *QueryF) FindObjectByIdInSameStationWithContext(ctx context.Context, 
 		return ret, err
 	}
 
+	err = _os.WriteHead(codec.LIST, 3)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*ActiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *ActiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	err = _os.WriteHead(codec.LIST, 4)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*InactiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *InactiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
 	var _status map[string]string
 	var _context map[string]string
 	if len(_opt) == 1 {
@@ -867,17 +1776,19 @@ func (_obj *QueryF) FindObjectByIdInSameStationWithContext(ctx context.Context, 
 		_status = _opt[1]
 	}
 	_resp := new(requestf.ResponsePacket)
+
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectByIdInSameStation", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return ret, err
 	}
+
 	_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
 	}
 
-	err, _, ty = _is.SkipToNoCheck(3, true)
+	err, have, ty = _is.SkipToNoCheck(3, true)
 	if err != nil {
 		return ret, err
 	}
@@ -887,6 +1798,7 @@ func (_obj *QueryF) FindObjectByIdInSameStationWithContext(ctx context.Context, 
 		if err != nil {
 			return ret, err
 		}
+
 		(*ActiveEp) = make([]endpointf.EndpointF, length, length)
 		for i16, e16 := int32(0), length; i16 < e16; i16++ {
 
@@ -894,20 +1806,23 @@ func (_obj *QueryF) FindObjectByIdInSameStationWithContext(ctx context.Context, 
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	err, _, ty = _is.SkipToNoCheck(4, true)
+	err, have, ty = _is.SkipToNoCheck(4, true)
 	if err != nil {
 		return ret, err
 	}
@@ -917,6 +1832,7 @@ func (_obj *QueryF) FindObjectByIdInSameStationWithContext(ctx context.Context, 
 		if err != nil {
 			return ret, err
 		}
+
 		(*InactiveEp) = make([]endpointf.EndpointF, length, length)
 		for i17, e17 := int32(0), length; i17 < e17; i17++ {
 
@@ -924,20 +1840,142 @@ func (_obj *QueryF) FindObjectByIdInSameStationWithContext(ctx context.Context, 
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
+	_ = length
+	_ = have
+	_ = ty
+	return ret, nil
+}
+
+//FindObjectByIdInSameStationOneWayWithContext is the proxy function for the method defined in the tars file, with the context
+func (_obj *QueryF) FindObjectByIdInSameStationOneWayWithContext(ctx context.Context, Id string, SStation string, ActiveEp *[]endpointf.EndpointF, InactiveEp *[]endpointf.EndpointF, _opt ...map[string]string) (ret int32, err error) {
+
+	var length int32
+	var have bool
+	var ty byte
+	_os := codec.NewBuffer()
+	err = _os.Write_string(Id, 1)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_string(SStation, 2)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.WriteHead(codec.LIST, 3)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*ActiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *ActiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	err = _os.WriteHead(codec.LIST, 4)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*InactiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *InactiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	var _status map[string]string
+	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
+	_resp := new(requestf.ResponsePacket)
+
+	err = _obj.s.Tars_invoke(ctx, 1, "findObjectByIdInSameStation", _os.ToBytes(), _status, _context, _resp)
+	if err != nil {
+		return ret, err
+	}
+
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -961,6 +1999,44 @@ func (_obj *QueryF) FindObjectByIdInSameSet(Id string, SetId string, ActiveEp *[
 		return ret, err
 	}
 
+	err = _os.WriteHead(codec.LIST, 3)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*ActiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *ActiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	err = _os.WriteHead(codec.LIST, 4)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*InactiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *InactiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
 	var _status map[string]string
 	var _context map[string]string
 	if len(_opt) == 1 {
@@ -971,17 +2047,19 @@ func (_obj *QueryF) FindObjectByIdInSameSet(Id string, SetId string, ActiveEp *[
 	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
+
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectByIdInSameSet", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return ret, err
 	}
+
 	_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
 	}
 
-	err, _, ty = _is.SkipToNoCheck(3, true)
+	err, have, ty = _is.SkipToNoCheck(3, true)
 	if err != nil {
 		return ret, err
 	}
@@ -991,6 +2069,7 @@ func (_obj *QueryF) FindObjectByIdInSameSet(Id string, SetId string, ActiveEp *[
 		if err != nil {
 			return ret, err
 		}
+
 		(*ActiveEp) = make([]endpointf.EndpointF, length, length)
 		for i18, e18 := int32(0), length; i18 < e18; i18++ {
 
@@ -998,20 +2077,23 @@ func (_obj *QueryF) FindObjectByIdInSameSet(Id string, SetId string, ActiveEp *[
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	err, _, ty = _is.SkipToNoCheck(4, true)
+	err, have, ty = _is.SkipToNoCheck(4, true)
 	if err != nil {
 		return ret, err
 	}
@@ -1021,6 +2103,7 @@ func (_obj *QueryF) FindObjectByIdInSameSet(Id string, SetId string, ActiveEp *[
 		if err != nil {
 			return ret, err
 		}
+
 		(*InactiveEp) = make([]endpointf.EndpointF, length, length)
 		for i19, e19 := int32(0), length; i19 < e19; i19++ {
 
@@ -1028,20 +2111,44 @@ func (_obj *QueryF) FindObjectByIdInSameSet(Id string, SetId string, ActiveEp *[
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -1065,6 +2172,44 @@ func (_obj *QueryF) FindObjectByIdInSameSetWithContext(ctx context.Context, Id s
 		return ret, err
 	}
 
+	err = _os.WriteHead(codec.LIST, 3)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*ActiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *ActiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	err = _os.WriteHead(codec.LIST, 4)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*InactiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *InactiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
 	var _status map[string]string
 	var _context map[string]string
 	if len(_opt) == 1 {
@@ -1074,17 +2219,19 @@ func (_obj *QueryF) FindObjectByIdInSameSetWithContext(ctx context.Context, Id s
 		_status = _opt[1]
 	}
 	_resp := new(requestf.ResponsePacket)
+
 	err = _obj.s.Tars_invoke(ctx, 0, "findObjectByIdInSameSet", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return ret, err
 	}
+
 	_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
 	}
 
-	err, _, ty = _is.SkipToNoCheck(3, true)
+	err, have, ty = _is.SkipToNoCheck(3, true)
 	if err != nil {
 		return ret, err
 	}
@@ -1094,6 +2241,7 @@ func (_obj *QueryF) FindObjectByIdInSameSetWithContext(ctx context.Context, Id s
 		if err != nil {
 			return ret, err
 		}
+
 		(*ActiveEp) = make([]endpointf.EndpointF, length, length)
 		for i20, e20 := int32(0), length; i20 < e20; i20++ {
 
@@ -1101,20 +2249,23 @@ func (_obj *QueryF) FindObjectByIdInSameSetWithContext(ctx context.Context, Id s
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	err, _, ty = _is.SkipToNoCheck(4, true)
+	err, have, ty = _is.SkipToNoCheck(4, true)
 	if err != nil {
 		return ret, err
 	}
@@ -1124,6 +2275,7 @@ func (_obj *QueryF) FindObjectByIdInSameSetWithContext(ctx context.Context, Id s
 		if err != nil {
 			return ret, err
 		}
+
 		(*InactiveEp) = make([]endpointf.EndpointF, length, length)
 		for i21, e21 := int32(0), length; i21 < e21; i21++ {
 
@@ -1131,20 +2283,142 @@ func (_obj *QueryF) FindObjectByIdInSameSetWithContext(ctx context.Context, Id s
 			if err != nil {
 				return ret, err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return ret, err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
+	_ = length
+	_ = have
+	_ = ty
+	return ret, nil
+}
+
+//FindObjectByIdInSameSetOneWayWithContext is the proxy function for the method defined in the tars file, with the context
+func (_obj *QueryF) FindObjectByIdInSameSetOneWayWithContext(ctx context.Context, Id string, SetId string, ActiveEp *[]endpointf.EndpointF, InactiveEp *[]endpointf.EndpointF, _opt ...map[string]string) (ret int32, err error) {
+
+	var length int32
+	var have bool
+	var ty byte
+	_os := codec.NewBuffer()
+	err = _os.Write_string(Id, 1)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_string(SetId, 2)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.WriteHead(codec.LIST, 3)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*ActiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *ActiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	err = _os.WriteHead(codec.LIST, 4)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len((*InactiveEp))), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range *InactiveEp {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	var _status map[string]string
+	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
+	_resp := new(requestf.ResponsePacket)
+
+	err = _obj.s.Tars_invoke(ctx, 1, "findObjectByIdInSameSet", _os.ToBytes(), _status, _context, _resp)
+	if err != nil {
+		return ret, err
+	}
+
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -1159,29 +2433,6 @@ func (_obj *QueryF) SetServant(s m.Servant) {
 //TarsSetTimeout sets the timeout for the servant which is in ms.
 func (_obj *QueryF) TarsSetTimeout(t int) {
 	_obj.s.TarsSetTimeout(t)
-}
-func setMap(l int, res *requestf.ResponsePacket, ctx map[string]string, sts map[string]string) {
-	if l == 1 {
-		for k := range ctx {
-			delete(ctx, k)
-		}
-		for k, v := range res.Context {
-			ctx[k] = v
-		}
-	} else if l == 2 {
-		for k := range ctx {
-			delete(ctx, k)
-		}
-		for k, v := range res.Context {
-			ctx[k] = v
-		}
-		for k := range sts {
-			delete(sts, k)
-		}
-		for k, v := range res.Status {
-			sts[k] = v
-		}
-	}
 }
 
 type _impQueryF interface {
@@ -1201,471 +2452,793 @@ type _impQueryFWithContext interface {
 	FindObjectByIdInSameSet(ctx context.Context, Id string, SetId string, ActiveEp *[]endpointf.EndpointF, InactiveEp *[]endpointf.EndpointF) (ret int32, err error)
 }
 
-func findObjectById(ctx context.Context, _val interface{}, _os *codec.Buffer, _is *codec.Reader, withContext bool) (err error) {
-	var length int32
-	var have bool
-	var ty byte
-	var Id string
-	err = _is.Read_string(&Id, 1, true)
-	if err != nil {
-		return err
-	}
-	if withContext == false {
-		_imp := _val.(_impQueryF)
-		ret, err := _imp.FindObjectById(Id)
-		if err != nil {
-			return err
-		}
-
-		err = _os.WriteHead(codec.LIST, 0)
-		if err != nil {
-			return err
-		}
-		err = _os.Write_int32(int32(len(ret)), 0)
-		if err != nil {
-			return err
-		}
-		for _, v := range ret {
-
-			err = v.WriteBlock(_os, 0)
-			if err != nil {
-				return err
-			}
-		}
-	} else {
-		_imp := _val.(_impQueryFWithContext)
-		ret, err := _imp.FindObjectById(ctx, Id)
-		if err != nil {
-			return err
-		}
-
-		err = _os.WriteHead(codec.LIST, 0)
-		if err != nil {
-			return err
-		}
-		err = _os.Write_int32(int32(len(ret)), 0)
-		if err != nil {
-			return err
-		}
-		for _, v := range ret {
-
-			err = v.WriteBlock(_os, 0)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	_ = length
-	_ = have
-	_ = ty
-	return nil
-}
-func findObjectById4Any(ctx context.Context, _val interface{}, _os *codec.Buffer, _is *codec.Reader, withContext bool) (err error) {
-	var length int32
-	var have bool
-	var ty byte
-	var Id string
-	err = _is.Read_string(&Id, 1, true)
-	if err != nil {
-		return err
-	}
-	var ActiveEp []endpointf.EndpointF
-	var InactiveEp []endpointf.EndpointF
-	if withContext == false {
-		_imp := _val.(_impQueryF)
-		ret, err := _imp.FindObjectById4Any(Id, &ActiveEp, &InactiveEp)
-		if err != nil {
-			return err
-		}
-
-		err = _os.Write_int32(ret, 0)
-		if err != nil {
-			return err
-		}
-	} else {
-		_imp := _val.(_impQueryFWithContext)
-		ret, err := _imp.FindObjectById4Any(ctx, Id, &ActiveEp, &InactiveEp)
-		if err != nil {
-			return err
-		}
-
-		err = _os.Write_int32(ret, 0)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = _os.WriteHead(codec.LIST, 2)
-	if err != nil {
-		return err
-	}
-	err = _os.Write_int32(int32(len(ActiveEp)), 0)
-	if err != nil {
-		return err
-	}
-	for _, v := range ActiveEp {
-
-		err = v.WriteBlock(_os, 0)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = _os.WriteHead(codec.LIST, 3)
-	if err != nil {
-		return err
-	}
-	err = _os.Write_int32(int32(len(InactiveEp)), 0)
-	if err != nil {
-		return err
-	}
-	for _, v := range InactiveEp {
-
-		err = v.WriteBlock(_os, 0)
-		if err != nil {
-			return err
-		}
-	}
-
-	_ = length
-	_ = have
-	_ = ty
-	return nil
-}
-func findObjectById4All(ctx context.Context, _val interface{}, _os *codec.Buffer, _is *codec.Reader, withContext bool) (err error) {
-	var length int32
-	var have bool
-	var ty byte
-	var Id string
-	err = _is.Read_string(&Id, 1, true)
-	if err != nil {
-		return err
-	}
-	var ActiveEp []endpointf.EndpointF
-	var InactiveEp []endpointf.EndpointF
-	if withContext == false {
-		_imp := _val.(_impQueryF)
-		ret, err := _imp.FindObjectById4All(Id, &ActiveEp, &InactiveEp)
-		if err != nil {
-			return err
-		}
-
-		err = _os.Write_int32(ret, 0)
-		if err != nil {
-			return err
-		}
-	} else {
-		_imp := _val.(_impQueryFWithContext)
-		ret, err := _imp.FindObjectById4All(ctx, Id, &ActiveEp, &InactiveEp)
-		if err != nil {
-			return err
-		}
-
-		err = _os.Write_int32(ret, 0)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = _os.WriteHead(codec.LIST, 2)
-	if err != nil {
-		return err
-	}
-	err = _os.Write_int32(int32(len(ActiveEp)), 0)
-	if err != nil {
-		return err
-	}
-	for _, v := range ActiveEp {
-
-		err = v.WriteBlock(_os, 0)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = _os.WriteHead(codec.LIST, 3)
-	if err != nil {
-		return err
-	}
-	err = _os.Write_int32(int32(len(InactiveEp)), 0)
-	if err != nil {
-		return err
-	}
-	for _, v := range InactiveEp {
-
-		err = v.WriteBlock(_os, 0)
-		if err != nil {
-			return err
-		}
-	}
-
-	_ = length
-	_ = have
-	_ = ty
-	return nil
-}
-func findObjectByIdInSameGroup(ctx context.Context, _val interface{}, _os *codec.Buffer, _is *codec.Reader, withContext bool) (err error) {
-	var length int32
-	var have bool
-	var ty byte
-	var Id string
-	err = _is.Read_string(&Id, 1, true)
-	if err != nil {
-		return err
-	}
-	var ActiveEp []endpointf.EndpointF
-	var InactiveEp []endpointf.EndpointF
-	if withContext == false {
-		_imp := _val.(_impQueryF)
-		ret, err := _imp.FindObjectByIdInSameGroup(Id, &ActiveEp, &InactiveEp)
-		if err != nil {
-			return err
-		}
-
-		err = _os.Write_int32(ret, 0)
-		if err != nil {
-			return err
-		}
-	} else {
-		_imp := _val.(_impQueryFWithContext)
-		ret, err := _imp.FindObjectByIdInSameGroup(ctx, Id, &ActiveEp, &InactiveEp)
-		if err != nil {
-			return err
-		}
-
-		err = _os.Write_int32(ret, 0)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = _os.WriteHead(codec.LIST, 2)
-	if err != nil {
-		return err
-	}
-	err = _os.Write_int32(int32(len(ActiveEp)), 0)
-	if err != nil {
-		return err
-	}
-	for _, v := range ActiveEp {
-
-		err = v.WriteBlock(_os, 0)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = _os.WriteHead(codec.LIST, 3)
-	if err != nil {
-		return err
-	}
-	err = _os.Write_int32(int32(len(InactiveEp)), 0)
-	if err != nil {
-		return err
-	}
-	for _, v := range InactiveEp {
-
-		err = v.WriteBlock(_os, 0)
-		if err != nil {
-			return err
-		}
-	}
-
-	_ = length
-	_ = have
-	_ = ty
-	return nil
-}
-func findObjectByIdInSameStation(ctx context.Context, _val interface{}, _os *codec.Buffer, _is *codec.Reader, withContext bool) (err error) {
-	var length int32
-	var have bool
-	var ty byte
-	var Id string
-	err = _is.Read_string(&Id, 1, true)
-	if err != nil {
-		return err
-	}
-	var SStation string
-	err = _is.Read_string(&SStation, 2, true)
-	if err != nil {
-		return err
-	}
-	var ActiveEp []endpointf.EndpointF
-	var InactiveEp []endpointf.EndpointF
-	if withContext == false {
-		_imp := _val.(_impQueryF)
-		ret, err := _imp.FindObjectByIdInSameStation(Id, SStation, &ActiveEp, &InactiveEp)
-		if err != nil {
-			return err
-		}
-
-		err = _os.Write_int32(ret, 0)
-		if err != nil {
-			return err
-		}
-	} else {
-		_imp := _val.(_impQueryFWithContext)
-		ret, err := _imp.FindObjectByIdInSameStation(ctx, Id, SStation, &ActiveEp, &InactiveEp)
-		if err != nil {
-			return err
-		}
-
-		err = _os.Write_int32(ret, 0)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = _os.WriteHead(codec.LIST, 3)
-	if err != nil {
-		return err
-	}
-	err = _os.Write_int32(int32(len(ActiveEp)), 0)
-	if err != nil {
-		return err
-	}
-	for _, v := range ActiveEp {
-
-		err = v.WriteBlock(_os, 0)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = _os.WriteHead(codec.LIST, 4)
-	if err != nil {
-		return err
-	}
-	err = _os.Write_int32(int32(len(InactiveEp)), 0)
-	if err != nil {
-		return err
-	}
-	for _, v := range InactiveEp {
-
-		err = v.WriteBlock(_os, 0)
-		if err != nil {
-			return err
-		}
-	}
-
-	_ = length
-	_ = have
-	_ = ty
-	return nil
-}
-func findObjectByIdInSameSet(ctx context.Context, _val interface{}, _os *codec.Buffer, _is *codec.Reader, withContext bool) (err error) {
-	var length int32
-	var have bool
-	var ty byte
-	var Id string
-	err = _is.Read_string(&Id, 1, true)
-	if err != nil {
-		return err
-	}
-	var SetId string
-	err = _is.Read_string(&SetId, 2, true)
-	if err != nil {
-		return err
-	}
-	var ActiveEp []endpointf.EndpointF
-	var InactiveEp []endpointf.EndpointF
-	if withContext == false {
-		_imp := _val.(_impQueryF)
-		ret, err := _imp.FindObjectByIdInSameSet(Id, SetId, &ActiveEp, &InactiveEp)
-		if err != nil {
-			return err
-		}
-
-		err = _os.Write_int32(ret, 0)
-		if err != nil {
-			return err
-		}
-	} else {
-		_imp := _val.(_impQueryFWithContext)
-		ret, err := _imp.FindObjectByIdInSameSet(ctx, Id, SetId, &ActiveEp, &InactiveEp)
-		if err != nil {
-			return err
-		}
-
-		err = _os.Write_int32(ret, 0)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = _os.WriteHead(codec.LIST, 3)
-	if err != nil {
-		return err
-	}
-	err = _os.Write_int32(int32(len(ActiveEp)), 0)
-	if err != nil {
-		return err
-	}
-	for _, v := range ActiveEp {
-
-		err = v.WriteBlock(_os, 0)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = _os.WriteHead(codec.LIST, 4)
-	if err != nil {
-		return err
-	}
-	err = _os.Write_int32(int32(len(InactiveEp)), 0)
-	if err != nil {
-		return err
-	}
-	for _, v := range InactiveEp {
-
-		err = v.WriteBlock(_os, 0)
-		if err != nil {
-			return err
-		}
-	}
-
-	_ = length
-	_ = have
-	_ = ty
-	return nil
-}
-
 //Dispatch is used to call the server side implemnet for the method defined in the tars file. withContext shows using context or not.
 func (_obj *QueryF) Dispatch(ctx context.Context, _val interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error) {
+	var length int32
+	var have bool
+	var ty byte
 	_is := codec.NewReader(tools.Int8ToByte(req.SBuffer))
 	_os := codec.NewBuffer()
 	switch req.SFuncName {
 	case "findObjectById":
-		err := findObjectById(ctx, _val, _os, _is, withContext)
+		var Id string
+		err = _is.Read_string(&Id, 1, true)
 		if err != nil {
 			return err
+		}
+
+		if withContext == false {
+			_imp := _val.(_impQueryF)
+			ret, err := _imp.FindObjectById(Id)
+			if err != nil {
+				return err
+			}
+
+			err = _os.WriteHead(codec.LIST, 0)
+			if err != nil {
+				return err
+			}
+
+			err = _os.Write_int32(int32(len(ret)), 0)
+			if err != nil {
+				return err
+			}
+
+			for _, v := range ret {
+
+				err = v.WriteBlock(_os, 0)
+				if err != nil {
+					return err
+				}
+
+			}
+		} else {
+			_imp := _val.(_impQueryFWithContext)
+			ret, err := _imp.FindObjectById(ctx, Id)
+			if err != nil {
+				return err
+			}
+
+			err = _os.WriteHead(codec.LIST, 0)
+			if err != nil {
+				return err
+			}
+
+			err = _os.Write_int32(int32(len(ret)), 0)
+			if err != nil {
+				return err
+			}
+
+			for _, v := range ret {
+
+				err = v.WriteBlock(_os, 0)
+				if err != nil {
+					return err
+				}
+
+			}
 		}
 	case "findObjectById4Any":
-		err := findObjectById4Any(ctx, _val, _os, _is, withContext)
+		var Id string
+		err = _is.Read_string(&Id, 1, true)
 		if err != nil {
 			return err
+		}
+
+		var ActiveEp []endpointf.EndpointF
+		err, have, ty = _is.SkipToNoCheck(2, false)
+		if err != nil {
+			return err
+		}
+
+		if have {
+			if ty == codec.LIST {
+				err = _is.Read_int32(&length, 0, true)
+				if err != nil {
+					return err
+				}
+
+				ActiveEp = make([]endpointf.EndpointF, length, length)
+				for i22, e22 := int32(0), length; i22 < e22; i22++ {
+
+					err = ActiveEp[i22].ReadBlock(_is, 0, false)
+					if err != nil {
+						return err
+					}
+
+				}
+			} else if ty == codec.SIMPLE_LIST {
+				err = fmt.Errorf("not support simple_list type")
+				if err != nil {
+					return err
+				}
+
+			} else {
+				err = fmt.Errorf("require vector, but not")
+				if err != nil {
+					return err
+				}
+
+			}
+		}
+		var InactiveEp []endpointf.EndpointF
+		err, have, ty = _is.SkipToNoCheck(3, false)
+		if err != nil {
+			return err
+		}
+
+		if have {
+			if ty == codec.LIST {
+				err = _is.Read_int32(&length, 0, true)
+				if err != nil {
+					return err
+				}
+
+				InactiveEp = make([]endpointf.EndpointF, length, length)
+				for i23, e23 := int32(0), length; i23 < e23; i23++ {
+
+					err = InactiveEp[i23].ReadBlock(_is, 0, false)
+					if err != nil {
+						return err
+					}
+
+				}
+			} else if ty == codec.SIMPLE_LIST {
+				err = fmt.Errorf("not support simple_list type")
+				if err != nil {
+					return err
+				}
+
+			} else {
+				err = fmt.Errorf("require vector, but not")
+				if err != nil {
+					return err
+				}
+
+			}
+		}
+		if withContext == false {
+			_imp := _val.(_impQueryF)
+			ret, err := _imp.FindObjectById4Any(Id, &ActiveEp, &InactiveEp)
+			if err != nil {
+				return err
+			}
+
+			err = _os.Write_int32(ret, 0)
+			if err != nil {
+				return err
+			}
+
+		} else {
+			_imp := _val.(_impQueryFWithContext)
+			ret, err := _imp.FindObjectById4Any(ctx, Id, &ActiveEp, &InactiveEp)
+			if err != nil {
+				return err
+			}
+
+			err = _os.Write_int32(ret, 0)
+			if err != nil {
+				return err
+			}
+
+		}
+
+		err = _os.WriteHead(codec.LIST, 2)
+		if err != nil {
+			return err
+		}
+
+		err = _os.Write_int32(int32(len(ActiveEp)), 0)
+		if err != nil {
+			return err
+		}
+
+		for _, v := range ActiveEp {
+
+			err = v.WriteBlock(_os, 0)
+			if err != nil {
+				return err
+			}
+
+		}
+
+		err = _os.WriteHead(codec.LIST, 3)
+		if err != nil {
+			return err
+		}
+
+		err = _os.Write_int32(int32(len(InactiveEp)), 0)
+		if err != nil {
+			return err
+		}
+
+		for _, v := range InactiveEp {
+
+			err = v.WriteBlock(_os, 0)
+			if err != nil {
+				return err
+			}
+
 		}
 	case "findObjectById4All":
-		err := findObjectById4All(ctx, _val, _os, _is, withContext)
+		var Id string
+		err = _is.Read_string(&Id, 1, true)
 		if err != nil {
 			return err
+		}
+
+		var ActiveEp []endpointf.EndpointF
+		err, have, ty = _is.SkipToNoCheck(2, false)
+		if err != nil {
+			return err
+		}
+
+		if have {
+			if ty == codec.LIST {
+				err = _is.Read_int32(&length, 0, true)
+				if err != nil {
+					return err
+				}
+
+				ActiveEp = make([]endpointf.EndpointF, length, length)
+				for i24, e24 := int32(0), length; i24 < e24; i24++ {
+
+					err = ActiveEp[i24].ReadBlock(_is, 0, false)
+					if err != nil {
+						return err
+					}
+
+				}
+			} else if ty == codec.SIMPLE_LIST {
+				err = fmt.Errorf("not support simple_list type")
+				if err != nil {
+					return err
+				}
+
+			} else {
+				err = fmt.Errorf("require vector, but not")
+				if err != nil {
+					return err
+				}
+
+			}
+		}
+		var InactiveEp []endpointf.EndpointF
+		err, have, ty = _is.SkipToNoCheck(3, false)
+		if err != nil {
+			return err
+		}
+
+		if have {
+			if ty == codec.LIST {
+				err = _is.Read_int32(&length, 0, true)
+				if err != nil {
+					return err
+				}
+
+				InactiveEp = make([]endpointf.EndpointF, length, length)
+				for i25, e25 := int32(0), length; i25 < e25; i25++ {
+
+					err = InactiveEp[i25].ReadBlock(_is, 0, false)
+					if err != nil {
+						return err
+					}
+
+				}
+			} else if ty == codec.SIMPLE_LIST {
+				err = fmt.Errorf("not support simple_list type")
+				if err != nil {
+					return err
+				}
+
+			} else {
+				err = fmt.Errorf("require vector, but not")
+				if err != nil {
+					return err
+				}
+
+			}
+		}
+		if withContext == false {
+			_imp := _val.(_impQueryF)
+			ret, err := _imp.FindObjectById4All(Id, &ActiveEp, &InactiveEp)
+			if err != nil {
+				return err
+			}
+
+			err = _os.Write_int32(ret, 0)
+			if err != nil {
+				return err
+			}
+
+		} else {
+			_imp := _val.(_impQueryFWithContext)
+			ret, err := _imp.FindObjectById4All(ctx, Id, &ActiveEp, &InactiveEp)
+			if err != nil {
+				return err
+			}
+
+			err = _os.Write_int32(ret, 0)
+			if err != nil {
+				return err
+			}
+
+		}
+
+		err = _os.WriteHead(codec.LIST, 2)
+		if err != nil {
+			return err
+		}
+
+		err = _os.Write_int32(int32(len(ActiveEp)), 0)
+		if err != nil {
+			return err
+		}
+
+		for _, v := range ActiveEp {
+
+			err = v.WriteBlock(_os, 0)
+			if err != nil {
+				return err
+			}
+
+		}
+
+		err = _os.WriteHead(codec.LIST, 3)
+		if err != nil {
+			return err
+		}
+
+		err = _os.Write_int32(int32(len(InactiveEp)), 0)
+		if err != nil {
+			return err
+		}
+
+		for _, v := range InactiveEp {
+
+			err = v.WriteBlock(_os, 0)
+			if err != nil {
+				return err
+			}
+
 		}
 	case "findObjectByIdInSameGroup":
-		err := findObjectByIdInSameGroup(ctx, _val, _os, _is, withContext)
+		var Id string
+		err = _is.Read_string(&Id, 1, true)
 		if err != nil {
 			return err
+		}
+
+		var ActiveEp []endpointf.EndpointF
+		err, have, ty = _is.SkipToNoCheck(2, false)
+		if err != nil {
+			return err
+		}
+
+		if have {
+			if ty == codec.LIST {
+				err = _is.Read_int32(&length, 0, true)
+				if err != nil {
+					return err
+				}
+
+				ActiveEp = make([]endpointf.EndpointF, length, length)
+				for i26, e26 := int32(0), length; i26 < e26; i26++ {
+
+					err = ActiveEp[i26].ReadBlock(_is, 0, false)
+					if err != nil {
+						return err
+					}
+
+				}
+			} else if ty == codec.SIMPLE_LIST {
+				err = fmt.Errorf("not support simple_list type")
+				if err != nil {
+					return err
+				}
+
+			} else {
+				err = fmt.Errorf("require vector, but not")
+				if err != nil {
+					return err
+				}
+
+			}
+		}
+		var InactiveEp []endpointf.EndpointF
+		err, have, ty = _is.SkipToNoCheck(3, false)
+		if err != nil {
+			return err
+		}
+
+		if have {
+			if ty == codec.LIST {
+				err = _is.Read_int32(&length, 0, true)
+				if err != nil {
+					return err
+				}
+
+				InactiveEp = make([]endpointf.EndpointF, length, length)
+				for i27, e27 := int32(0), length; i27 < e27; i27++ {
+
+					err = InactiveEp[i27].ReadBlock(_is, 0, false)
+					if err != nil {
+						return err
+					}
+
+				}
+			} else if ty == codec.SIMPLE_LIST {
+				err = fmt.Errorf("not support simple_list type")
+				if err != nil {
+					return err
+				}
+
+			} else {
+				err = fmt.Errorf("require vector, but not")
+				if err != nil {
+					return err
+				}
+
+			}
+		}
+		if withContext == false {
+			_imp := _val.(_impQueryF)
+			ret, err := _imp.FindObjectByIdInSameGroup(Id, &ActiveEp, &InactiveEp)
+			if err != nil {
+				return err
+			}
+
+			err = _os.Write_int32(ret, 0)
+			if err != nil {
+				return err
+			}
+
+		} else {
+			_imp := _val.(_impQueryFWithContext)
+			ret, err := _imp.FindObjectByIdInSameGroup(ctx, Id, &ActiveEp, &InactiveEp)
+			if err != nil {
+				return err
+			}
+
+			err = _os.Write_int32(ret, 0)
+			if err != nil {
+				return err
+			}
+
+		}
+
+		err = _os.WriteHead(codec.LIST, 2)
+		if err != nil {
+			return err
+		}
+
+		err = _os.Write_int32(int32(len(ActiveEp)), 0)
+		if err != nil {
+			return err
+		}
+
+		for _, v := range ActiveEp {
+
+			err = v.WriteBlock(_os, 0)
+			if err != nil {
+				return err
+			}
+
+		}
+
+		err = _os.WriteHead(codec.LIST, 3)
+		if err != nil {
+			return err
+		}
+
+		err = _os.Write_int32(int32(len(InactiveEp)), 0)
+		if err != nil {
+			return err
+		}
+
+		for _, v := range InactiveEp {
+
+			err = v.WriteBlock(_os, 0)
+			if err != nil {
+				return err
+			}
+
 		}
 	case "findObjectByIdInSameStation":
-		err := findObjectByIdInSameStation(ctx, _val, _os, _is, withContext)
+		var Id string
+		err = _is.Read_string(&Id, 1, true)
 		if err != nil {
 			return err
 		}
-	case "findObjectByIdInSameSet":
-		err := findObjectByIdInSameSet(ctx, _val, _os, _is, withContext)
+
+		var SStation string
+		err = _is.Read_string(&SStation, 2, true)
 		if err != nil {
 			return err
+		}
+
+		var ActiveEp []endpointf.EndpointF
+		err, have, ty = _is.SkipToNoCheck(3, false)
+		if err != nil {
+			return err
+		}
+
+		if have {
+			if ty == codec.LIST {
+				err = _is.Read_int32(&length, 0, true)
+				if err != nil {
+					return err
+				}
+
+				ActiveEp = make([]endpointf.EndpointF, length, length)
+				for i28, e28 := int32(0), length; i28 < e28; i28++ {
+
+					err = ActiveEp[i28].ReadBlock(_is, 0, false)
+					if err != nil {
+						return err
+					}
+
+				}
+			} else if ty == codec.SIMPLE_LIST {
+				err = fmt.Errorf("not support simple_list type")
+				if err != nil {
+					return err
+				}
+
+			} else {
+				err = fmt.Errorf("require vector, but not")
+				if err != nil {
+					return err
+				}
+
+			}
+		}
+		var InactiveEp []endpointf.EndpointF
+		err, have, ty = _is.SkipToNoCheck(4, false)
+		if err != nil {
+			return err
+		}
+
+		if have {
+			if ty == codec.LIST {
+				err = _is.Read_int32(&length, 0, true)
+				if err != nil {
+					return err
+				}
+
+				InactiveEp = make([]endpointf.EndpointF, length, length)
+				for i29, e29 := int32(0), length; i29 < e29; i29++ {
+
+					err = InactiveEp[i29].ReadBlock(_is, 0, false)
+					if err != nil {
+						return err
+					}
+
+				}
+			} else if ty == codec.SIMPLE_LIST {
+				err = fmt.Errorf("not support simple_list type")
+				if err != nil {
+					return err
+				}
+
+			} else {
+				err = fmt.Errorf("require vector, but not")
+				if err != nil {
+					return err
+				}
+
+			}
+		}
+		if withContext == false {
+			_imp := _val.(_impQueryF)
+			ret, err := _imp.FindObjectByIdInSameStation(Id, SStation, &ActiveEp, &InactiveEp)
+			if err != nil {
+				return err
+			}
+
+			err = _os.Write_int32(ret, 0)
+			if err != nil {
+				return err
+			}
+
+		} else {
+			_imp := _val.(_impQueryFWithContext)
+			ret, err := _imp.FindObjectByIdInSameStation(ctx, Id, SStation, &ActiveEp, &InactiveEp)
+			if err != nil {
+				return err
+			}
+
+			err = _os.Write_int32(ret, 0)
+			if err != nil {
+				return err
+			}
+
+		}
+
+		err = _os.WriteHead(codec.LIST, 3)
+		if err != nil {
+			return err
+		}
+
+		err = _os.Write_int32(int32(len(ActiveEp)), 0)
+		if err != nil {
+			return err
+		}
+
+		for _, v := range ActiveEp {
+
+			err = v.WriteBlock(_os, 0)
+			if err != nil {
+				return err
+			}
+
+		}
+
+		err = _os.WriteHead(codec.LIST, 4)
+		if err != nil {
+			return err
+		}
+
+		err = _os.Write_int32(int32(len(InactiveEp)), 0)
+		if err != nil {
+			return err
+		}
+
+		for _, v := range InactiveEp {
+
+			err = v.WriteBlock(_os, 0)
+			if err != nil {
+				return err
+			}
+
+		}
+	case "findObjectByIdInSameSet":
+		var Id string
+		err = _is.Read_string(&Id, 1, true)
+		if err != nil {
+			return err
+		}
+
+		var SetId string
+		err = _is.Read_string(&SetId, 2, true)
+		if err != nil {
+			return err
+		}
+
+		var ActiveEp []endpointf.EndpointF
+		err, have, ty = _is.SkipToNoCheck(3, false)
+		if err != nil {
+			return err
+		}
+
+		if have {
+			if ty == codec.LIST {
+				err = _is.Read_int32(&length, 0, true)
+				if err != nil {
+					return err
+				}
+
+				ActiveEp = make([]endpointf.EndpointF, length, length)
+				for i30, e30 := int32(0), length; i30 < e30; i30++ {
+
+					err = ActiveEp[i30].ReadBlock(_is, 0, false)
+					if err != nil {
+						return err
+					}
+
+				}
+			} else if ty == codec.SIMPLE_LIST {
+				err = fmt.Errorf("not support simple_list type")
+				if err != nil {
+					return err
+				}
+
+			} else {
+				err = fmt.Errorf("require vector, but not")
+				if err != nil {
+					return err
+				}
+
+			}
+		}
+		var InactiveEp []endpointf.EndpointF
+		err, have, ty = _is.SkipToNoCheck(4, false)
+		if err != nil {
+			return err
+		}
+
+		if have {
+			if ty == codec.LIST {
+				err = _is.Read_int32(&length, 0, true)
+				if err != nil {
+					return err
+				}
+
+				InactiveEp = make([]endpointf.EndpointF, length, length)
+				for i31, e31 := int32(0), length; i31 < e31; i31++ {
+
+					err = InactiveEp[i31].ReadBlock(_is, 0, false)
+					if err != nil {
+						return err
+					}
+
+				}
+			} else if ty == codec.SIMPLE_LIST {
+				err = fmt.Errorf("not support simple_list type")
+				if err != nil {
+					return err
+				}
+
+			} else {
+				err = fmt.Errorf("require vector, but not")
+				if err != nil {
+					return err
+				}
+
+			}
+		}
+		if withContext == false {
+			_imp := _val.(_impQueryF)
+			ret, err := _imp.FindObjectByIdInSameSet(Id, SetId, &ActiveEp, &InactiveEp)
+			if err != nil {
+				return err
+			}
+
+			err = _os.Write_int32(ret, 0)
+			if err != nil {
+				return err
+			}
+
+		} else {
+			_imp := _val.(_impQueryFWithContext)
+			ret, err := _imp.FindObjectByIdInSameSet(ctx, Id, SetId, &ActiveEp, &InactiveEp)
+			if err != nil {
+				return err
+			}
+
+			err = _os.Write_int32(ret, 0)
+			if err != nil {
+				return err
+			}
+
+		}
+
+		err = _os.WriteHead(codec.LIST, 3)
+		if err != nil {
+			return err
+		}
+
+		err = _os.Write_int32(int32(len(ActiveEp)), 0)
+		if err != nil {
+			return err
+		}
+
+		for _, v := range ActiveEp {
+
+			err = v.WriteBlock(_os, 0)
+			if err != nil {
+				return err
+			}
+
+		}
+
+		err = _os.WriteHead(codec.LIST, 4)
+		if err != nil {
+			return err
+		}
+
+		err = _os.Write_int32(int32(len(InactiveEp)), 0)
+		if err != nil {
+			return err
+		}
+
+		for _, v := range InactiveEp {
+
+			err = v.WriteBlock(_os, 0)
+			if err != nil {
+				return err
+			}
+
 		}
 
 	default:
@@ -1682,7 +3255,7 @@ func (_obj *QueryF) Dispatch(ctx context.Context, _val interface{}, req *request
 		_context = c
 	}
 	*resp = requestf.ResponsePacket{
-		IVersion:     1,
+		IVersion:     req.IVersion,
 		CPacketType:  0,
 		IRequestId:   req.IRequestId,
 		IMessageType: 0,
@@ -1692,5 +3265,8 @@ func (_obj *QueryF) Dispatch(ctx context.Context, _val interface{}, req *request
 		SResultDesc:  "",
 		Context:      _context,
 	}
+	_ = length
+	_ = have
+	_ = ty
 	return nil
 }

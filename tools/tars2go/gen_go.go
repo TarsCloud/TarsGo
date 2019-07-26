@@ -344,7 +344,7 @@ func (gen *GenGo) genFunEncode(st *StructInfo) {
 func (gen *GenGo) genFunResetDefault(st *StructInfo) {
 	c := &gen.code
 
-	c.WriteString("func (st *" + st.TName + ") resetDefault() {\n")
+	c.WriteString("func (st *" + st.TName + ") ResetDefault() {\n")
 
 	for _, v := range st.Mb {
 		if v.Default == "" {
