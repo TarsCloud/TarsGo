@@ -1,4 +1,4 @@
-# TarsGo  Document
+# TarsGo  Document  [![Build Status](https://travis-ci.com/tars-go/tars.svg?branch=master)](https://travis-ci.com/tars-go/tars)
 
 * [版本特性Wiki](https://github.com/tars-go/TarsGo/wiki)
 * [点我查看中文版](README.zh.md)

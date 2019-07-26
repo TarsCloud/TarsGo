@@ -1,9 +1,25 @@
 language: go
+
+branches:
+  only:
+  - master
+  - dev
+
 go:
-  - '1.9'
-  - 1.10.x
   - 1.11.x
+  - 1.12.x
+
 install:
-  - echo "$GOPATH"
+  - ln -s $GOPATH/src/github.com/tars-go/tars $GOPATH/src/tars
+
 script:
-  - go build github.com/TarsCloud/TarsGo/tars
+  # Check source can build
+  - cd $GOPATH/src/github.com/tars-go/tars && go build
+
+  # Create DemoProject
+  - mkdir -p $HOME/outside_gopath/tars-go && cd $HOME/outside_gopath/tars-go
+  - bash +x $GOPATH/src/github.com/tars-go/tars/tools/create_tars_server.sh DemoGroup DemoProject DemoServant
+
+  # Compile server and client
+  - cd $HOME/outside_gopath/tars-go/DemoGroup/DemoProject/ && make tar
+  - cd client/ && go build
