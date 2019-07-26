@@ -5,7 +5,6 @@ package requestf
 
 import (
 	"fmt"
-
 	"tars/protocol/codec"
 )
 
@@ -22,7 +21,7 @@ type ResponsePacket struct {
 	Context      map[string]string `json:"context"`
 }
 
-func (st *ResponsePacket) resetDefault() {
+func (st *ResponsePacket) ResetDefault() {
 	st.CPacketType = 0
 	st.IMessageType = 0
 	st.IRet = 0
@@ -34,7 +33,7 @@ func (st *ResponsePacket) ReadFrom(_is *codec.Reader) error {
 	var length int32
 	var have bool
 	var ty byte
-	st.resetDefault()
+	st.ResetDefault()
 
 	err = _is.Read_int16(&st.IVersion, 1, true)
 	if err != nil {
@@ -61,7 +60,7 @@ func (st *ResponsePacket) ReadFrom(_is *codec.Reader) error {
 		return err
 	}
 
-	err, _, ty = _is.SkipToNoCheck(6, true)
+	err, have, ty = _is.SkipToNoCheck(6, true)
 	if err != nil {
 		return err
 	}
@@ -71,6 +70,7 @@ func (st *ResponsePacket) ReadFrom(_is *codec.Reader) error {
 		if err != nil {
 			return err
 		}
+
 		st.SBuffer = make([]int8, length, length)
 		for i0, e0 := int32(0), length; i0 < e0; i0++ {
 
@@ -78,6 +78,7 @@ func (st *ResponsePacket) ReadFrom(_is *codec.Reader) error {
 			if err != nil {
 				return err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 
@@ -85,10 +86,12 @@ func (st *ResponsePacket) ReadFrom(_is *codec.Reader) error {
 		if err != nil {
 			return err
 		}
+
 		err = _is.Read_int32(&length, 0, true)
 		if err != nil {
 			return err
 		}
+
 		err = _is.Read_slice_int8(&st.SBuffer, length, true)
 		if err != nil {
 			return err
@@ -99,9 +102,10 @@ func (st *ResponsePacket) ReadFrom(_is *codec.Reader) error {
 		if err != nil {
 			return err
 		}
+
 	}
 
-	err, _ = _is.SkipTo(codec.MAP, 7, true)
+	err, have = _is.SkipTo(codec.MAP, 7, true)
 	if err != nil {
 		return err
 	}
@@ -110,6 +114,7 @@ func (st *ResponsePacket) ReadFrom(_is *codec.Reader) error {
 	if err != nil {
 		return err
 	}
+
 	st.Status = make(map[string]string)
 	for i1, e1 := int32(0), length; i1 < e1; i1++ {
 		var k1 string
@@ -137,11 +142,13 @@ func (st *ResponsePacket) ReadFrom(_is *codec.Reader) error {
 	if err != nil {
 		return err
 	}
+
 	if have {
 		err = _is.Read_int32(&length, 0, true)
 		if err != nil {
 			return err
 		}
+
 		st.Context = make(map[string]string)
 		for i2, e2 := int32(0), length; i2 < e2; i2++ {
 			var k2 string
@@ -171,7 +178,7 @@ func (st *ResponsePacket) ReadFrom(_is *codec.Reader) error {
 func (st *ResponsePacket) ReadBlock(_is *codec.Reader, tag byte, require bool) error {
 	var err error
 	var have bool
-	st.resetDefault()
+	st.ResetDefault()
 
 	err, have = _is.SkipTo(codec.STRUCT_BEGIN, tag, require)
 	if err != nil {
@@ -228,14 +235,17 @@ func (st *ResponsePacket) WriteTo(_os *codec.Buffer) error {
 	if err != nil {
 		return err
 	}
+
 	err = _os.WriteHead(codec.BYTE, 0)
 	if err != nil {
 		return err
 	}
+
 	err = _os.Write_int32(int32(len(st.SBuffer)), 0)
 	if err != nil {
 		return err
 	}
+
 	err = _os.Write_slice_int8(st.SBuffer)
 	if err != nil {
 		return err
@@ -245,10 +255,12 @@ func (st *ResponsePacket) WriteTo(_os *codec.Buffer) error {
 	if err != nil {
 		return err
 	}
+
 	err = _os.Write_int32(int32(len(st.Status)), 0)
 	if err != nil {
 		return err
 	}
+
 	for k3, v3 := range st.Status {
 
 		err = _os.Write_string(k3, 0)
@@ -260,6 +272,7 @@ func (st *ResponsePacket) WriteTo(_os *codec.Buffer) error {
 		if err != nil {
 			return err
 		}
+
 	}
 
 	err = _os.Write_string(st.SResultDesc, 8)
@@ -271,10 +284,12 @@ func (st *ResponsePacket) WriteTo(_os *codec.Buffer) error {
 	if err != nil {
 		return err
 	}
+
 	err = _os.Write_int32(int32(len(st.Context)), 0)
 	if err != nil {
 		return err
 	}
+
 	for k4, v4 := range st.Context {
 
 		err = _os.Write_string(k4, 0)
@@ -286,6 +301,7 @@ func (st *ResponsePacket) WriteTo(_os *codec.Buffer) error {
 		if err != nil {
 			return err
 		}
+
 	}
 
 	return nil

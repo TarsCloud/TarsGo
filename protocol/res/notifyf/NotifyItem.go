@@ -16,7 +16,7 @@ type NotifyItem struct {
 	SMessage   string `json:"sMessage"`
 }
 
-func (st *NotifyItem) resetDefault() {
+func (st *NotifyItem) ResetDefault() {
 }
 
 //ReadFrom reads  from _is and put into struct.
@@ -25,7 +25,7 @@ func (st *NotifyItem) ReadFrom(_is *codec.Reader) error {
 	var length int32
 	var have bool
 	var ty byte
-	st.resetDefault()
+	st.ResetDefault()
 
 	err = _is.Read_string(&st.STimeStamp, 1, true)
 	if err != nil {
@@ -57,7 +57,7 @@ func (st *NotifyItem) ReadFrom(_is *codec.Reader) error {
 func (st *NotifyItem) ReadBlock(_is *codec.Reader, tag byte, require bool) error {
 	var err error
 	var have bool
-	st.resetDefault()
+	st.ResetDefault()
 
 	err, have = _is.SkipTo(codec.STRUCT_BEGIN, tag, require)
 	if err != nil {

@@ -16,6 +16,7 @@ type VarType struct {
 	CType    TK       // make sure which type of custom type is,tkEnum, tkStruct
 	TypeK    *VarType // vector's member variable,the key of map
 	TypeV    *VarType // the value of map
+	TypeL    int64    // lenth of array
 }
 
 // StructMember member struct.
@@ -39,15 +40,19 @@ func (a StructMemberSorter) Less(i, j int) bool { return a[i].Tag < a[j].Tag }
 //StructInfo record struct information.
 type StructInfo struct {
 	TName        string
+	OriginName   string
 	Mb           []StructMember
 	DependModule map[string]bool
+
+	DependModuleWithJce map[string]bool
 }
 
 //ArgInfo record argument information.
 type ArgInfo struct {
-	Name  string
-	IsOut bool
-	Type  *VarType
+	Name    string
+	NameStr string //original name
+	IsOut   bool
+	Type    *VarType
 }
 
 //FunInfo record function information.
@@ -64,18 +69,23 @@ type InterfaceInfo struct {
 	TName        string
 	Fun          []FunInfo
 	DependModule map[string]bool
+
+	DependModuleWithJce map[string]bool
 }
 
 //EnumMember record member information.
 type EnumMember struct {
 	Key   string
-	Value int32
+	Type  int
+	Value int32  //type 0
+	Name  string //type 1
 }
 
 //EnumInfo record EnumMember information include name.
 type EnumInfo struct {
-	TName string
-	Mb    []EnumMember
+	TModule string
+	TName   string
+	Mb      []EnumMember
 }
 
 //ConstInfo record const information.
@@ -111,6 +121,14 @@ type Parse struct {
 	lex   *LexState
 	t     *Token
 	lastT *Token
+
+	// tars include chain
+	IncChain []string
+
+	// tars file name(not include .tars)
+	TarsName string
+
+	DependModuleWithJce map[string]bool
 }
 
 func (p *Parse) parseErr(err string) {
@@ -186,39 +204,38 @@ func (p *Parse) parseEnum() {
 	}
 	p.expect(tkBracel)
 
-	defer func() {
-		p.expect(tkSemi)
-		p.Enum = append(p.Enum, enum)
-	}()
-
-	var it int32
+LFOR:
 	for {
 		p.next()
 		switch p.t.T {
 		case tkBracer:
-
-			return
+			break LFOR
 		case tkName:
 			k := p.t.S.S
 			p.next()
 			switch p.t.T {
 			case tkComma:
-				m := EnumMember{Key: k, Value: it}
+				m := EnumMember{Key: k, Type: 2}
 				enum.Mb = append(enum.Mb, m)
-				it++
 			case tkBracer:
-				m := EnumMember{Key: k, Value: it}
+				m := EnumMember{Key: k, Type: 2}
 				enum.Mb = append(enum.Mb, m)
-				return
+				break LFOR
 			case tkEq:
-				p.expect(tkInteger)
-				it = int32(p.t.S.I)
-				m := EnumMember{Key: k, Value: it}
-				enum.Mb = append(enum.Mb, m)
-				it++
+				p.next()
+				switch p.t.T {
+				case tkInteger:
+					m := EnumMember{Key: k, Value: int32(p.t.S.I)}
+					enum.Mb = append(enum.Mb, m)
+				case tkName:
+					m := EnumMember{Key: k, Type: 1, Name: p.t.S.S}
+					enum.Mb = append(enum.Mb, m)
+				default:
+					p.parseErr("not expect " + TokenMap[p.t.T])
+				}
 				p.next()
 				if p.t.T == tkBracer {
-					return
+					break LFOR
 				} else if p.t.T == tkComma {
 				} else {
 					p.parseErr("expect , or }")
@@ -226,41 +243,8 @@ func (p *Parse) parseEnum() {
 			}
 		}
 	}
-}
-func (p *Parse) parseStructMemberDefault(m *StructMember) {
-	m.DefType = p.t.T
-	switch p.t.T {
-	case tkInteger:
-		if !isNumberType(m.Type.Type) && m.Type.Type != tkName {
-			// enum auto defined type ,default value is number.
-			p.parseErr("type does not accept number")
-		}
-		m.Default = p.t.S.S
-	case tkFloat:
-		if !isNumberType(m.Type.Type) {
-			p.parseErr("type does not accept number")
-		}
-		m.Default = p.t.S.S
-	case tkString:
-		if isNumberType(m.Type.Type) {
-			p.parseErr("type does not accept string")
-		}
-		m.Default = `"` + p.t.S.S + `"`
-	case tkTrue:
-		if m.Type.Type != tkTBool {
-			p.parseErr("default value format error")
-		}
-		m.Default = "true"
-	case tkFalse:
-		if m.Type.Type != tkTBool {
-			p.parseErr("default value format error")
-		}
-		m.Default = "false"
-	case tkName:
-		m.Default = p.t.S.S
-	default:
-		p.parseErr("default value format error")
-	}
+	p.expect(tkSemi)
+	p.Enum = append(p.Enum, enum)
 }
 
 func (p *Parse) parseStructMember() *StructMember {
@@ -301,6 +285,13 @@ func (p *Parse) parseStructMember() *StructMember {
 	if p.t.T == tkSemi {
 		return m
 	}
+	if p.t.T == tkSquarel {
+		p.expect(tkInteger)
+		m.Type = &VarType{Type: tkTArray, TypeK: m.Type, TypeL: p.t.S.I}
+		p.expect(tkSquarer)
+		p.expect(tkSemi)
+		return m
+	}
 	if p.t.T != tkEq {
 		p.parseErr("expect ; or =")
 	}
@@ -310,7 +301,39 @@ func (p *Parse) parseStructMember() *StructMember {
 
 	// default
 	p.next()
-	p.parseStructMemberDefault(m)
+	m.DefType = p.t.T
+	switch p.t.T {
+	case tkInteger:
+		if !isNumberType(m.Type.Type) && m.Type.Type != tkName {
+			// enum auto defined type ,default value is number.
+			p.parseErr("type does not accept number")
+		}
+		m.Default = p.t.S.S
+	case tkFloat:
+		if !isNumberType(m.Type.Type) {
+			p.parseErr("type does not accept number")
+		}
+		m.Default = p.t.S.S
+	case tkString:
+		if isNumberType(m.Type.Type) {
+			p.parseErr("type does not accept string")
+		}
+		m.Default = `"` + p.t.S.S + `"`
+	case tkTrue:
+		if m.Type.Type != tkTBool {
+			p.parseErr("default value format error")
+		}
+		m.Default = "true"
+	case tkFalse:
+		if m.Type.Type != tkTBool {
+			p.parseErr("default value format error")
+		}
+		m.Default = "false"
+	case tkName:
+		m.Default = p.t.S.S
+	default:
+		p.parseErr("default value format error")
+	}
 	p.expect(tkSemi)
 
 	return m
@@ -444,7 +467,7 @@ func (p *Parse) parseConst() {
 	p.next()
 	switch p.t.T {
 	case tkTVector, tkTMap:
-		p.parseErr("const no supports type vector or map.")
+		p.parseErr("const no suppost type vector or map.")
 	case tkTBool, tkTByte, tkTShort,
 		tkTInt, tkTLong, tkTFloat,
 		tkTDouble, tkTString, tkUnsigned:
@@ -555,32 +578,37 @@ func (p *Parse) parseInclude() {
 }
 
 // Looking for the true type of user-defined identifier
-func (p *Parse) findTNameType(tname string) (TK, string) {
+func (p *Parse) findTNameType(tname string) (TK, string, string) {
 	for _, v := range p.Struct {
 		if p.Module+"::"+v.TName == tname {
-			return tkStruct, p.Module
+			return tkStruct, p.Module, p.TarsName
 		}
 	}
 
 	for _, v := range p.Enum {
 		if p.Module+"::"+v.TName == tname {
-			return tkEnum, p.Module
+			return tkEnum, p.Module, p.TarsName
 		}
 	}
 
 	for _, pInc := range p.IncParse {
-		ret, mod := pInc.findTNameType(tname)
+		ret, mod, tarsName := pInc.findTNameType(tname)
 		if ret != tkName {
-			return ret, mod
+			return ret, mod, tarsName
 		}
 	}
 	// not find
-	return tkName, p.Module
+	return tkName, p.Module, p.TarsName
 }
 
 func (p *Parse) findEnumName(ename string) (*EnumMember, *EnumInfo) {
+	var module = ""
 	if strings.Contains(ename, "::") {
-		ename = strings.Split(ename, "::")[1]
+		vec := strings.Split(ename, "::")
+		if len(vec) >= 2 {
+			module = vec[0]
+			ename = vec[1]
+		}
 	}
 	var cmb *EnumMember
 	var cenum *EnumInfo
@@ -605,6 +633,9 @@ func (p *Parse) findEnumName(ename string) (*EnumMember, *EnumInfo) {
 			break
 		}
 	}
+	if cenum != nil {
+		cenum.TModule = module
+	}
 	return cmb, cenum
 }
 
@@ -615,7 +646,7 @@ func addToSet(m *map[string]bool, module string) {
 	(*m)[module] = true
 }
 
-func (p *Parse) checkDepTName(ty *VarType, dm *map[string]bool) {
+func (p *Parse) checkDepTName(ty *VarType, dm *map[string]bool, dmj *map[string]bool) {
 	if ty.Type == tkName {
 		name := ty.TypeSt
 		if strings.Count(name, "::") == 0 {
@@ -623,30 +654,52 @@ func (p *Parse) checkDepTName(ty *VarType, dm *map[string]bool) {
 		}
 
 		mod := ""
-		ty.CType, mod = p.findTNameType(name)
+		tarsName := ""
+		ty.CType, mod, tarsName = p.findTNameType(name)
 		if ty.CType == tkName {
 			p.parseErr(ty.TypeSt + " not find define")
 		}
-		if mod != p.Module {
-			addToSet(dm, mod)
+		if *gModuleCycle == true {
+			if mod != p.Module || tarsName != p.TarsName {
+				var modStr string
+				if *gModuleUpper {
+					modStr = upperFirstLatter(mod)
+				} else {
+					modStr = mod
+				}
+				addToSet(dmj, tarsName+"_"+modStr)
+
+				if strings.Contains(ty.TypeSt, mod+"::") {
+					ty.TypeSt = strings.Replace(ty.TypeSt, mod+"::", tarsName+"_"+modStr+"::", 1)
+				} else {
+					ty.TypeSt = tarsName + "_" + modStr + "::" + ty.TypeSt
+				}
+			} else {
+				// the same Module ,do not add self.
+				ty.TypeSt = strings.Replace(ty.TypeSt, mod+"::", "", 1)
+			}
 		} else {
-			// the same Module ,do not add self.
-			ty.TypeSt = strings.Replace(ty.TypeSt, mod+"::", "", 1)
+			if mod != p.Module {
+				addToSet(dm, mod)
+			} else {
+				// the same Module ,do not add self.
+				ty.TypeSt = strings.Replace(ty.TypeSt, mod+"::", "", 1)
+			}
 		}
 	} else if ty.Type == tkTVector {
-		p.checkDepTName(ty.TypeK, dm)
+		p.checkDepTName(ty.TypeK, dm, dmj)
 	} else if ty.Type == tkTMap {
-		p.checkDepTName(ty.TypeK, dm)
-		p.checkDepTName(ty.TypeV, dm)
+		p.checkDepTName(ty.TypeK, dm, dmj)
+		p.checkDepTName(ty.TypeV, dm, dmj)
 	}
 }
 
-// analysis custom type，whether have definition
+// analysis custom type，whether have defination
 func (p *Parse) analyzeTName() {
 	for i, v := range p.Struct {
 		for _, v := range v.Mb {
 			ty := v.Type
-			p.checkDepTName(ty, &p.Struct[i].DependModule)
+			p.checkDepTName(ty, &p.Struct[i].DependModule, &p.Struct[i].DependModuleWithJce)
 		}
 	}
 
@@ -654,10 +707,10 @@ func (p *Parse) analyzeTName() {
 		for _, v := range v.Fun {
 			for _, v := range v.Args {
 				ty := v.Type
-				p.checkDepTName(ty, &p.Interface[i].DependModule)
+				p.checkDepTName(ty, &p.Interface[i].DependModule, &p.Interface[i].DependModuleWithJce)
 			}
 			if v.RetType != nil {
-				p.checkDepTName(v.RetType, &p.Interface[i].DependModule)
+				p.checkDepTName(v.RetType, &p.Interface[i].DependModule, &p.Interface[i].DependModuleWithJce)
 			}
 		}
 	}
@@ -668,10 +721,14 @@ func (p *Parse) analyzeDefault() {
 		for i, r := range v.Mb {
 			if r.Default != "" && r.DefType == tkName {
 				mb, enum := p.findEnumName(r.Default)
-				if mb == nil {
+				if mb == nil || enum == nil {
 					p.parseErr("can not find default value" + r.Default)
 				}
-				v.Mb[i].Default = enum.TName + "_" + mb.Key
+				defValue := enum.TName + "_" + mb.Key
+				if len(enum.TModule) > 0 && p.Module != enum.TModule {
+					defValue = enum.TModule + "." + defValue
+				}
+				v.Mb[i].Default = defValue
 			}
 		}
 	}
@@ -684,7 +741,7 @@ func (p *Parse) analyzeHashKey() {
 
 func (p *Parse) analyzeDepend() {
 	for _, v := range p.Include {
-		pInc := ParseFile(v)
+		pInc := ParseFile(v, p.IncChain)
 		p.IncParse = append(p.IncParse, pInc)
 		fmt.Println("parse include: ", v)
 	}
@@ -713,21 +770,29 @@ OUT:
 	p.analyzeDepend()
 }
 
-func newParse(s string, b []byte) *Parse {
-	p := &Parse{Source: s}
+func newParse(s string, b []byte, inc_chain []string) *Parse {
+	p := &Parse{Source: s, TarsName: path2TarsName(s)}
+	for _, v := range inc_chain {
+		if s == v {
+			panic("tars circular reference: " + s)
+		}
+	}
+	inc_chain = append(inc_chain, s)
+	p.IncChain = inc_chain
+	fmt.Println(s, p.IncChain)
 
 	p.lex = NewLexState(s, b)
 	return p
 }
 
-//ParseFile parse a file,return grammar tree.
-func ParseFile(path string) *Parse {
+//ParseFile parse a file,return grammer tree.
+func ParseFile(path string, inc_chain []string) *Parse {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		fmt.Println("file read error: " + path + ". " + err.Error())
 	}
 
-	p := newParse(path, b)
+	p := newParse(path, b, inc_chain)
 	p.parse()
 
 	return p

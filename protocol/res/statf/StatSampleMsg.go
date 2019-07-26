@@ -21,7 +21,7 @@ type StatSampleMsg struct {
 	ParentWidth   int32  `json:"parentWidth"`
 }
 
-func (st *StatSampleMsg) resetDefault() {
+func (st *StatSampleMsg) ResetDefault() {
 }
 
 //ReadFrom reads  from _is and put into struct.
@@ -30,7 +30,7 @@ func (st *StatSampleMsg) ReadFrom(_is *codec.Reader) error {
 	var length int32
 	var have bool
 	var ty byte
-	st.resetDefault()
+	st.ResetDefault()
 
 	err = _is.Read_string(&st.Unid, 0, true)
 	if err != nil {
@@ -87,7 +87,7 @@ func (st *StatSampleMsg) ReadFrom(_is *codec.Reader) error {
 func (st *StatSampleMsg) ReadBlock(_is *codec.Reader, tag byte, require bool) error {
 	var err error
 	var have bool
-	st.resetDefault()
+	st.ResetDefault()
 
 	err, have = _is.SkipTo(codec.STRUCT_BEGIN, tag, require)
 	if err != nil {

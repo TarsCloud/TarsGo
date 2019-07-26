@@ -20,7 +20,7 @@ type StatPropMsgHead struct {
 	IPropertyVer int32  `json:"iPropertyVer"`
 }
 
-func (st *StatPropMsgHead) resetDefault() {
+func (st *StatPropMsgHead) ResetDefault() {
 	st.IPropertyVer = 1
 }
 
@@ -30,7 +30,7 @@ func (st *StatPropMsgHead) ReadFrom(_is *codec.Reader) error {
 	var length int32
 	var have bool
 	var ty byte
-	st.resetDefault()
+	st.ResetDefault()
 
 	err = _is.Read_string(&st.ModuleName, 0, true)
 	if err != nil {
@@ -82,7 +82,7 @@ func (st *StatPropMsgHead) ReadFrom(_is *codec.Reader) error {
 func (st *StatPropMsgHead) ReadBlock(_is *codec.Reader, tag byte, require bool) error {
 	var err error
 	var have bool
-	st.resetDefault()
+	st.ResetDefault()
 
 	err, have = _is.SkipTo(codec.STRUCT_BEGIN, tag, require)
 	if err != nil {

@@ -29,10 +29,12 @@ func (_obj *StatF) ReportMicMsg(Msg map[StatMicMsgHead]StatMicMsgBody, BFromClie
 	if err != nil {
 		return ret, err
 	}
+
 	err = _os.Write_int32(int32(len(Msg)), 0)
 	if err != nil {
 		return ret, err
 	}
+
 	for k0, v0 := range Msg {
 
 		err = k0.WriteBlock(_os, 0)
@@ -44,6 +46,7 @@ func (_obj *StatF) ReportMicMsg(Msg map[StatMicMsgHead]StatMicMsgBody, BFromClie
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
 	err = _os.Write_bool(BFromClient, 2)
@@ -61,17 +64,40 @@ func (_obj *StatF) ReportMicMsg(Msg map[StatMicMsgHead]StatMicMsgBody, BFromClie
 	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
+
 	err = _obj.s.Tars_invoke(ctx, 0, "reportMicMsg", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return ret, err
 	}
+
 	_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -89,10 +115,12 @@ func (_obj *StatF) ReportMicMsgWithContext(ctx context.Context, Msg map[StatMicM
 	if err != nil {
 		return ret, err
 	}
+
 	err = _os.Write_int32(int32(len(Msg)), 0)
 	if err != nil {
 		return ret, err
 	}
+
 	for k1, v1 := range Msg {
 
 		err = k1.WriteBlock(_os, 0)
@@ -104,6 +132,7 @@ func (_obj *StatF) ReportMicMsgWithContext(ctx context.Context, Msg map[StatMicM
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
 	err = _os.Write_bool(BFromClient, 2)
@@ -120,17 +149,119 @@ func (_obj *StatF) ReportMicMsgWithContext(ctx context.Context, Msg map[StatMicM
 		_status = _opt[1]
 	}
 	_resp := new(requestf.ResponsePacket)
+
 	err = _obj.s.Tars_invoke(ctx, 0, "reportMicMsg", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return ret, err
 	}
+
 	_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
+	_ = length
+	_ = have
+	_ = ty
+	return ret, nil
+}
+
+//ReportMicMsgOneWayWithContext is the proxy function for the method defined in the tars file, with the context
+func (_obj *StatF) ReportMicMsgOneWayWithContext(ctx context.Context, Msg map[StatMicMsgHead]StatMicMsgBody, BFromClient bool, _opt ...map[string]string) (ret int32, err error) {
+
+	var length int32
+	var have bool
+	var ty byte
+	_os := codec.NewBuffer()
+	err = _os.WriteHead(codec.MAP, 1)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len(Msg)), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for k2, v2 := range Msg {
+
+		err = k2.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+		err = v2.WriteBlock(_os, 1)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	err = _os.Write_bool(BFromClient, 2)
+	if err != nil {
+		return ret, err
+	}
+
+	var _status map[string]string
+	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
+	_resp := new(requestf.ResponsePacket)
+
+	err = _obj.s.Tars_invoke(ctx, 1, "reportMicMsg", _os.ToBytes(), _status, _context, _resp)
+	if err != nil {
+		return ret, err
+	}
+
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -148,16 +279,19 @@ func (_obj *StatF) ReportSampleMsg(Msg []StatSampleMsg, _opt ...map[string]strin
 	if err != nil {
 		return ret, err
 	}
+
 	err = _os.Write_int32(int32(len(Msg)), 0)
 	if err != nil {
 		return ret, err
 	}
+
 	for _, v := range Msg {
 
 		err = v.WriteBlock(_os, 0)
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
 	var _status map[string]string
@@ -170,17 +304,40 @@ func (_obj *StatF) ReportSampleMsg(Msg []StatSampleMsg, _opt ...map[string]strin
 	}
 	_resp := new(requestf.ResponsePacket)
 	ctx := context.Background()
+
 	err = _obj.s.Tars_invoke(ctx, 0, "reportSampleMsg", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return ret, err
 	}
+
 	_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -198,16 +355,19 @@ func (_obj *StatF) ReportSampleMsgWithContext(ctx context.Context, Msg []StatSam
 	if err != nil {
 		return ret, err
 	}
+
 	err = _os.Write_int32(int32(len(Msg)), 0)
 	if err != nil {
 		return ret, err
 	}
+
 	for _, v := range Msg {
 
 		err = v.WriteBlock(_os, 0)
 		if err != nil {
 			return ret, err
 		}
+
 	}
 
 	var _status map[string]string
@@ -219,17 +379,109 @@ func (_obj *StatF) ReportSampleMsgWithContext(ctx context.Context, Msg []StatSam
 		_status = _opt[1]
 	}
 	_resp := new(requestf.ResponsePacket)
+
 	err = _obj.s.Tars_invoke(ctx, 0, "reportSampleMsg", _os.ToBytes(), _status, _context, _resp)
 	if err != nil {
 		return ret, err
 	}
+
 	_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))
 	err = _is.Read_int32(&ret, 0, true)
 	if err != nil {
 		return ret, err
 	}
 
-	setMap(len(_opt), _resp, _context, _status)
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
+	_ = length
+	_ = have
+	_ = ty
+	return ret, nil
+}
+
+//ReportSampleMsgOneWayWithContext is the proxy function for the method defined in the tars file, with the context
+func (_obj *StatF) ReportSampleMsgOneWayWithContext(ctx context.Context, Msg []StatSampleMsg, _opt ...map[string]string) (ret int32, err error) {
+
+	var length int32
+	var have bool
+	var ty byte
+	_os := codec.NewBuffer()
+	err = _os.WriteHead(codec.LIST, 1)
+	if err != nil {
+		return ret, err
+	}
+
+	err = _os.Write_int32(int32(len(Msg)), 0)
+	if err != nil {
+		return ret, err
+	}
+
+	for _, v := range Msg {
+
+		err = v.WriteBlock(_os, 0)
+		if err != nil {
+			return ret, err
+		}
+
+	}
+
+	var _status map[string]string
+	var _context map[string]string
+	if len(_opt) == 1 {
+		_context = _opt[0]
+	} else if len(_opt) == 2 {
+		_context = _opt[0]
+		_status = _opt[1]
+	}
+	_resp := new(requestf.ResponsePacket)
+
+	err = _obj.s.Tars_invoke(ctx, 1, "reportSampleMsg", _os.ToBytes(), _status, _context, _resp)
+	if err != nil {
+		return ret, err
+	}
+
+	if len(_opt) == 1 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+	} else if len(_opt) == 2 {
+		for k, _ := range _context {
+			delete(_context, k)
+		}
+		for k, v := range _resp.Context {
+			_context[k] = v
+		}
+		for k, _ := range _status {
+			delete(_status, k)
+		}
+		for k, v := range _resp.Status {
+			_status[k] = v
+		}
+
+	}
 	_ = length
 	_ = have
 	_ = ty
@@ -245,29 +497,6 @@ func (_obj *StatF) SetServant(s m.Servant) {
 func (_obj *StatF) TarsSetTimeout(t int) {
 	_obj.s.TarsSetTimeout(t)
 }
-func setMap(l int, res *requestf.ResponsePacket, ctx map[string]string, sts map[string]string) {
-	if l == 1 {
-		for k := range ctx {
-			delete(ctx, k)
-		}
-		for k, v := range res.Context {
-			ctx[k] = v
-		}
-	} else if l == 2 {
-		for k := range ctx {
-			delete(ctx, k)
-		}
-		for k, v := range res.Context {
-			ctx[k] = v
-		}
-		for k := range sts {
-			delete(sts, k)
-		}
-		for k, v := range res.Status {
-			sts[k] = v
-		}
-	}
-}
 
 type _impStatF interface {
 	ReportMicMsg(Msg map[StatMicMsgHead]StatMicMsgBody, BFromClient bool) (ret int32, err error)
@@ -278,149 +507,133 @@ type _impStatFWithContext interface {
 	ReportSampleMsg(ctx context.Context, Msg []StatSampleMsg) (ret int32, err error)
 }
 
-func reportMicMsg(ctx context.Context, _val interface{}, _os *codec.Buffer, _is *codec.Reader, withContext bool) (err error) {
-	var length int32
-	var have bool
-	var ty byte
-	var Msg map[StatMicMsgHead]StatMicMsgBody
-	err, have = _is.SkipTo(codec.MAP, 1, true)
-	if err != nil {
-		return err
-	}
-
-	err = _is.Read_int32(&length, 0, true)
-	if err != nil {
-		return err
-	}
-	Msg = make(map[StatMicMsgHead]StatMicMsgBody)
-	for i2, e2 := int32(0), length; i2 < e2; i2++ {
-		var k2 StatMicMsgHead
-		var v2 StatMicMsgBody
-
-		err = k2.ReadBlock(_is, 0, false)
-		if err != nil {
-			return err
-		}
-
-		err = v2.ReadBlock(_is, 1, false)
-		if err != nil {
-			return err
-		}
-
-		Msg[k2] = v2
-	}
-	var BFromClient bool
-	err = _is.Read_bool(&BFromClient, 2, true)
-	if err != nil {
-		return err
-	}
-	if withContext == false {
-		_imp := _val.(_impStatF)
-		ret, err := _imp.ReportMicMsg(Msg, BFromClient)
-		if err != nil {
-			return err
-		}
-
-		err = _os.Write_int32(ret, 0)
-		if err != nil {
-			return err
-		}
-	} else {
-		_imp := _val.(_impStatFWithContext)
-		ret, err := _imp.ReportMicMsg(ctx, Msg, BFromClient)
-		if err != nil {
-			return err
-		}
-
-		err = _os.Write_int32(ret, 0)
-		if err != nil {
-			return err
-		}
-	}
-
-	_ = length
-	_ = have
-	_ = ty
-	return nil
-}
-func reportSampleMsg(ctx context.Context, _val interface{}, _os *codec.Buffer, _is *codec.Reader, withContext bool) (err error) {
-	var length int32
-	var have bool
-	var ty byte
-	var Msg []StatSampleMsg
-	err, _, ty = _is.SkipToNoCheck(1, true)
-	if err != nil {
-		return err
-	}
-
-	if ty == codec.LIST {
-		err = _is.Read_int32(&length, 0, true)
-		if err != nil {
-			return err
-		}
-		Msg = make([]StatSampleMsg, length, length)
-		for i3, e3 := int32(0), length; i3 < e3; i3++ {
-
-			err = Msg[i3].ReadBlock(_is, 0, false)
-			if err != nil {
-				return err
-			}
-		}
-	} else if ty == codec.SIMPLE_LIST {
-		err = fmt.Errorf("not support simple_list type")
-		if err != nil {
-			return err
-		}
-	} else {
-		err = fmt.Errorf("require vector, but not")
-		if err != nil {
-			return err
-		}
-	}
-	if withContext == false {
-		_imp := _val.(_impStatF)
-		ret, err := _imp.ReportSampleMsg(Msg)
-		if err != nil {
-			return err
-		}
-
-		err = _os.Write_int32(ret, 0)
-		if err != nil {
-			return err
-		}
-	} else {
-		_imp := _val.(_impStatFWithContext)
-		ret, err := _imp.ReportSampleMsg(ctx, Msg)
-		if err != nil {
-			return err
-		}
-
-		err = _os.Write_int32(ret, 0)
-		if err != nil {
-			return err
-		}
-	}
-
-	_ = length
-	_ = have
-	_ = ty
-	return nil
-}
-
 //Dispatch is used to call the server side implemnet for the method defined in the tars file. withContext shows using context or not.
 func (_obj *StatF) Dispatch(ctx context.Context, _val interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error) {
+	var length int32
+	var have bool
+	var ty byte
 	_is := codec.NewReader(tools.Int8ToByte(req.SBuffer))
 	_os := codec.NewBuffer()
 	switch req.SFuncName {
 	case "reportMicMsg":
-		err := reportMicMsg(ctx, _val, _os, _is, withContext)
+		var Msg map[StatMicMsgHead]StatMicMsgBody
+		err, have = _is.SkipTo(codec.MAP, 1, true)
 		if err != nil {
 			return err
 		}
-	case "reportSampleMsg":
-		err := reportSampleMsg(ctx, _val, _os, _is, withContext)
+
+		err = _is.Read_int32(&length, 0, true)
 		if err != nil {
 			return err
+		}
+
+		Msg = make(map[StatMicMsgHead]StatMicMsgBody)
+		for i3, e3 := int32(0), length; i3 < e3; i3++ {
+			var k3 StatMicMsgHead
+			var v3 StatMicMsgBody
+
+			err = k3.ReadBlock(_is, 0, false)
+			if err != nil {
+				return err
+			}
+
+			err = v3.ReadBlock(_is, 1, false)
+			if err != nil {
+				return err
+			}
+
+			Msg[k3] = v3
+		}
+		var BFromClient bool
+		err = _is.Read_bool(&BFromClient, 2, true)
+		if err != nil {
+			return err
+		}
+
+		if withContext == false {
+			_imp := _val.(_impStatF)
+			ret, err := _imp.ReportMicMsg(Msg, BFromClient)
+			if err != nil {
+				return err
+			}
+
+			err = _os.Write_int32(ret, 0)
+			if err != nil {
+				return err
+			}
+
+		} else {
+			_imp := _val.(_impStatFWithContext)
+			ret, err := _imp.ReportMicMsg(ctx, Msg, BFromClient)
+			if err != nil {
+				return err
+			}
+
+			err = _os.Write_int32(ret, 0)
+			if err != nil {
+				return err
+			}
+
+		}
+	case "reportSampleMsg":
+		var Msg []StatSampleMsg
+		err, have, ty = _is.SkipToNoCheck(1, true)
+		if err != nil {
+			return err
+		}
+
+		if ty == codec.LIST {
+			err = _is.Read_int32(&length, 0, true)
+			if err != nil {
+				return err
+			}
+
+			Msg = make([]StatSampleMsg, length, length)
+			for i4, e4 := int32(0), length; i4 < e4; i4++ {
+
+				err = Msg[i4].ReadBlock(_is, 0, false)
+				if err != nil {
+					return err
+				}
+
+			}
+		} else if ty == codec.SIMPLE_LIST {
+			err = fmt.Errorf("not support simple_list type")
+			if err != nil {
+				return err
+			}
+
+		} else {
+			err = fmt.Errorf("require vector, but not")
+			if err != nil {
+				return err
+			}
+
+		}
+		if withContext == false {
+			_imp := _val.(_impStatF)
+			ret, err := _imp.ReportSampleMsg(Msg)
+			if err != nil {
+				return err
+			}
+
+			err = _os.Write_int32(ret, 0)
+			if err != nil {
+				return err
+			}
+
+		} else {
+			_imp := _val.(_impStatFWithContext)
+			ret, err := _imp.ReportSampleMsg(ctx, Msg)
+			if err != nil {
+				return err
+			}
+
+			err = _os.Write_int32(ret, 0)
+			if err != nil {
+				return err
+			}
+
 		}
 
 	default:
@@ -437,7 +650,7 @@ func (_obj *StatF) Dispatch(ctx context.Context, _val interface{}, req *requestf
 		_context = c
 	}
 	*resp = requestf.ResponsePacket{
-		IVersion:     1,
+		IVersion:     req.IVersion,
 		CPacketType:  0,
 		IRequestId:   req.IRequestId,
 		IMessageType: 0,
@@ -447,5 +660,8 @@ func (_obj *StatF) Dispatch(ctx context.Context, _val interface{}, req *requestf
 		SResultDesc:  "",
 		Context:      _context,
 	}
+	_ = length
+	_ = have
+	_ = ty
 	return nil
 }

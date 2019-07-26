@@ -14,7 +14,7 @@ type NotifyInfo struct {
 	NotifyItems []NotifyItem `json:"notifyItems"`
 }
 
-func (st *NotifyInfo) resetDefault() {
+func (st *NotifyInfo) ResetDefault() {
 }
 
 //ReadFrom reads  from _is and put into struct.
@@ -23,14 +23,14 @@ func (st *NotifyInfo) ReadFrom(_is *codec.Reader) error {
 	var length int32
 	var have bool
 	var ty byte
-	st.resetDefault()
+	st.ResetDefault()
 
 	err = _is.Read_int32(&st.Nextpage, 1, true)
 	if err != nil {
 		return err
 	}
 
-	err, _, ty = _is.SkipToNoCheck(2, true)
+	err, have, ty = _is.SkipToNoCheck(2, true)
 	if err != nil {
 		return err
 	}
@@ -40,6 +40,7 @@ func (st *NotifyInfo) ReadFrom(_is *codec.Reader) error {
 		if err != nil {
 			return err
 		}
+
 		st.NotifyItems = make([]NotifyItem, length, length)
 		for i0, e0 := int32(0), length; i0 < e0; i0++ {
 
@@ -47,17 +48,20 @@ func (st *NotifyInfo) ReadFrom(_is *codec.Reader) error {
 			if err != nil {
 				return err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return err
 		}
+
 	}
 
 	_ = length
@@ -70,7 +74,7 @@ func (st *NotifyInfo) ReadFrom(_is *codec.Reader) error {
 func (st *NotifyInfo) ReadBlock(_is *codec.Reader, tag byte, require bool) error {
 	var err error
 	var have bool
-	st.resetDefault()
+	st.ResetDefault()
 
 	err, have = _is.SkipTo(codec.STRUCT_BEGIN, tag, require)
 	if err != nil {
@@ -107,16 +111,19 @@ func (st *NotifyInfo) WriteTo(_os *codec.Buffer) error {
 	if err != nil {
 		return err
 	}
+
 	err = _os.Write_int32(int32(len(st.NotifyItems)), 0)
 	if err != nil {
 		return err
 	}
+
 	for _, v := range st.NotifyItems {
 
 		err = v.WriteBlock(_os, 0)
 		if err != nil {
 			return err
 		}
+
 	}
 
 	return nil

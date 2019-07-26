@@ -20,7 +20,7 @@ type ReportInfo struct {
 	ELevel     NOTIFYLEVEL `json:"eLevel"`
 }
 
-func (st *ReportInfo) resetDefault() {
+func (st *ReportInfo) ResetDefault() {
 }
 
 //ReadFrom reads  from _is and put into struct.
@@ -29,7 +29,7 @@ func (st *ReportInfo) ReadFrom(_is *codec.Reader) error {
 	var length int32
 	var have bool
 	var ty byte
-	st.resetDefault()
+	st.ResetDefault()
 
 	err = _is.Read_int32((*int32)(&st.EType), 1, true)
 	if err != nil {
@@ -81,7 +81,7 @@ func (st *ReportInfo) ReadFrom(_is *codec.Reader) error {
 func (st *ReportInfo) ReadBlock(_is *codec.Reader, tag byte, require bool) error {
 	var err error
 	var have bool
-	st.resetDefault()
+	st.ResetDefault()
 
 	err, have = _is.SkipTo(codec.STRUCT_BEGIN, tag, require)
 	if err != nil {

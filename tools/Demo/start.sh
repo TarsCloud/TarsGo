@@ -1,4 +1,3 @@
 #!/bin/bash
-tars2go -outdir=. *.tars
-go build
+make
 ./_SERVER_ --config=_SERVER_.conf

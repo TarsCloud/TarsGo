@@ -56,6 +56,7 @@ const (
 	tkTString
 	tkTVector
 	tkTMap
+	tkTArray
 	tkDummyTypeEnd
 
 	tkName // variable name
@@ -108,6 +109,7 @@ var TokenMap = [...]string{
 	tkTString: "string",
 	tkTVector: "vector",
 	tkTMap:    "map",
+	tkTArray:  "array",
 
 	tkName: "<name>",
 	// value
@@ -313,17 +315,6 @@ func (ls *LexState) next() {
 		ls.current = EOS
 	}
 }
-func (ls *LexState) llexDefault() (TK, *SemInfo) {
-	switch {
-	case isNumber(ls.current):
-		return ls.readNumber()
-	case isLetter(ls.current):
-		return ls.readIdent()
-	default:
-		ls.lexErr("unrecognized characters, " + string(ls.current))
-		return '0', nil
-	}
-}
 
 // Do lexical analysis.
 func (ls *LexState) llex() (TK, *SemInfo) {
@@ -386,8 +377,14 @@ func (ls *LexState) llex() (TK, *SemInfo) {
 		case '#':
 			return ls.readSharp()
 		default:
-			return ls.llexDefault()
-
+			switch {
+			case isNumber(ls.current):
+				return ls.readNumber()
+			case isLetter(ls.current):
+				return ls.readIdent()
+			default:
+				ls.lexErr("unrecognized characters, " + string(ls.current))
+			}
 		}
 	}
 }

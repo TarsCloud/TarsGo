@@ -13,7 +13,7 @@ type StatPropMsgBody struct {
 	VInfo []StatPropInfo `json:"vInfo"`
 }
 
-func (st *StatPropMsgBody) resetDefault() {
+func (st *StatPropMsgBody) ResetDefault() {
 }
 
 //ReadFrom reads  from _is and put into struct.
@@ -22,9 +22,9 @@ func (st *StatPropMsgBody) ReadFrom(_is *codec.Reader) error {
 	var length int32
 	var have bool
 	var ty byte
-	st.resetDefault()
+	st.ResetDefault()
 
-	err, _, ty = _is.SkipToNoCheck(0, true)
+	err, have, ty = _is.SkipToNoCheck(0, true)
 	if err != nil {
 		return err
 	}
@@ -34,6 +34,7 @@ func (st *StatPropMsgBody) ReadFrom(_is *codec.Reader) error {
 		if err != nil {
 			return err
 		}
+
 		st.VInfo = make([]StatPropInfo, length, length)
 		for i0, e0 := int32(0), length; i0 < e0; i0++ {
 
@@ -41,17 +42,20 @@ func (st *StatPropMsgBody) ReadFrom(_is *codec.Reader) error {
 			if err != nil {
 				return err
 			}
+
 		}
 	} else if ty == codec.SIMPLE_LIST {
 		err = fmt.Errorf("not support simple_list type")
 		if err != nil {
 			return err
 		}
+
 	} else {
 		err = fmt.Errorf("require vector, but not")
 		if err != nil {
 			return err
 		}
+
 	}
 
 	_ = length
@@ -64,7 +68,7 @@ func (st *StatPropMsgBody) ReadFrom(_is *codec.Reader) error {
 func (st *StatPropMsgBody) ReadBlock(_is *codec.Reader, tag byte, require bool) error {
 	var err error
 	var have bool
-	st.resetDefault()
+	st.ResetDefault()
 
 	err, have = _is.SkipTo(codec.STRUCT_BEGIN, tag, require)
 	if err != nil {
@@ -96,16 +100,19 @@ func (st *StatPropMsgBody) WriteTo(_os *codec.Buffer) error {
 	if err != nil {
 		return err
 	}
+
 	err = _os.Write_int32(int32(len(st.VInfo)), 0)
 	if err != nil {
 		return err
 	}
+
 	for _, v := range st.VInfo {
 
 		err = v.WriteBlock(_os, 0)
 		if err != nil {
 			return err
 		}
+
 	}
 
 	return nil

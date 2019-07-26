@@ -13,7 +13,7 @@ type ProxyInfo struct {
 	BFromClient bool `json:"bFromClient"`
 }
 
-func (st *ProxyInfo) resetDefault() {
+func (st *ProxyInfo) ResetDefault() {
 }
 
 //ReadFrom reads  from _is and put into struct.
@@ -22,7 +22,7 @@ func (st *ProxyInfo) ReadFrom(_is *codec.Reader) error {
 	var length int32
 	var have bool
 	var ty byte
-	st.resetDefault()
+	st.ResetDefault()
 
 	err = _is.Read_bool(&st.BFromClient, 0, true)
 	if err != nil {
@@ -39,7 +39,7 @@ func (st *ProxyInfo) ReadFrom(_is *codec.Reader) error {
 func (st *ProxyInfo) ReadBlock(_is *codec.Reader, tag byte, require bool) error {
 	var err error
 	var have bool
-	st.resetDefault()
+	st.ResetDefault()
 
 	err, have = _is.SkipTo(codec.STRUCT_BEGIN, tag, require)
 	if err != nil {
