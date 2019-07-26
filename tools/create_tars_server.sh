@@ -33,7 +33,8 @@ then
 fi
 echo "[create server: $APP.$SERVER ...]"
 
-SRC_DIR=$(cd $(dirname $0); pwd)
+# SRC_DIR=$(cd $(dirname $0); pwd)
+SRC_DIR=$GOPATH/src/github.com/tars-go/tars/tools
 DEMODIR=$SRC_DIR/Demo
 DEBUGDIR=$SRC_DIR/debugtool
 cd $DEMODIR || exit 1
@@ -58,8 +59,7 @@ then
 
     for RENAMEFILE in `find . -maxdepth 1 -type f`
     do
-        # $SERVER cant contain "Servant" string
-        NEWFILE=`echo $RENAMEFILE | sed "s/Server/$SERVER/" | sed "s/Servant/$SERVANT/"`
+        NEWFILE=`echo $RENAMEFILE | sed "s/Server/$SERVER/" | sed "s/Servant/$SERVANT/"` # $SERVER 不能包含 “Servant” 字符串
         mv $RENAMEFILE $NEWFILE
 
         # or use `rename`，default not install rename, you should execute ``` brew install rename ```
@@ -83,10 +83,8 @@ else
 fi
 
 # try build tars2go
-# cd "$GOPATH/src/tars/tools/tars2go"
-# go install
 go install github.com/tars-go/tars/tools/tars2go
-cd "$GOPATH/src/$APP/$SERVER"
+cd ${TARGET}
 echo ">>> Great！Done! You can jump in "`pwd`
 
 # show tips: how to convert tars to golang

@@ -13,7 +13,7 @@ TARS2GO     := $(firstword $(subst :, , $(shell go env GOPATH)))/bin/tars2go
 J2GO_FLAG   := -outdir=. ${J2GO_FLAG} 
 #-------------------------------------------------------------------------------
 
-TARS_SRC     := $(wildcard *.tars)
+TARS_SRC    := $(wildcard *.tars)
 GO_SRC      := $(wildcard *.go)
 
 #----------------------------------------------------------------------------------
