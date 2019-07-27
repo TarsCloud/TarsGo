@@ -51,7 +51,7 @@ if [ `uname` == "Darwin" ] # support macOS
 then
     for FILE in $SRC_FILE client/client.go
     do
-        echo ">>>Now doing:"$FILE" >>>>"
+        echo ">>> Now doing: $FILE >>>>"
         sed  -i "" "s/_APP_/$APP/g"   $FILE
         sed  -i "" "s/_SERVER_/$SERVER/g" $FILE
         sed  -i "" "s/_SERVANT_/$SERVANT/g" $FILE
@@ -69,7 +69,7 @@ then
 else
     for FILE in $SRC_FILE client/client.go debugtool/dumpstack.go
     do
-        echo ">>>Now doing:"$FILE" >>>>"
+        echo ">>> Now doing: $FILE >>>>"
         sed  -i "s/_APP_/$APP/g"   $FILE
         sed  -i "s/_SERVER_/$SERVER/g" $FILE
         sed  -i "s/_SERVANT_/$SERVANT/g" $FILE
