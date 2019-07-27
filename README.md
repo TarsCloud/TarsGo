@@ -1,4 +1,4 @@
-# TarsGo  Document  [![Build Status](https://travis-ci.com/tars-go/tars.svg?branch=master)](https://travis-ci.com/tars-go/tars) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/3bd09f9e132348fe99329decfa4a4a0e)](https://app.codacy.com/app/tars-go/tars?utm_source=github.com&utm_medium=referral&utm_content=tars-go/tars&utm_campaign=Badge_Grade_Settings)
+# TarsGo Document [![Build Status](https://travis-ci.com/tars-go/tars.svg?branch=master)](https://travis-ci.com/tars-go/tars) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/3bd09f9e132348fe99329decfa4a4a0e)](https://app.codacy.com/app/tars-go/tars?utm_source=github.com&utm_medium=referral&utm_content=tars-go/tars&utm_campaign=Badge_Grade_Settings)
 
 * [版本特性Wiki](https://github.com/tars-go/TarsGo/wiki)
 * [点我查看中文版](README.zh.md)
