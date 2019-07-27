@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/TarsCloud/TarsGo/tars"
+	"tars"
 
-	"StressTest"
+	"ContextTestServer/StressTest"
 	"log"
 	"net/http"
 	_ "net/http/pprof"

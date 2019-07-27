@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/TarsCloud/TarsGo/tars"
+	"tars"
 
-	"StressTest"
+	"ContextTestServer/StressTest"
 )
 
 func main() {
