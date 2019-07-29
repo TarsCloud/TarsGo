@@ -1,7 +1,6 @@
 package rogger
 
 import (
-	"tars/util/logger"
 	"testing"
 	"time"
 )
@@ -50,6 +49,7 @@ func BenchmarkRogger(b *testing.B) {
 	FlushLogger()
 }
 
+/*
 //BenchmarkOldLogger benchmark old rogger writes.
 func BenchmarkOldLogger(b *testing.B) {
 	bs := make([]byte, 1024)
@@ -65,3 +65,4 @@ func BenchmarkOldLogger(b *testing.B) {
 		lg.Error("ERROR")
 	}
 }
+*/
