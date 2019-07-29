@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/TarsCloud/TarsGo/tars"
+	"tars"
 
-	"StressTest"
+	"EchoTestServer/StressTest"
 )
 
 func main() {
