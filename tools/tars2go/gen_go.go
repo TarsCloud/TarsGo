@@ -1143,20 +1143,20 @@ _resp := new(requestf.ResponsePacket)
 
 	c.WriteString(`
 if len(_opt) == 1{
-	for k, _ := range(_context){
+	for k := range(_context){
 		delete(_context, k)
 	}
 	for k, v := range(_resp.Context){
 		_context[k] = v
 	}
 }else if len(_opt) == 2 {
-	for k, _ := range(_context){
+	for k := range(_context){
 		delete(_context, k)
 	}
 	for k, v := range(_resp.Context){
 		_context[k] = v
 	}
-	for k, _ := range(_status){
+	for k := range(_status){
 		delete(_status, k)
 	}
 	for k, v := range(_resp.Status){

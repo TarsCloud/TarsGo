@@ -30,7 +30,7 @@ const (
 	SIMPLE_LIST
 )
 
-var typeToStr []string = []string{
+var typeToStr = []string{
 	"Byte",
 	"Short",
 	"Int",
@@ -446,7 +446,7 @@ func (b *Reader) skipField(ty byte) error {
 	case ZERO_TAG:
 		break
 	default:
-		return fmt.Errorf("invalid type.")
+		return fmt.Errorf("invalid type")
 	}
 	return nil
 }
@@ -508,7 +508,7 @@ func (b *Reader) SkipTo(ty, tag byte, require bool) (error, bool) {
 		return err, false
 	}
 	if have && ty != tyCur {
-		return fmt.Errorf("type not match, need %d, bug %d.", ty, tyCur), false
+		return fmt.Errorf("type not match, need %d, bug %d", ty, tyCur), false
 	}
 	return nil, have
 }
@@ -760,7 +760,7 @@ func (b *Reader) Read_string(data *string, tag byte, require bool) error {
 		buff := b.Next(int(len))
 		*data = string(buff)
 	} else {
-		return fmt.Errorf("need string, tag:%d, but type is %s.", tag, typeToStr[ty])
+		return fmt.Errorf("need string, tag:%d, but type is %s", tag, typeToStr[ty])
 	}
 	return nil
 }
