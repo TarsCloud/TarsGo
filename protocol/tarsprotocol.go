@@ -10,7 +10,6 @@ package protocol
 import (
 	"bytes"
 	"encoding/binary"
-
 	"tars/protocol/codec"
 	"tars/protocol/res/requestf"
 )

@@ -30,6 +30,23 @@ const (
 	SIMPLE_LIST
 )
 
+var typeToStr []string = []string{
+	"Byte",
+	"Short",
+	"Int",
+	"Long",
+	"Float",
+	"Double",
+	"String1",
+	"String4",
+	"Map",
+	"List",
+	"StructBegin",
+	"StructEnd",
+	"ZeroTag",
+	"SimpleList",
+}
+
 //Buffer is wrapper of bytes.Buffer
 type Buffer struct {
 	buf *bytes.Buffer
@@ -263,7 +280,7 @@ func (b *Buffer) Write_float64(data float64, tag byte) error {
 		return err
 	}
 
-	bWriteU64(b.buf, math.Float64bits(data))
+	err = bWriteU64(b.buf, math.Float64bits(data))
 	return err
 }
 
@@ -340,55 +357,6 @@ func (b *Reader) Skip(n int) {
 	b.buf.Seek(int64(n), io.SeekCurrent)
 }
 
-func (b *Reader) skipFieldMap() error {
-	var len int32
-	err := b.Read_int32(&len, 0, true)
-	if err != nil {
-		return err
-	}
-
-	for i := int32(0); i < len*2; i++ {
-		tyCur, _, err := b.readHead()
-		if err != nil {
-			return err
-		}
-		b.skipField(tyCur)
-	}
-	return nil
-}
-func (b *Reader) skipFieldList() error {
-	var len int32
-	err := b.Read_int32(&len, 0, true)
-	if err != nil {
-		return err
-	}
-	for i := int32(0); i < len; i++ {
-		tyCur, _, err := b.readHead()
-		if err != nil {
-			return err
-		}
-		b.skipField(tyCur)
-	}
-	return nil
-}
-func (b *Reader) skipFieldSimpleList() error {
-	tyCur, _, err := b.readHead()
-	if tyCur != BYTE {
-		return fmt.Errorf("simple list need byte head. but get %d", tyCur)
-	}
-	if err != nil {
-		return err
-	}
-	var len int32
-	err = b.Read_int32(&len, 0, true)
-	if err != nil {
-		return err
-	}
-
-	b.Skip(int(len))
-	return nil
-}
-
 func (b *Reader) skipField(ty byte) error {
 	switch ty {
 	case BYTE:
@@ -426,22 +394,46 @@ func (b *Reader) skipField(ty byte) error {
 		b.Skip(int(l))
 		break
 	case MAP:
-		err := b.skipFieldMap()
+		var len int32
+		err := b.Read_int32(&len, 0, true)
 		if err != nil {
 			return err
+		}
+
+		for i := int32(0); i < len*2; i++ {
+			tyCur, _, err := b.readHead()
+			if err != nil {
+				return err
+			}
+			b.skipField(tyCur)
 		}
 		break
 	case LIST:
-		err := b.skipFieldList()
+		var len int32
+		err := b.Read_int32(&len, 0, true)
 		if err != nil {
 			return err
+		}
+		for i := int32(0); i < len; i++ {
+			tyCur, _, err := b.readHead()
+			if err != nil {
+				return err
+			}
+			b.skipField(tyCur)
 		}
 		break
 	case SIMPLE_LIST:
-		err := b.skipFieldSimpleList()
+		tyCur, _, err := b.readHead()
+		if tyCur != BYTE {
+			return fmt.Errorf("simple list need byte head. but get %d", tyCur)
+		}
+		var len int32
+		err = b.Read_int32(&len, 0, true)
 		if err != nil {
 			return err
 		}
+
+		b.Skip(int(len))
 		break
 	case STRUCT_BEGIN:
 		err := b.SkipToStructEnd()
@@ -454,7 +446,7 @@ func (b *Reader) skipField(ty byte) error {
 	case ZERO_TAG:
 		break
 	default:
-		return fmt.Errorf("invalid type")
+		return fmt.Errorf("invalid type.")
 	}
 	return nil
 }
@@ -516,7 +508,7 @@ func (b *Reader) SkipTo(ty, tag byte, require bool) (error, bool) {
 		return err, false
 	}
 	if have && ty != tyCur {
-		return fmt.Errorf("type not match, need %d, bug %d", ty, tyCur), false
+		return fmt.Errorf("type not match, need %d, bug %d.", ty, tyCur), false
 	}
 	return nil, have
 }
@@ -525,6 +517,9 @@ func (b *Reader) SkipTo(ty, tag byte, require bool) (error, bool) {
 func (b *Reader) Read_slice_int8(data *[]int8, len int32, require bool) error {
 	*data = make([]int8, len)
 	_, err := b.buf.Read(*(*[]uint8)(unsafe.Pointer(data)))
+	if err != nil {
+		err = fmt.Errorf("Read_slice_int8 error:%v", err)
+	}
 	return err
 }
 
@@ -532,6 +527,9 @@ func (b *Reader) Read_slice_int8(data *[]int8, len int32, require bool) error {
 func (b *Reader) Read_slice_uint8(data *[]uint8, len int32, require bool) error {
 	*data = make([]uint8, len)
 	_, err := b.buf.Read(*data)
+	if err != nil {
+		err = fmt.Errorf("Read_slice_uint8 error:%v", err)
+	}
 	return err
 }
 
@@ -551,6 +549,11 @@ func (b *Reader) Read_int8(data *int8, tag byte, require bool) error {
 		var tmp uint8
 		err = bReadU8(b.buf, &tmp)
 		*data = int8(tmp)
+	default:
+		return fmt.Errorf("read 'int8' type mismatch, tag:%d, get type:%s", tag, typeToStr[ty])
+	}
+	if err != nil {
+		err = fmt.Errorf("Read_int8 tag:%d error:%v", tag, err)
 	}
 	return err
 }
@@ -598,6 +601,11 @@ func (b *Reader) Read_int16(data *int16, tag byte, require bool) error {
 		var tmp uint16
 		err = bReadU16(b.buf, &tmp)
 		*data = int16(tmp)
+	default:
+		return fmt.Errorf("read 'int16' type mismatch, tag:%d, get type:%s", tag, typeToStr[ty])
+	}
+	if err != nil {
+		err = fmt.Errorf("Read_int16 tag:%d error:%v", tag, err)
 	}
 	return err
 }
@@ -634,6 +642,11 @@ func (b *Reader) Read_int32(data *int32, tag byte, require bool) error {
 		var tmp uint32
 		err = bReadU32(b.buf, &tmp)
 		*data = int32(tmp)
+	default:
+		return fmt.Errorf("read 'int32' type mismatch, tag:%d, get type:%s", tag, typeToStr[ty])
+	}
+	if err != nil {
+		err = fmt.Errorf("Read_int32 tag:%d error:%v", tag, err)
 	}
 	return err
 }
@@ -674,6 +687,11 @@ func (b *Reader) Read_int64(data *int64, tag byte, require bool) error {
 		var tmp uint64
 		err = bReadU64(b.buf, &tmp)
 		*data = int64(tmp)
+	default:
+		return fmt.Errorf("read 'int64' type mismatch, tag:%d, get type:%s", tag, typeToStr[ty])
+	}
+	if err != nil {
+		err = fmt.Errorf("Read_int64 tag:%d error:%v", tag, err)
 	}
 
 	return err
@@ -691,6 +709,9 @@ func (b *Reader) Read_float32(data *float32, tag byte, require bool) error {
 	var tmp uint32
 	err = bReadU32(b.buf, &tmp)
 	*data = math.Float32frombits(tmp)
+	if err != nil {
+		err = fmt.Errorf("Read_float32 tag:%d error:%v", tag, err)
+	}
 	return err
 }
 
@@ -706,6 +727,9 @@ func (b *Reader) Read_float64(data *float64, tag byte, require bool) error {
 	var tmp uint64
 	err = bReadU64(b.buf, &tmp)
 	*data = math.Float64frombits(tmp)
+	if err != nil {
+		err = fmt.Errorf("Read_float64 tag:%d error:%v", tag, err)
+	}
 	return err
 }
 
@@ -723,7 +747,7 @@ func (b *Reader) Read_string(data *string, tag byte, require bool) error {
 		var len uint32
 		err = bReadU32(b.buf, &len)
 		if err != nil {
-			return err
+			return fmt.Errorf("Read_string4 tag:%d error:%v", tag, err)
 		}
 		buff := b.Next(int(len))
 		*data = string(buff)
@@ -731,12 +755,12 @@ func (b *Reader) Read_string(data *string, tag byte, require bool) error {
 		var len uint8
 		err = bReadU8(b.buf, &len)
 		if err != nil {
-			return err
+			return fmt.Errorf("Read_string1 tag:%d error:%v", tag, err)
 		}
 		buff := b.Next(int(len))
 		*data = string(buff)
 	} else {
-		return fmt.Errorf("need string, but type is %d", ty)
+		return fmt.Errorf("need string, tag:%d, but type is %s.", tag, typeToStr[ty])
 	}
 	return nil
 }
