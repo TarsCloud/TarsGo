@@ -1,12 +1,12 @@
 package main
 
 import (
-	"StressTest"
+	"EchoClientServer/StressTest"
 
 	_ "net/http/pprof"
 
-	"github.com/TarsCloud/TarsGo/tars"
-	"github.com/TarsCloud/TarsGo/tars/util/rogger"
+	"tars"
+	"tars/util/rogger"
 )
 
 var app *StressTest.EchoTest
