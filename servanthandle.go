@@ -59,3 +59,17 @@ func AddHttpServant(mux *TarsHttpMux, obj string) {
 	s := &http.Server{Addr: cfg.Address, Handler: mux}
 	httpSvrs[obj] = s
 }
+
+// AddServantWithProtocol adds a servant with protocol and obj
+func AddServantWithProtocol(proto transport.TarsProtoCol, obj string) {
+	objRunList = append(objRunList, obj)
+	cfg, ok := tarsConfig[obj]
+	if !ok {
+		//ReportNotifyInfo(NOTIFY_ERROR, "servant obj name not found:"+obj)
+		TLOG.Debug("servant obj name not found ", obj)
+		panic(ok)
+	}
+	TLOG.Debug("add:", cfg)
+	s := transport.NewTarsServer(proto, cfg)
+	goSvrs[obj] = s
+}
