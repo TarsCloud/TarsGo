@@ -36,6 +36,11 @@ func (s *TarsProtocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 	defer checkPanic()
 	reqPackage := requestf.RequestPacket{}
 	rspPackage := requestf.ResponsePacket{}
+	if len(req) <= 4 {
+		TLOG.Error("len(req)=[%d]", len(req))
+		return nil
+	}
+	req = req[4:]
 	is := codec.NewReader(req)
 	reqPackage.ReadFrom(is)
 	TLOG.Debug("invoke:", reqPackage.IRequestId)

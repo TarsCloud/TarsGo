@@ -135,8 +135,8 @@ func (h *tcpHandler) recv(conn *net.TCPConn) {
 				break
 			}
 			if status == PACKAGE_FULL {
-				pkg := make([]byte, pkgLen-4)
-				copy(pkg, currBuffer[4:pkgLen])
+				pkg := make([]byte, pkgLen)
+				copy(pkg, currBuffer[:pkgLen])
 				currBuffer = currBuffer[pkgLen:]
 				h.handleConn(conn, pkg)
 				if len(currBuffer) > 0 {
