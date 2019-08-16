@@ -657,13 +657,16 @@ func (st *` + st.TName + `) ReadBlock(_is *codec.Reader, tag byte, require bool)
 	}
   if !have {
     if require {
-      return fmt.Errorf("require ` + st.TName + `, but not exist. tag %d", tag)    
-    } 
+      return fmt.Errorf("require ` + st.TName + `, but not exist. tag %d", tag)
+    }
       return nil
-    
+
   }
 
-  st.ReadFrom(_is)
+	err = st.ReadFrom(_is)
+	if err != nil {
+		return err
+	}
 
 	err = _is.SkipToStructEnd()
 	if err != nil {
@@ -1172,7 +1175,7 @@ _ = length
 _ = have
 _ = ty
 `)
-	c.WriteString(`return nil 
+	c.WriteString(`return nil
 	}`)
 	c.WriteString("\n")
 
