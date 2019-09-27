@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/model"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
@@ -19,6 +20,7 @@ type ServantProxy struct {
 	comm    *Communicator
 	obj     *ObjectProxy
 	timeout int
+	p       model.Protocol
 }
 
 //Init init the ServantProxy struct.
@@ -39,6 +41,10 @@ func (s *ServantProxy) Init(comm *Communicator, objName string) {
 //TarsSetTimeout sets the timeout for client calling the server , which is in ms.
 func (s *ServantProxy) TarsSetTimeout(t int) {
 	s.timeout = t
+}
+
+func (s *ServantProxy) TarsSetProtocol(p model.Protocol) {
+	s.p = p
 }
 
 //Tars_invoke is use for client inoking server.
