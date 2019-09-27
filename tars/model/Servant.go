@@ -18,3 +18,9 @@ type Servant interface {
 	TarsSetProtocol(Protocol)
 	TarsSetVersion(ver int16)
 }
+
+type Protocol interface {
+	RequestPack(*requestf.RequestPacket) ([]byte, error)
+	ResponseUnpack([]byte) (*requestf.ResponsePacket, error)
+	ParsePackage([]byte) (int, int)
+}
