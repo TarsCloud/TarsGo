@@ -15,4 +15,6 @@ type Servant interface {
 		context map[string]string,
 		Resp *requestf.ResponsePacket) error
 	TarsSetTimeout(t int)
+	TarsSetProtocol(Protocol)
+	TarsSetVersion(ver int16)
 }
