@@ -1,10 +1,7 @@
 package tars
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
-	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	"github.com/TarsCloud/TarsGo/tars/transport"
@@ -75,7 +72,7 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 	if ok {
 		ch := chIF.(chan *requestf.ResponsePacket)
 		TLOG.Debug("IN:", packet)
-		ch <- &packet
+		ch <- packet
 	} else {
 		TLOG.Error("timeout resp,drop it:", packet.IRequestId)
 	}
@@ -98,7 +95,7 @@ func (c *AdapterProxy) Send(req *requestf.RequestPacket) error {
 		TLOG.Debug("protocol wrong:", req.IRequestId)
 		return err
 	}
-	return c.tarsClient.Send(sbuf.Bytes())
+	return c.tarsClient.Send(sbuf)
 }
 
 // GetPoint : Get an endpoint
