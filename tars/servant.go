@@ -5,7 +5,6 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"tars/protocol"
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/model"
