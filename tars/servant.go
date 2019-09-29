@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"tars/protocol"
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/model"
@@ -20,7 +21,6 @@ type ServantProxy struct {
 	comm    *Communicator
 	obj     *ObjectProxy
 	timeout int
-	p       model.Protocol
 }
 
 //Init init the ServantProxy struct.
@@ -36,6 +36,7 @@ func (s *ServantProxy) Init(comm *Communicator, objName string) {
 	of.Init(comm)
 	s.timeout = s.comm.Client.AsyncInvokeTimeout
 	s.obj = of.GetObjectProxy(objName)
+	s.obj.proto = &protocol.TarsProtocol{}
 }
 
 //TarsSetTimeout sets the timeout for client calling the server , which is in ms.
@@ -44,7 +45,7 @@ func (s *ServantProxy) TarsSetTimeout(t int) {
 }
 
 func (s *ServantProxy) TarsSetProtocol(p model.Protocol) {
-	s.p = p
+	s.obj.proto = p
 }
 
 //Tars_invoke is use for client inoking server.

@@ -16,6 +16,7 @@ import (
 // AdapterProxy : Adapter proxy
 type AdapterProxy struct {
 	resp       sync.Map
+	obj        *ObjectProxy
 	point      *endpointf.EndpointF
 	tarsClient *transport.TarsClient
 	comm       *Communicator
@@ -50,7 +51,8 @@ func (c *AdapterProxy) New(point *endpointf.EndpointF, comm *Communicator) error
 
 // ParsePackage : Parse packet from bytes
 func (c *AdapterProxy) ParsePackage(buff []byte) (int, int) {
-	return TarsRequest(buff)
+	return c.obj.proto.ParsePackage(buff)
+	//return TarsRequest(buff)
 }
 
 // Recv : Recover read channel when closed for timeout
@@ -62,8 +64,9 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 			TLOG.Error("recv pkg painc:", err)
 		}
 	}()
-	packet := requestf.ResponsePacket{}
-	err := packet.ReadFrom(codec.NewReader(pkg))
+	//packet := requestf.ResponsePacket{}
+	//err := packet.ReadFrom(codec.NewReader(pkg))
+	packet, err := c.obj.proto.ResponseUnpack(pkg)
 	if err != nil {
 		TLOG.Error("decode packet error", err.Error())
 		return
@@ -82,14 +85,19 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 func (c *AdapterProxy) Send(req *requestf.RequestPacket) error {
 	TLOG.Debug("send req:", req.IRequestId)
 	c.sendAdd()
-	sbuf := bytes.NewBuffer(nil)
+	/*sbuf := bytes.NewBuffer(nil)
 	sbuf.Write(make([]byte, 4))
 	os := codec.NewBuffer()
 	req.WriteTo(os)
 	bs := os.ToBytes()
 	sbuf.Write(bs)
 	len := sbuf.Len()
-	binary.BigEndian.PutUint32(sbuf.Bytes(), uint32(len))
+	binary.BigEndian.PutUint32(sbuf.Bytes(), uint32(len))*/
+	sbuf, err := c.obj.proto.RequestPack(req)
+	if err != nil {
+		TLOG.Debug("protocol wrong:", req.IRequestId)
+		return err
+	}
 	return c.tarsClient.Send(sbuf.Bytes())
 }
 

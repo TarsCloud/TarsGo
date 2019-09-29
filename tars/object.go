@@ -18,6 +18,7 @@ type ObjectProxy struct {
 	manager  *EndpointManager
 	comm     *Communicator
 	queueLen int32
+	proto    model.Protocol
 }
 
 // Init proxy
@@ -37,6 +38,7 @@ func (obj *ObjectProxy) Invoke(ctx context.Context, msg *Message, timeout time.D
 		return errors.New("invoke queue is full:" + msg.Req.SServantName)
 	}
 	msg.Adp = adp
+	adp.obj = obj
 	atomic.AddInt32(&obj.queueLen, 1)
 	readCh := make(chan *requestf.ResponsePacket, 1)
 	adp.resp.Store(msg.Req.IRequestId, readCh)
