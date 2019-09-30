@@ -29,6 +29,18 @@ type StatFHelper struct {
 	lStatInfoFromServer *list.List
 }
 
+//NewStatFHelper constructs a new StatFHelper struct with instantiating mutex, list and other structs.
+func NewStatFHelper() *StatFHelper {
+	return &StatFHelper{
+		lStatInfo:           list.New(),
+		lStatInfoFromServer: list.New(),
+		mlock:               new(sync.Mutex),
+		mStatInfo:           make(map[statf.StatMicMsgHead]statf.StatMicMsgBody),
+		mStatCount:          make(map[statf.StatMicMsgHead]int),
+		sf:                  new(statf.StatF),
+	}
+}
+
 //Init init the StatFHelper.
 func (s *StatFHelper) Init(comm *Communicator, node string) {
 	s.node = node
@@ -118,7 +130,8 @@ func (s *StatFHelper) ReportMicMsg(stStatInfo StatInfo, fromServer bool) {
 }
 
 //StatReport is global.
-var StatReport *StatFHelper
+//StatReport needs to instance mutex and list so that it would avoid invalid memory address panic error.
+var StatReport = NewStatFHelper()
 var statInited = make(chan struct{}, 1)
 
 func initReport() {
