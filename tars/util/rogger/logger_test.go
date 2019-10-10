@@ -1,7 +1,6 @@
 package rogger
 
 import (
-	"github.com/TarsCloud/TarsGo/tars/util/logger"
 	"testing"
 	"time"
 )
@@ -48,20 +47,4 @@ func BenchmarkRogger(b *testing.B) {
 		lg.Error("ERROR")
 	}
 	FlushLogger()
-}
-
-//BenchmarkOldLogger benchmark old rogger writes.
-func BenchmarkOldLogger(b *testing.B) {
-	bs := make([]byte, 1024)
-	longmsg := string(bs)
-	lg := logger.GetLogger()
-	lg.SetLevel(logger.DEBUG)
-	lg.SetConsole(false)
-	lg.SetRollingFile("./logs", "oldlog", 10, 100, logger.MB)
-	for i := 0; i < b.N; i++ {
-		lg.Debug("debugxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-		lg.Info(longmsg)
-		lg.Warn("warn")
-		lg.Error("ERROR")
-	}
 }
