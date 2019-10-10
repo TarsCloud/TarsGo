@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/model"
-	"github.com/TarsCloud/TarsGo/tars/protocol"
+	"github.com/HyperLiar/TarsGo/tars/protocol"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
