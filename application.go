@@ -40,7 +40,9 @@ func init() {
 	shutdown = make(chan bool, 1)
 	adminMethods = make(map[string]adminFn)
 	rogger.SetLevel(rogger.ERROR)
-	Init()
+	// Remove flag.Parse() from init, due to https://github.com/golang/go/issues/31859
+	// Disable call Init() here
+	// Init()
 }
 
 //Init should run before GetServerConfig & GetClientConfig , or before run
