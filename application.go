@@ -32,7 +32,6 @@ var initOnce sync.Once
 type adminFn func(string) (string, error)
 
 var adminMethods map[string]adminFn
-var confPath = flag.String("config", "", "init config path")
 
 func init() {
 	tarsConfig = make(map[string]*transport.TarsServerConf)
@@ -51,8 +50,8 @@ func Init() {
 }
 
 func initConfig() {
-	// Remove flag.Parse() from init, due to https://github.com/golang/go/issues/31859
-	// flag.Parse()
+	confPath := flag.String("config", "", "init config path")
+	flag.Parse()
 	if len(*confPath) == 0 {
 		return
 	}
