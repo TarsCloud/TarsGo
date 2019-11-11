@@ -2,6 +2,7 @@ package tars
 
 import (
 	"tars/util/endpoint"
+	"time"
 )
 
 var svrCfg *serverConfig
@@ -58,4 +59,5 @@ type clientConfig struct {
 	refreshEndpointInterval int
 	reportInterval          int
 	AsyncInvokeTimeout      int
+	ClientDialTimeout       time.Duration
 }

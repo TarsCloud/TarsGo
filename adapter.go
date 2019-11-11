@@ -42,6 +42,7 @@ func (c *AdapterProxy) New(point *endpointf.EndpointF, comm *Communicator) error
 		IdleTimeout:  ClientIdleTimeout,
 		ReadTimeout:  ClientReadTimeout,
 		WriteTimeout: ClientWriteTimeout,
+		DialTimeout:  comm.Client.ClientDialTimeout,
 	}
 	c.tarsClient = transport.NewTarsClient(fmt.Sprintf("%s:%d", point.Host, point.Port), c, conf)
 	c.status = true

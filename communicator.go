@@ -1,8 +1,8 @@
 package tars
 
 import (
-	s "tars/model"
 	"sync"
+	s "tars/model"
 )
 
 // ProxyPrx interface
@@ -45,6 +45,7 @@ func (c *Communicator) init() {
 			refreshEndpointInterval,
 			reportInterval,
 			AsyncInvokeTimeout,
+			DialTimeout,
 		}
 	}
 	c.SetProperty("netthread", 2)

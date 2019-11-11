@@ -42,6 +42,9 @@ const (
 	ClientWriteTimeout time.Duration = time.Millisecond * 3000
 	//ReqDefaultTimeout request default timeout
 	ReqDefaultTimeout int32 = 3000
+
+	//DialTimeout connection dial timeout
+	DialTimeout = 3000
 	//ObjQueueMax obj queue max number
 	ObjQueueMax int32 = 10000
 

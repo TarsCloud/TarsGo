@@ -3,6 +3,7 @@ package tools
 import (
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 )
 
@@ -88,5 +89,11 @@ func ParseLogNum(strVal string) (ret uint64) {
 	if err != nil {
 		return defualtLogNum
 	}
+	return ret
+}
+
+// ParseTimeOut : Parse time.Duration from int
+func ParseTimeOut(timeout int) (ret time.Duration) {
+	ret = time.Duration(timeout) * time.Millisecond
 	return ret
 }

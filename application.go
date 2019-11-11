@@ -103,6 +103,7 @@ func initConfig() {
 	cltCfg.property = cMap["property"]
 	cltCfg.AsyncInvokeTimeout = c.GetInt("/tars/application/client<async-invoke-timeout>")
 	cltCfg.refreshEndpointInterval = c.GetInt("/tars/application/client<refresh-endpoint-interval>")
+	cltCfg.ClientDialTimeout = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/client<client-dial-timeout>", DialTimeout))
 	serList = c.GetDomain("/tars/application/server")
 
 	for _, adapter := range serList {

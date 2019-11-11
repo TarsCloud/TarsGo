@@ -22,6 +22,7 @@ type TarsClientConf struct {
 	IdleTimeout  time.Duration
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
+	DialTimeout  time.Duration
 }
 
 //TarsClient is struct for tars client.
@@ -42,9 +43,10 @@ type connection struct {
 	conn     net.Conn
 	connLock *sync.Mutex
 
-	isClosed  bool
-	idleTime  time.Time
-	invokeNum int32
+	isClosed    bool
+	idleTime    time.Time
+	invokeNum   int32
+	dialTimeout time.Duration
 }
 
 //NewTarsClient new tars client and init it .
@@ -54,7 +56,7 @@ func NewTarsClient(address string, cp TarsClientProtocol, conf *TarsClientConf) 
 	}
 	sendQueue := make(chan []byte, conf.QueueLen)
 	tc := &TarsClient{conf: conf, address: address, cp: cp, sendQueue: sendQueue}
-	tc.conn = &connection{tc: tc, isClosed: true, connLock: &sync.Mutex{}}
+	tc.conn = &connection{tc: tc, isClosed: true, connLock: &sync.Mutex{}, dialTimeout: conf.DialTimeout}
 	return tc
 }
 
@@ -167,7 +169,7 @@ func (c *connection) reConnect() (err error) {
 	c.connLock.Lock()
 	if c.isClosed {
 		TLOG.Debug("Connect:", c.tc.address)
-		c.conn, err = net.Dial(c.tc.conf.Proto, c.tc.address)
+		c.conn, err = net.DialTimeout(c.tc.conf.Proto, c.tc.address, c.dialTimeout)
 
 		if err != nil {
 			c.connLock.Unlock()
