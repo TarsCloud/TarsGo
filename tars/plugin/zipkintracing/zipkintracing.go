@@ -11,7 +11,7 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	oplog "github.com/opentracing/opentracing-go/log"
-	zipkin "github.com/openzipkin/zipkin-go-opentracing"
+	zipkin "github.com/openzipkin-contrib/zipkin-go-opentracing"
 )
 
 var logger = tars.GetLogger("tracing")
