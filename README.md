@@ -785,7 +785,7 @@ Client use context
     ret, err := app.AddWithContext(ctx, i, i*2, &out, c)
 
 ```
-Read full demo client and server under  examples/ContextTestServer
+Read full demo client and server under  _examples/ContextTestServer
 
 
 ### 13 filter & zipkin plugin 
