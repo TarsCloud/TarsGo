@@ -244,7 +244,7 @@ func Run() {
 		s := goSvrs[obj]
 		if s == nil {
 			TLOG.Debug("Obj not found", obj)
-			break
+			continue
 		}
 		TLOG.Debug("Run", obj, s.GetConfig())
 		go func(obj string) {
