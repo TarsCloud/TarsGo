@@ -201,6 +201,15 @@ func (e *EndpointManager) findAndSetObj(q *queryf.QueryF) {
 		TLOG.Error("find obj end fail:", err.Error())
 		return
 	}
+	if ret != 0 {
+		TLOG.Errorf("find obj fail [%v], ret [%v]", e.objName, ret)
+		return
+	}
+	if len(*activeEp) == 0 {
+		TLOG.Errorf("findAndSetObj [%v], empty of active endpoint", e.objName)
+		return
+	}
+
 	TLOG.Debug("find obj endpoint:", e.objName, ret, *activeEp, *inactiveEp)
 
 	e.mlock.Lock()
