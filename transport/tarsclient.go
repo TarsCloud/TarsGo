@@ -79,23 +79,28 @@ func (tc *TarsClient) Close() {
 	}
 }
 
-func (c *connection) send(conn net.Conn) {
+func (c *connection) send(conn net.Conn, connDone chan bool) {
 	var req []byte
 	t := time.NewTicker(time.Second)
 	defer t.Stop()
 	for {
 		select {
-		case req = <-c.tc.sendQueue: // Fetch jobs
-		case <-t.C:
-			if c.isClosed {
-				return
+		case <-connDone: // connection closed
+			return
+		default:
+			select {
+			case req = <-c.tc.sendQueue: // Fetch jobs
+			case <-t.C:
+				if c.isClosed {
+					return
+				}
+				// TODO: check one-way invoke for idle detect
+				if c.invokeNum == 0 && c.idleTime.Add(c.tc.conf.IdleTimeout).Before(time.Now()) {
+					c.close(conn)
+					return
+				}
+				continue
 			}
-			// TODO: check one-way invoke for idle detect
-			if c.invokeNum == 0 && c.idleTime.Add(c.tc.conf.IdleTimeout).Before(time.Now()) {
-				c.close(conn)
-				return
-			}
-			continue
 		}
 		atomic.AddInt32(&c.invokeNum, 1)
 		if c.tc.conf.WriteTimeout != 0 {
@@ -104,7 +109,8 @@ func (c *connection) send(conn net.Conn) {
 		c.idleTime = time.Now()
 		_, err := conn.Write(req)
 		if err != nil {
-			//TODO
+			//TODO add retry time
+			c.tc.sendQueue <- req
 			TLOG.Error("send request error:", err)
 			c.close(conn)
 			return
@@ -112,7 +118,10 @@ func (c *connection) send(conn net.Conn) {
 	}
 }
 
-func (c *connection) recv(conn net.Conn) {
+func (c *connection) recv(conn net.Conn, connDone chan bool) {
+	defer func() {
+		connDone <- true
+	}()
 	buffer := make([]byte, 1024*4)
 	var currBuffer []byte
 	var n int
@@ -128,14 +137,14 @@ func (c *connection) recv(conn net.Conn) {
 				continue // no data, not error
 			}
 			if _, ok := err.(*net.OpError); ok {
-				TLOG.Error("netOperror", conn.RemoteAddr())
+				TLOG.Error("net.OpError: ", conn.RemoteAddr())
 				c.close(conn)
 				return // connection is closed
 			}
 			if err == io.EOF {
-				TLOG.Debug("connection closed by remote:", conn.RemoteAddr())
+				TLOG.Debug("connection closed by remote: ", conn.RemoteAddr())
 			} else {
-				TLOG.Error("read package error:", err)
+				TLOG.Error("read package error: ", err)
 			}
 			c.close(conn)
 			return
@@ -182,8 +191,9 @@ func (c *connection) reConnect() (err error) {
 		}
 		c.idleTime = time.Now()
 		c.isClosed = false
-		go c.recv(c.conn)
-		go c.send(c.conn)
+		connDone := make(chan bool, 1)
+		go c.recv(c.conn, connDone)
+		go c.send(c.conn, connDone)
 	}
 	c.connLock.Unlock()
 	return nil
