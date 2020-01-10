@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/TarsCloud/TarsGo/tars/util/debug"
+	debugutil "github.com/TarsCloud/TarsGo/tars/util/debug"
 	logger "github.com/TarsCloud/TarsGo/tars/util/rogger"
 )
 

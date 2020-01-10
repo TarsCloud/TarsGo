@@ -1,8 +1,9 @@
 package tars
 
 import (
-	s "github.com/TarsCloud/TarsGo/tars/model"
 	"sync"
+
+	s "github.com/TarsCloud/TarsGo/tars/model"
 )
 
 // ProxyPrx interface
