@@ -18,12 +18,12 @@ type StatInfo struct {
 
 //StatFHelper is helper struct for stat reporting.
 type StatFHelper struct {
-	lStatInfo  *list.List
-	mStatInfo  map[statf.StatMicMsgHead]statf.StatMicMsgBody
-	mlock      *sync.Mutex
-	comm       *Communicator
-	sf         *statf.StatF
-	node       string
+	lStatInfo *list.List
+	mStatInfo map[statf.StatMicMsgHead]statf.StatMicMsgBody
+	mlock     *sync.Mutex
+	comm      *Communicator
+	sf        *statf.StatF
+	node      string
 
 	lStatInfoFromServer *list.List
 }

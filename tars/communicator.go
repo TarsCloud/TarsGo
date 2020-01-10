@@ -1,8 +1,9 @@
 package tars
 
 import (
-	s "github.com/TarsCloud/TarsGo/tars/model"
 	"sync"
+
+	s "github.com/TarsCloud/TarsGo/tars/model"
 )
 
 // ProxyPrx interface
@@ -17,7 +18,8 @@ func Dail(servant string) *ServantProxy {
 	return c.s.GetServantProxy(servant)
 }
 
-// NewCommunicator returns a new communicator. A Communicator is used for communicating with the server side which should only init once and be global!!!
+// NewCommunicator returns a new communicator. A Communicator is used for communicating with
+// the server side which should only init once and be global!!!
 func NewCommunicator() *Communicator {
 	c := new(Communicator)
 	c.init()
@@ -90,7 +92,8 @@ func (c *Communicator) SetProperty(key string, value interface{}) {
 	c.properties.Store(key, value)
 }
 
-// GetProperty returns communicator property value as string and true for key, or empty string and false for not exists key
+// GetProperty returns communicator property value as string and true for key, or empty string
+// and false for not exists key
 func (c *Communicator) GetProperty(key string) (string, bool) {
 	if v, ok := c.properties.Load(key); ok {
 		return v.(string), ok
@@ -98,7 +101,8 @@ func (c *Communicator) GetProperty(key string) (string, bool) {
 	return "", false
 }
 
-// GetPropertyInt returns communicator property value as int and true for key, or 0 and false for not exists key
+// GetPropertyInt returns communicator property value as int and true for key, or 0 and false
+// for not exists key
 func (c *Communicator) GetPropertyInt(key string) (int, bool) {
 	if v, ok := c.properties.Load(key); ok {
 		return v.(int), ok
