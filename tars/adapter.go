@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	"github.com/TarsCloud/TarsGo/tars/transport"
-	"sync"
-	"sync/atomic"
-	"time"
 )
 
 // AdapterProxy : Adapter proxy
