@@ -32,5 +32,3 @@
 package main
 
 import _ "github.com/TarsCloud/TarsGo/tars/tools/pb2tarsgo/protoc-gen-go/tarsrpc"
-
-func main() {}
