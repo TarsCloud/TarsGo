@@ -92,7 +92,9 @@ func ZipkinClientFilter() tars.ClientFilter {
 
 //ZipkinServerFilter gets tars server filter for zipkin opentraicng.
 func ZipkinServerFilter() tars.ServerFilter {
-	return func(ctx context.Context, d tars.Dispatch, f interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error) {
+	return func(ctx context.Context, d tars.Dispatch, f interface{},
+		req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error) {
+
 		pCtx, err := opentracing.GlobalTracer().Extract(opentracing.TextMap, opentracing.TextMapCarrier(req.Status))
 		if err != nil && err != opentracing.ErrSpanContextNotFound {
 			return err

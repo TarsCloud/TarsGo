@@ -1,3 +1,5 @@
+Tars整体介绍文档请阅读: https://tarscloud.gitbook.io/
+
 # Tarsgo  文档
 
 ## 关于
@@ -773,7 +775,7 @@ app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+".ContextTestObj")
     ret, err := app.AddWithContext(ctx, i, i*2, &out, c)
 
 ```
-服务端和客户端的完整例子，详见 TarGo/examples
+服务端和客户端的完整例子，详见 TarGo/_examples
 
 
 ### 13 filter机制（插件） 和 zipkin opentracing
@@ -850,4 +852,4 @@ func ZipkinClientFilter() tars.ClientFilter {
 服务端也会注册一个filter，主要功能就是从request包体的status 提取调用链的上下文，以这个作为父span，进行调用信息的记录。
 
 详细代码参见 TarsGo/tars/plugin/zipkintracing
-完整的zipkin tracing的客户端和服务端例子，详见 TarsGo/examples下面的ZipkinTraceClient和ZipkinTraceServer
+完整的zipkin tracing的客户端和服务端例子，详见 TarsGo/_examples下面的ZipkinTraceClient和ZipkinTraceServer
