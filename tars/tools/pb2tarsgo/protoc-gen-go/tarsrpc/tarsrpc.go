@@ -147,6 +147,14 @@ func (t *tarsrpc) generateService(file *generator.FileDescriptor, service *pb.Se
 		obj.s.TarsSetTimeout(t)
 	}
 	`, serviceName))
+
+	//generate TarsSetHashCode
+	t.P(fmt.Sprintf(`//TarsSetHashCode sets the hash code for client calling the server , which is for Message hash code.
+	func (obj *%s) TarsSetHashCode(code int64){
+        s := _obj.s.(*tars.ServantProxy)
+        s.TarsSetHashCode(code)
+	}
+	`, serviceName))
 	t.P()
 
 	//generate the interface
