@@ -816,6 +816,12 @@ func (_obj *` + itf.TName + `) TarsSetTimeout(t int) {
 	_obj.s.TarsSetTimeout(t)
 }
 `)
+	c.WriteString(`//TarsSetHashCode sets the hash code for client calling the server , which is for Message hash code.
+func (_obj *` + itf.TName + `) TarsSetHashCode(code int64) {
+        s := _obj.s.(*tars.ServantProxy)
+        s.TarsSetHashCode(code)
+}
+`)
 	c.WriteString(`func (_obj *` + itf.TName + `) setMap(l int, res *requestf.ResponsePacket,  ctx map[string]string, sts map[string]string) {
 		if l == 1{
 			for k, _ := range(ctx){
