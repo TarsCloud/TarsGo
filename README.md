@@ -23,8 +23,8 @@
 
 
 ## Install
-- For install OSS and other basic servers, see the [Installation](https://github.com/TarsCloud/Tars/blob/master/Install.md) document.
-For quick install OSS and other basic servers, see more about [Deploy](https://github.com/TarsCloud/Tars/tree/master/deploy)
+- For install OSS and other basic servers, see the [Installation](https://github.com/TarsCloud/TarsDocs_en/blob/master/begin/installation/step-by-step.md) document.
+For quick install OSS and other basic servers, see more about [Deploy](https://github.com/TarsCloud/TarsDocs_en/blob/master/begin/installation/automatic-script.md)
 - Requires Go 1.9.x or above (see https://golang.org/doc/install for help installing Go)
 - go get -u github.com/TarsCloud/TarsGo/tars
 
