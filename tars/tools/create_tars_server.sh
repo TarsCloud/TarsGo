@@ -33,7 +33,7 @@ fi
 echo "[create server: $APP.$SERVER ...]"
 
 SRC_DIR=$(cd $(dirname $0); pwd)
-DEMODIR=$SRC_DIR/Demo
+DEMODIR=$SRC_DIR/_demo
 DEBUGDIR=$SRC_DIR/debugtool
 cd $DEMODIR || exit 1
 SRC_FILE=`find . -maxdepth 1 -type f`
