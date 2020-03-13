@@ -41,7 +41,7 @@ func upperFirstLatter(s string) string {
 // 0. rename module
 func (p *Parse) rename() {
 	p.OriginModule = p.Module
-	p.Module = upperFirstLatter(p.Module)
+	//p.Module = upperFirstLatter(p.Module)
 }
 
 // 1. struct rename
