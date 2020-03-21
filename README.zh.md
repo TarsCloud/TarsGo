@@ -307,13 +307,13 @@ func main() {
     comm.StringToProxy(obj, app)
 	var req string="Hello Wold"
     var res string
-    ret, err := app.TestHello(req, &out)
+    ret, err := app.TestHello(req, &res)
     if err != nil {
         fmt.Println(err)
         return
     }   
-    fmt.Println(ret, out)
-
+    fmt.Println(ret, res)
+}
 ```
 
 说明:
