@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -21,6 +22,7 @@ const (
 
 var (
 	logLevel = DEBUG
+	colored  = false
 
 	logQueue  = make(chan *logValue, 10000)
 	loggerMap = make(map[string]*Logger)
@@ -89,6 +91,22 @@ func (lv *LogLevel) String() string {
 	}
 }
 
+//Colored enable colored level string when use console writer
+func (lv *LogLevel) coloredString() string {
+	switch *lv {
+	case DEBUG:
+		return "\x1b[34mDEBUG\x1b[0m" //blue
+	case INFO:
+		return "\x1b[32mINFO\x1b[0m" //green
+	case WARN:
+		return "\x1b[33mWARN\x1b[0m" // yellow
+	case ERROR:
+		return "\x1b[31mERROR\x1b[0m" //cred
+	default:
+		return "\x1b[37mUNKNOWN\x1b[0m" // white
+	}
+}
+
 // GetLogger return an logger instance
 func GetLogger(name string) *Logger {
 	if lg, ok := loggerMap[name]; ok {
@@ -105,6 +123,11 @@ func GetLogger(name string) *Logger {
 //SetLevel sets the log level
 func SetLevel(level LogLevel) {
 	logLevel = level
+}
+
+//Colored enable colored level string when use console writer
+func Colored() {
+	colored = true
 }
 
 //StringToLevel turns string to LogLevel
@@ -225,17 +248,20 @@ func (l *Logger) writef(level LogLevel, format string, v []interface{}) {
 	if l.writer.NeedPrefix() {
 		fmt.Fprintf(buf, "%s|", currDateTime)
 		if logLevel == DEBUG {
-			_, file, line, ok := runtime.Caller(2)
+			pc, file, line, ok := runtime.Caller(2)
 			if !ok {
 				file = "???"
 				line = 0
 			} else {
 				file = filepath.Base(file)
 			}
-			fmt.Fprintf(buf, "%s:%d|", file, line)
+			fmt.Fprintf(buf, "%s:%d (%s) |", file, line, getFuncName(runtime.FuncForPC(pc).Name()))
 		}
-		
-		buf.WriteString(level.String())
+		if colored && l.IsConsoleWriter() {
+			buf.WriteString(level.coloredString())
+		} else {
+			buf.WriteString(level.String())
+		}
 		buf.WriteByte('|')
 	}
 
@@ -248,6 +274,18 @@ func (l *Logger) writef(level LogLevel, format string, v []interface{}) {
 		buf.WriteByte('\n')
 	}
 	logQueue <- &logValue{value: buf.Bytes(), writer: l.writer}
+}
+
+func getFuncName(name string) string {
+	idx := strings.LastIndexByte(name, '/')
+	if idx != -1 {
+		name = name[idx:]
+		idx = strings.IndexByte(name, '.')
+		if idx != -1 {
+			name = strings.TrimPrefix(name[idx:], ".")
+		}
+	}
+	return name
 }
 
 //FlushLogger flushs all log to disk.
