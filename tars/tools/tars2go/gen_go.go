@@ -1175,6 +1175,8 @@ func (gen *GenGo) genIFDispatch(itf *InterfaceInfo) {
 
 	if param {
 		c.WriteString("_is := codec.NewReader(tools.Int8ToByte(req.SBuffer))")
+	} else {
+		c.WriteString("_is := codec.NewReader(nil)")
 	}
 	c.WriteString(`
 _os := codec.NewBuffer()
