@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # check params
 if [ $# -lt 3 ]
