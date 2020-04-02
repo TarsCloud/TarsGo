@@ -1,7 +1,6 @@
 package rogger
 
 import (
-	"tars/util/logger"
 	"testing"
 	"time"
 )
@@ -50,18 +49,24 @@ func BenchmarkRogger(b *testing.B) {
 	FlushLogger()
 }
 
-//BenchmarkOldLogger benchmark old rogger writes.
-func BenchmarkOldLogger(b *testing.B) {
+// TestColoredLogger test colored logger.
+func TestColoredLogger(t *testing.T) {
+	SetLevel(DEBUG)
+	Colored()
+	lg := GetLogger("debug")
 	bs := make([]byte, 1024)
 	longmsg := string(bs)
-	lg := logger.GetLogger()
-	lg.SetLevel(logger.DEBUG)
-	lg.SetConsole(false)
-	lg.SetRollingFile("./logs", "oldlog", 10, 100, logger.MB)
-	for i := 0; i < b.N; i++ {
+	for i := 0; i < 10; i++ {
 		lg.Debug("debugxxxxxxxxxxxxxxxxxxxxxxxxxxx")
 		lg.Info(longmsg)
 		lg.Warn("warn")
 		lg.Error("ERROR")
+		func() {
+			lg.Info("closure func  log")
+		}()
+		time.Sleep(time.Second)
 	}
+	time.Sleep(time.Millisecond * 100)
+
+	FlushLogger()
 }

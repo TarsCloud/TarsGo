@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/TarsCloud/TarsGo/tars/util/debug"
+	debugutil "github.com/TarsCloud/TarsGo/tars/util/debug"
 	logger "github.com/TarsCloud/TarsGo/tars/util/rogger"
 )
 
@@ -14,12 +14,7 @@ type Admin struct {
 
 //Shutdown shutdown all servant by admin
 func (a *Admin) Shutdown() error {
-	for obj, s := range goSvrs {
-		TLOG.Debug("shutdown", obj)
-		//TODO
-		go s.Shutdown()
-	}
-	shutdown <- true
+	go graceShutdown()
 	return nil
 }
 
@@ -58,6 +53,9 @@ func (a *Admin) Notify(command string) (string, error) {
 
 	case "tars.connection":
 		return fmt.Sprintf("%s not support now!", command), nil
+	case "tars.gracerestart":
+		graceRestart()
+		return "restart gracefully!", nil
 	default:
 		if fn, ok := adminMethods[cmd[0]]; ok {
 			return fn(command)
