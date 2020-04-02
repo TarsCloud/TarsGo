@@ -37,13 +37,14 @@ type RollFileWriter struct {
 
 //DateWriter rotate logs by date.
 type DateWriter struct {
-	logpath  string
-	name     string
-	dateType DateType
-	num      int
-	currDate string
-	currFile *os.File
-	openTime int64
+	logpath   string
+	name      string
+	dateType  DateType
+	num       int
+	currDate  string
+	currFile  *os.File
+	openTime  int64
+	hasPrefix bool
 }
 
 //HourWriter for rotate logs by hour
@@ -147,16 +148,21 @@ func (w *DateWriter) Write(v []byte) {
 
 //NeedPrefix shows whether needs prefix info for DateWriter or not.
 func (w *DateWriter) NeedPrefix() bool {
-	return true
+	return w.hasPrefix
+}
+
+func (w *DateWriter) SetPrefix(enable bool) {
+	w.hasPrefix = enable
 }
 
 //NewDateWriter returns a writer which keeps logs in hours or day format.
 func NewDateWriter(logpath, name string, dateType DateType, num int) *DateWriter {
 	w := &DateWriter{
-		logpath:  logpath,
-		name:     name,
-		num:      num,
-		dateType: dateType,
+		logpath:   logpath,
+		name:      name,
+		num:       num,
+		dateType:  dateType,
+		hasPrefix: true,
 	}
 	w.currDate = w.getCurrDate()
 	return w
