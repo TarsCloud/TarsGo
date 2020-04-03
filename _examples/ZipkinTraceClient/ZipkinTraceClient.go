@@ -29,7 +29,8 @@ func main() { //Init servant
 	tars.RegisterServerFilter(sf)
 	cfg := tars.GetServerConfig() //Get Config File Object
 	port := cfg.Adapters[cfg.App+"."+cfg.Server+".ZipkinClientObjAdapter"].Endpoint.Port
-	zipkintracing.Init("http://127.0.0.1:9411/api/v1/spans", true, true, true, strconv.Itoa(int(port)), cfg.App+"."+cfg.Server)
+	hostPort := cfg.Adapters[cfg.App+"."+cfg.Server+".ZipkinClientObjAdapter"].Endpoint.Host + ":" + strconv.Itoa(int(port))
+	zipkintracing.Init("http://127.0.0.1:9411/api/v2/spans", true, true, true, hostPort, cfg.App+"."+cfg.Server)
 	app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+".ZipkinClientObj") //Register Servant
 	tars.Run()
 }
