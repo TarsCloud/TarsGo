@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -24,14 +25,14 @@ var (
 	logLevel = DEBUG
 	colored  = false
 
-	logQueue  = make(chan *logValue, 10000)
-	loggerMap = make(map[string]*Logger)
-	writeDone = make(chan bool)
+	logQueue      = make(chan *logValue, 10000)
+	loggerMap     = make(map[string]*Logger)
+	writeDone     = make(chan bool)
 	loggermaplock = new(sync.Mutex)
-	currUnixTime int64
-	currDateTime string
-	currDateHour string
-	currDateDay  string
+	currUnixTime  int64
+	currDateTime  string
+	currDateHour  string
+	currDateDay   string
 )
 
 //Logger is the struct with name and wirter.

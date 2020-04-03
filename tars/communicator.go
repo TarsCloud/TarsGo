@@ -2,8 +2,8 @@ package tars
 
 import (
 	s "github.com/TarsCloud/TarsGo/tars/model"
-	"sync"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
+	"sync"
 )
 
 // ProxyPrx interface
@@ -46,14 +46,14 @@ func (c *Communicator) init() {
 			refreshEndpointInterval,
 			reportInterval,
 			AsyncInvokeTimeout,
-			ClientQueueLen,          
-			tools.ParseTimeOut(ClientIdleTimeout),       
-			tools.ParseTimeOut(ClientReadTimeout),	   
-			tools.ParseTimeOut(ClientWriteTimeout),    
-			ReqDefaultTimeout,       
-			ObjQueueMax , 
+			ClientQueueLen,
+			tools.ParseTimeOut(ClientIdleTimeout),
+			tools.ParseTimeOut(ClientReadTimeout),
+			tools.ParseTimeOut(ClientWriteTimeout),
+			ReqDefaultTimeout,
+			ObjQueueMax,
 			tools.ParseTimeOut(AdapterProxyTicker),
-			AdapterProxyResetCount, 
+			AdapterProxyResetCount,
 		}
 	}
 	c.SetProperty("isclient", true)
