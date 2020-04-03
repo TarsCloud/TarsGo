@@ -2,6 +2,7 @@ package transport
 
 import (
 	"context"
+	"net"
 	"sync/atomic"
 	"time"
 
@@ -26,12 +27,15 @@ type TarsProtoCol interface {
 	Invoke(ctx context.Context, pkg []byte) []byte
 	ParsePackage(buff []byte) (int, int)
 	InvokeTimeout(pkg []byte) []byte
+	GetCloseMsg() []byte
 }
 
 //ServerHandler  is interface with listen and handler method
 type ServerHandler interface {
 	Listen() error
 	Handle() error
+	OnShutdown()
+	CloseIdles(n int64) bool
 }
 
 //TarsServerConf server config for tars server side.
@@ -52,18 +56,21 @@ type TarsServerConf struct {
 
 //TarsServer tars server struct.
 type TarsServer struct {
+	Listener   net.Listener
 	svr        TarsProtoCol
 	conf       *TarsServerConf
+	handle     ServerHandler
 	lastInvoke time.Time
 	idleTime   time.Time
-	isClosed   bool
+	isClosed   int32
 	numInvoke  int32
+	numConn    int32
 }
 
 //NewTarsServer new TarsServer and init with conf.
 func NewTarsServer(svr TarsProtoCol, conf *TarsServerConf) *TarsServer {
 	ts := &TarsServer{svr: svr, conf: conf}
-	ts.isClosed = false
+	ts.isClosed = 0
 	ts.lastInvoke = time.Now()
 	return ts
 }
@@ -79,18 +86,39 @@ func (ts *TarsServer) getHandler() (sh ServerHandler) {
 	return
 }
 
-//Serve listen and handle
+//Serve accepts incoming connections
 func (ts *TarsServer) Serve() error {
-	h := ts.getHandler()
-	if err := h.Listen(); err != nil {
-		return err
+	if ts.handle == nil {
+		panic("handle is nil")
 	}
-	return h.Handle()
+	return ts.handle.Handle()
 }
 
-//Shutdown shutdown the server.
-func (ts *TarsServer) Shutdown() {
-	ts.isClosed = true
+//Listen listens on the network address
+func (ts *TarsServer) Listen() error {
+	ts.handle = ts.getHandler()
+	return ts.handle.Listen()
+}
+
+//Shutdown try to shutdown server gracefully.
+func (ts *TarsServer) Shutdown(ctx context.Context) error {
+	// step 1: close listeners, notify client reconnect
+	atomic.StoreInt32(&ts.isClosed, 1)
+	ts.handle.OnShutdown()
+	// step 2: wait and close idle connections
+	watchInterval := time.Millisecond * 500
+	tk := time.NewTicker(watchInterval)
+	defer tk.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-tk.C:
+			if ts.handle.CloseIdles(2) {
+				return nil
+			}
+		}
+	}
 }
 
 //GetConfig gets the tars server config.
@@ -106,7 +134,6 @@ func (ts *TarsServer) IsZombie(timeout time.Duration) bool {
 
 func (ts *TarsServer) invoke(ctx context.Context, pkg []byte) []byte {
 	cfg := ts.conf
-	atomic.AddInt32(&ts.numInvoke, 1)
 	var rsp []byte
 	if cfg.HandleTimeout == 0 {
 		rsp = ts.svr.Invoke(ctx, pkg)
@@ -122,6 +149,5 @@ func (ts *TarsServer) invoke(ctx context.Context, pkg []byte) []byte {
 		case <-done:
 		}
 	}
-	atomic.AddInt32(&ts.numInvoke, -1)
 	return rsp
 }

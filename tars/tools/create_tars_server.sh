@@ -76,8 +76,8 @@ else
 
     for RENAMEFILE in `ls `
     do
-        rename "Server" "$SERVER" $RENAMEFILE
-        rename "Servant" "$SERVANT" $RENAMEFILE
+         rename "s/Server/${SERVER}/" ${RENAMEFILE}
+         rename "s/Servant/${SERVANT}/" ${RENAMEFILE}
     done
 fi
 

@@ -454,7 +454,8 @@ func main() {
         fmt.Println(err)
         return
     }   
-    fmt.Println(ret, out)
+    fmt.Println(ret, res)
+}
 
 ```
 
@@ -470,8 +471,8 @@ import (
     "time"
     "TestApp"
 )
-var *tars.Communicator
 func main() {
+    var comm *tars.Communicator
     comm = tars.NewCommunicator()
     obj := "TestApp.TestServer.HelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
     app := new(TestApp.Hello)
@@ -479,14 +480,15 @@ func main() {
 	go func(){
 		var req string="Hello Wold"
     	var res string
-    	ret, err := app.TestHello(req, &out)
+    	ret, err := app.TestHello(req, &res)
     	if err != nil {
         	fmt.Println(err)
         	return
     	} 
-		fmt.Println(ret, out)
+		fmt.Println(ret, res)
 	}()
     time.Sleep(1)  
+}
 
 ```
 

@@ -48,3 +48,25 @@ func BenchmarkRogger(b *testing.B) {
 	}
 	FlushLogger()
 }
+
+// TestColoredLogger test colored logger.
+func TestColoredLogger(t *testing.T) {
+	SetLevel(DEBUG)
+	Colored()
+	lg := GetLogger("debug")
+	bs := make([]byte, 1024)
+	longmsg := string(bs)
+	for i := 0; i < 10; i++ {
+		lg.Debug("debugxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+		lg.Info(longmsg)
+		lg.Warn("warn")
+		lg.Error("ERROR")
+		func() {
+			lg.Info("closure func  log")
+		}()
+		time.Sleep(time.Second)
+	}
+	time.Sleep(time.Millisecond * 100)
+
+	FlushLogger()
+}

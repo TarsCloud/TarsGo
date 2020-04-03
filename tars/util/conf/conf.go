@@ -285,3 +285,33 @@ func (c *Conf) GetMap(path string) map[string]string {
 func (c *Conf) ToString() string {
 	return c.root.toString(0)
 }
+
+// GetInt32WithDef get int32 value
+func (c *Conf) GetInt32WithDef(path string, defVal int32) int32 {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	value, err := c.root.getValue(path)
+	if err != nil {
+		return defVal
+	}
+	iValue, err := strconv.Atoi(value)
+	if err != nil {
+		return defVal
+	}
+	return int32(iValue)
+}
+
+// GetBoolWithDef get bool value
+func (c *Conf) GetBoolWithDef(path string, defVal bool) bool {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	value, err := c.root.getValue(path)
+	if err != nil {
+		return defVal
+	}
+	bValue, err := strconv.ParseBool(value)
+	if err != nil {
+		return defVal
+	}
+	return bValue
+}
