@@ -90,7 +90,7 @@ func (s *StatFHelper) addUpMsg(statList *list.List, fromServer bool) {
 
 //Run runs the reporting
 func (s *StatFHelper) Run() {
-	loop := time.NewTicker(StatReportInterval)
+	loop := time.NewTicker(GetServerConfig().StatReportInterval)
 	for range loop.C {
 		s.addUpMsg(s.lStatInfo, false)
 		s.addUpMsg(s.lStatInfoFromServer, true)
@@ -123,7 +123,6 @@ func initReport() {
 		return
 	}
 	comm := NewCommunicator()
-	comm.SetProperty("netthread", 1)
 	StatReport = new(StatFHelper)
 	StatReport.Init(comm, GetClientConfig().stat)
 	statInited <- struct{}{}

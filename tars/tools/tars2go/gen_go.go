@@ -657,13 +657,16 @@ func (st *` + st.TName + `) ReadBlock(_is *codec.Reader, tag byte, require bool)
 	}
   if !have {
     if require {
-      return fmt.Errorf("require ` + st.TName + `, but not exist. tag %d", tag)    
-    } 
+      return fmt.Errorf("require ` + st.TName + `, but not exist. tag %d", tag)
+    }
       return nil
-    
+
   }
 
-  st.ReadFrom(_is)
+	err = st.ReadFrom(_is)
+	if err != nil {
+		return err
+	}
 
 	err = _is.SkipToStructEnd()
 	if err != nil {
@@ -711,9 +714,36 @@ func (gen *GenGo) genEnum(en *EnumInfo) {
 
 	c.WriteString("type " + en.TName + " int32\n")
 	c.WriteString("const (\n")
+	var it int32
 	for _, v := range en.Mb {
-		c.WriteString("//" + gen.makeEnumName(en, &v) + " enum\n")
-		c.WriteString(gen.makeEnumName(en, &v) + ` = ` + strconv.Itoa(int(v.Value)) + "\n")
+		if v.Type == 0 {
+			//use value
+			c.WriteString("//" + gen.makeEnumName(en, &v) + " enum \n")
+			c.WriteString(gen.makeEnumName(en, &v) + ` = ` + strconv.Itoa(int(v.Value)) + "\n")
+			it = v.Value + 1
+		} else if v.Type == 1 {
+			// use name
+			find := false
+			for _, ref := range en.Mb {
+				if ref.Key == v.Name {
+					find = true
+					c.WriteString("//" + gen.makeEnumName(en, &v) + " enum \n")
+					c.WriteString(gen.makeEnumName(en, &v) + ` = ` + gen.makeEnumName(en, &ref) + "\n")
+					it = ref.Value + 1
+					break
+				}
+				if ref.Key == v.Key {
+					break
+				}
+			}
+			if !find {
+				gen.genErr(v.Name + " not define before use.")
+			}
+		} else {
+			// use auto add
+			c.WriteString(gen.makeEnumName(en, &v) + ` = ` + strconv.Itoa(int(it)) + "\n")
+			it++
+		}
 	}
 
 	c.WriteString(")\n")
@@ -1151,7 +1181,7 @@ _ = length
 _ = have
 _ = ty
 `)
-	c.WriteString(`return nil 
+	c.WriteString(`return nil
 	}`)
 	c.WriteString("\n")
 
