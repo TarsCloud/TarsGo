@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -24,14 +25,14 @@ var (
 	logLevel = DEBUG
 	colored  = false
 
-	logQueue  = make(chan *logValue, 10000)
-	loggerMap = make(map[string]*Logger)
-	writeDone = make(chan bool)
-
-	currUnixTime int64
-	currDateTime string
-	currDateHour string
-	currDateDay  string
+	logQueue      = make(chan *logValue, 10000)
+	loggerMap     = make(map[string]*Logger)
+	writeDone     = make(chan bool)
+	loggermaplock = new(sync.Mutex)
+	currUnixTime  int64
+	currDateTime  string
+	currDateHour  string
+	currDateDay   string
 )
 
 //Logger is the struct with name and wirter.
@@ -109,6 +110,8 @@ func (lv *LogLevel) coloredString() string {
 
 // GetLogger return an logger instance
 func GetLogger(name string) *Logger {
+	loggermaplock.Lock()
+	defer loggermaplock.Unlock()
 	if lg, ok := loggerMap[name]; ok {
 		return lg
 	}
@@ -248,14 +251,14 @@ func (l *Logger) writef(level LogLevel, format string, v []interface{}) {
 	if l.writer.NeedPrefix() {
 		fmt.Fprintf(buf, "%s|", currDateTime)
 		if logLevel == DEBUG {
-			pc, file, line, ok := runtime.Caller(2)
+			_, file, line, ok := runtime.Caller(2)
 			if !ok {
 				file = "???"
 				line = 0
 			} else {
 				file = filepath.Base(file)
 			}
-			fmt.Fprintf(buf, "%s:%d (%s) |", file, line, getFuncName(runtime.FuncForPC(pc).Name()))
+			fmt.Fprintf(buf, "%s:%d|", file, line)
 		}
 		if colored && l.IsConsoleWriter() {
 			buf.WriteString(level.coloredString())

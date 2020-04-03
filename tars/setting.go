@@ -43,7 +43,7 @@ const (
 	//ReqDefaultTimeout request default timeout
 	ReqDefaultTimeout int32 = 3000
 	//ObjQueueMax obj queue max number
-	ObjQueueMax int32 = 10000
+	ObjQueueMax int32 = 1000000
 
 	//log
 	remotelogBuff int = 500000
@@ -87,7 +87,7 @@ const (
 	//TCPNoDelay set tcp no delay
 	TCPNoDelay = false
 
-	//GracedownTimeout set timeout (second) for grace shutdown
-	GracedownTimeout   = 60
+	//GracedownTimeout set timeout (milliseconds) for grace shutdown
+	GracedownTimeout   = 60000
 	graceCheckInterval = time.Millisecond * 500
 )

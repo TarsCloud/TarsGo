@@ -28,7 +28,7 @@ type RConf struct {
 func NewRConf(app string, server string, path string) *RConf {
 	comm := NewCommunicator()
 	tc := new(configf.Config)
-	obj := GetServerConfig().config
+	obj := "tars.tarsconfig.ConfigObj"
 
 	comm.StringToProxy(obj, tc)
 	return &RConf{app, server, comm, tc, path}
