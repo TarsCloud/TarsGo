@@ -76,6 +76,7 @@ type serverConfig struct {
 	StatReportInterval     time.Duration
 	MainLoopTicker         time.Duration
 	MaxPackageLength       int
+	GracedownTimeout       time.Duration
 }
 
 type clientConfig struct {
