@@ -21,14 +21,6 @@ func GetClientConfig() *clientConfig {
 	return cltCfg
 }
 
-func (svrConf *serverConfig) GetConfig() string {
-	return GetServerConfig().config
-}
-
-func (svrConf *serverConfig) GetNotify() string {
-	return GetServerConfig().notify
-}
-
 type adapterConfig struct {
 	Endpoint endpoint.Endpoint
 	Protocol string
@@ -46,6 +38,7 @@ type serverConfig struct {
 	LogLevel string
 	Version  string
 	LocalIP  string
+	Local    string
 	BasePath string
 	DataPath string
 	config   string
@@ -75,8 +68,17 @@ type serverConfig struct {
 	PropertyReportInterval time.Duration
 	StatReportInterval     time.Duration
 	MainLoopTicker         time.Duration
+	StatReportChannelBufLen int32
 	MaxPackageLength       int
 	GracedownTimeout       time.Duration
+}
+
+func (svrConf *serverConfig) GetConfig() string {
+	return GetServerConfig().config
+}
+
+func (svrConf *serverConfig) GetNotify() string {
+	return GetServerConfig().notify
 }
 
 type clientConfig struct {
@@ -86,12 +88,14 @@ type clientConfig struct {
 	modulename              string
 	refreshEndpointInterval int
 	reportInterval          int
+	checkStatusInterval     int
 	AsyncInvokeTimeout      int
 	//add client timeout
 	ClientQueueLen         int
 	ClientIdleTimeout      time.Duration
 	ClientReadTimeout      time.Duration
 	ClientWriteTimeout     time.Duration
+	ClientDialTimeout      time.Duration
 	ReqDefaultTimeout      int32
 	ObjQueueMax            int32
 	AdapterProxyTicker     time.Duration

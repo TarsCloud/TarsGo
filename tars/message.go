@@ -6,12 +6,20 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 )
 
+// HashType is the hash type
+type HashType int
+
+// HashType enum
+const (
+	ModHash HashType = iota
+	ConsistentHash
+)
+
 // Message is a struct contains servant information
 type Message struct {
 	Req  *requestf.RequestPacket
 	Resp *requestf.ResponsePacket
 
-	Obj *ObjectProxy
 	Ser *ServantProxy
 	Adp *AdapterProxy
 
@@ -19,18 +27,19 @@ type Message struct {
 	EndTime   int64
 	Status    int32
 
-	hashCode int64
+	hashCode uint32
+	hashType HashType
 	isHash   bool
 }
 
 // Init define the begintime
 func (m *Message) Init() {
-	m.BeginTime = time.Now().UnixNano() / 1000000
+	m.BeginTime = time.Now().UnixNano() / 1e6
 }
 
 // End define the endtime
 func (m *Message) End() {
-	m.EndTime = time.Now().UnixNano() / 1000000
+	m.EndTime = time.Now().UnixNano() / 1e6
 }
 
 // Cost calculate the cost time
@@ -38,8 +47,9 @@ func (m *Message) Cost() int64 {
 	return m.EndTime - m.BeginTime
 }
 
-// SetHashCode set hash code
-func (m *Message) SetHashCode(code int64) {
+// SetHash set hash code
+func (m *Message) SetHash(code uint32, h HashType) {
 	m.hashCode = code
+	m.hashType = h
 	m.isHash = true
 }
