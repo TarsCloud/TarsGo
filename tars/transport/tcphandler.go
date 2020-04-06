@@ -49,39 +49,44 @@ func (h *tcpHandler) Listen() (err error) {
 	} else {
 		TLOG.Infof("Listening on %s error: %v", cfg.Address, err)
 	}
+	
+	// init goroutine pool
+	if cfg.MaxInvoke > 0 { 		
+		h.gpool = gpool.NewPool(int(cfg.MaxInvoke), cfg.QueueCap)
+	}
+	
 	return err
 }
 
 func (h *tcpHandler) handleConn(connSt *connInfo, pkg []byte) {
 	handler := func() {
-		conn := connSt.conn
-		ctx := context.Background()
-		remoteAddr := conn.RemoteAddr().String()
-		ipPort := strings.Split(remoteAddr, ":")
-		ctx = current.ContextWithTarsCurrent(ctx)
-		ok := current.SetClientIPWithContext(ctx, ipPort[0])
-		if !ok {
-			TLOG.Error("Failed to set context with client ip")
-		}
-		ok = current.SetClientPortWithContext(ctx, ipPort[1])
-		if !ok {
-			TLOG.Error("Failed to set context with client port")
-		}
+		ctx := current.ContextWithTarsCurrent(context.Background())
+		ipPort := strings.Split(connSt.conn.RemoteAddr().String(), ":")
+		current.SetClientIPWithContext(ctx, ipPort[0])
+		current.SetClientPortWithContext(ctx, ipPort[1])
+		current.SetRecvPkgTsFromContext(ctx, time.Now().UnixNano()/1e6)
+
 		rsp := h.ts.invoke(ctx, pkg)
+
+		cPacketType, ok := current.GetPacketTypeFromContext(ctx)
+		if !ok {
+			TLOG.Error("Failed to GetPacketTypeFromContext")
+		}
+		if cPacketType == basef.JCEONEWAY {
+			return
+		}
+
 		connSt.writeLock.Lock()
-		if _, err := conn.Write(rsp); err != nil {
+		if _, err := connSt.conn.Write(rsp); err != nil {
 			TLOG.Errorf("send pkg to %v failed %v", remoteAddr, err)
 		}
 		connSt.writeLock.Unlock()
+
 		atomic.AddInt32(&connSt.numInvoke, -1)
 	}
 
 	cfg := h.conf
 	if cfg.MaxInvoke > 0 { // use goroutine pool
-		if h.gpool == nil {
-			h.gpool = gpool.NewPool(int(cfg.MaxInvoke), cfg.QueueCap)
-		}
-
 		h.gpool.JobQueue <- handler
 	} else {
 		go handler()
@@ -238,8 +243,8 @@ func (h *tcpHandler) recv(connSt *connInfo) {
 			}
 			if status == PACKAGE_FULL {
 				atomic.AddInt32(&connSt.numInvoke, 1)
-				pkg := make([]byte, pkgLen-4)
-				copy(pkg, currBuffer[4:pkgLen])
+				pkg := make([]byte, pkgLen)
+				copy(pkg, currBuffer[:pkgLen])
 				currBuffer = currBuffer[pkgLen:]
 				h.handleConn(connSt, pkg)
 				if len(currBuffer) > 0 {

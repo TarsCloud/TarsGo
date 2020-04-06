@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-//XTestLogger test logger writes.
+// XTestLogger test logger writes.
 func XTestLogger(t *testing.T) {
 	SetLevel(DEBUG)
 	lg := GetLogger("debug")
@@ -27,13 +27,13 @@ func XTestLogger(t *testing.T) {
 	FlushLogger()
 }
 
-//XTestGetLogList test get log list
+// XTestGetLogList test get log list
 func XTestGetLogList(t *testing.T) {
 	w := NewDateWriter("./logs", "abc", HOUR, 0)
 	w.cleanOldLogs()
 }
 
-//BenchmarkRogger benchmark rogger writes.
+// BenchmarkRogger benchmark rogger writes.
 func BenchmarkRogger(b *testing.B) {
 	SetLevel(DEBUG)
 	bs := make([]byte, 1024)
