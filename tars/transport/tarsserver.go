@@ -13,14 +13,6 @@ import (
 // TLOG  is logger for transport.
 var TLOG = rogger.GetLogger("TLOG")
 
-// TarsProtoCol is interface for handling the server side tars package.
-type TarsProtoCol interface {
-	Invoke(ctx context.Context, pkg []byte) []byte
-	ParsePackage(buff []byte) (int, int)
-	InvokeTimeout(pkg []byte) []byte
-	GetCloseMsg() []byte
-}
-
 // ServerHandler  is interface with listen and handler method
 type ServerHandler interface {
 	Listen() error
@@ -132,7 +124,10 @@ func (ts *TarsServer) invoke(ctx context.Context, pkg []byte) []byte {
 		done := make(chan struct{})
 		go func() {
 			rsp = ts.svr.Invoke(ctx, pkg)
-			done <- struct{}{}
+			select {
+			case done <- struct{}{}:
+			default:
+			}
 		}()
 		select {
 		case <-rtimer.After(cfg.HandleTimeout):

@@ -56,6 +56,7 @@ const (
 	tkTString
 	tkTVector
 	tkTMap
+	tkTArray
 	tkDummyTypeEnd
 
 	tkName // variable name
@@ -108,6 +109,7 @@ var TokenMap = [...]string{
 	tkTString: "string",
 	tkTVector: "vector",
 	tkTMap:    "map",
+	tkTArray:  "array",
 
 	tkName: "<name>",
 	// value
