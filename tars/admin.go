@@ -10,48 +10,55 @@ import (
 	"sync/atomic"
 	"time"
 
-	debugutil "github.com/TarsCloud/TarsGo/tars/util/debug"
+	"github.com/TarsCloud/TarsGo/tars/util/debug"
 	logger "github.com/TarsCloud/TarsGo/tars/util/rogger"
 )
 
-//Admin struct
+// Admin struct
 type Admin struct {
 }
 
-//Shutdown shutdown all servant by admin
 var (
 	isShutdownbyadmin int32 = 0
 )
 
+// Shutdown shutdown all servant by admin
 func (a *Admin) Shutdown() error {
 	atomic.StoreInt32(&isShutdownbyadmin, 1)
 	go graceShutdown()
 	return nil
 }
 
-//Notify handler for cmds from admin
+// Notify handler for cmds from admin
 func (a *Admin) Notify(command string) (string, error) {
 	cmd := strings.Split(command, " ")
-	go ReportNotifyInfo("AdminServant::notify:" + cmd[0])
+	// report command to notify
+	go ReportNotifyInfo(NOTIFY_NORMAL, "AdminServant::notify:"+command)
 	switch cmd[0] {
 	case "tars.viewversion":
 		return GetServerConfig().Version, nil
 	case "tars.setloglevel":
-		switch cmd[1] {
-		case "INFO":
-			logger.SetLevel(logger.INFO)
-		case "WARN":
-			logger.SetLevel(logger.WARN)
-		case "ERROR":
-			logger.SetLevel(logger.ERROR)
-		case "DEBUG":
-			logger.SetLevel(logger.DEBUG)
-		case "NONE":
-			logger.SetLevel(logger.OFF)
+		if len(cmd) >= 2 {
+			appCache.LogLevel = cmd[1]
+			switch cmd[1] {
+			case "INFO":
+				logger.SetLevel(logger.INFO)
+			case "WARN":
+				logger.SetLevel(logger.WARN)
+			case "ERROR":
+				logger.SetLevel(logger.ERROR)
+			case "DEBUG":
+				logger.SetLevel(logger.DEBUG)
+			case "NONE":
+				logger.SetLevel(logger.OFF)
+			default:
+				return fmt.Sprintf("%s failed: unknown log level [%s]!", cmd[0], cmd[1]), nil
+			}
+			return fmt.Sprintf("%s succ", command), nil
 		}
-		return fmt.Sprintf("%s succ", command), nil
+		return fmt.Sprintf("%s failed: missing loglevel!", command), nil
 	case "tars.dumpstack":
-		debugutil.DumpStack(true, "stackinfo")
+		debug.DumpStack(true, "stackinfo", "tars.dumpstack:")
 		return fmt.Sprintf("%s succ", command), nil
 	case "tars.loadconfig":
 		cfg := GetServerConfig()
@@ -61,7 +68,6 @@ func (a *Admin) Notify(command string) (string, error) {
 			return fmt.Sprintf("Getconfig Error!: %s", cmd[1]), err
 		}
 		return fmt.Sprintf("Getconfig Success!: %s", cmd[1]), nil
-
 	case "tars.connection":
 		return fmt.Sprintf("%s not support now!", command), nil
 	case "tars.gracerestart":
@@ -104,7 +110,7 @@ func (a *Admin) Notify(command string) (string, error) {
 	}
 }
 
-//RegisterAdmin register admin functions
+// RegisterAdmin register admin functions
 func RegisterAdmin(name string, fn adminFn) {
 	adminMethods[name] = fn
 }

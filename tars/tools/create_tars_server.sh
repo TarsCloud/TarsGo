@@ -4,7 +4,7 @@
 if [ $# -lt 3 ]
 then
     echo "<Usage: sh $0  App  Server  Servant>"
-        echo ">>>>>>  sh $0  TeleSafe PhonenumSogouServer SogouInfo"
+    echo ">>>>>>  sh $0  TeleSafe PhonenumSogouServer SogouInfo"
     exit 1
 fi
 
@@ -33,7 +33,7 @@ fi
 echo "[create server: $APP.$SERVER ...]"
 
 SRC_DIR=$(cd $(dirname $0); pwd)
-DEMODIR=$SRC_DIR/_demo
+DEMODIR=$SRC_DIR/Demo
 DEBUGDIR=$SRC_DIR/debugtool
 cd $DEMODIR || exit 1
 SRC_FILE=`find . -maxdepth 1 -type f`
@@ -76,8 +76,8 @@ else
 
     for RENAMEFILE in `ls `
     do
-         rename "s/Server/${SERVER}/" ${RENAMEFILE}
-         rename "s/Servant/${SERVANT}/" ${RENAMEFILE}
+        rename "Server" "$SERVER" $RENAMEFILE
+        rename "Servant" "$SERVANT" $RENAMEFILE
     done
 fi
 

@@ -3,9 +3,12 @@ package transport
 import (
 	"context"
 	"net"
+	"strconv"
 	"sync/atomic"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
+	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/grace"
 )
 
@@ -60,9 +63,24 @@ func (h *udpHandler) Handle() error {
 		pkg := make([]byte, n)
 		copy(pkg, buffer[0:n])
 		go func() {
-			ctx := context.Background()
+			ctx := current.ContextWithTarsCurrent(context.Background())
+			current.SetClientIPWithContext(ctx, udpAddr.IP.String())
+			current.SetClientPortWithContext(ctx, strconv.Itoa(udpAddr.Port))
+			current.SetRecvPkgTsFromContext(ctx, time.Now().UnixNano()/1e6)
+			
 			atomic.AddInt32(&h.ts.numInvoke, 1)
-			rsp := h.ts.invoke(ctx, pkg[4:]) // no need to check package
+			rsp := h.ts.invoke(ctx, pkg) // no need to check package
+
+			cPacketType, ok := current.GetPacketTypeFromContext(ctx)
+			if !ok {
+				TLOG.Error("Failed to GetPacketTypeFromContext")
+			}
+			
+			if cPacketType == basef.TARSONEWAY {
+				atomic.AddInt32(&h.ts.numInvoke, -1)
+				return
+			}
+
 			if _, err := h.conn.WriteToUDP(rsp, udpAddr); err != nil {
 				TLOG.Errorf("send pkg to %v failed %v", udpAddr, err)
 			}

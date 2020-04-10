@@ -13,7 +13,7 @@ func init() {
 	runtime.GOMAXPROCS(numCPUs)
 }
 
-//TestNewPool test new goroutine pool
+// TestNewPool test new goroutine pool
 func TestNewPool(t *testing.T) {
 	pool := NewPool(1000, 10000)
 	defer pool.Release()
