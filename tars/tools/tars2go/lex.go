@@ -317,6 +317,7 @@ func (ls *LexState) next() {
 		ls.current = EOS
 	}
 }
+
 func (ls *LexState) llexDefault() (TK, *SemInfo) {
 	switch {
 	case isNumber(ls.current):

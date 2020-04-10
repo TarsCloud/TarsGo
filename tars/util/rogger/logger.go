@@ -113,7 +113,7 @@ func GetLogLevel() LogLevel {
 
 // GetLevel get global log level and return string
 func GetLevel() string {
-	return leveltostring(logLevel)
+	return logLevel.String()
 }
 
 // Colored enable colored level string when use console writer

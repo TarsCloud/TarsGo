@@ -9,14 +9,12 @@ import (
 )
 
 
-var iMaxLength int = 10485760
-
-func TarsRequest(rev []byte) (int, int) {
+func TarsRequest(rev []byte, maxLen int) (int, int) {
 	if len(rev) < 4 {
 		return 0, PACKAGE_LESS
 	}
 	iHeaderLen := int(binary.BigEndian.Uint32(rev[0:4]))
-	if iHeaderLen < 4 || iHeaderLen > iMaxLength {
+	if iHeaderLen < 4 || iHeaderLen > maxLen {
 		return 0, PACKAGE_ERROR
 	}
 	if len(rev) < iHeaderLen {
@@ -26,9 +24,10 @@ func TarsRequest(rev []byte) (int, int) {
 }
 
 type TarsProtocol struct {
+	MaxPackageLength int
 }
 
-func (self *TarsProtocol) RequestPack(req *requestf.RequestPacket) ([]byte, error) {
+func (p *TarsProtocol) RequestPack(req *requestf.RequestPacket) ([]byte, error) {
 	sbuf := bytes.NewBuffer(nil)
 	sbuf.Write(make([]byte, 4))
 	os := codec.NewBuffer()
@@ -40,11 +39,11 @@ func (self *TarsProtocol) RequestPack(req *requestf.RequestPacket) ([]byte, erro
 	return sbuf.Bytes(), nil
 
 }
-func (self *TarsProtocol) ResponseUnpack(pkg []byte) (*requestf.ResponsePacket, error) {
+func (p *TarsProtocol) ResponseUnpack(pkg []byte) (*requestf.ResponsePacket, error) {
 	packet := &requestf.ResponsePacket{}
 	err := packet.ReadFrom(codec.NewReader(pkg[4:]))
 	return packet, err
 }
-func (self *TarsProtocol) ParsePackage(rev []byte) (int, int) {
-	return TarsRequest(rev)
+func (p *TarsProtocol) ParsePackage(rev []byte) (int, int) {
+	return TarsRequest(rev, p.MaxPackageLength)
 }

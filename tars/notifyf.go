@@ -49,7 +49,7 @@ func (n *NotifyHelper) ReportNotifyInfo(level int32, info string) {
 func ReportNotifyInfo(level int32, info string) {
 	ha := new(NotifyHelper)
 	comm := NewCommunicator()
-	notify := GetServerConfig().notify
+	notify := GetServerConfig().Notify
 	if notify == "" {
 		return
 	}

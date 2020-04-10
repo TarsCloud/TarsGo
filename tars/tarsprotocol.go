@@ -19,15 +19,16 @@ type dispatch interface {
 
 // TarsProtocol is struct for dispatch with tars protocol.
 type TarsProtocol struct {
-	dispatcher  dispatch
-	serverImp   interface{}
-	withContext bool
+	dispatcher       dispatch
+	serverImp        interface{}
+	withContext      bool
+	maxPackageLength int
 }
 
 // NewTarsProtocol return a TarsProtocol with dipatcher and implement interface.
 // withContext explain using context or not.
-func NewTarsProtocol(dispatcher dispatch, imp interface{}, withContext bool) *TarsProtocol {
-	s := &TarsProtocol{dispatcher: dispatcher, serverImp: imp, withContext: withContext}
+func NewTarsProtocol(dispatcher dispatch, imp interface{}, withContext bool, maxLen int) *TarsProtocol {
+	s := &TarsProtocol{dispatcher: dispatcher, serverImp: imp, withContext: withContext, maxPackageLength: maxLen}
 	return s
 }
 
@@ -94,14 +95,14 @@ func (s *TarsProtocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 		rspPackage.IRet = 1
 		rspPackage.SResultDesc = err.Error()
 	}
-	
+
 	//return ctype
 	rspPackage.CPacketType = reqPackage.CPacketType
 	ok := current.SetPacketTypeFromContext(ctx, rspPackage.CPacketType)
 	if !ok {
 		TLOG.Error("SetPacketType in context fail!")
 	}
-	
+
 	return s.rsp2Byte(&rspPackage)
 }
 
@@ -120,7 +121,7 @@ func (s *TarsProtocol) rsp2Byte(rsp *requestf.ResponsePacket) []byte {
 // ParsePackage parse the []byte according to the tars protocol.
 // returns header length and package integrity condition (PACKAGE_LESS | PACKAGE_FULL | PACKAGE_ERROR)
 func (s *TarsProtocol) ParsePackage(buff []byte) (int, int) {
-	return protocol.TarsRequest(buff)
+	return protocol.TarsRequest(buff, s.maxPackageLength)
 }
 
 // InvokeTimeout indicates how to deal with timeout.

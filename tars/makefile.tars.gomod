@@ -11,9 +11,14 @@ GO      = ${GOROOT}/bin/go
 #-------------------------------------------------------------------------------
 libpath=${subst :, ,$(GOPATH)}
 TARS2GO     := $(firstword $(subst :, , $(GOPATH)))/bin/tars2go
+GOMODULENAME:= $(shell head -n1 go.mod | awk '{print $$2}')
 
 ifeq (,$(findstring -outdir,$(J2GO_FLAG)))
-    J2GO_FLAG   += -outdir=vendor
+    J2GO_FLAG   += -outdir=tars-protocol
+endif
+
+ifeq (,$(findstring -module,$(J2GO_FLAG)))
+    J2GO_FLAG   += -module=${GOMODULENAME}
 endif
 
 PB2GO     	:= $(firstword $(subst :, , $(GOPATH)))/bin/protoc
@@ -45,6 +50,8 @@ $(TARGET): TARSBUILD $(GO_SRC)
 #----------------------------------------------------------------------------------
 ifneq ($(strip $(TARS_SRC)),)
 TARSBUILD: $(TARS_SRC)
+	@echo "install $(TARS2GO)..."	
+	#go get github.com/TarsCloud/TarsGo/tars/tools/tars2go && go install github.com/TarsCloud/TarsGo/tars/tools/tars2go
 	@echo -e "\e[33;1m$(TARS2GO)\e[0m \e[36;1m ${TARS_SRC} \e[0m..."
 	$(TARS2GO) $(J2GO_FLAG) $(TARS_SRC)
 else

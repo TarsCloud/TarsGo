@@ -289,7 +289,7 @@ func (t *tarsrpc) generateDispatch(service *pb.ServiceDescriptorProto) {
 			if err != nil {
 				return err
 			}
-		`, method.GetName(), t.typeName(method.GetInputType()), t.typeName(method.GetOutputType()), serviceName, upperFirstLatter(method.GetName()),serviceName, upperFirstLatter(method.GetName())))
+		`, method.GetName(), t.typeName(method.GetInputType()), t.typeName(method.GetOutputType()), serviceName, upperFirstLatter(method.GetName()), serviceName, upperFirstLatter(method.GetName())))
 	}
 	t.P(`default:
 			return fmt.Errorf("func mismatch")

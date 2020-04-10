@@ -21,13 +21,13 @@ type VarType struct {
 
 // StructMember member struct.
 type StructMember struct {
-	Tag     int32
-	Require bool
-	Type    *VarType
-	Key     string // after the uppercase converted key
-	KeyStr  string // original key
-	Default string
-	DefType TK
+	Tag       int32
+	Require   bool
+	Type      *VarType
+	Key       string // after the uppercase converted key
+	OriginKey string // original key
+	Default   string
+	DefType   TK
 }
 
 // StructMemberSorter When serializing, make sure the tags are ordered.
@@ -39,37 +39,36 @@ func (a StructMemberSorter) Less(i, j int) bool { return a[i].Tag < a[j].Tag }
 
 //StructInfo record struct information.
 type StructInfo struct {
-	TName        string
-	OriginName   string
-	Mb           []StructMember
-	DependModule map[string]bool
-
+	Name                string
+	OriginName          string //original name
+	Mb                  []StructMember
+	DependModule        map[string]bool
 	DependModuleWithJce map[string]string
 }
 
 //ArgInfo record argument information.
 type ArgInfo struct {
-	Name    string
-	NameStr string //original name
-	IsOut   bool
-	Type    *VarType
+	Name       string
+	OriginName string //original name
+	IsOut      bool
+	Type       *VarType
 }
 
 //FunInfo record function information.
 type FunInfo struct {
-	Name    string // after the uppercase converted name
-	NameStr string // original name
-	HasRet  bool
-	RetType *VarType
-	Args    []ArgInfo
+	Name       string // after the uppercase converted name
+	OriginName string // original name
+	HasRet     bool
+	RetType    *VarType
+	Args       []ArgInfo
 }
 
 //InterfaceInfo record interface information.
 type InterfaceInfo struct {
-	TName        string
-	Fun          []FunInfo
-	DependModule map[string]bool
-
+	Name                string
+	OriginName          string // original name
+	Fun                 []FunInfo
+	DependModule        map[string]bool
 	DependModuleWithJce map[string]string
 }
 
@@ -83,16 +82,18 @@ type EnumMember struct {
 
 //EnumInfo record EnumMember information include name.
 type EnumInfo struct {
-	TModule string
-	TName   string
-	Mb      []EnumMember
+	Module     string
+	Name       string
+	OriginName string // original name
+	Mb         []EnumMember
 }
 
 //ConstInfo record const information.
 type ConstInfo struct {
-	Type  *VarType
-	Key   string
-	Value string
+	Type       *VarType
+	Name       string
+	OriginName string // original name
+	Value      string
 }
 
 //HashKeyInfo record hashkey information.
@@ -125,8 +126,8 @@ type Parse struct {
 	// jce include chain
 	IncChain []string
 
-	// jce file name(not include .jce)
-	JceName string
+	// proto file name(not include .tars)
+	ProtoName string
 
 	DependModuleWithJce map[string]bool
 }
@@ -196,10 +197,10 @@ func (p *Parse) parseType() *VarType {
 func (p *Parse) parseEnum() {
 	enum := EnumInfo{}
 	p.expect(tkName)
-	enum.TName = p.t.S.S
+	enum.Name = p.t.S.S
 	for _, v := range p.Enum {
-		if v.TName == enum.TName {
-			p.parseErr(enum.TName + " Redefine.")
+		if v.Name == enum.Name {
+			p.parseErr(enum.Name + " Redefine.")
 		}
 	}
 	p.expect(tkBracel)
@@ -246,6 +247,7 @@ LFOR:
 	p.expect(tkSemi)
 	p.Enum = append(p.Enum, enum)
 }
+
 func (p *Parse) parseStructMemberDefault(m *StructMember) {
 	m.DefType = p.t.T
 	switch p.t.T {
@@ -359,10 +361,10 @@ func (p *Parse) sortTag(st *StructInfo) {
 func (p *Parse) parseStruct() {
 	st := StructInfo{}
 	p.expect(tkName)
-	st.TName = p.t.S.S
+	st.Name = p.t.S.S
 	for _, v := range p.Struct {
-		if v.TName == st.TName {
-			p.parseErr(st.TName + " Redefine.")
+		if v.Name == st.Name {
+			p.parseErr(st.Name + " Redefine.")
 		}
 	}
 	p.expect(tkBracel)
@@ -444,10 +446,10 @@ func (p *Parse) parseInterfaceFun() *FunInfo {
 func (p *Parse) parseInterface() {
 	itf := &InterfaceInfo{}
 	p.expect(tkName)
-	itf.TName = p.t.S.S
+	itf.Name = p.t.S.S
 	for _, v := range p.Interface {
-		if v.TName == itf.TName {
-			p.parseErr(itf.TName + " Redefine.")
+		if v.Name == itf.Name {
+			p.parseErr(itf.Name + " Redefine.")
 		}
 	}
 	p.expect(tkBracel)
@@ -480,7 +482,7 @@ func (p *Parse) parseConst() {
 	}
 
 	p.expect(tkName)
-	m.Key = p.t.S.S
+	m.Name = p.t.S.S
 
 	p.expect(tkEq)
 
@@ -583,25 +585,25 @@ func (p *Parse) parseInclude() {
 // Looking for the true type of user-defined identifier
 func (p *Parse) findTNameType(tname string) (TK, string, string) {
 	for _, v := range p.Struct {
-		if p.Module+"::"+v.TName == tname {
-			return tkStruct, p.Module, p.JceName
+		if p.Module+"::"+v.Name == tname {
+			return tkStruct, p.Module, p.ProtoName
 		}
 	}
 
 	for _, v := range p.Enum {
-		if p.Module+"::"+v.TName == tname {
-			return tkEnum, p.Module, p.JceName
+		if p.Module+"::"+v.Name == tname {
+			return tkEnum, p.Module, p.ProtoName
 		}
 	}
 
 	for _, pInc := range p.IncParse {
-		ret, mod, jceName := pInc.findTNameType(tname)
+		ret, mod, protoName := pInc.findTNameType(tname)
 		if ret != tkName {
-			return ret, mod, jceName
+			return ret, mod, protoName
 		}
 	}
 	// not find
-	return tkName, p.Module, p.JceName
+	return tkName, p.Module, p.ProtoName
 }
 
 func (p *Parse) findEnumName(ename string) (*EnumMember, *EnumInfo) {
@@ -622,7 +624,7 @@ func (p *Parse) findEnumName(ename string) (*EnumMember, *EnumInfo) {
 				cmb = &enum.Mb[mk]
 				cenum = &p.Enum[ek]
 			} else {
-				p.parseErr(ename + " name conflict [" + cenum.TName + "::" + cmb.Key + " or " + enum.TName + "::" + mb.Key)
+				p.parseErr(ename + " name conflict [" + cenum.Name + "::" + cmb.Key + " or " + enum.Name + "::" + mb.Key)
 				return nil, nil
 			}
 		}
@@ -634,11 +636,11 @@ func (p *Parse) findEnumName(ename string) (*EnumMember, *EnumInfo) {
 			break
 		}
 	}
-	if cenum != nil && cenum.TModule == "" {
+	if cenum != nil && cenum.Module == "" {
 		if *gModuleCycle == true {
-			cenum.TModule = p.JceName + "_" + p.Module
+			cenum.Module = p.ProtoName + "_" + p.Module
 		} else {
-			cenum.TModule = p.Module
+			cenum.Module = p.Module
 		}
 	}
 	return cmb, cenum
@@ -650,7 +652,8 @@ func addToSet(m *map[string]bool, module string) {
 	}
 	(*m)[module] = true
 }
-func addToMap(m *map[string]string, module string,value string) {
+
+func addToMap(m *map[string]string, module string, value string) {
 	if *m == nil {
 		*m = make(map[string]string)
 	}
@@ -665,25 +668,25 @@ func (p *Parse) checkDepTName(ty *VarType, dm *map[string]bool, dmj *map[string]
 		}
 
 		mod := ""
-		jceName := ""
-		ty.CType, mod, jceName = p.findTNameType(name)
+		protoName := ""
+		ty.CType, mod, protoName = p.findTNameType(name)
 		if ty.CType == tkName {
 			p.parseErr(ty.TypeSt + " not find define")
 		}
 		if *gModuleCycle == true {
-			if mod != p.Module || jceName != p.JceName {
+			if mod != p.Module || protoName != p.ProtoName {
 				var modStr string
 				if *gModuleUpper {
-					modStr = upperFirstLatter(mod)
+					modStr = upperFirstLetter(mod)
 				} else {
 					modStr = mod
 				}
-				addToMap(dmj, jceName+"_"+modStr,jceName)
+				addToMap(dmj, protoName+"_"+modStr, protoName)
 
 				if strings.Contains(ty.TypeSt, mod+"::") {
-					ty.TypeSt = strings.Replace(ty.TypeSt, mod+"::", jceName+"_"+modStr+"::", 1)
+					ty.TypeSt = strings.Replace(ty.TypeSt, mod+"::", protoName+"_"+modStr+"::", 1)
 				} else {
-					ty.TypeSt = jceName + "_" + modStr + "::" + ty.TypeSt
+					ty.TypeSt = protoName + "_" + modStr + "::" + ty.TypeSt
 				}
 			} else {
 				// the same Module ,do not add self.
@@ -735,15 +738,15 @@ func (p *Parse) analyzeDefault() {
 				if mb == nil || enum == nil {
 					p.parseErr("can not find default value" + r.Default)
 				}
-				defValue := enum.TName + "_" + upperFirstLatter(mb.Key)
+				defValue := enum.Name + "_" + upperFirstLetter(mb.Key)
 				var currModule string
 				if *gModuleCycle == true {
-					currModule = p.JceName + "_" + p.Module
+					currModule = p.ProtoName + "_" + p.Module
 				} else {
 					currModule = p.Module
 				}
-				if len(enum.TModule) > 0 && currModule != enum.TModule {
-					defValue = enum.TModule + "." + defValue
+				if len(enum.Module) > 0 && currModule != enum.Module {
+					defValue = enum.Module + "." + defValue
 				}
 				v.Mb[i].Default = defValue
 			}
@@ -787,29 +790,29 @@ OUT:
 	p.analyzeDepend()
 }
 
-func newParse(s string, b []byte, inc_chain []string) *Parse {
-	p := &Parse{Source: s, JceName: path2JceName(s)}
-	for _, v := range inc_chain {
+func newParse(s string, b []byte, incChain []string) *Parse {
+	p := &Parse{Source: s, ProtoName: path2ProtoName(s)}
+	for _, v := range incChain {
 		if s == v {
 			panic("jce circular reference: " + s)
 		}
 	}
-	inc_chain = append(inc_chain, s)
-	p.IncChain = inc_chain
+	incChain = append(incChain, s)
+	p.IncChain = incChain
 	fmt.Println(s, p.IncChain)
 
 	p.lex = NewLexState(s, b)
 	return p
 }
 
-//ParseFile parse a file,return grammar tree.
-func ParseFile(path string, inc_chain []string) *Parse {
+//ParseFile parse a file,return grammer tree.
+func ParseFile(path string, incChain []string) *Parse {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		fmt.Println("file read error: " + path + ". " + err.Error())
 	}
 
-	p := newParse(path, b, inc_chain)
+	p := newParse(path, b, incChain)
 	p.parse()
 
 	return p

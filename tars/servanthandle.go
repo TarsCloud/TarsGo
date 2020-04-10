@@ -32,8 +32,8 @@ func addServantCommon(v dispatch, f interface{}, obj string, withContext bool) {
 		destroyableObjs = append(destroyableObjs, v)
 	}
 	TLOG.Debug("add:", cfg)
-	
-	jp := NewTarsProtocol(v, f, withContext)
+
+	jp := NewTarsProtocol(v, f, withContext, GetServerConfig().MaxPackageLength)
 	s := transport.NewTarsServer(jp, cfg)
 	goSvrs[obj] = s
 }

@@ -12,6 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
 	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/gpool"
 	"github.com/TarsCloud/TarsGo/tars/util/grace"
@@ -49,12 +50,12 @@ func (h *tcpHandler) Listen() (err error) {
 	} else {
 		TLOG.Infof("Listening on %s error: %v", cfg.Address, err)
 	}
-	
+
 	// init goroutine pool
-	if cfg.MaxInvoke > 0 { 		
+	if cfg.MaxInvoke > 0 {
 		h.gpool = gpool.NewPool(int(cfg.MaxInvoke), cfg.QueueCap)
 	}
-	
+
 	return err
 }
 
@@ -72,13 +73,13 @@ func (h *tcpHandler) handleConn(connSt *connInfo, pkg []byte) {
 		if !ok {
 			TLOG.Error("Failed to GetPacketTypeFromContext")
 		}
-		if cPacketType == basef.JCEONEWAY {
+		if cPacketType == basef.TARSONEWAY {
 			return
 		}
 
 		connSt.writeLock.Lock()
 		if _, err := connSt.conn.Write(rsp); err != nil {
-			TLOG.Errorf("send pkg to %v failed %v", remoteAddr, err)
+			TLOG.Errorf("send pkg to %v failed %v", connSt.conn.RemoteAddr(), err)
 		}
 		connSt.writeLock.Unlock()
 

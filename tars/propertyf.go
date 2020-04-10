@@ -12,6 +12,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
+// ReportPolicy is report policy
 type ReportPolicy int
 
 const (
@@ -107,7 +108,7 @@ func NewAvg() *Avg {
 }
 
 // Enum return the report policy
-func (s *Avg) Enum() ReportPolicy {
+func (a *Avg) Enum() ReportPolicy {
 	return ReportPolicyAvg
 }
 
@@ -150,6 +151,11 @@ func NewMax() *Max {
 		mlock: new(sync.Mutex)}
 }
 
+// Enum return the report policy
+func (m *Max) Enum() ReportPolicy {
+	return ReportPolicyMax
+}
+
 // Set sets a value for counting max.
 func (m *Max) Set(in int) {
 	m.mlock.Lock()
@@ -171,11 +177,6 @@ func (m *Max) clear() {
 	m.data = -9999999
 }
 
-// Enum return the report policy
-func (s *Max) Enum() ReportPolicy {
-	return ReportPolicyMax
-}
-
 // Min is the struct for counting the min value.
 type Min struct {
 	data  int
@@ -192,7 +193,7 @@ func NewMin() *Min {
 }
 
 // Enum return the report policy
-func (s *Min) Enum() ReportPolicy {
+func (m *Min) Enum() ReportPolicy {
 	return ReportPolicyMin
 }
 
@@ -225,11 +226,6 @@ type Distr struct {
 	mlock     *sync.Mutex
 }
 
-// Enum return the report policy
-func (s *Distr) Enum() ReportPolicy {
-	return ReportPolicyDistr
-}
-
 // NewDistr new and int the Distr
 func NewDistr(in []int) (d *Distr) {
 	d = new(Distr)
@@ -239,6 +235,11 @@ func NewDistr(in []int) (d *Distr) {
 	d.dataRange = s
 	d.result = make([]int, len(d.dataRange))
 	return d
+}
+
+// Enum return the report policy
+func (d *Distr) Enum() ReportPolicy {
+	return ReportPolicyDistr
 }
 
 // Set sets the value for counting distribution.
@@ -284,6 +285,11 @@ func NewCount() *Count {
 	}
 }
 
+// Enum return the report policy
+func (c *Count) Enum() ReportPolicy {
+	return ReportPolicyCount
+}
+
 // Set sets the value for counting.
 func (c *Count) Set(in int) {
 	c.mlock.Lock()
@@ -302,11 +308,6 @@ func (c *Count) Get() (out string) {
 
 func (c *Count) clear() {
 	c.data = 0
-}
-
-// Enum return the report policy
-func (s *Count) Enum() ReportPolicy {
-	return ReportPolicyCount
 }
 
 // PropertyReportHelper is helper struct for property report.
@@ -433,12 +434,12 @@ func (p *PropertyReportHelper) Init(comm *Communicator, node string) {
 }
 
 func initProReport() {
-	if GetClientConfig() == nil || GetClientConfig().property == "" {
+	if GetClientConfig() == nil || GetClientConfig().Property == "" {
 		return
 	}
 	comm := NewCommunicator()
 	ProHelper = new(PropertyReportHelper)
-	ProHelper.Init(comm, GetClientConfig().property)
+	ProHelper.Init(comm, GetClientConfig().Property)
 	go ProHelper.Run()
 }
 
@@ -481,6 +482,7 @@ func CreatePropertyReport(key string, argvs ...ReportMethod) *PropertyReport {
 	return ptr
 }
 
+// GetPropertyReport gets the property report instance with the key.
 func GetPropertyReport(key string) *PropertyReport {
 	proOnce.Do(initProReport)
 	if val, ok := ProHelper.reportPtrs.Load(key); ok {

@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/TarsCloud/TarsGo/tars"
 
-	"_APP_"
+	"_IMPORTAPP_"
 )
 
 func main() { //Init servant

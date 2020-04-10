@@ -42,8 +42,8 @@ const (
 	ClientWriteTimeout = 3000
 	//ReqDefaultTimeout request default timeout
 	ReqDefaultTimeout int32 = 3000
-	//DialTimeout connection dial timeout
-	DialTimeout = 3000
+	//ClientDialTimeout connection dial timeout
+	ClientDialTimeout = 3000
 	//ObjQueueMax obj queue max number
 	ObjQueueMax int32 = 100000
 
@@ -68,7 +68,7 @@ const (
 	StatReportInterval = 10000
 	// StatReportChannelBufLen stat report channel len
 	StatReportChannelBufLen = 100000
-	
+
 	//mainloop
 
 	//MainLoopTicker main loop ticker,defaultvalue is 10000 milliseconds
@@ -114,4 +114,7 @@ const (
 	//GracedownTimeout set timeout (milliseconds) for grace shutdown
 	GracedownTimeout   = 60000
 	graceCheckInterval = time.Millisecond * 500
+
+	//MaxPackageLength maximum length of the request
+	MaxPackageLength = 10485760
 )

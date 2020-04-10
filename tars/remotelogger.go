@@ -24,7 +24,7 @@ func NewRemoteTimeWriter() *RemoteTimeWriter {
 	rw.logs = logs
 	rw.logPtr = new(logf.Log)
 	comm := NewCommunicator()
-	node := GetServerConfig().log
+	node := GetServerConfig().Log
 	rw.EnableSufix(true)
 	rw.EnablePrefix(true)
 	rw.SetSeparator("|")
@@ -127,6 +127,7 @@ func (rw *RemoteTimeWriter) NeedPrefix() bool {
 	return rw.hasPrefix
 }
 
+// SetPrefix set if need prefix for the logger.
 func (rw *RemoteTimeWriter) SetPrefix(enable bool) {
 	rw.hasPrefix = enable
 }

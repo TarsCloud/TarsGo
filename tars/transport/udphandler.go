@@ -76,7 +76,7 @@ func (h *udpHandler) Handle() error {
 				TLOG.Error("Failed to GetPacketTypeFromContext")
 			}
 			
-			if cPacketType == basef.JCEONEWAY {
+			if cPacketType == basef.TARSONEWAY {
 				atomic.AddInt32(&h.ts.numInvoke, -1)
 				return
 			}

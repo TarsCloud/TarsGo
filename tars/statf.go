@@ -49,8 +49,6 @@ func (s *StatFHelper) collectMsg(statInfo StatInfo, mStatInfo map[statf.StatMicM
 		body.TotalRspTime += statInfo.Body.TotalRspTime
 		body.MaxRspTime += body.MaxRspTime + statInfo.Body.MaxRspTime
 		body.MinRspTime += body.MinRspTime + statInfo.Body.MinRspTime
-		body.WeightValue += body.WeightValue + statInfo.Body.WeightValue
-		body.WeightCount += body.WeightCount + statInfo.Body.WeightCount
 		s.mStatInfo[statInfo.Head] = body
 		s.mStatCount[statInfo.Head]++
 	} else {
@@ -61,8 +59,6 @@ func (s *StatFHelper) collectMsg(statInfo StatInfo, mStatInfo map[statf.StatMicM
 		firstBody.TotalRspTime = statInfo.Body.TotalRspTime
 		firstBody.MaxRspTime = statInfo.Body.MaxRspTime
 		firstBody.MinRspTime = statInfo.Body.MinRspTime
-		firstBody.WeightValue = statInfo.Body.WeightValue
-		firstBody.WeightCount = statInfo.Body.WeightCount
 		s.mStatInfo[statInfo.Head] = firstBody
 		s.mStatCount[statInfo.Head] = 1
 	}
@@ -127,13 +123,13 @@ var StatReport *StatFHelper
 var statInited = make(chan struct{}, 1)
 
 func initReport() {
-	if GetClientConfig() == nil || GetClientConfig().stat == "" {
+	if GetClientConfig() == nil || GetClientConfig().Stat == "" {
 		statInited <- struct{}{}
 		return
 	}
 	comm := NewCommunicator()
 	StatReport = new(StatFHelper)
-	StatReport.Init(comm, GetClientConfig().stat)
+	StatReport.Init(comm, GetClientConfig().Stat)
 	statInited <- struct{}{}
 	go StatReport.Run()
 }
