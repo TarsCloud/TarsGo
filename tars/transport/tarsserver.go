@@ -2,7 +2,6 @@ package transport
 
 import (
 	"context"
-	"net"
 	"sync/atomic"
 	"time"
 
@@ -87,7 +86,7 @@ func (ts *TarsServer) Shutdown(ctx context.Context) error {
 	// step 1: close listeners, notify client reconnect
 	atomic.StoreInt32(&ts.isClosed, 1)
 	ts.handle.OnShutdown()
-	
+
 	// step 2: wait and close idle connections
 	watchInterval := time.Millisecond * 500
 	tk := time.NewTicker(watchInterval)

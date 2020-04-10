@@ -48,7 +48,7 @@ type connection struct {
 }
 
 // NewTarsClient new tars client and init it .
-func NewTarsClient(address string, cp TarsClientProtocol, conf *TarsClientConf) *TarsClient {
+func NewTarsClient(address string, cp ClientProtocol, conf *TarsClientConf) *TarsClient {
 	if conf.QueueLen <= 0 {
 		conf.QueueLen = 100
 	}
@@ -58,10 +58,14 @@ func NewTarsClient(address string, cp TarsClientProtocol, conf *TarsClientConf) 
 	return tc
 }
 
+// ReConnect established the client connection with the server.
+func (tc *TarsClient) ReConnect() error {
+	return tc.conn.ReConnect()
+}
+
 // Send sends the request to the server as []byte.
 func (tc *TarsClient) Send(req []byte) error {
-	w := tc.conn
-	if err := w.reConnect(); err != nil {
+	if err := tc.ReConnect(); err != nil {
 		return err
 	}
 
@@ -72,9 +76,9 @@ func (tc *TarsClient) Send(req []byte) error {
 	}
 
 	select {
-		case <- timerC:
-			return errors.New("tars client write timeout")
-		case tc.sendQueue <- req:
+	case <-timerC:
+		return errors.New("tars client write timeout")
+	case tc.sendQueue <- req:
 	}
 
 	return nil
@@ -184,7 +188,7 @@ func (c *connection) recv(conn net.Conn, connDone chan bool) {
 	}
 }
 
-func (c *connection) reConnect() (err error) {
+func (c *connection) ReConnect() (err error) {
 	c.connLock.Lock()
 	if c.isClosed {
 		TLOG.Debug("Connect:", c.tc.address)

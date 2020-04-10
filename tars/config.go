@@ -9,13 +9,13 @@ import (
 var svrCfg *serverConfig
 var cltCfg *clientConfig
 
-// GetServerConfig : Get server config
+// GetServerConfig Get server config
 func GetServerConfig() *serverConfig {
 	Init()
 	return svrCfg
 }
 
-// GetClientConfig : Get client config
+// GetClientConfig Get client config
 func GetClientConfig() *clientConfig {
 	Init()
 	return cltCfg
@@ -41,9 +41,9 @@ type serverConfig struct {
 	Local    string
 	BasePath string
 	DataPath string
-	config   string
-	notify   string
-	log      string
+	Config   string
+	Notify   string
+	Log      string
 	Adapters map[string]adapterConfig
 
 	Container   string
@@ -65,30 +65,22 @@ type serverConfig struct {
 	//add routine number
 	MaxInvoke int32
 	//add adapter & report config
-	PropertyReportInterval time.Duration
-	StatReportInterval     time.Duration
-	MainLoopTicker         time.Duration
+	PropertyReportInterval  time.Duration
+	StatReportInterval      time.Duration
+	MainLoopTicker          time.Duration
 	StatReportChannelBufLen int32
-	MaxPackageLength       int
-	GracedownTimeout       time.Duration
-}
-
-func (svrConf *serverConfig) GetConfig() string {
-	return GetServerConfig().config
-}
-
-func (svrConf *serverConfig) GetNotify() string {
-	return GetServerConfig().notify
+	MaxPackageLength        int
+	GracedownTimeout        time.Duration
 }
 
 type clientConfig struct {
 	Locator                 string
-	stat                    string
-	property                string
-	modulename              string
-	refreshEndpointInterval int
-	reportInterval          int
-	checkStatusInterval     int
+	Stat                    string
+	Property                string
+	Modulename              string
+	RefreshEndpointInterval int
+	ReportInterval          int
+	CheckStatusInterval     int
 	AsyncInvokeTimeout      int
 	//add client timeout
 	ClientQueueLen         int

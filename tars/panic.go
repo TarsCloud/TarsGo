@@ -17,7 +17,7 @@ func CheckPanic() {
 		} else {
 			msg = fmt.Sprintf("%#v", r)
 		}
-		debugutil.DumpStack(true, "panic", msg)
+		debug.DumpStack(true, "panic", msg)
 		rogger.FlushLogger()
 		os.Exit(-1)
 	}

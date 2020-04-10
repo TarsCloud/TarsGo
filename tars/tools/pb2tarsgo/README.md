@@ -14,6 +14,7 @@ make install
 ```
 go get github.com/golang/protobuf/{proto,protoc-gen-go}
 go get github.com/TarsCloud/TarsGo/tars
+
 cd $GOPATH/src/github.com/golang/protobuf/protoc-gen-go &&  cp -r $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/pb2tarsgo/protoc-gen-go/{link_tarsrpc.go, tarsrpc} .
 go install
 export PATH=$PATH:$GOPATH/bin
