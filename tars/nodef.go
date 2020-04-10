@@ -6,19 +6,19 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/nodef"
 )
 
-//NodeFHelper is helper struct.
+// NodeFHelper is helper struct.
 type NodeFHelper struct {
 	comm *Communicator
 	si   nodef.ServerInfo
 	sf   *nodef.ServerF
 }
 
-//SetNodeInfo sets the node location for the given Communicator.
-func (n *NodeFHelper) SetNodeInfo(comm *Communicator, node string, app string, server string) {
-	n.comm = comm
+// SetNodeInfo sets node information with communicator, node name, app name, server and container name
+func (n *NodeFHelper) SetNodeInfo(comm *Communicator, node string, app string, server string, container string) {
 	if node == "" {
 		return
 	}
+	n.comm = comm
 	n.sf = new(nodef.ServerF)
 	comm.StringToProxy(node, n.sf)
 	n.si = nodef.ServerInfo{
@@ -31,7 +31,7 @@ func (n *NodeFHelper) SetNodeInfo(comm *Communicator, node string, app string, s
 	}
 }
 
-//KeepAlive sends the keepalive pacakage to the node.
+// KeepAlive sends the keepalive pacakage to the node.
 func (n *NodeFHelper) KeepAlive(adapter string) {
 	if n.sf == nil {
 		return
@@ -44,7 +44,7 @@ func (n *NodeFHelper) KeepAlive(adapter string) {
 	}
 }
 
-//ReportVersion report the tars version to the node.
+// ReportVersion report the tars version to the node.
 func (n *NodeFHelper) ReportVersion(version string) {
 	if n.sf == nil {
 		return

@@ -15,7 +15,7 @@ func saveFile(path string, filename string, content string) error {
 	return nil
 }
 
-//RConf struct for getting remote config.
+// RConf struct for getting remote config.
 type RConf struct {
 	app    string
 	server string
@@ -24,17 +24,17 @@ type RConf struct {
 	path   string
 }
 
-//NewRConf init a Rconf, path should be getting from GetServerConfig().BasePath
+// NewRConf init a Rconf, path should be getting from GetServerConfig().BasePath
 func NewRConf(app string, server string, path string) *RConf {
 	comm := NewCommunicator()
 	tc := new(configf.Config)
-	obj := GetServerConfig().config
+	obj := GetServerConfig().Config
 
 	comm.StringToProxy(obj, tc)
 	return &RConf{app, server, comm, tc, path}
 }
 
-//GetConfigList is discarded.
+// GetConfigList is discarded.
 func (c *RConf) GetConfigList() (flist []string, err error) {
 	info := configf.GetConfigListInfo{
 		Appname:    c.app,
@@ -55,7 +55,7 @@ func (c *RConf) GetConfigList() (flist []string, err error) {
 	return flist, nil
 }
 
-//GetConfig gets the remote config and save it to the path, also return the content.
+// GetConfig gets the remote config and save it to the path, also return the content.
 func (c *RConf) GetConfig(filename string) (config string, err error) {
 	var set string
 	if v, ok := c.comm.GetProperty("setdivision"); ok {

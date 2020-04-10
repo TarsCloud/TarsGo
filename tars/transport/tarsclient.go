@@ -2,36 +2,34 @@ package transport
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
 )
 
-//TarsClientProtocol interface for handling tars client package.
-type TarsClientProtocol interface {
-	Recv(pkg []byte)
-	ParsePackage(buff []byte) (int, int)
-}
-
-//TarsClientConf is tars client side config
+// TarsClientConf is tars client side config
 type TarsClientConf struct {
 	Proto        string
-	ClientProto  TarsClientProtocol
+	ClientProto  ClientProtocol
 	QueueLen     int
 	IdleTimeout  time.Duration
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
+	DialTimeout  time.Duration
 }
 
-//TarsClient is struct for tars client.
+// TarsClient is struct for tars client.
 type TarsClient struct {
 	address string
 	//TODO remove it
 	conn *connection
 
-	cp        TarsClientProtocol
+	cp        ClientProtocol
 	conf      *TarsClientConf
 	sendQueue chan []byte
 	//recvQueue chan []byte
@@ -43,33 +41,50 @@ type connection struct {
 	conn     net.Conn
 	connLock *sync.Mutex
 
-	isClosed  bool
-	idleTime  time.Time
-	invokeNum int32
+	isClosed    bool
+	idleTime    time.Time
+	invokeNum   int32
+	dialTimeout time.Duration
 }
 
-//NewTarsClient new tars client and init it .
-func NewTarsClient(address string, cp TarsClientProtocol, conf *TarsClientConf) *TarsClient {
+// NewTarsClient new tars client and init it .
+func NewTarsClient(address string, cp ClientProtocol, conf *TarsClientConf) *TarsClient {
 	if conf.QueueLen <= 0 {
 		conf.QueueLen = 100
 	}
 	sendQueue := make(chan []byte, conf.QueueLen)
 	tc := &TarsClient{conf: conf, address: address, cp: cp, sendQueue: sendQueue}
-	tc.conn = &connection{tc: tc, isClosed: true, connLock: &sync.Mutex{}}
+	tc.conn = &connection{tc: tc, isClosed: true, connLock: &sync.Mutex{}, dialTimeout: conf.DialTimeout}
 	return tc
 }
 
-//Send sends the request to the server as []byte.
+// ReConnect established the client connection with the server.
+func (tc *TarsClient) ReConnect() error {
+	return tc.conn.ReConnect()
+}
+
+// Send sends the request to the server as []byte.
 func (tc *TarsClient) Send(req []byte) error {
-	w := tc.conn
-	if err := w.reConnect(); err != nil {
+	if err := tc.ReConnect(); err != nil {
 		return err
 	}
-	tc.sendQueue <- req
+
+	// avoid full sendQueue that cause sending block
+	var timerC <-chan struct{}
+	if tc.conf.WriteTimeout > 0 {
+		timerC = rtimer.After(tc.conf.WriteTimeout)
+	}
+
+	select {
+	case <-timerC:
+		return errors.New("tars client write timeout")
+	case tc.sendQueue <- req:
+	}
+
 	return nil
 }
 
-//Close close the client connection with the server.
+// Close close the client connection with the server.
 func (tc *TarsClient) Close() {
 	w := tc.conn
 	if !w.isClosed && w.conn != nil {
@@ -136,12 +151,12 @@ func (c *connection) recv(conn net.Conn, connDone chan bool) {
 				continue // no data, not error
 			}
 			if _, ok := err.(*net.OpError); ok {
-				TLOG.Error("netOperror", conn.RemoteAddr())
+				TLOG.Errorf("net.OpError: %v, error: %v", conn.RemoteAddr(), err)
 				c.close(conn)
 				return // connection is closed
 			}
 			if err == io.EOF {
-				TLOG.Debug("connection closed by remote:", conn.RemoteAddr())
+				TLOG.Debugf("connection closed by remote: %v, error: %v", conn.RemoteAddr(), err)
 			} else {
 				TLOG.Error("read package error:", err)
 			}
@@ -156,8 +171,8 @@ func (c *connection) recv(conn net.Conn, connDone chan bool) {
 			}
 			if status == PACKAGE_FULL {
 				atomic.AddInt32(&c.invokeNum, -1)
-				pkg := make([]byte, pkgLen-4)
-				copy(pkg, currBuffer[4:pkgLen])
+				pkg := make([]byte, pkgLen)
+				copy(pkg, currBuffer[0:pkgLen])
 				currBuffer = currBuffer[pkgLen:]
 				go c.tc.cp.Recv(pkg)
 				if len(currBuffer) > 0 {
@@ -173,11 +188,11 @@ func (c *connection) recv(conn net.Conn, connDone chan bool) {
 	}
 }
 
-func (c *connection) reConnect() (err error) {
+func (c *connection) ReConnect() (err error) {
 	c.connLock.Lock()
 	if c.isClosed {
 		TLOG.Debug("Connect:", c.tc.address)
-		c.conn, err = net.Dial(c.tc.conf.Proto, c.tc.address)
+		c.conn, err = net.DialTimeout(c.tc.conf.Proto, c.tc.address, c.dialTimeout)
 
 		if err != nil {
 			c.connLock.Unlock()

@@ -1,15 +1,13 @@
 package tars
 
 import (
-	"bytes"
 	"context"
-	"encoding/binary"
 	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
+	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	"github.com/TarsCloud/TarsGo/tars/transport"
@@ -19,27 +17,34 @@ var reconnectMsg = "_reconnect_"
 
 // AdapterProxy : Adapter proxy
 type AdapterProxy struct {
-	resp       sync.Map
-	point      *endpointf.EndpointF
-	tarsClient *transport.TarsClient
-	comm       *Communicator
-	failCount  int32
-	sendCount  int32
-	status     bool
-	closed     bool
+	resp            sync.Map
+	point           *endpointf.EndpointF
+	tarsClient      *transport.TarsClient
+	conf            *transport.TarsClientConf
+	comm            *Communicator
+	obj             *ServantProxy
+	failCount       int32
+	lastFailCount   int32
+	sendCount       int32
+	successCount    int32
+	status          bool // true for good
+	lastSuccessTime int64
+	lastBlockTime   int64
+	lastCheckTime   int64
 
-	conf *transport.TarsClientConf
+	count  int
+	closed bool
 }
 
-// New : Construct an adapter proxy
-func (c *AdapterProxy) New(point *endpointf.EndpointF, comm *Communicator) error {
+// NewAdapterProxy : Construct an adapter proxy
+func NewAdapterProxy(point *endpointf.EndpointF, comm *Communicator) *AdapterProxy {
+	c := &AdapterProxy{}
 	c.comm = comm
 	c.point = point
 	proto := "tcp"
 	if point.Istcp == 0 {
 		proto = "udp"
 	}
-
 	conf := &transport.TarsClientConf{
 		Proto: proto,
 		//NumConnect:   netthread,
@@ -47,17 +52,17 @@ func (c *AdapterProxy) New(point *endpointf.EndpointF, comm *Communicator) error
 		IdleTimeout:  comm.Client.ClientIdleTimeout,
 		ReadTimeout:  comm.Client.ClientReadTimeout,
 		WriteTimeout: comm.Client.ClientWriteTimeout,
+		DialTimeout:  comm.Client.ClientDialTimeout,
 	}
 	c.conf = conf
 	c.tarsClient = transport.NewTarsClient(fmt.Sprintf("%s:%d", point.Host, point.Port), c, conf)
 	c.status = true
-	go c.checkActive()
-	return nil
+	return c
 }
 
 // ParsePackage : Parse packet from bytes
 func (c *AdapterProxy) ParsePackage(buff []byte) (int, int) {
-	return TarsRequest(buff)
+	return c.obj.proto.ParsePackage(buff)
 }
 
 // Recv : Recover read channel when closed for timeout
@@ -69,23 +74,30 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 			TLOG.Error("recv pkg painc:", err)
 		}
 	}()
-	packet := requestf.ResponsePacket{}
-	err := packet.ReadFrom(codec.NewReader(pkg))
+	packet, err := c.obj.proto.ResponseUnpack(pkg)
 	if err != nil {
 		TLOG.Error("decode packet error", err.Error())
 		return
 	}
 	if packet.IRequestId == 0 {
-		go c.onPush(&packet)
+		go c.onPush(packet)
+		return
+	}
+	if packet.CPacketType == basef.TARSONEWAY {
 		return
 	}
 	chIF, ok := c.resp.Load(packet.IRequestId)
 	if ok {
 		ch := chIF.(chan *requestf.ResponsePacket)
-		TLOG.Debug("IN:", packet)
-		ch <- &packet
+		select {
+		case ch <- packet:
+		default:
+			TLOG.Errorf("response timeout, write channel error, now time :%v, RequestId:%v",
+				time.Now().UnixNano()/1e6, packet.IRequestId)
+		}
 	} else {
-		TLOG.Error("timeout resp,drop it:", packet.IRequestId)
+		TLOG.Errorf("response timeout, req has been drop, now time :%v, RequestId:%v",
+			time.Now().UnixNano()/1e6, packet.IRequestId)
 	}
 }
 
@@ -93,15 +105,12 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 func (c *AdapterProxy) Send(req *requestf.RequestPacket) error {
 	TLOG.Debug("send req:", req.IRequestId)
 	c.sendAdd()
-	sbuf := bytes.NewBuffer(nil)
-	sbuf.Write(make([]byte, 4))
-	os := codec.NewBuffer()
-	req.WriteTo(os)
-	bs := os.ToBytes()
-	sbuf.Write(bs)
-	len := sbuf.Len()
-	binary.BigEndian.PutUint32(sbuf.Bytes(), uint32(len))
-	return c.tarsClient.Send(sbuf.Bytes())
+	sbuf, err := c.obj.proto.RequestPack(req)
+	if err != nil {
+		TLOG.Debug("protocol wrong:", req.IRequestId)
+		return err
+	}
+	return c.tarsClient.Send(sbuf)
 }
 
 // GetPoint : Get an endpoint
@@ -119,43 +128,74 @@ func (c *AdapterProxy) sendAdd() {
 	atomic.AddInt32(&c.sendCount, 1)
 }
 
+func (c *AdapterProxy) succssAdd() {
+	now := time.Now().Unix()
+	atomic.SwapInt64(&c.lastSuccessTime, now)
+	atomic.AddInt32(&c.successCount, 1)
+	atomic.SwapInt32(&c.lastFailCount, 0)
+}
+
 func (c *AdapterProxy) failAdd() {
+	atomic.AddInt32(&c.lastFailCount, 1)
 	atomic.AddInt32(&c.failCount, 1)
 }
 
 func (c *AdapterProxy) reset() {
+	now := time.Now().Unix()
 	atomic.SwapInt32(&c.sendCount, 0)
+	atomic.SwapInt32(&c.successCount, 0)
 	atomic.SwapInt32(&c.failCount, 0)
+	atomic.SwapInt32(&c.lastFailCount, 0)
+	atomic.SwapInt64(&c.lastBlockTime, now)
+	atomic.SwapInt64(&c.lastCheckTime, now)
+	c.status = true
 }
 
-func (c *AdapterProxy) checkActive() {
-	loop := time.NewTicker(c.comm.Client.AdapterProxyTicker)
-	count := 0 // Detect if a dead node recovers each minute
-	for range loop.C {
-		if c.closed {
-			loop.Stop()
-			return
-		}
-		if c.failCount > c.sendCount/2 {
-			c.status = false
-		}
-		if !c.status && count > c.comm.Client.AdapterProxyResetCount {
-			//TODO USE TAFPING INSTEAD
-			c.reset()
-			c.status = true
-			count = 0
-		}
-		count++
+func (c *AdapterProxy) checkActive() (firstTime bool, needCheck bool) {
+	if c.closed {
+		return false, false
 	}
+
+	now := time.Now().Unix()
+	if c.status {
+		//check if healthy
+		if (now-c.lastSuccessTime) >= failInterval && c.lastFailCount >= fainN {
+			c.status = false
+			c.lastBlockTime = now
+			return true, false
+		}
+		if (now - c.lastCheckTime) >= checkTime {
+			if c.failCount >= overN && (float32(c.failCount)/float32(c.sendCount)) >= failRatio {
+				c.status = false
+				c.lastBlockTime = now
+				return true, false
+			}
+			c.lastCheckTime = now
+			return false, false
+		}
+		return false, false
+	}
+
+	if (now - c.lastBlockTime) >= tryTimeInterval {
+		c.lastBlockTime = now
+		if err := c.tarsClient.ReConnect(); err != nil {
+			return false, false
+		}
+
+		return false, true
+	}
+
+	return false, false
 }
+
 func (c *AdapterProxy) onPush(pkg *requestf.ResponsePacket) {
 	if pkg.SResultDesc == reconnectMsg {
 		TLOG.Infof("reconnect %s:%d", c.point.Host, c.point.Port)
 		oldClient := c.tarsClient
 		c.tarsClient = transport.NewTarsClient(fmt.Sprintf("%s:%d", c.point.Host, c.point.Port), c, c.conf)
 
-		ctx, canf := context.WithTimeout(context.Background(), time.Millisecond*ClientIdleTimeout)
-		defer canf()
+		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*ClientIdleTimeout)
+		defer cancel()
 		oldClient.GraceClose(ctx) // grace shutdown
 	}
 	//TODO: support push msg

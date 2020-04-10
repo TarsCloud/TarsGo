@@ -4,8 +4,10 @@ package tars
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -33,7 +35,7 @@ var serList []string
 var objRunList []string
 var isShudowning int32
 
-//TLOG is the logger for tars framework.
+// TLOG is the logger for tars framework.
 var TLOG = rogger.GetLogger("TLOG")
 var initOnce sync.Once
 var shutdownOnce sync.Once
@@ -54,25 +56,29 @@ func init() {
 	shutdown = make(chan bool, 1)
 	adminMethods = make(map[string]adminFn)
 	rogger.SetLevel(rogger.ERROR)
-	Init()
+	registerFlag()
 }
 
-//Init should run before GetServerConfig & GetClientConfig , or before run
-// and Init should be only run once
-func Init() {
-	initOnce.Do(initConfig)
+var confPath string
+
+func registerFlag() {
+	flag.StringVar(&confPath, "config", "", "init config path")
 }
 
 func initConfig() {
-	confPath := flag.String("config", "", "init config path")
-	flag.Parse()
-	if len(*confPath) == 0 {
+	if !flag.Parsed() {
+		flag.Parse()
+	}
+
+	if len(confPath) == 0 {
 		return
 	}
-	c, err := conf.NewConf(*confPath)
+
+	c, err := conf.NewConf(confPath)
 	if err != nil {
 		TLOG.Error("open app config fail")
 	}
+
 	//Config.go
 	//Server
 	svrCfg = new(serverConfig)
@@ -85,25 +91,42 @@ func initConfig() {
 	svrCfg.App = sMap["app"]
 	svrCfg.Server = sMap["server"]
 	svrCfg.LocalIP = sMap["localip"]
+	svrCfg.Local = c.GetString("/tars/application/server<local>")
 	//svrCfg.Container = c.GetString("/tars/application<container>")
+
 	//init log
 	svrCfg.LogPath = sMap["logpath"]
 	svrCfg.LogSize = tools.ParseLogSizeMb(sMap["logsize"])
 	svrCfg.LogNum = tools.ParseLogNum(sMap["lognum"])
 	svrCfg.LogLevel = sMap["logLevel"]
-	svrCfg.config = sMap["config"]
-	svrCfg.notify = sMap["notify"]
+	svrCfg.Config = sMap["config"]
+	svrCfg.Notify = sMap["notify"]
 	svrCfg.BasePath = sMap["basepath"]
 	svrCfg.DataPath = sMap["datapath"]
+	svrCfg.Log = sMap["log"]
 
-	svrCfg.log = sMap["log"]
 	//add version info
 	svrCfg.Version = TarsVersion
 	//add adapters config
 	svrCfg.Adapters = make(map[string]adapterConfig)
 
+	cachePath := filepath.Join(svrCfg.DataPath, svrCfg.Server) + ".tarsdat"
+	if cacheData, err := ioutil.ReadFile(cachePath); err == nil {
+		json.Unmarshal(cacheData, &appCache)
+	}
+
+	if svrCfg.LogLevel == "" {
+		svrCfg.LogLevel = appCache.LogLevel
+	} else {
+		appCache.LogLevel = svrCfg.LogLevel
+	}
 	rogger.SetLevel(rogger.StringToLevel(svrCfg.LogLevel))
-	TLOG.SetFileRoller(svrCfg.LogPath+"/"+svrCfg.App+"/"+svrCfg.Server, 10, 100)
+	if svrCfg.LogPath != "" {
+		TLOG.SetFileRoller(svrCfg.LogPath+"/"+svrCfg.App+"/"+svrCfg.Server, 10, 100)
+	}
+
+	//cache
+	appCache.TarsVersion = TarsVersion
 
 	// add timeout config
 	svrCfg.AcceptTimeout = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/server<accepttimeout>", AcceptTimeout))
@@ -125,24 +148,28 @@ func initConfig() {
 	svrCfg.PropertyReportInterval = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/server<propertyreportinterval>", PropertyReportInterval))
 	svrCfg.StatReportInterval = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/server<statreportinterval>", StatReportInterval))
 	svrCfg.MainLoopTicker = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/server<mainloopticker>", MainLoopTicker))
+	svrCfg.StatReportChannelBufLen = c.GetInt32WithDef("/tars/application/server<statreportchannelbuflen>", StatReportChannelBufLen)
+	// maxPackageLength
+	svrCfg.MaxPackageLength = c.GetIntWithDef("/tars/application/server<maxPackageLength>", MaxPackageLength)
 
-	svrCfg.MaxPackageLength = c.GetIntWithDef("/tars/application/server<maxPackageLength>", iMaxLength)
 	//client
 	cltCfg = new(clientConfig)
 	cMap := c.GetMap("/tars/application/client")
 	cltCfg.Locator = cMap["locator"]
-	cltCfg.stat = cMap["stat"]
-	cltCfg.property = cMap["property"]
+	cltCfg.Stat = cMap["stat"]
+	cltCfg.Property = cMap["property"]
 	cltCfg.AsyncInvokeTimeout = c.GetIntWithDef("/tars/application/client<async-invoke-timeout>", AsyncInvokeTimeout)
-	cltCfg.refreshEndpointInterval = c.GetIntWithDef("/tars/application/client<refresh-endpoint-interval>", refreshEndpointInterval)
+	cltCfg.RefreshEndpointInterval = c.GetIntWithDef("/tars/application/client<refresh-endpoint-interval>", refreshEndpointInterval)
 	serList = c.GetDomain("/tars/application/server")
-	cltCfg.reportInterval = c.GetIntWithDef("/tars/application/client<report-interval>", reportInterval)
+	cltCfg.ReportInterval = c.GetIntWithDef("/tars/application/client<report-interval>", reportInterval)
+	cltCfg.CheckStatusInterval = c.GetIntWithDef("/tars/application/client<check-status-interval>", checkStatusInterval)
 
 	// add client timeout
 	cltCfg.ClientQueueLen = c.GetIntWithDef("/tars/application/client<clientqueuelen>", ClientQueueLen)
 	cltCfg.ClientIdleTimeout = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/client<clientidletimeout>", ClientIdleTimeout))
 	cltCfg.ClientReadTimeout = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/client<clientreadtimeout>", ClientReadTimeout))
 	cltCfg.ClientWriteTimeout = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/client<clientwritetimeout>", ClientWriteTimeout))
+	cltCfg.ClientDialTimeout = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/client<clientdialtimeout>", ClientDialTimeout))
 	cltCfg.ReqDefaultTimeout = c.GetInt32WithDef("/tars/application/client<reqdefaulttimeout>", ReqDefaultTimeout)
 	cltCfg.ObjQueueMax = c.GetInt32WithDef("/tars/application/client<objqueuemax>", ObjQueueMax)
 	cltCfg.AdapterProxyTicker = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/client<adapterproxyticker>", AdapterProxyTicker))
@@ -177,9 +204,8 @@ func initConfig() {
 		tarsConfig[svrObj] = conf
 	}
 	TLOG.Debug("config add ", tarsConfig)
-	localString := c.GetString("/tars/application/server<local>")
-	localpoint := endpoint.Parse(localString)
 
+	localpoint := endpoint.Parse(svrCfg.Local)
 	adminCfg := &transport.TarsServerConf{
 		Proto:          "tcp",
 		Address:        fmt.Sprintf("%s:%d", localpoint.Host, localpoint.Port),
@@ -197,11 +223,13 @@ func initConfig() {
 
 	tarsConfig["AdminObj"] = adminCfg
 	svrCfg.Adapters["AdminAdapter"] = adapterConfig{localpoint, "tcp", "AdminObj", 1}
+	RegisterAdmin(rogger.Admin, rogger.HandleDyeingAdmin)
 	go initReport()
 }
 
-//Run the application
+// Run the application
 func Run() {
+	defer rogger.FlushLogger()
 	isShudowning = 0
 	Init()
 	<-statInited
@@ -224,18 +252,21 @@ func Run() {
 				addr := s.Addr
 				TLOG.Infof("%s http server start on %s", obj, s.Addr)
 				if addr == "" {
+					lisDone.Done()
 					teerDown(fmt.Errorf("empty addr for %s", obj))
 					return
 				}
 				ln, err := grace.CreateListener("tcp", addr)
 				if err != nil {
+					lisDone.Done()
 					teerDown(fmt.Errorf("start http server for %s failed: %v", obj, err))
 					return
 				}
+
 				lisDone.Done()
 				err = s.Serve(ln)
 				if err != nil {
-					TLOG.Infof("server stop: %v", err)
+					teerDown(fmt.Errorf("%s server stop: %v", obj, err))
 				}
 			}(obj)
 			continue
@@ -243,16 +274,18 @@ func Run() {
 
 		s := goSvrs[obj]
 		if s == nil {
-			TLOG.Debug("Obj not found ", obj)
+			TLOG.Error("Obj not found ", obj)
 			break
 		}
 		TLOG.Debugf("Run %s  %+v", obj, s.GetConfig())
 		lisDone.Add(1)
 		go func(obj string) {
 			if err := s.Listen(); err != nil {
+				lisDone.Done()
 				teerDown(fmt.Errorf("listen obj for %s failed: %v", obj, err))
 				return
 			}
+
 			lisDone.Done()
 			if err := s.Serve(); err != nil {
 				teerDown(fmt.Errorf("server obj for %s failed: %v", obj, err))
@@ -260,7 +293,7 @@ func Run() {
 			}
 		}(obj)
 	}
-	go ReportNotifyInfo("restart")
+	go ReportNotifyInfo(NOTIFY_NORMAL, "restart")
 
 	lisDone.Wait()
 	if os.Getenv("GRACE_RESTART") == "1" {
@@ -398,7 +431,7 @@ func graceShutdown() {
 func teerDown(err error) {
 	shutdownOnce.Do(func() {
 		if err != nil {
-			ReportNotifyInfo("server is fatal: " + err.Error())
+			ReportNotifyInfo(NOTIFY_NORMAL, "server is fatal: "+err.Error())
 			fmt.Println(err)
 			TLOG.Error(err)
 		}
@@ -412,14 +445,13 @@ func handleSignal() {
 }
 
 func mainloop() {
-	defer rogger.FlushLogger()
 	ha := new(NodeFHelper)
 	comm := NewCommunicator()
 	node := GetServerConfig().Node
 	app := GetServerConfig().App
 	server := GetServerConfig().Server
-	//container := GetServerConfig().Container
-	ha.SetNodeInfo(comm, node, app, server)
+	container := GetServerConfig().Container
+	ha.SetNodeInfo(comm, node, app, server, container)
 
 	go ha.ReportVersion(GetServerConfig().Version)
 	go ha.KeepAlive("") //first start
@@ -429,7 +461,7 @@ func mainloop() {
 	for {
 		select {
 		case <-shutdown:
-			ReportNotifyInfo("stop")
+			ReportNotifyInfo(NOTIFY_NORMAL, "stop")
 			return
 		case <-loop.C:
 			if atomic.LoadInt32(&isShudowning) == 1 {

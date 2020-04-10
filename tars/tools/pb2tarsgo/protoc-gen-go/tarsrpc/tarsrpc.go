@@ -49,6 +49,7 @@ const (
 	requestPkgPath = "github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	tarsPkgPath    = "github.com/TarsCloud/TarsGo/tars"
 	toolsPath      = "github.com/TarsCloud/TarsGo/tars/util/tools"
+	currentPath    = "github.com/TarsCloud/TarsGo/tars/util/current"
 )
 
 func init() {
@@ -110,6 +111,7 @@ func (t *tarsrpc) Generate(file *generator.FileDescriptor) {
 	_ = t.gen.AddImport(requestPkgPath)
 	_ = t.gen.AddImport(tarsPkgPath)
 	_ = t.gen.AddImport(toolsPath)
+	_ = t.gen.AddImport(currentPath)
 	_ = t.gen.AddImport("context")
 	for i, service := range file.FileDescriptorProto.Service {
 		t.generateService(file, service, i)
@@ -141,18 +143,25 @@ func (t *tarsrpc) generateService(file *generator.FileDescriptor, service *pb.Se
 		tars.AddServant(obj, imp, objStr)
 	}`, serviceName, serviceName))
 
+	//generate AddServantWithContext
+	t.P(fmt.Sprintf(`////AddServant adds servant  for the service with context
+	func (obj *%s) AddServantWithContext(imp imp%sWithContext, objStr string) {
+		tars.AddServantWithContext(obj, imp, objStr)
+	}`, serviceName, serviceName))
+	t.P()
+
 	//generate TarsSetTimeout
 	t.P(fmt.Sprintf(`//TarsSetTimeout is required by the servant interface. t is the timeout in ms. 
 	func (obj *%s) TarsSetTimeout(t int){
 		obj.s.TarsSetTimeout(t)
 	}
 	`, serviceName))
+	t.P()
 
-	//generate TarsSetHashCode
-	t.P(fmt.Sprintf(`//TarsSetHashCode sets the hash code for client calling the server , which is for Message hash code.
-	func (obj *%s) TarsSetHashCode(code int64){
-        s := _obj.s.(*tars.ServantProxy)
-        s.TarsSetHashCode(code)
+	//generate TarsSetProtocol
+	t.P(fmt.Sprintf(`//TarsSetProtocol is required by the servant interface. t is the protocol. 
+	func (obj *%s) TarsSetProtocol(p model.Protocol){
+		obj.s.TarsSetProtocol(p)
 	}
 	`, serviceName))
 	t.P()
@@ -161,6 +170,15 @@ func (t *tarsrpc) generateService(file *generator.FileDescriptor, service *pb.Se
 	t.P(fmt.Sprintf("type imp%s interface{", serviceName))
 	for _, method := range service.Method {
 		t.P(fmt.Sprintf("%s (input %s) (output %s, err error)",
+			upperFirstLatter(method.GetName()), t.typeName(method.GetInputType()), t.typeName(method.GetOutputType())))
+	}
+	t.P("}")
+	t.P()
+
+	//generate the context interface
+	t.P(fmt.Sprintf("type imp%sWithContext interface{", serviceName))
+	for _, method := range service.Method {
+		t.P(fmt.Sprintf("%s (ctx context.Context, input %s) (output %s, err error)",
 			upperFirstLatter(method.GetName()), t.typeName(method.GetInputType()), t.typeName(method.GetOutputType())))
 	}
 	t.P("}")
@@ -179,16 +197,31 @@ func (t *tarsrpc) generateClientCode(service *pb.ServiceDescriptorProto, method 
 	inType := t.typeName(method.GetInputType())
 	outType := t.typeName(method.GetOutputType())
 	t.P(fmt.Sprintf(`// %s is client rpc method as defined
-		func (obj *%s) %s(input %s)(output %s, err error){
-			var _status map[string]string
-			var _context map[string]string
+		func (obj *%s) %s(input %s, _opt ...map[string]string)(output %s, err error){
+			ctx := context.Background()
+			return obj.%sWithContext(ctx, input, _opt...)
+		}
+	`, methodName, serviceName, methodName, inType, outType, methodName))
+
+	t.P(fmt.Sprintf(`// %sWithContext is client rpc method as defined
+		func (obj *%s) %sWithContext(ctx context.Context, input %s, _opt ...map[string]string)(output %s, err error){
 			var inputMarshal []byte
 			inputMarshal, err = proto.Marshal(&input)
 			if err != nil {
 				return output, err
 			}
+
+			var _status map[string]string
+			var _context map[string]string
+			if len(_opt) == 1 {
+				_context = _opt[0]
+			} else if len(_opt) == 2 {
+				_context = _opt[0]
+				_status = _opt[1]
+			}
+
 			resp := new(requestf.ResponsePacket)
-			ctx := context.Background()
+
 			err = obj.s.Tars_invoke(ctx, 0, "%s", inputMarshal, _status, _context, resp)
 			if err != nil {
 				return output, err
@@ -196,6 +229,29 @@ func (t *tarsrpc) generateClientCode(service *pb.ServiceDescriptorProto, method 
 			if err = proto.Unmarshal(tools.Int8ToByte(resp.SBuffer), &output); err != nil{
 				return output, err
 			}
+
+			if len(_opt) == 1 {
+				for k := range _context {
+					delete(_context, k)
+				}
+				for k, v := range resp.Context {
+					_context[k] = v
+				}
+			} else if len(_opt) == 2 {
+				for k := range _context {
+					delete(_context, k)
+				}
+				for k, v := range resp.Context {
+					_context[k] = v
+				}
+				for k := range _status {
+					delete(_status, k)
+				}
+				for k, v := range resp.Status {
+					_status[k] = v
+				}
+			}
+
 			return output, nil
 		}
 	`, methodName, serviceName, methodName, inType, outType, method.GetName()))
@@ -206,30 +262,48 @@ func (t *tarsrpc) generateDispatch(service *pb.ServiceDescriptorProto) {
 	func (obj *%s) Dispatch(ctx context.Context, val interface{}, req * requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool)(err error){
 		input := tools.Int8ToByte(req.SBuffer)
 		var output []byte
-		imp := val.(imp%s)
 		funcName := req.SFuncName
 		switch funcName {
-	`, serviceName, serviceName))
+	`, serviceName))
 	for _, method := range service.Method {
 		t.P(fmt.Sprintf(`case "%s":
 			inputDefine := %s{}
 			if err = proto.Unmarshal(input,&inputDefine); err != nil{
 				return err
 			}
-			res, err := imp.%s(inputDefine)
-			if err != nil {
-				return err
+			var res %s
+            if withContext == false {
+				imp := val.(imp%s)
+				res, err = imp.%s(inputDefine)
+				if err != nil {
+					return err
+				}
+			}else {
+				imp := val.(imp%sWithContext)
+				res, err = imp.%s(ctx, inputDefine)
+				if err != nil {
+					return err
+				}
 			}
 			output , err = proto.Marshal(&res)
 			if err != nil {
 				return err
 			}
-		`, method.GetName(), t.typeName(method.GetInputType()), upperFirstLatter(method.GetName())))
+		`, method.GetName(), t.typeName(method.GetInputType()), t.typeName(method.GetOutputType()), serviceName, upperFirstLatter(method.GetName()), serviceName, upperFirstLatter(method.GetName())))
 	}
 	t.P(`default:
 			return fmt.Errorf("func mismatch")
 	}
-	var status map[string]string
+	var _status map[string]string
+	s, ok := current.GetResponseStatus(ctx)
+	if ok && s != nil {
+		_status = s
+	}
+	var _context map[string]string
+	c, ok := current.GetResponseContext(ctx)
+	if ok && c != nil {
+		_context = c
+	}
 	*resp = requestf.ResponsePacket{
 		IVersion:     1,
 		CPacketType:  0,
@@ -237,9 +311,9 @@ func (t *tarsrpc) generateDispatch(service *pb.ServiceDescriptorProto) {
 		IMessageType: 0,
 		IRet:         0,
 		SBuffer:      tools.ByteToInt8(output),
-		Status:       status,
+		Status:       _status,
 		SResultDesc:  "",
-		Context:      req.Context,
+		Context:      _context,
 	}
 	return nil
 }

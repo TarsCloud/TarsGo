@@ -11,7 +11,7 @@ const (
 	//for now ,some option shuold update from remote config
 
 	//TarsVersion is tars vesion
-	TarsVersion string = "1.1.1"
+	TarsVersion string = "1.1.2"
 
 	//server
 
@@ -42,23 +42,32 @@ const (
 	ClientWriteTimeout = 3000
 	//ReqDefaultTimeout request default timeout
 	ReqDefaultTimeout int32 = 3000
+	//ClientDialTimeout connection dial timeout
+	ClientDialTimeout = 3000
 	//ObjQueueMax obj queue max number
-	ObjQueueMax int32 = 1000000
+	ObjQueueMax int32 = 100000
 
 	//log
-	remotelogBuff int = 500000
-	//MaxlogOneTime is the max logs for reporting in one time.
-	MaxlogOneTime       int = 2000
-	defualtRotateN          = 10
-	defaultRotateSizeMB     = 100
+	defualtRotateN      = 10
+	defaultRotateSizeMB = 100
+
+	//remotelog
+
+	//remoteLogQueueSize remote log queue size
+	remoteLogQueueSize int = 500000
+	//remoteLogMaxNumOneTime is the max logs for reporting in one time.
+	remoteLogMaxNumOneTime int = 2000
+	//remoteLogInterval log report interval, defaultvalue is 1000 milliseconds
+	remoteLogInterval time.Duration = 1000 * time.Millisecond
 
 	//report
 
 	//PropertyReportInterval property report interval,defaultvalue is 10000 milliseconds
 	PropertyReportInterval = 10000
 	//StatReportInterval stat report interval,defaultvalue is 10000 milliseconds
-	StatReportInterval               = 10000
-	remoteLogInterval  time.Duration = 5 * time.Second
+	StatReportInterval = 10000
+	// StatReportChannelBufLen stat report channel len
+	StatReportChannelBufLen = 100000
 
 	//mainloop
 
@@ -74,9 +83,24 @@ const (
 
 	//communicator default ,update from remote config
 	refreshEndpointInterval int = 60000
-	reportInterval          int = 10000
+	reportInterval          int = 5000
 	//AsyncInvokeTimeout async invoke timeout
 	AsyncInvokeTimeout int = 3000
+
+	//check endpoint status every 1000 ms
+	checkStatusInterval int = 1000
+
+	//try interval after every 30s
+	tryTimeInterval int64 = 30
+	//failN & failInterval shows how many times fail in the failInterval second,the server will be blocked.
+	fainN        int32 = 5
+	failInterval int64 = 5
+
+	//default check every 60 second , and over 2 is failed ,
+	//and timeout ratio over 0.5 ,the server will be blocked.
+	checkTime int64   = 60
+	overN     int32   = 2
+	failRatio float32 = 0.5
 
 	//tcp network config
 
@@ -90,4 +114,7 @@ const (
 	//GracedownTimeout set timeout (milliseconds) for grace shutdown
 	GracedownTimeout   = 60000
 	graceCheckInterval = time.Millisecond * 500
+
+	//MaxPackageLength maximum length of the request
+	MaxPackageLength = 10485760
 )
