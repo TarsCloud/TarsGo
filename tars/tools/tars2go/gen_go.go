@@ -1412,6 +1412,9 @@ func (gen *GenGo) genIFDispatch(itf *InterfaceInfo) {
 		SResultDesc:  "",
 		Context:      _context,
 	}
+
+	_ = _is
+	_ = _os
 	_ = length
 	_ = have
 	_ = ty
