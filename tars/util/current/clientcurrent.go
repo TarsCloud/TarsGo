@@ -13,8 +13,8 @@ type ClientCurrent struct {
 	isTimeout bool
 	timeout   int //in ms
 
-	serverIP    string
-	serverPort  string
+	serverIP   string
+	serverPort string
 }
 
 func newCientCurrent() *ClientCurrent {

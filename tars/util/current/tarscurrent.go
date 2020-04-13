@@ -6,7 +6,7 @@ type tarsCurrentKey int64
 
 var tcKey = tarsCurrentKey(0x484900)
 
-// Current contains message for the specify request. 
+// Current contains message for the specify request.
 // This current is used for server side.
 type Current struct {
 	clientIP    string

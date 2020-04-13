@@ -146,9 +146,9 @@ func (e *elem) getValue(path string) (string, error) {
 
 // Conf struct for parse xml-like tars config file.
 type Conf struct {
-	content []byte 		// content for storing data
-	mutex   *sync.RWMutex 	// mutex for multi goroutines
-	root    *elem 		// root is the root element
+	content []byte        // content for storing data
+	mutex   *sync.RWMutex // mutex for multi goroutines
+	root    *elem         // root is the root element
 }
 
 // New  returns an new Conf struct.
