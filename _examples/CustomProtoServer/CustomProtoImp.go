@@ -14,7 +14,7 @@ import (
 type CustomProtocolImp struct {
 }
 
-// ParsePackage protocol interface
+// ParsePackage parse request package
 func (s *CustomProtocolImp) ParsePackage(buff []byte) (int, int) {
 	if len(buff) < 4 {
 		return 0, transport.PACKAGE_LESS
@@ -30,7 +30,7 @@ func (s *CustomProtocolImp) ParsePackage(buff []byte) (int, int) {
 	return 0, transport.PACKAGE_LESS
 }
 
-// Invoke 按照protocol interface实现的自定义协议处理函数（taf平台function层）。与常规taf协议不同的地方是，响应仍旧是RequestPacket结构
+// Invoke process request and send response 
 func (s *CustomProtocolImp) Invoke(ctx context.Context, req []byte) []byte {
 	fmt.Println("req:", req)
 	reqMap, err := url.ParseQuery(strings.TrimSpace(string(req)))
@@ -49,7 +49,7 @@ func (s *CustomProtocolImp) Invoke(ctx context.Context, req []byte) []byte {
 	}
 }
 
-// InvokeTimeout 超时时的处理函数
+// InvokeTimeout send response when server is timeout
 func (s *CustomProtocolImp) InvokeTimeout(pkg []byte) []byte {
 	fmt.Println("invoke timeout:", pkg)
 	rsp := bytes.NewBuffer(nil)
