@@ -59,7 +59,7 @@ func path2ProtoName(path string) string {
 	} else {
 		iBegin++
 	}
-	iEnd := strings.LastIndex(path, ".jce")
+	iEnd := strings.LastIndex(path, ".tars")
 	if iEnd == -1 {
 		iEnd = len(path)
 	}
