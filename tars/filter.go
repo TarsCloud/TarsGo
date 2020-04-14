@@ -8,12 +8,12 @@ import (
 )
 
 type filters struct {
-	cf ClientFilter
-	preCfs []ClientFilter
+	cf      ClientFilter
+	preCfs  []ClientFilter
 	postCfs []ClientFilter
 
-	sf ServerFilter
-	preSfs []ServerFilter
+	sf      ServerFilter
+	preSfs  []ServerFilter
 	postSfs []ServerFilter
 }
 

@@ -67,7 +67,7 @@ func (h *udpHandler) Handle() error {
 			current.SetClientIPWithContext(ctx, udpAddr.IP.String())
 			current.SetClientPortWithContext(ctx, strconv.Itoa(udpAddr.Port))
 			current.SetRecvPkgTsFromContext(ctx, time.Now().UnixNano()/1e6)
-			
+
 			atomic.AddInt32(&h.ts.numInvoke, 1)
 			rsp := h.ts.invoke(ctx, pkg) // no need to check package
 
@@ -75,7 +75,7 @@ func (h *udpHandler) Handle() error {
 			if !ok {
 				TLOG.Error("Failed to GetPacketTypeFromContext")
 			}
-			
+
 			if cPacketType == basef.TARSONEWAY {
 				atomic.AddInt32(&h.ts.numInvoke, -1)
 				return

@@ -25,7 +25,7 @@ var (
 	logLevel = DEBUG
 	colored  = false
 
-	logQueue      = make(chan *logValue, 10000)
+	logQueue    = make(chan *logValue, 10000)
 	loggerMutex sync.Mutex
 	loggerMap   = make(map[string]*Logger)
 	writeDone   = make(chan bool)

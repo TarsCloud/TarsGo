@@ -8,7 +8,6 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 )
 
-
 func TarsRequest(rev []byte, maxLen int) (int, int) {
 	if len(rev) < 4 {
 		return 0, PACKAGE_LESS

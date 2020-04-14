@@ -3,8 +3,8 @@ package tools
 import (
 	"strconv"
 	"strings"
-	"unicode"
 	"time"
+	"unicode"
 )
 
 const (
