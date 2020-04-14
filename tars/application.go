@@ -266,7 +266,11 @@ func Run() {
 				lisDone.Done()
 				err = s.Serve(ln)
 				if err != nil {
-					teerDown(fmt.Errorf("%s server stop: %v", obj, err))
+					if err == http.ErrServerClosed {
+						TLOG.Infof("%s http server stop: %v", obj, err)
+					} else {
+						teerDown(fmt.Errorf("%s server stop: %v", obj, err))
+					}
 				}
 			}(obj)
 			continue
