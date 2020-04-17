@@ -59,6 +59,7 @@ func (rw *RemoteTimeWriter) Sync2remote() {
 					rw.reportFailPtr.Report(len(v))
 				}
 				rw.reportSuccPtr.Report(len(v))
+				v = make([]string, 0, maxLen) //reset the slice after syncing log to remote
 			}
 		}
 	}
