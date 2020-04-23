@@ -17,6 +17,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/protocol"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/adminf"
 	"github.com/TarsCloud/TarsGo/tars/transport"
 	"github.com/TarsCloud/TarsGo/tars/util/conf"
