@@ -17,8 +17,8 @@ fi
 APP=$1
 SERVER=$2
 SERVANT=$3
-GOMODULENAME=$4
-TARGET="$PWD/$APP/$SERVER/"
+MODULE=$4
+TARGET="$PWD/$SERVER/"
 PROTODIR="/tars-protocol"
 
 if [ -d $TARGET ];then
@@ -53,9 +53,9 @@ then
     do
         echo ">>>Now doing:"$FILE" >>>>"
         sed  -i "" "s/_APP_/$APP/g"   $FILE
-        sed  -i "" "s#_IMPORTAPP_#${GOMODULENAME}/tars-protocol/${APP}#g"   $FILE
         sed  -i "" "s/_SERVER_/$SERVER/g" $FILE
         sed  -i "" "s/_SERVANT_/$SERVANT/g" $FILE
+        sed  -i "" "s#_MODULE_#$MODULE#g" $FILE
     done
 
     for RENAMEFILE in `find . -maxdepth 1 -type f`
@@ -72,16 +72,18 @@ else
     for FILE in $SRC_FILE client/client.go debugtool/dumpstack.go
     do
         echo ">>>Now doing:"$FILE" >>>>"
-        sed  -i "s/_APP_/$APP/g"   $FILE
-        sed  -i "s#_IMPORTAPP_#${GOMODULENAME}/tars-protocol/${APP}#g"   $FILE
-        sed  -i "s/_SERVER_/$SERVER/g" $FILE
-        sed  -i "s/_SERVANT_/$SERVANT/g" $FILE
+        sed -i "s/_APP_/$APP/g"   $FILE
+        sed -i "s/_SERVER_/$SERVER/g" $FILE
+        sed -i "s/_SERVANT_/$SERVANT/g" $FILE
+        sed -i "s#_MODULE_#$MODULE#g" $FILE
     done
 
+    SERVANT_LC=`echo $SERVANT|tr 'A-Z' 'a-z'`
     for RENAMEFILE in `ls `
     do
         rename "Server" "$SERVER" $RENAMEFILE
-        rename "Servant" "$SERVANT" $RENAMEFILE
+        rename "Servant.tars" "${SERVANT}.tars" $RENAMEFILE
+        rename "Servant_imp.go" "${SERVANT_LC}_imp.go" $RENAMEFILE
     done
 fi
 
@@ -91,7 +93,7 @@ go install
 cd "$TARGET"
 echo ">>> Great！Done! You can jump in "`pwd`
 
-go mod init "$GOMODULENAME"
+go mod init "$MODULE"
 
 # show tips: how to convert tars to golang
 echo ">>> Tips: After editing the Tars file, execute the following cmd to automatically generate golang files."

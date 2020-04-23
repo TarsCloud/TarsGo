@@ -33,7 +33,7 @@ func addServantCommon(v dispatch, f interface{}, obj string, withContext bool) {
 	}
 	TLOG.Debug("add:", cfg)
 
-	jp := NewTarsProtocol(v, f, withContext, GetServerConfig().MaxPackageLength)
+	jp := NewTarsProtocol(v, f, withContext)
 	s := transport.NewTarsServer(jp, cfg)
 	goSvrs[obj] = s
 }

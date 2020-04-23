@@ -22,13 +22,12 @@ type TarsProtocol struct {
 	dispatcher       dispatch
 	serverImp        interface{}
 	withContext      bool
-	maxPackageLength int
 }
 
 // NewTarsProtocol return a TarsProtocol with dipatcher and implement interface.
 // withContext explain using context or not.
-func NewTarsProtocol(dispatcher dispatch, imp interface{}, withContext bool, maxLen int) *TarsProtocol {
-	s := &TarsProtocol{dispatcher: dispatcher, serverImp: imp, withContext: withContext, maxPackageLength: maxLen}
+func NewTarsProtocol(dispatcher dispatch, imp interface{}, withContext bool) *TarsProtocol {
+	s := &TarsProtocol{dispatcher: dispatcher, serverImp: imp, withContext: withContext}
 	return s
 }
 
@@ -121,7 +120,7 @@ func (s *TarsProtocol) rsp2Byte(rsp *requestf.ResponsePacket) []byte {
 // ParsePackage parse the []byte according to the tars protocol.
 // returns header length and package integrity condition (PACKAGE_LESS | PACKAGE_FULL | PACKAGE_ERROR)
 func (s *TarsProtocol) ParsePackage(buff []byte) (int, int) {
-	return protocol.TarsRequest(buff, s.maxPackageLength)
+	return protocol.TarsRequest(buff)
 }
 
 // InvokeTimeout indicates how to deal with timeout.
