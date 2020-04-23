@@ -15,7 +15,7 @@ func main() {
 
 	// New servant imp
 	imp := new(_SERVANT_Imp)
-	ret, err := imp.Init()
+	err := imp.Init()
 	if err != nil {
 		fmt.Printf("_SERVANT_Imp init fail, ret:%d, err:(%s)\n", ret, err)
 		os.Exit(-1)
