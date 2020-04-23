@@ -17,6 +17,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/protocol"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/adminf"
 	"github.com/TarsCloud/TarsGo/tars/transport"
 	"github.com/TarsCloud/TarsGo/tars/util/conf"
@@ -151,6 +152,7 @@ func initConfig() {
 	svrCfg.StatReportChannelBufLen = c.GetInt32WithDef("/tars/application/server<statreportchannelbuflen>", StatReportChannelBufLen)
 	// maxPackageLength
 	svrCfg.MaxPackageLength = c.GetIntWithDef("/tars/application/server<maxPackageLength>", MaxPackageLength)
+	protocol.SetMaxPackageLength(svrCfg.MaxPackageLength)
 
 	//client
 	cltCfg = new(clientConfig)

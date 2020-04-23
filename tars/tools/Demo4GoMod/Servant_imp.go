@@ -4,16 +4,18 @@ import (
 	"context"
 )
 
+// _SERVANT_Imp servant implementation
 type _SERVANT_Imp struct {
 }
 
+// Init servant init
 func (imp *_SERVANT_Imp) Init() (int, error) {
 	//initialize servant here:
 	//...
 	return 0,nil
 }
 
-//////////////////////////////////////////////////////
+// Destroy servant destory
 func (imp *_SERVANT_Imp) Destroy() {
 	//destroy servant here:
 	//...
