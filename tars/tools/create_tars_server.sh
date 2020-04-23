@@ -69,22 +69,24 @@ else
     for FILE in $SRC_FILE client/client.go vendor/vendor.json debugtool/dumpstack.go
     do
         echo ">>>Now doing:"$FILE" >>>>"
-        sed  -i "s/_APP_/$APP/g"   $FILE
-        sed  -i "s/_SERVER_/$SERVER/g" $FILE
-        sed  -i "s/_SERVANT_/$SERVANT/g" $FILE
+        sed -i "s/_APP_/$APP/g"   $FILE
+        sed -i "s/_SERVER_/$SERVER/g" $FILE
+        sed -i "s/_SERVANT_/$SERVANT/g" $FILE
     done
 
+    SERVANT_LC=`echo $SERVANT|tr 'A-Z' 'a-z'`
     for RENAMEFILE in `ls `
     do
         rename "Server" "$SERVER" $RENAMEFILE
-        rename "Servant" "$SERVANT" $RENAMEFILE
+        rename "Servant.tars" "${SERVANT}.tars" $RENAMEFILE
+        rename "Servant_imp.go" "${SERVANT_LC}_imp.go" $RENAMEFILE
     done
 fi
 
 # try build tars2go
-cd "$GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go"
+cd "$SRC_DIR/tars2go"
 go install
-cd "$GOPATH/src/$APP/$SERVER"
+cd $TARGET
 echo ">>> Great！Done! You can jump in "`pwd`
 
 # show tips: how to convert tars to golang

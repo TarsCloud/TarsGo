@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.2 (2020/04/23)
+### ChangLogs
+- merge from tars internal version
 
 ## 1.1.1 (2020/04/06)
 ### ChangLogs
