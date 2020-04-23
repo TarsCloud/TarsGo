@@ -67,7 +67,6 @@ PROBUILD: $(PRO_SRC)
 	for file in $(sort $(PRO_SRC));\
 	do \
 		dirname=$$(dirname $$file);\
-		mkdir -p vendor/$$dirname;\
 		$(PB2GO) ${PB2GO_FLAG} --go_out=plugins=tarsrpc:$$dirname --proto_path=$$dirname $$file;\
 	done
 else

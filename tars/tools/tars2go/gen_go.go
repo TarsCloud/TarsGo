@@ -307,7 +307,7 @@ func (gen *GenGo) genStructImport(module string, protoName string, mImports map[
 		}
 	}
 
-	if *gModuleUpper{
+	if *gModuleUpper {
 		moduleAlia = upperFirstLetter(moduleAlia)
 	}
 
@@ -478,27 +478,6 @@ func (gen *GenGo) genStructDefine(st *StructInfo) {
 			c.WriteString("\t" + v.Key + " " + gen.genType(v.Type) + " `json:\"" + v.OriginKey + "\"`\n")
 		}
 	}
-	c.WriteString("}\n")
-}
-
-func (gen *GenGo) genFunTypeName(st *StructInfo) {
-	c := &gen.code
-	c.WriteString("\nfunc (st *" + st.Name + ") TypeName() string {\n")
-	c.WriteString("	return \"" + gen.p.Module + "." + st.OriginName + "\"")
-	c.WriteString("}\n")
-}
-
-func (gen *GenGo) genFunDecode(st *StructInfo) {
-	c := &gen.code
-	c.WriteString("\nfunc (st *" + st.Name + ") Decode(raw []byte) error{\n")
-	c.WriteString("	return st.ReadBlock(codec.NewReader(raw),0,true)\n")
-	c.WriteString("}\n")
-}
-
-func (gen *GenGo) genFunEncode(st *StructInfo) {
-	c := &gen.code
-	c.WriteString("\nfunc (st *" + st.Name + ") Encode(_os *codec.Buffer) error{\n")
-	c.WriteString("	return st.WriteBlock(_os,0)\n")
 	c.WriteString("}\n")
 }
 
@@ -1005,10 +984,6 @@ func (gen *GenGo) genStruct(st *StructInfo) {
 
 	gen.genFunWriteTo(st)
 	gen.genFunWriteBlock(st)
-
-	gen.genFunDecode(st)
-	gen.genFunEncode(st)
-	gen.genFunTypeName(st)
 }
 
 func (gen *GenGo) makeEnumName(en *EnumInfo, mb *EnumMember) string {
@@ -1157,7 +1132,7 @@ func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo, withContext boo
 		if isOneWay {
 			c.WriteString("//" + fun.Name + "OneWayWithContext is the proxy function for the method defined in the tars file, with the context\n")
 			c.WriteString("func (_obj *" + interfName + ") " + fun.Name + "OneWayWithContext(ctx context.Context,")
-		} else {	
+		} else {
 			c.WriteString("//" + fun.Name + "WithContext is the proxy function for the method defined in the tars file, with the context\n")
 			c.WriteString("func (_obj *" + interfName + ") " + fun.Name + "WithContext(ctx context.Context,")
 		}

@@ -151,6 +151,7 @@ func initConfig() {
 	svrCfg.StatReportChannelBufLen = c.GetInt32WithDef("/tars/application/server<statreportchannelbuflen>", StatReportChannelBufLen)
 	// maxPackageLength
 	svrCfg.MaxPackageLength = c.GetIntWithDef("/tars/application/server<maxPackageLength>", MaxPackageLength)
+	protocol.SetMaxPackageLength(svrCfg.MaxPackageLength)
 
 	//client
 	cltCfg = new(clientConfig)

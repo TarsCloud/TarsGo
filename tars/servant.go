@@ -55,7 +55,7 @@ func newServantProxy(comm *Communicator, objName string) *ServantProxy {
 	// init manager
 	s.manager = GetManager(comm, objName)
 	s.comm = comm
-	s.proto = &protocol.TarsProtocol{MaxPackageLength: GetServerConfig().MaxPackageLength}
+	s.proto = &protocol.TarsProtocol{}
 	s.timeout = s.comm.Client.AsyncInvokeTimeout
 	s.version = basef.TARSVERSION
 	return s

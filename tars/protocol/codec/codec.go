@@ -66,13 +66,13 @@ type Reader struct {
 	buf *bytes.Reader
 }
 
-// go:nosplit
+//go:nosplit
 func bWriteU8(w *bytes.Buffer, data uint8) error {
 	err := w.WriteByte(byte(data))
 	return err
 }
 
-// go:nosplit
+//go:nosplit
 func bWriteU16(w *bytes.Buffer, data uint16) error {
 	var b [2]byte
 	var bs []byte
@@ -82,7 +82,7 @@ func bWriteU16(w *bytes.Buffer, data uint16) error {
 	return err
 }
 
-// go:nosplit
+//go:nosplit
 func bWriteU32(w *bytes.Buffer, data uint32) error {
 	var b [4]byte
 	var bs []byte
@@ -92,7 +92,7 @@ func bWriteU32(w *bytes.Buffer, data uint32) error {
 	return err
 }
 
-// go:nosplit
+//go:nosplit
 func bWriteU64(w *bytes.Buffer, data uint64) error {
 	var b [8]byte
 	var bs []byte
@@ -102,14 +102,14 @@ func bWriteU64(w *bytes.Buffer, data uint64) error {
 	return err
 }
 
-// go:nosplit
+//go:nosplit
 func bReadU8(r *bytes.Reader, data *uint8) error {
 	var err error
 	*data, err = r.ReadByte()
 	return err
 }
 
-// go:nosplit
+//go:nosplit
 func bReadU16(r *bytes.Reader, data *uint16) error {
 	var b [2]byte
 	var bs []byte
@@ -119,7 +119,7 @@ func bReadU16(r *bytes.Reader, data *uint16) error {
 	return err
 }
 
-// go:nosplit
+//go:nosplit
 func bReadU32(r *bytes.Reader, data *uint32) error {
 	var b [4]byte
 	var bs []byte
@@ -129,7 +129,7 @@ func bReadU32(r *bytes.Reader, data *uint32) error {
 	return err
 }
 
-// go:nosplit
+//go:nosplit
 func bReadU64(r *bytes.Reader, data *uint64) error {
 	var b [8]byte
 	var bs []byte
@@ -139,7 +139,7 @@ func bReadU64(r *bytes.Reader, data *uint64) error {
 	return err
 }
 
-// go:nosplit
+//go:nosplit
 func (b *Buffer) WriteHead(ty byte, tag byte) error {
 	if tag < 15 {
 		data := (tag << 4) | ty
@@ -319,7 +319,7 @@ func (b *Buffer) Write_string(data string, tag byte) error {
 	return nil
 }
 
-// go:nosplit
+//go:nosplit
 func (b *Reader) readHead() (ty, tag byte, err error) {
 	data, err := b.buf.ReadByte()
 	if err != nil {
@@ -345,7 +345,7 @@ func (b *Reader) unreadHead(tag byte) {
 }
 
 // Next return the []byte of next n .
-// go:nosplit
+//go:nosplit
 func (b *Reader) Next(n int) []byte {
 	if n <= 0 {
 		return []byte{}
@@ -357,7 +357,7 @@ func (b *Reader) Next(n int) []byte {
 }
 
 // Skip Skip the next n byte.
-// go:nosplit
+//go:nosplit
 func (b *Reader) Skip(n int) {
 	if n <= 0 {
 		return
@@ -740,16 +740,25 @@ func (b *Reader) Read_int64(data *int64, tag byte, require bool) error {
 
 // Read_float32 reads the float32 value for the tag and the require or optional sign.
 func (b *Reader) Read_float32(data *float32, tag byte, require bool) error {
-	err, have := b.SkipTo(FLOAT, tag, require)
+	err, have, ty := b.SkipToNoCheck(tag, require)
 	if err != nil {
 		return err
 	}
 	if !have {
 		return nil
 	}
-	var tmp uint32
-	err = bReadU32(b.buf, &tmp)
-	*data = math.Float32frombits(tmp)
+
+	switch ty {
+	case ZERO_TAG:
+		*data = 0
+	case FLOAT:
+		var tmp uint32
+		err = bReadU32(b.buf, &tmp)
+		*data = math.Float32frombits(tmp)
+	default:
+		return fmt.Errorf("read 'float' type mismatch, tag:%d, get type:%s", tag, getTypeStr(int(ty)))
+	}
+
 	if err != nil {
 		err = fmt.Errorf("Read_float32 tag:%d error:%v", tag, err)
 	}
@@ -758,16 +767,29 @@ func (b *Reader) Read_float32(data *float32, tag byte, require bool) error {
 
 // Read_float64 reads the float64 value for the tag and the require or optional sign.
 func (b *Reader) Read_float64(data *float64, tag byte, require bool) error {
-	err, have := b.SkipTo(DOUBLE, tag, require)
+	err, have, ty := b.SkipToNoCheck(tag, require)
 	if err != nil {
 		return err
 	}
 	if !have {
 		return nil
 	}
-	var tmp uint64
-	err = bReadU64(b.buf, &tmp)
-	*data = math.Float64frombits(tmp)
+
+	switch ty {
+	case ZERO_TAG:
+		*data = 0
+	case FLOAT:
+		var tmp uint32
+		err = bReadU32(b.buf, &tmp)
+		*data = float64(math.Float32frombits(tmp))
+	case DOUBLE:
+		var tmp uint64
+		err = bReadU64(b.buf, &tmp)
+		*data = math.Float64frombits(tmp)
+	default:
+		return fmt.Errorf("read 'double' type mismatch, tag:%d, get type:%s", tag, getTypeStr(int(ty)))
+	}
+
 	if err != nil {
 		err = fmt.Errorf("Read_float64 tag:%d error:%v", tag, err)
 	}
