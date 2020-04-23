@@ -8,12 +8,20 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 )
 
-func TarsRequest(rev []byte, maxLen int) (int, int) {
+
+var maxPackageLength int = 10485760
+
+// SetMaxPackageLength sets the max length of tars packet 
+func SetMaxPackageLength(len int) {
+	maxPackageLength = len
+}
+
+func TarsRequest(rev []byte) (int, int) {
 	if len(rev) < 4 {
 		return 0, PACKAGE_LESS
 	}
 	iHeaderLen := int(binary.BigEndian.Uint32(rev[0:4]))
-	if iHeaderLen < 4 || iHeaderLen > maxLen {
+	if iHeaderLen < 4 || iHeaderLen > maxPackageLength {
 		return 0, PACKAGE_ERROR
 	}
 	if len(rev) < iHeaderLen {
@@ -44,5 +52,5 @@ func (p *TarsProtocol) ResponseUnpack(pkg []byte) (*requestf.ResponsePacket, err
 	return packet, err
 }
 func (p *TarsProtocol) ParsePackage(rev []byte) (int, int) {
-	return TarsRequest(rev, p.MaxPackageLength)
+	return TarsRequest(rev)
 }
