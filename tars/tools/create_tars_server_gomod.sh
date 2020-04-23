@@ -49,7 +49,7 @@ cp -r $DEBUGDIR $TARGET
 
 if [ `uname` == "Darwin" ] # support macOS
 then
-    for FILE in $SRC_FILE client/client.go
+    for FILE in $SRC_FILE client/client.go debugtool/dumpstack.go
     do
         echo ">>>Now doing:"$FILE" >>>>"
         sed  -i "" "s/_APP_/$APP/g"   $FILE
@@ -90,7 +90,7 @@ fi
 # try build tars2go
 cd "$SRC_DIR/tars2go"
 go install
-cd "$TARGET"
+cd $TARGET
 echo ">>> Great！Done! You can jump in "`pwd`
 
 go mod init "$MODULE"
