@@ -57,27 +57,27 @@ func init() {
 	shutdown = make(chan bool, 1)
 	adminMethods = make(map[string]adminFn)
 	rogger.SetLevel(rogger.ERROR)
-	registerFlag()
 }
 
-var confPath string
-
-func registerFlag() {
-	flag.StringVar(&confPath, "config", "", "init config path")
-}
+// ServerConfigPath is the path of server config
+var ServerConfigPath string
 
 func initConfig() {
-	if !flag.Parsed() {
-		flag.Parse()
+	if ServerConfigPath == "" {
+		svrFlag := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
+		svrFlag.StringVar(&ServerConfigPath, "config", "", "server config path")
+		svrFlag.Parse(os.Args[1:])
 	}
 
-	if len(confPath) == 0 {
+	if len(ServerConfigPath) == 0 {
+		TLOG.Error("server config path empty")
 		return
 	}
 
-	c, err := conf.NewConf(confPath)
+	c, err := conf.NewConf(ServerConfigPath)
 	if err != nil {
-		TLOG.Error("open app config fail")
+		TLOG.Error("open server config fail")
+		return
 	}
 
 	//Config.go
@@ -207,25 +207,28 @@ func initConfig() {
 	}
 	TLOG.Debug("config add ", tarsConfig)
 
-	localpoint := endpoint.Parse(svrCfg.Local)
-	adminCfg := &transport.TarsServerConf{
-		Proto:          "tcp",
-		Address:        fmt.Sprintf("%s:%d", localpoint.Host, localpoint.Port),
-		MaxInvoke:      svrCfg.MaxInvoke,
-		AcceptTimeout:  svrCfg.AcceptTimeout,
-		ReadTimeout:    svrCfg.ReadTimeout,
-		WriteTimeout:   svrCfg.WriteTimeout,
-		HandleTimeout:  svrCfg.HandleTimeout,
-		IdleTimeout:    svrCfg.IdleTimeout,
-		QueueCap:       svrCfg.QueueCap,
-		TCPNoDelay:     svrCfg.TCPNoDelay,
-		TCPReadBuffer:  svrCfg.TCPReadBuffer,
-		TCPWriteBuffer: svrCfg.TCPWriteBuffer,
+	if len(svrCfg.Local) > 0 {
+		localpoint := endpoint.Parse(svrCfg.Local)
+		adminCfg := &transport.TarsServerConf{
+			Proto:          "tcp",
+			Address:        fmt.Sprintf("%s:%d", localpoint.Host, localpoint.Port),
+			MaxInvoke:      svrCfg.MaxInvoke,
+			AcceptTimeout:  svrCfg.AcceptTimeout,
+			ReadTimeout:    svrCfg.ReadTimeout,
+			WriteTimeout:   svrCfg.WriteTimeout,
+			HandleTimeout:  svrCfg.HandleTimeout,
+			IdleTimeout:    svrCfg.IdleTimeout,
+			QueueCap:       svrCfg.QueueCap,
+			TCPNoDelay:     svrCfg.TCPNoDelay,
+			TCPReadBuffer:  svrCfg.TCPReadBuffer,
+			TCPWriteBuffer: svrCfg.TCPWriteBuffer,
+		}
+
+		tarsConfig["AdminObj"] = adminCfg
+		svrCfg.Adapters["AdminAdapter"] = adapterConfig{localpoint, "tcp", "AdminObj", 1}
+		RegisterAdmin(rogger.Admin, rogger.HandleDyeingAdmin)
 	}
 
-	tarsConfig["AdminObj"] = adminCfg
-	svrCfg.Adapters["AdminAdapter"] = adapterConfig{localpoint, "tcp", "AdminObj", 1}
-	RegisterAdmin(rogger.Admin, rogger.HandleDyeingAdmin)
 	go initReport()
 }
 
@@ -241,10 +244,13 @@ func Run() {
 			TLOG.Infof("env %s", env)
 		}
 	}
+
 	// add adminF
-	adf := new(adminf.AdminF)
-	ad := new(Admin)
-	AddServant(adf, ad, "AdminObj")
+	if _, ok := tarsConfig["AdminObj"]; ok {
+		adf := new(adminf.AdminF)
+		ad := new(Admin)
+		AddServant(adf, ad, "AdminObj")
+	}
 
 	lisDone := &sync.WaitGroup{}
 	for _, obj := range objRunList {
@@ -280,7 +286,7 @@ func Run() {
 
 		s := goSvrs[obj]
 		if s == nil {
-			TLOG.Error("Obj not found ", obj)
+			teerDown(fmt.Errorf("Obj not found %s", obj))
 			break
 		}
 		TLOG.Debugf("Run %s  %+v", obj, s.GetConfig())
