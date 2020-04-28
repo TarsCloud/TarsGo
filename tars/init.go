@@ -1,5 +1,3 @@
-// +build !go1.13,!go1.14
-
 package tars
 
 //Init need to be called first in some situation:
