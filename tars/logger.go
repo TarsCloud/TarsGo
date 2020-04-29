@@ -44,7 +44,11 @@ func GetHourLogger(name string, numHour int) *rogger.Logger {
 }
 
 //GetRemoteLogger returns a remote logger
-func GetRemoteLogger(name string) *rogger.Logger {
+func GetRemoteLogger(params ...string) *rogger.Logger {
+	name := ""
+	if len(params) > 0 {
+		name = params[0]
+	}
 	cfg := GetServerConfig()
 	lg := rogger.GetLogger(name)
 	if !lg.IsConsoleWriter() {
@@ -56,7 +60,12 @@ func GetRemoteLogger(name string) *rogger.Logger {
 		set = cfg.Setdivision
 	}
 
-	remoteWriter.InitServerInfo(cfg.App, cfg.Server, name, set)
+	remoteWriter.InitServerInfo(cfg.App, cfg.Server, params[0], set)
+	if len(params) > 1 {
+		remoteWriter.SetLogType(params[1])
+	} else {
+		remoteWriter.SetLogType("1day")
+	}
 	lg.SetWriter(remoteWriter)
 	return lg
 
