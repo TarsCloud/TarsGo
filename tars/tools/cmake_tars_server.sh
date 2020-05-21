@@ -36,7 +36,7 @@ fi
 echo "[create server: $APP.$SERVER ...]"
 
 SRC_DIR=$(cd $(dirname $0); pwd)
-DEMODIR=$SRC_DIR/Demo4GoMod
+DEMODIR=$SRC_DIR/Demo4Cmake
 DEBUGDIR=$SRC_DIR/debugtool
 cd $DEMODIR || exit 1
 SRC_FILE=`find . -maxdepth 1 -type f`
@@ -50,7 +50,7 @@ cp -r $DEBUGDIR $TARGET
 
 if [ `uname` == "Darwin" ] # support macOS
 then
-    for FILE in $SRC_FILE client/client.go debugtool/dumpstack.go
+    for FILE in $SRC_FILE client/client.go debugtool/dumpstack.go CMakeLists.txt
     do
         echo ">>>Now doing:"$FILE" >>>>"
         sed  -i "" "s/_APP_/$APP/g"   $FILE
@@ -99,4 +99,12 @@ go mod init "$MODULE"
 # show tips: how to convert tars to golang
 echo ">>> Tips: After editing the Tars file, execute the following cmd to automatically generate golang files."
 echo ">>>       $GOPATH/bin/tars2go *.tars"
+
+pwd
+
+# build
+mkdir build
+cd build
+cmake ..
+make
 
