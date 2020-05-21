@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(_SERVER_ Go) # select GO compile
 
-gen_server(StressTest _SERVER_)
+gen_server(_APP_ _SERVER_)
 
 # go mod init
 # mkdir build
