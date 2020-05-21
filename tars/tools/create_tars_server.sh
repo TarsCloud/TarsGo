@@ -8,7 +8,11 @@ then
     exit 1
 fi
 
-export GOPATH=$(echo $GOPATH | cut -f1 -d ':')
+GOPATH=$(go env GOPATH)
+
+# echo ${GOPATH}
+
+# export GOPATH=$(echo $GOPATH | cut -f1 -d ':')
 if [ "$GOPATH" == "" ]; then
     echo "GOPATH must be set"
     exit 1
