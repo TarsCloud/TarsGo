@@ -1,6 +1,3 @@
-# set(GOPATH "$ENV{GOPATH}:${CMAKE_CURRENT_BINARY_DIR}/../")
-#message(${GOPATH})
-#file(MAKE_DIRECTORY ${GOPATH})
 
 # go get function
 function(ExternalGoProject_Add TARG)
@@ -9,14 +6,15 @@ endfunction(ExternalGoProject_Add)
 
 function(add_go_executable NAME)
   file(GLOB GO_SOURCE RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.go")
-  add_custom_command(OUTPUT ${OUTPUT_DIR}/.timestamp
-    COMMAND env GOPATH=${GOPATH} ${CMAKE_Go_COMPILER} build
-    -o "${CMAKE_CURRENT_BINARY_DIR}/${NAME}"
-    ${CMAKE_GO_FLAGS} ${GO_SOURCE}
+
+  # message(${CMAKE_BINARY_DIR}/.${NAME}.timestamp)
+
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/.${NAME}.timestamp
+    COMMAND env GOPATH=${GOPATH} ${CMAKE_Go_COMPILER} build -o "${CMAKE_CURRENT_BINARY_DIR}/${NAME}" ${CMAKE_GO_FLAGS} ${GO_SOURCE}
+    COMMENT "${CMAKE_Go_COMPILER} build -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME} ${CMAKE_GO_FLAGS} ${GO_SOURCE}"
     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 
-  add_custom_target(${NAME} ALL DEPENDS ${OUTPUT_DIR}/.timestamp ${ARGN})
-  install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${NAME} DESTINATION bin)
+  add_custom_target(${NAME} ALL DEPENDS ${CMAKE_BINARY_DIR}/.${NAME}.timestamp ${ARGN})
 endfunction(add_go_executable)
 
 function(ADD_GO_LIBRARY NAME BUILD_TYPE)
@@ -34,14 +32,10 @@ function(ADD_GO_LIBRARY NAME BUILD_TYPE)
 
   file(GLOB GO_SOURCE RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.go")
   add_custom_command(OUTPUT ${OUTPUT_DIR}/.timestamp
-    COMMAND env GOPATH=${GOPATH} ${CMAKE_Go_COMPILER} build ${BUILD_MODE}
-    -o "${CMAKE_CURRENT_BINARY_DIR}/${LIB_NAME}"
-    ${CMAKE_GO_FLAGS} ${GO_SOURCE}
+    COMMAND env GOPATH=${GOPATH} ${CMAKE_Go_COMPILER} build ${BUILD_MODE} -o "${CMAKE_CURRENT_BINARY_DIR}/${LIB_NAME}" ${CMAKE_GO_FLAGS} ${GO_SOURCE}
+    COMMENT "env GOPATH=${GOPATH} ${CMAKE_Go_COMPILER} build ${BUILD_MODE} -o ${CMAKE_CURRENT_BINARY_DIR}/${LIB_NAME} ${CMAKE_GO_FLAGS} ${GO_SOURCE}"
     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 
   add_custom_target(${NAME} ALL DEPENDS ${OUTPUT_DIR}/.timestamp ${ARGN})
 
-  if(NOT BUILD_TYPE STREQUAL "STATIC")
-    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${LIB_NAME} DESTINATION bin)
-  endif()
 endfunction(ADD_GO_LIBRARY)

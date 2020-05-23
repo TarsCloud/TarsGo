@@ -25,4 +25,5 @@ func main() { //Init servant
 	cfg := tars.GetServerConfig()                              //Get Config File Object
 	app.AddServant(imp, cfg.App+"."+cfg.Server+".EchoTestObj") //Register Servant
 	tars.Run()
+
 }
