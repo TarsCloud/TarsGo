@@ -10,6 +10,9 @@ project(_SERVER_ Go) # select GO compile
 
 gen_server(_APP_ _SERVER_)
 
+add_subdirectory(client)
+
+# go env -w GO111MODULE=on
 # go mod init
 # mkdir build
 # cd build
