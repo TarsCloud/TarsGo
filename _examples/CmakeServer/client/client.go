@@ -5,7 +5,7 @@ import (
 
 	"github.com/TarsCloud/TarsGo/tars"
 
-	"StressTest"
+	"CmakeServer/tars-protocol/StressTest"
 )
 
 func main() {

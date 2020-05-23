@@ -8,8 +8,10 @@ cmake_minimum_required(VERSION 2.8)
 
 project(CmakeServer Go) # select GO compile
 
+add_subdirectory(client)
 
 gen_server(StressTest CmakeServer)
+
 
 # go mod init
 # mkdir build

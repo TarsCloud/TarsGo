@@ -6,7 +6,7 @@ import (
 
 	"github.com/TarsCloud/TarsGo/tars"
 
-	"CmakeServer/StressTest"
+	"CmakeServer/tars-protocol/StressTest"
 	"runtime/pprof"
 )
 
