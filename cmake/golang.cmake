@@ -10,8 +10,8 @@ endfunction(ExternalGoProject_Add)
 function(add_go_executable NAME)
   file(GLOB GO_SOURCE RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "*.go")
 
-  message(${GO_SOURCE})
-  message(${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${NAME})
+  # message(${GO_SOURCE})
+  # message(${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${NAME})
 
   add_custom_command(OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/.timestamp
     COMMAND env GOPATH=${GOPATH} ${CMAKE_Go_COMPILER} build -o "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${NAME}" ${CMAKE_GO_FLAGS} ${GO_SOURCE}
