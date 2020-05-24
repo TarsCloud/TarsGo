@@ -26,4 +26,5 @@ func main() { //Init servant
 	app.AddServant(imp, cfg.App+"."+cfg.Server+".EchoTestObj") //Register Servant
 	tars.Run()
 
+	// log.Fatal("succ")
 }
