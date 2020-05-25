@@ -2,6 +2,7 @@ package rogger
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -31,6 +32,10 @@ var (
 	writeDone   = make(chan bool)
 	callerSkip  = 2
 	callerFlag  = true
+
+	waitFlushTimeout       = time.Second
+	syncDone, syncCancel   = context.WithCancel(context.Background())
+	asyncDone, asyncCancel = context.WithCancel(context.Background())
 )
 
 // Logger is the struct with name and wirter.
@@ -50,7 +55,7 @@ type logValue struct {
 }
 
 func init() {
-	go flushLog(true)
+	go flushLog()
 }
 
 // String turns the LogLevel to string.
@@ -297,21 +302,24 @@ func (l *Logger) WriteLog(msg []byte) {
 
 // FlushLogger flushs all log to disk.
 func FlushLogger() {
-	flushLog(false)
+	syncCancel()
+	select {
+	case <-time.After(waitFlushTimeout):
+	case <-asyncDone.Done():
+	}
 }
 
-func flushLog(sync bool) {
-	if sync {
-		for v := range logQueue {
+func flushLog() {
+	for {
+		select {
+		case v := <-logQueue:
 			v.writer.Write(v.value)
-		}
-	} else {
-		for {
+		default:
 			select {
 			case v := <-logQueue:
 				v.writer.Write(v.value)
-				continue
-			default:
+			case <-syncDone.Done():
+				asyncCancel()
 				return
 			}
 		}
