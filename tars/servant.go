@@ -106,13 +106,15 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 		SServantName: s.name,
 		SFuncName:    sFuncName,
 		SBuffer:      tools.ByteToInt8(buf),
-		ITimeout:     s.comm.Client.ReqDefaultTimeout,
+		//ITimeout:     s.comm.Client.ReqDefaultTimeout,
+		ITimeout:     int32(s.timeout),
 		Context:      reqContext,
 		Status:       status,
 		IMessageType: msgType,
 	}
 	msg := &Message{Req: &req, Ser: s, Resp: resp}
 	msg.Init()
+
 	timeout := time.Duration(s.timeout) * time.Millisecond
 	ok, hashType, hashCode, isHash := current.GetClientHash(ctx)
 	if ok {
@@ -124,6 +126,7 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	if ok && isTimeout {
 		timeout = time.Duration(to) * time.Millisecond
 	}
+
 	var err error
 	s.manager.preInvoke()
 	if allFilters.cf != nil {
