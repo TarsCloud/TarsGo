@@ -88,7 +88,7 @@ type clientConfig struct {
 	ClientReadTimeout      time.Duration
 	ClientWriteTimeout     time.Duration
 	ClientDialTimeout      time.Duration
-	ReqDefaultTimeout      int32
+	//ReqDefaultTimeout      int32
 	ObjQueueMax            int32
 	AdapterProxyTicker     time.Duration
 	AdapterProxyResetCount int
