@@ -2,118 +2,229 @@ package tars
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/model"
+	"github.com/TarsCloud/TarsGo/tars/protocol"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
+	"github.com/TarsCloud/TarsGo/tars/util/current"
+	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
+	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
-//ServantProxy is the struct for proxy servants.
+var (
+	maxInt32 int32 = 1<<31 - 1
+	msgID    int32
+)
+
+const (
+	STAT_SUCCESS = iota
+	STAT_FAILED
+)
+
+// ServantProxy tars servant proxy instance
 type ServantProxy struct {
-	sid     int32
-	name    string
-	comm    *Communicator
-	obj     *ObjectProxy
-	timeout int
+	name     string
+	comm     *Communicator
+	manager  EndpointManager
+	timeout  int
+	version  int16
+	proto    model.Protocol
+	queueLen int32
 }
 
-//Init init the ServantProxy struct.
-func (s *ServantProxy) Init(comm *Communicator, objName string) {
+func newServantProxy(comm *Communicator, objName string) *ServantProxy {
+	s := &ServantProxy{}
 	pos := strings.Index(objName, "@")
 	if pos > 0 {
 		s.name = objName[0:pos]
 	} else {
 		s.name = objName
 	}
+	pos = strings.Index(s.name, "://")
+	if pos > 0 {
+		s.name = s.name[pos+3:]
+	}
+
+	// init manager
+	s.manager = GetManager(comm, objName)
 	s.comm = comm
-	of := new(ObjectProxyFactory)
-	of.Init(comm)
+	s.proto = &protocol.TarsProtocol{}
 	s.timeout = s.comm.Client.AsyncInvokeTimeout
-	s.obj = of.GetObjectProxy(objName)
+	s.version = basef.TARSVERSION
+	return s
 }
 
-//TarsSetTimeout sets the timeout for client calling the server , which is in ms.
+// TarsSetTimeout sets the timeout for client calling the server , which is in ms.
 func (s *ServantProxy) TarsSetTimeout(t int) {
 	s.timeout = t
 }
 
-//Tars_invoke is use for client inoking server.
+// TarsSetVersion set tars version
+func (s *ServantProxy) TarsSetVersion(iVersion int16) {
+	s.version = iVersion
+}
+
+// TarsSetProtocol tars set model protocol
+func (s *ServantProxy) TarsSetProtocol(proto model.Protocol) {
+	s.proto = proto
+}
+
+// Tars_invoke is use for client inoking server.
 func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	sFuncName string,
 	buf []byte,
 	status map[string]string,
 	reqContext map[string]string,
-	Resp *requestf.ResponsePacket) error {
-	defer checkPanic()
+	resp *requestf.ResponsePacket) error {
+	defer CheckPanic()
 	//TODO 重置sid，防止溢出
-	atomic.CompareAndSwapInt32(&s.sid, 1<<31-1, 1)
+	atomic.CompareAndSwapInt32(&msgID, maxInt32, 1)
+
+	// 将ctx中的dyeinglog信息传入到request中
+	var msgType int32
+	dyeingKey, ok := current.GetDyeingKey(ctx)
+	if ok {
+		TLOG.Debug("dyeing debug: find dyeing key:", dyeingKey)
+		if status == nil {
+			status = make(map[string]string)
+		}
+		status[current.STATUS_DYED_KEY] = dyeingKey
+		msgType = basef.TARSMESSAGETYPEDYED
+	}
+
 	req := requestf.RequestPacket{
-		IVersion:     1,
-		CPacketType:  0,
-		IRequestId:   atomic.AddInt32(&s.sid, 1),
+		IVersion:     s.version,
+		CPacketType:  int8(ctype),
+		IRequestId:   atomic.AddInt32(&msgID, 1),
 		SServantName: s.name,
 		SFuncName:    sFuncName,
 		SBuffer:      tools.ByteToInt8(buf),
-		ITimeout:     ReqDefaultTimeout,
+		//ITimeout:     s.comm.Client.ReqDefaultTimeout,
+		ITimeout:     int32(s.timeout),
 		Context:      reqContext,
 		Status:       status,
+		IMessageType: msgType,
 	}
-	msg := &Message{Req: &req, Ser: s, Obj: s.obj}
+	msg := &Message{Req: &req, Ser: s, Resp: resp}
 	msg.Init()
-	var err error
-	if allFilters.cf != nil {
-		err = allFilters.cf(ctx, msg, s.obj.Invoke, time.Duration(s.timeout)*time.Millisecond)
-	} else {
-		err = s.obj.Invoke(ctx, msg, time.Duration(s.timeout)*time.Millisecond)
+
+	timeout := time.Duration(s.timeout) * time.Millisecond
+	ok, hashType, hashCode, isHash := current.GetClientHash(ctx)
+	if ok {
+		msg.isHash = isHash
+		msg.hashType = HashType(hashType)
+		msg.hashCode = hashCode
 	}
+	ok, to, isTimeout := current.GetClientTimeout(ctx)
+	if ok && isTimeout {
+		timeout = time.Duration(to) * time.Millisecond
+	}
+
+	var err error
+	s.manager.preInvoke()
+	if allFilters.cf != nil {
+		err = allFilters.cf(ctx, msg, s.doInvoke, timeout)
+	} else {
+		// execute pre client filters
+		for i, v := range allFilters.preCfs {
+			err = v(ctx, msg, s.doInvoke, timeout)
+			if err != nil {
+				TLOG.Errorf("Pre filter error, no: %v, err: %v", i, err.Error())
+			}
+		}
+		// execute rpc
+		err = s.doInvoke(ctx, msg, timeout)
+		// execute post client filters
+		for i, v := range allFilters.postCfs {
+			err = v(ctx, msg, s.doInvoke, timeout)
+			if err != nil {
+				TLOG.Errorf("Post filter error, no: %v, err: %v", i, err.Error())
+			}
+		}
+	}
+	s.manager.postInvoke()
+
 	if err != nil {
-		TLOG.Errorf("Invoke Obj:%s,fun:%s,error:%s", s.name, sFuncName, err.Error())
+		msg.End()
+		TLOG.Errorf("Invoke error: %s, %s, %v, cost:%d", s.name, sFuncName, err.Error(), msg.Cost())
 		if msg.Resp == nil {
-			ReportStat(msg, 0, 0, 1)
+			ReportStat(msg, STAT_SUCCESS, STAT_SUCCESS, STAT_FAILED)
 		} else if msg.Status == basef.TARSINVOKETIMEOUT {
-			ReportStat(msg, 0, 1, 0)
+			ReportStat(msg, STAT_SUCCESS, STAT_FAILED, STAT_SUCCESS)
 		} else {
-			ReportStat(msg, 0, 0, 1)
+			ReportStat(msg, STAT_SUCCESS, STAT_SUCCESS, STAT_FAILED)
 		}
 		return err
 	}
 	msg.End()
-	*Resp = *msg.Resp
-	//report
-	ReportStat(msg, 1, 0, 0)
+	*resp = *msg.Resp
+	ReportStat(msg, STAT_FAILED, STAT_SUCCESS, STAT_SUCCESS)
 	return err
 }
 
-//ServantProxyFactory is ServantProxy' factory struct.
-type ServantProxyFactory struct {
-	objs map[string]*ServantProxy
-	comm *Communicator
-	fm   *sync.Mutex
-}
-
-//Init init the  ServantProxyFactory.
-func (o *ServantProxyFactory) Init(comm *Communicator) {
-	o.fm = new(sync.Mutex)
-	o.comm = comm
-	o.objs = make(map[string]*ServantProxy)
-}
-
-//GetServantProxy gets the ServanrProxy for the object.
-func (o *ServantProxyFactory) GetServantProxy(objName string) *ServantProxy {
-	o.fm.Lock()
-	if obj, ok := o.objs[objName]; ok {
-		o.fm.Unlock()
-		return obj
+func (s *ServantProxy) doInvoke(ctx context.Context, msg *Message, timeout time.Duration) error {
+	adp, needCheck := s.manager.SelectAdapterProxy(msg)
+	if adp == nil {
+		return errors.New("no adapter Proxy selected:" + msg.Req.SServantName)
 	}
-	o.fm.Unlock()
-	obj := new(ServantProxy)
-	obj.Init(o.comm, objName)
-	o.fm.Lock()
-	o.objs[objName] = obj
-	o.fm.Unlock()
-	return obj
+	if s.queueLen > ObjQueueMax {
+		return errors.New("invoke queue is full:" + msg.Req.SServantName)
+	}
+	ep := adp.GetPoint()
+	current.SetServerIPWithContext(ctx, ep.Host)
+	current.SetServerPortWithContext(ctx, fmt.Sprintf("%v", ep.Port))
+	msg.Adp = adp
+	adp.obj = s
+	atomic.AddInt32(&s.queueLen, 1)
+	readCh := make(chan *requestf.ResponsePacket)
+	adp.resp.Store(msg.Req.IRequestId, readCh)
+	defer func() {
+		CheckPanic()
+		atomic.AddInt32(&s.queueLen, -1)
+		adp.resp.Delete(msg.Req.IRequestId)
+	}()
+	if err := adp.Send(msg.Req); err != nil {
+		adp.failAdd()
+		return err
+	}
+	if msg.Req.CPacketType == basef.TARSONEWAY {
+		adp.succssAdd()
+		return nil
+	}
+	select {
+	case <-rtimer.After(timeout):
+		msg.Status = basef.TARSINVOKETIMEOUT
+		adp.failAdd()
+		msg.End()
+		return fmt.Errorf("request timeout, begin time:%d, cost:%d, obj:%s, func:%s, addr:(%s:%d), reqid:%d",
+			msg.BeginTime, msg.Cost(), msg.Req.SServantName, msg.Req.SFuncName, adp.point.Host, adp.point.Port, msg.Req.IRequestId)
+	case msg.Resp = <-readCh:
+		if needCheck {
+			go func() {
+				adp.reset()
+				ep := endpoint.Tars2endpoint(*msg.Adp.point)
+				s.manager.addAliveEp(ep)
+			}()
+		}
+		adp.succssAdd()
+		if msg.Resp != nil {
+			if msg.Status != basef.TARSSERVERSUCCESS || msg.Resp.IRet != 0 {
+				if msg.Resp.SResultDesc == "" {
+					return fmt.Errorf("basef error code %d", msg.Resp.IRet)
+				}
+				return errors.New(msg.Resp.SResultDesc)
+			}
+		} else {
+			TLOG.Debug("recv nil Resp, close of the readCh?")
+		}
+		TLOG.Debug("recv msg succ ", msg.Req.IRequestId)
+	}
+	return nil
 }

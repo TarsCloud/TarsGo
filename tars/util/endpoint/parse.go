@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-//Parse pares string to struct Endpoint, like tcp -h 10.219.139.142 -p 19386 -t 60000
+// Parse pares string to struct Endpoint, like tcp -h 10.219.139.142 -p 19386 -t 60000
 func Parse(endpoint string) Endpoint {
 	//tcp -h 10.219.139.142 -p 19386 -t 60000
 	proto := endpoint[0:3]
@@ -21,7 +21,7 @@ func Parse(endpoint string) Endpoint {
 	if proto == "tcp" {
 		istcp = int32(1)
 	}
-	return Endpoint{
+	e := Endpoint{
 		Host:    host,
 		Port:    int32(port),
 		Timeout: int32(timeout),
@@ -29,4 +29,6 @@ func Parse(endpoint string) Endpoint {
 		Proto:   proto,
 		Bind:    bind,
 	}
+	e.Key = e.String()
+	return e
 }

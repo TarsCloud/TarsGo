@@ -56,6 +56,7 @@ const (
 	tkTString
 	tkTVector
 	tkTMap
+	tkTArray
 	tkDummyTypeEnd
 
 	tkName // variable name
@@ -108,6 +109,7 @@ var TokenMap = [...]string{
 	tkTString: "string",
 	tkTVector: "vector",
 	tkTMap:    "map",
+	tkTArray:  "array",
 
 	tkName: "<name>",
 	// value
@@ -191,7 +193,9 @@ func (ls *LexState) readNumber() (TK, *SemInfo) {
 	hasDot := false
 	isHex := false
 	sem := &SemInfo{}
-	for isNumber(ls.current) || ls.current == '.' || ls.current == 'x' || ls.current == 'X' || (isHex && isHexNumber(ls.current)) {
+	for isNumber(ls.current) || ls.current == '.' || ls.current == 'x' || ls.current == 'X' ||
+		(isHex && isHexNumber(ls.current)) {
+
 		if ls.current == '.' {
 			hasDot = true
 		} else if ls.current == 'x' || ls.current == 'X' {
@@ -313,6 +317,7 @@ func (ls *LexState) next() {
 		ls.current = EOS
 	}
 }
+
 func (ls *LexState) llexDefault() (TK, *SemInfo) {
 	switch {
 	case isNumber(ls.current):

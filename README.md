@@ -6,7 +6,7 @@
 - Go's goroutine concurrency mechanism means Go is very suitable for large-scale high-concurrency back-end server program development. The Go language has near C/C++ performance and near Python productivity.
 - At Tencent, part of the existing C++ development team has gradually turned into Go developers. Tars, a widely used RPC framework, supports C++, Java, NodeJS, and PHP, and now Go. The combination with Go language has become a general trend. Therefore, in the voice of users, we launched Tarsgo, and we have applied to Tencent map application, YingYongbao application, Internet plus and other projects.
 
-- Learn more about the whole Tars architecture and design at [Introduction](https://github.com/TarsCloud/Tars/blob/master/Introduction.md).
+- Learn more about the whole Tars architecture and design at [Introduction](https://github.com/TarsCloud/TarsDocs_en/blob/master/begin/introduction.md).
 
 
 ## Function & features
@@ -23,8 +23,8 @@
 
 
 ## Install
-- For install OSS and other basic servers, see the [Installation](https://github.com/TarsCloud/Tars/blob/master/Install.md) document.
-For quick install OSS and other basic servers, see more about [Deploy](https://github.com/TarsCloud/Tars/tree/master/deploy)
+- For install OSS and other basic servers, see the [Installation](https://github.com/TarsCloud/TarsDocs_en/blob/master/begin/installation/step-by-step.md) document.
+For quick install OSS and other basic servers, see more about [Deploy](https://github.com/TarsCloud/TarsDocs_en/blob/master/begin/installation/automatic-script.md)
 - Requires Go 1.9.x or above (see https://golang.org/doc/install for help installing Go)
 - go get -u github.com/TarsCloud/TarsGo/tars
 
@@ -785,7 +785,7 @@ Client use context
     ret, err := app.AddWithContext(ctx, i, i*2, &out, c)
 
 ```
-Read full demo client and server under  examples/ContextTestServer
+Read full demo client and server under  _examples/ContextTestServer
 
 
 ### 13 filter & zipkin plugin 

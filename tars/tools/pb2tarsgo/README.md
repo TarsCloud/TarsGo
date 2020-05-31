@@ -1,16 +1,23 @@
 # Usage
+- Install protoc
 ```
-go get github.com/TarsCloud/TarsGo/tars
-go get  github.com/golang/protobuf/{proto,protoc-gen-go}
-install protoc
+git clone https://github.com/protocolbuffers/protobuf
+cd protobuf
+git checkout v3.6.1.3
+./autogen.sh
+./configure
+make -j8
+make install
 ```
 
 - Add tarsrpc plugin for protoc-gen-go
 ```
-	cd $GOPATH/src/github.com/golang/protobuf/protoc-gen-go &&  cp -r $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/pb2tarsgo/protoc-gen-go/{link_tarsrpc.go, tarsrpc} .
-	go build .
-	cp protoc-gen-go $GOPATH/bin
-	export PATH=$PATH:$GOPATH/bin
+go get github.com/golang/protobuf/{proto,protoc-gen-go}
+go get github.com/TarsCloud/TarsGo/tars
+
+cd $GOPATH/src/github.com/golang/protobuf/protoc-gen-go &&  cp -r $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/pb2tarsgo/protoc-gen-go/{link_tarsrpc.go, tarsrpc} .
+go install
+export PATH=$PATH:$GOPATH/bin
 ```
 
 # example
