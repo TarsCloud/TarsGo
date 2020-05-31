@@ -13,8 +13,6 @@ import (
 
 type importPath []string
 
-var gTarsPath string
-
 func (t *importPath) String() string {
 	return strings.Join(*t, ":")
 }
@@ -24,8 +22,10 @@ func (t *importPath) Set(value string) error {
 	return nil
 }
 
-var gOutdir = flag.String("outdir", "", "which dir to put generated code")
 var gImports importPath
+var gTarsPath string
+var gOutdir string
+var gModule string
 
 func printhelp() {
 	bin := os.Args[0]
@@ -41,13 +41,17 @@ func main() {
 	flag.Usage = printhelp
 	flag.Var(&gImports, "I", "Specify a specific import path")
 	flag.StringVar(&gTarsPath, "tarsPath", "github.com/TarsCloud/TarsGo/tars", "Specify the tars source path.")
+	flag.StringVar(&gOutdir, "outdir", "", "which dir to put generated code")
+	flag.StringVar(&gModule, "module", "", "current go module path")
 	flag.Parse()
+
 	if flag.NArg() == 0 {
 		printhelp()
 		os.Exit(0)
 	}
+	
 	for _, filename := range flag.Args() {
-		gen := NewGenGo(filename, *gOutdir)
+		gen := NewGenGo(filename, gModule, gOutdir)
 		gen.I = gImports
 		gen.tarsPath = gTarsPath
 		gen.Gen()

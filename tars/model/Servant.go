@@ -6,7 +6,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 )
 
-//Servant is interface for call the remote server.
+// Servant is interface for call the remote server.
 type Servant interface {
 	Tars_invoke(ctx context.Context, ctype byte,
 		sFuncName string,
@@ -15,4 +15,11 @@ type Servant interface {
 		context map[string]string,
 		Resp *requestf.ResponsePacket) error
 	TarsSetTimeout(t int)
+	TarsSetProtocol(Protocol)
+}
+
+type Protocol interface {
+	RequestPack(*requestf.RequestPacket) ([]byte, error)
+	ResponseUnpack([]byte) (*requestf.ResponsePacket, error)
+	ParsePackage([]byte) (int, int)
 }

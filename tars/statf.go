@@ -1,145 +1,151 @@
 package tars
 
 import (
-	"container/list"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/statf"
 )
 
-//StatInfo struct contains stat info' head and body.
+// StatInfo struct contains stat info' head and body.
 type StatInfo struct {
 	Head statf.StatMicMsgHead
 	Body statf.StatMicMsgBody
 }
 
-//StatFHelper is helper struct for stat reporting.
+// StatFHelper is helper struct for stat reporting.
 type StatFHelper struct {
-	lStatInfo  *list.List
-	mStatInfo  map[statf.StatMicMsgHead]statf.StatMicMsgBody
-	mlock      *sync.Mutex
-	comm       *Communicator
-	sf         *statf.StatF
-	node       string
-
-	lStatInfoFromServer *list.List
+	chStatInfo           chan StatInfo
+	mStatInfo            map[statf.StatMicMsgHead]statf.StatMicMsgBody
+	mStatCount           map[statf.StatMicMsgHead]int
+	comm                 *Communicator
+	sf                   *statf.StatF
+	node                 string
+	chStatInfoFromServer chan StatInfo
+	mStatInfoFromServer  map[statf.StatMicMsgHead]statf.StatMicMsgBody
+	mStatCountFromServer map[statf.StatMicMsgHead]int
 }
 
-//Init init the StatFHelper.
+// Init init the StatFHelper
 func (s *StatFHelper) Init(comm *Communicator, node string) {
 	s.node = node
-	s.lStatInfo = list.New()
-	s.lStatInfoFromServer = list.New()
-	s.mlock = new(sync.Mutex)
+	s.chStatInfo = make(chan StatInfo, GetServerConfig().StatReportChannelBufLen)
+	s.chStatInfoFromServer = make(chan StatInfo, GetServerConfig().StatReportChannelBufLen)
 	s.mStatInfo = make(map[statf.StatMicMsgHead]statf.StatMicMsgBody)
+	s.mStatCount = make(map[statf.StatMicMsgHead]int)
+	s.mStatInfoFromServer = make(map[statf.StatMicMsgHead]statf.StatMicMsgBody)
+	s.mStatCountFromServer = make(map[statf.StatMicMsgHead]int)
 	s.comm = comm
 	s.sf = new(statf.StatF)
 	s.comm.StringToProxy(s.node, s.sf)
 }
 
-func (s *StatFHelper) addUpMsg(statList *list.List, fromServer bool) {
-	s.mlock.Lock()
-	var n *list.Element
-	TLOG.Debug("report statList.size:", statList.Len())
-	for e := statList.Front(); e != nil; e = n {
-		statInfo := e.Value.(StatInfo)
-		bodyList := statInfo.Body
-		body, ok := s.mStatInfo[statInfo.Head]
-		if ok {
-			body.Count = (body.Count + statInfo.Body.Count)
-			body.TimeoutCount = (body.TimeoutCount + statInfo.Body.TimeoutCount)
-			body.ExecCount = (body.ExecCount + statInfo.Body.ExecCount)
-			body.TotalRspTime = (body.TotalRspTime + statInfo.Body.TotalRspTime)
-			body.MaxRspTime = (body.MaxRspTime + statInfo.Body.MaxRspTime)
-			body.MinRspTime = (body.MinRspTime + statInfo.Body.MinRspTime)
-			//body.WeightValue = (body.WeightValue + statInfo.Body.WeightValue)
-			//body.WeightCount = (body.WeightCount + statInfo.Body.WeightCount)
-			s.mStatInfo[statInfo.Head] = body
-		} else {
-			headMap := statInfo.Head
-			firstBody := statf.StatMicMsgBody{}
-			firstBody.Count = bodyList.Count
-			firstBody.TimeoutCount = bodyList.TimeoutCount
-			firstBody.ExecCount = bodyList.ExecCount
-			firstBody.TotalRspTime = bodyList.TotalRspTime
-			firstBody.MaxRspTime = bodyList.MaxRspTime
-			firstBody.MinRspTime = bodyList.MinRspTime
-			//firstBody.WeightValue = bodyList.WeightValue
-			//firstBody.WeightCount = bodyList.WeightCount
-			s.mStatInfo[headMap] = firstBody
-		}
-
-		n = e.Next()
-		statList.Remove(e)
+func (s *StatFHelper) collectMsg(statInfo StatInfo, mStatInfo map[statf.StatMicMsgHead]statf.StatMicMsgBody, mStatCount map[statf.StatMicMsgHead]int) {
+	if body, ok := s.mStatInfo[statInfo.Head]; ok {
+		body.Count += statInfo.Body.Count
+		body.TimeoutCount += statInfo.Body.TimeoutCount
+		body.ExecCount += statInfo.Body.ExecCount
+		body.TotalRspTime += statInfo.Body.TotalRspTime
+		body.MaxRspTime += body.MaxRspTime + statInfo.Body.MaxRspTime
+		body.MinRspTime += body.MinRspTime + statInfo.Body.MinRspTime
+		s.mStatInfo[statInfo.Head] = body
+		s.mStatCount[statInfo.Head]++
+	} else {
+		firstBody := statf.StatMicMsgBody{}
+		firstBody.Count = statInfo.Body.Count
+		firstBody.TimeoutCount = statInfo.Body.TimeoutCount
+		firstBody.ExecCount = statInfo.Body.ExecCount
+		firstBody.TotalRspTime = statInfo.Body.TotalRspTime
+		firstBody.MaxRspTime = statInfo.Body.MaxRspTime
+		firstBody.MinRspTime = statInfo.Body.MinRspTime
+		s.mStatInfo[statInfo.Head] = firstBody
+		s.mStatCount[statInfo.Head] = 1
 	}
-	s.mlock.Unlock()
-	ret, err := s.sf.ReportMicMsg(s.mStatInfo, !fromServer)
-	if err != nil {
-		TLOG.Debug("report err:", err.Error())
-	}
-	TLOG.Debug("report ret:", ret)
-	s.mlock.Lock()
-	for m := range s.mStatInfo {
-		delete(s.mStatInfo, m)
-	}
-	s.mlock.Unlock()
 }
 
-//Run runs the reporting
+func (s *StatFHelper) reportAndClear(mStat string, bFromClient bool) {
+	// report mStatInfo
+	if mStat == "mStatInfo" {
+		_, err := s.sf.ReportMicMsg(s.mStatInfo, bFromClient)
+		if err != nil {
+			TLOG.Debug("mStatInfo report err:", err.Error())
+		}
+		s.mStatInfo = make(map[statf.StatMicMsgHead]statf.StatMicMsgBody)
+		s.mStatCount = make(map[statf.StatMicMsgHead]int)
+	}
+	// report mStatInfoFromServer
+	if mStat == "mStatInfoFromServer" {
+		_, err := s.sf.ReportMicMsg(s.mStatInfoFromServer, bFromClient)
+		if err != nil {
+			TLOG.Debug("mStatInfoFromServer report err:", err.Error())
+		}
+		s.mStatInfoFromServer = make(map[statf.StatMicMsgHead]statf.StatMicMsgBody)
+		s.mStatCountFromServer = make(map[statf.StatMicMsgHead]int)
+	}
+}
+
+// Run run stat report loop
 func (s *StatFHelper) Run() {
-	loop := time.NewTicker(StatReportInterval)
-	for range loop.C {
-		s.addUpMsg(s.lStatInfo, false)
-		s.addUpMsg(s.lStatInfoFromServer, true)
-		TLOG.Debug("stat report")
+	ticker := time.NewTicker(GetServerConfig().StatReportInterval)
+	for {
+		select {
+		case stStatInfo := <-s.chStatInfo:
+			s.collectMsg(stStatInfo, s.mStatInfo, s.mStatCount)
+		case stStatInfoFromServer := <-s.chStatInfoFromServer:
+			s.collectMsg(stStatInfoFromServer, s.mStatInfoFromServer, s.mStatCountFromServer)
+		case <-ticker.C:
+			if len(s.mStatInfo) > 0 {
+				s.reportAndClear("mStatInfo", true)
+			}
+			if len(s.mStatInfoFromServer) > 0 {
+				s.reportAndClear("mStatInfoFromServer", false)
+			}
+		}
 	}
 }
 
 func (s *StatFHelper) pushBackMsg(stStatInfo StatInfo, fromServer bool) {
-	defer s.mlock.Unlock()
-	s.mlock.Lock()
 	if fromServer {
-		s.lStatInfoFromServer.PushFront(stStatInfo)
+		s.chStatInfoFromServer <- stStatInfo
 	} else {
-		s.lStatInfo.PushFront(stStatInfo)
+		s.chStatInfo <- stStatInfo
 	}
 }
 
-//ReportMicMsg report the Statinfo ,from server shows whether it comes from server.
+// ReportMicMsg report the Statinfo ,from server shows whether it comes from server.
 func (s *StatFHelper) ReportMicMsg(stStatInfo StatInfo, fromServer bool) {
 	s.pushBackMsg(stStatInfo, fromServer)
 }
 
-//StatReport is global.
+// StatReport instance pointer of StatFHelper
 var StatReport *StatFHelper
 var statInited = make(chan struct{}, 1)
 
 func initReport() {
-	if GetClientConfig() == nil {
+	if GetClientConfig() == nil || GetClientConfig().Stat == "" {
 		statInited <- struct{}{}
 		return
 	}
 	comm := NewCommunicator()
-	comm.SetProperty("netthread", 1)
 	StatReport = new(StatFHelper)
-	StatReport.Init(comm, GetClientConfig().stat)
+	StatReport.Init(comm, GetClientConfig().Stat)
 	statInited <- struct{}{}
 	go StatReport.Run()
 }
 
-//ReportStatBase is base method for report statitics.
+// ReportStatBase is base method for report statitics.
 func ReportStatBase(head *statf.StatMicMsgHead, body *statf.StatMicMsgBody, FromServer bool) {
 	cfg := GetServerConfig()
 	statInfo := StatInfo{Head: *head, Body: *body}
 	statInfo.Head.TarsVersion = cfg.Version
 	//statInfo.Head.IStatVer = 2
-	StatReport.ReportMicMsg(statInfo, FromServer)
+	if StatReport != nil {
+		StatReport.ReportMicMsg(statInfo, FromServer)
+	}
 }
 
-//ReportStatFromClient report the statics from client.
+// ReportStatFromClient report the statics from client.
 func ReportStatFromClient(msg *Message, succ int32, timeout int32, exec int32) {
 	cfg := GetServerConfig()
 	if cfg == nil {
@@ -190,7 +196,7 @@ func ReportStatFromClient(msg *Message, succ int32, timeout int32, exec int32) {
 	ReportStatBase(&head, &body, false)
 }
 
-//ReportStatFromServer reports statics from server side.
+// ReportStatFromServer reports statics from server side.
 func ReportStatFromServer(InterfaceName, MasterName string, ReturnValue int32, TotalRspTime int64) {
 	cfg := GetServerConfig()
 	var head statf.StatMicMsgHead
@@ -220,7 +226,7 @@ func ReportStatFromServer(InterfaceName, MasterName string, ReturnValue int32, T
 	ReportStatBase(&head, &body, true)
 }
 
-//ReportStat is same as ReportStatFromClient.
+// ReportStat is same as ReportStatFromClient.
 func ReportStat(msg *Message, succ int32, timeout int32, exec int32) {
 	ReportStatFromClient(msg, succ, timeout, exec)
 }

@@ -1,8 +1,13 @@
 package tars
 
 import (
-	s "github.com/TarsCloud/TarsGo/tars/model"
+	"crypto/md5"
+	"encoding/hex"
+	"fmt"
 	"sync"
+
+	s "github.com/TarsCloud/TarsGo/tars/model"
+	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
 // ProxyPrx interface
@@ -10,14 +15,8 @@ type ProxyPrx interface {
 	SetServant(s.Servant)
 }
 
-// Dail returns servant proxy
-func Dail(servant string) *ServantProxy {
-	c := new(Communicator)
-	c.init()
-	return c.s.GetServantProxy(servant)
-}
-
-// NewCommunicator returns a new communicator. A Communicator is used for communicating with the server side which should only init once and be global!!!
+// NewCommunicator returns a new communicator. A Communicator is used for communicating with
+// the server side which should only init once and be global!!!
 func NewCommunicator() *Communicator {
 	c := new(Communicator)
 	c.init()
@@ -26,7 +25,6 @@ func NewCommunicator() *Communicator {
 
 // Communicator struct
 type Communicator struct {
-	s          *ServantProxyFactory
 	Client     *clientConfig
 	properties sync.Map
 }
@@ -38,21 +36,25 @@ func (c *Communicator) init() {
 		c.Client = GetClientConfig()
 	} else {
 		c.Client = &clientConfig{
-			"",
-			"",
-			"",
-			"",
-			refreshEndpointInterval,
-			reportInterval,
-			AsyncInvokeTimeout,
+			RefreshEndpointInterval: refreshEndpointInterval,
+			ReportInterval:          reportInterval,
+			CheckStatusInterval:     checkStatusInterval,
+			AsyncInvokeTimeout:      AsyncInvokeTimeout,
+			ClientQueueLen:          ClientQueueLen,
+			ClientIdleTimeout:       tools.ParseTimeOut(ClientIdleTimeout),
+			ClientReadTimeout:       tools.ParseTimeOut(ClientReadTimeout),
+			ClientWriteTimeout:      tools.ParseTimeOut(ClientWriteTimeout),
+			ClientDialTimeout:       tools.ParseTimeOut(ClientDialTimeout),
+			ReqDefaultTimeout:       ReqDefaultTimeout,
+			ObjQueueMax:             ObjQueueMax,
+			AdapterProxyTicker:      tools.ParseTimeOut(AdapterProxyTicker),
+			AdapterProxyResetCount:  AdapterProxyResetCount,
 		}
 	}
-	c.SetProperty("netthread", 2)
 	c.SetProperty("isclient", true)
 	c.SetProperty("enableset", false)
 	if GetServerConfig() != nil {
-		c.SetProperty("netthread", GetServerConfig().netThread)
-		c.SetProperty("notify", GetServerConfig().notify)
+		c.SetProperty("notify", GetServerConfig().Notify)
 		c.SetProperty("node", GetServerConfig().Node)
 		c.SetProperty("server", GetServerConfig().Server)
 		c.SetProperty("isclient", false)
@@ -61,9 +63,6 @@ func (c *Communicator) init() {
 			c.SetProperty("setdivision", GetServerConfig().Setdivision)
 		}
 	}
-
-	c.s = new(ServantProxyFactory)
-	c.s.Init(c)
 }
 
 // GetLocator returns locator as string
@@ -79,7 +78,11 @@ func (c *Communicator) SetLocator(obj string) {
 
 // StringToProxy sets the servant of ProxyPrx p with a string servant
 func (c *Communicator) StringToProxy(servant string, p ProxyPrx) {
-	p.SetServant(c.s.GetServantProxy(servant))
+	if servant == "" {
+		panic("empty servant")
+	}
+	sp := newServantProxy(c, servant)
+	p.SetServant(sp)
 }
 
 // SetProperty sets communicator property with a string key and an interface value.
@@ -90,7 +93,8 @@ func (c *Communicator) SetProperty(key string, value interface{}) {
 	c.properties.Store(key, value)
 }
 
-// GetProperty returns communicator property value as string and true for key, or empty string and false for not exists key
+// GetProperty returns communicator property value as string and true for key, or empty string
+// and false for not exists key
 func (c *Communicator) GetProperty(key string) (string, bool) {
 	if v, ok := c.properties.Load(key); ok {
 		return v.(string), ok
@@ -98,7 +102,8 @@ func (c *Communicator) GetProperty(key string) (string, bool) {
 	return "", false
 }
 
-// GetPropertyInt returns communicator property value as int and true for key, or 0 and false for not exists key
+// GetPropertyInt returns communicator property value as int and true for key, or 0 and false
+// for not exists key
 func (c *Communicator) GetPropertyInt(key string) (int, bool) {
 	if v, ok := c.properties.Load(key); ok {
 		return v.(int), ok
@@ -112,4 +117,15 @@ func (c *Communicator) GetPropertyBool(key string) (bool, bool) {
 		return v.(bool), ok
 	}
 	return false, false
+}
+
+func (c *Communicator) hashKey() string {
+	hash := md5.New()
+	hashKeys := []string{"locator", "enableset", "setdivision"}
+	for _, k := range hashKeys {
+		if v, ok := c.properties.Load(k); ok {
+			hash.Write([]byte(fmt.Sprintf("%v:%v", k, v)))
+		}
+	}
+	return hex.EncodeToString(hash.Sum(nil))
 }

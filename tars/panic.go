@@ -3,18 +3,22 @@ package tars
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-	"runtime/debug"
-	"time"
+
+	"github.com/TarsCloud/TarsGo/tars/util/debug"
+	"github.com/TarsCloud/TarsGo/tars/util/rogger"
 )
 
-func checkPanic() {
+// CheckPanic used to dump stack info to file when catch panic
+func CheckPanic() {
 	if r := recover(); r != nil {
-		path, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-		os.Chdir(path)
-		file, _ := os.Create(fmt.Sprintf("panic.%s", time.Now().Format("20060102-150405")))
-		file.WriteString(string(debug.Stack()))
-		file.Close()
+		var msg string
+		if err, ok := r.(error); ok {
+			msg = err.Error()
+		} else {
+			msg = fmt.Sprintf("%#v", r)
+		}
+		debug.DumpStack(true, "panic", msg)
+		rogger.FlushLogger()
 		os.Exit(-1)
 	}
 }
