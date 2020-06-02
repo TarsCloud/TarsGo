@@ -67,6 +67,8 @@ Compile and install the tars2go tools.
 
     go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
 
+**Note: not open GO111MODULE**
+
 ##### 1.2.2 compile the tars file and translate into go file
 	tars2go --outdir=./vendor hello.tars
 #### 1.3 implement the interface

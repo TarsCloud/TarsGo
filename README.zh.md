@@ -56,13 +56,14 @@ Tars整体介绍文档请阅读: https://tarscloud.gitbook.io/
 	
 ```
 	
-
 #### 1.2 编译接口定义文件
 
 ##### 1.2.1 构建 tars2go
 编译并安装tars2go工具
 
 	go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
+
+**注意: 不要全局开启go mod模式, 否在在pkg目录下**
 
 ##### 1.2.2 编译tars文件并转成go文
 	tars2go --outdir=./vendor hello.tars
