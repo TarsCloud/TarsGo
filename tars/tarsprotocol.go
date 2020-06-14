@@ -56,43 +56,52 @@ func (s *TarsProtocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 			}
 		}()()
 	}
-	var err error
-	if s.withContext {
-		ok := current.SetRequestStatus(ctx, reqPackage.Status)
-		if !ok {
-			TLOG.Error("Set reqeust status in context fail!")
-		}
-		ok = current.SetRequestContext(ctx, reqPackage.Context)
-		if !ok {
-			TLOG.Error("Set request context in context fail!")
-		}
-	}
-	if allFilters.sf != nil {
-		err = allFilters.sf(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
-	} else {
-		// execute pre server filters
-		for i, v := range allFilters.preSfs {
-			err = v(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
-			if err != nil {
-				TLOG.Errorf("Pre filter error, No.%v, err: %v", i, err.Error())
-			}
-		}
-		err = s.dispatcher.Dispatch(ctx, s.serverImp, &reqPackage, &rspPackage, s.withContext)
-		// execute post server filters
-		for i, v := range allFilters.postSfs {
-			err = v(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
-			if err != nil {
-				TLOG.Errorf("Post filter error, No.%v, err: %v", i, err.Error())
-			}
-		}
-	}
-	if err != nil {
-		TLOG.Errorf("RequestID:%d, Found err: %v", reqPackage.IRequestId, err)
-		rspPackage.IVersion = basef.TARSVERSION
-		rspPackage.CPacketType = basef.TARSNORMAL
+
+	if reqPackage.SFuncName == "tars_ping" {
+		rspPackage.IVersion = reqPackage.IVersion
+		//rspPackage.CPacketType = basef.TARSNORMAL
 		rspPackage.IRequestId = reqPackage.IRequestId
-		rspPackage.IRet = 1
-		rspPackage.SResultDesc = err.Error()
+		rspPackage.IRet = 0
+	} else {
+		var err error
+		if s.withContext {
+			ok := current.SetRequestStatus(ctx, reqPackage.Status)
+			if !ok {
+				TLOG.Error("Set reqeust status in context fail!")
+			}
+			ok = current.SetRequestContext(ctx, reqPackage.Context)
+			if !ok {
+				TLOG.Error("Set request context in context fail!")
+			}
+		}
+		if allFilters.sf != nil {
+			err = allFilters.sf(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
+		} else {
+			// execute pre server filters
+			for i, v := range allFilters.preSfs {
+				err = v(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
+				if err != nil {
+					TLOG.Errorf("Pre filter error, No.%v, err: %v", i, err.Error())
+				}
+			}
+			err = s.dispatcher.Dispatch(ctx, s.serverImp, &reqPackage, &rspPackage, s.withContext)
+			// execute post server filters
+			for i, v := range allFilters.postSfs {
+				err = v(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
+				if err != nil {
+					TLOG.Errorf("Post filter error, No.%v, err: %v", i, err.Error())
+				}
+			}
+		}
+		if err != nil {
+			TLOG.Errorf("RequestID:%d, Found err: %v", reqPackage.IRequestId, err)
+			//rspPackage.IVersion = basef.TARSVERSION
+			rspPackage.IVersion = reqPackage.IVersion
+			rspPackage.CPacketType = basef.TARSNORMAL
+			rspPackage.IRequestId = reqPackage.IRequestId
+			rspPackage.IRet = 1
+			rspPackage.SResultDesc = err.Error()
+		}
 	}
 
 	//return ctype

@@ -170,6 +170,12 @@ func (b *Buffer) Write_slice_int8(data []int8) error {
 	return err
 }
 
+// Write_bytes write []byte to the buffer
+func (b *Buffer) Write_bytes(data []byte) error  {
+	_, err := b.buf.Write(data)
+	return err
+}
+
 // Write_int8 write int8 with the tag.
 func (b *Buffer) Write_int8(data int8, tag byte) error {
 	var err error
@@ -317,6 +323,11 @@ func (b *Buffer) Write_string(data string, tag byte) error {
 		return err
 	}
 	return nil
+}
+
+//Reset clean the Reader.
+func (b *Reader) Reset(data []byte) {
+	b.buf.Reset(data)
 }
 
 //go:nosplit
@@ -571,6 +582,13 @@ func (b *Reader) Read_slice_uint8(data *[]uint8, len int32, require bool) error 
 	if err != nil {
 		err = fmt.Errorf("Read_slice_uint8 error:%v", err)
 	}
+	return err
+}
+
+//Read_bytes reads []byte for the given length and the require or optional sign.
+func (b *Reader) Read_bytes(data *[]byte, len int32, require bool) error {
+	*data = make([]byte, len)
+	_, err := b.buf.Read(*data)
 	return err
 }
 
@@ -836,6 +854,16 @@ func (b *Buffer) ToBytes() []byte {
 // Grow grows the size of the buffer.
 func (b *Buffer) Grow(size int) {
 	b.buf.Grow(size)
+}
+
+//ToString make the reader to string
+func (r *Reader) ToString() string {
+	return string(r.ref[:])
+}
+
+//ToString make the reader to string
+func (r *Reader) ToBytes() []byte {
+	return r.ref
 }
 
 // NewReader returns *Reader
