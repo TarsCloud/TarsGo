@@ -3,8 +3,8 @@ Tars整体介绍文档请阅读: https://tarscloud.gitbook.io/
 # Tarsgo  文档
 
 ## 关于
-- 	Tarsgo是基于Golang编程语言使用Tars协议的高性能RPC框架。随着docker,k8s,etcd等容器化技术的兴起，Go语言变得流行起来。Go的goroutine并发机制使Go非常适合用于大规模高并发后端服务程序的开发。 Go语言具有接近C/C++的性能和接近python的生产力。在腾讯，一部分现有的C++开发人员正逐渐向Go转型，Tars作为广泛使用的RPC框架，现已支持C++/Java/Nodejs/Php，其与Go语言的结合已成为大势所趋。因此，在广大用户的呼声中我们推出了Tarsgo,并且已经将它应用于腾讯地图、应用宝、互联网+以及其他项目中。
-- 关于tars的整体架构和设计理念，请阅读 [Tars介绍](https://github.com/TarsCloud/Tars/blob/master/Introduction.md)
+- Tarsgo是基于Golang编程语言使用Tars协议的高性能RPC框架。随着docker,k8s,etcd等容器化技术的兴起，Go语言变得流行起来。Go的goroutine并发机制使Go非常适合用于大规模高并发后端服务程序的开发。 Go语言具有接近C/C++的性能和接近python的生产力。在腾讯，一部分现有的C++开发人员正逐渐向Go转型，Tars作为广泛使用的RPC框架，现已支持C++/Java/Nodejs/Php，其与Go语言的结合已成为大势所趋。因此，在广大用户的呼声中我们推出了Tarsgo,并且已经将它应用于腾讯地图、应用宝、互联网+以及其他项目中。
+- 关于tars的整体架构和设计理念，请阅读 [Tars文档](https://tarscloud.github.io/TarsDocs/SUMMARY.html)
 
 ## 功能特性
 - Tars2go工具: tars文件自动生成并转换为go语言，包含用go语言实现的RPC服务端/客户端代码
@@ -16,14 +16,46 @@ Tars整体介绍文档请阅读: https://tarscloud.gitbook.io/
 - 提供set分组
 - 提供 protocol buffers 支持， 详见 [pb2tarsgo](tars/tools/pb2tarsgo/README.md) 
 
-
-
 ## 安装
-- 对于安装OSS和其他基本服务, 请[安装文档](https://github.com/TarsCloud/Tars/blob/master/Install.zh.md)，
-快速安装，请查看[快速部署](https://github.com/TarsCloud/Tars/tree/master/deploy)
-- 要求Go 1.9.x 或以上版本,请查看https://golang.org/doc/install
-- go get -u github.com/TarsCloud/TarsGo/tars
+- 对于安装OSS和其他基本服务, 请[安装文档](https://tarscloud.github.io/TarsDocs/installation/)，
 
+- 要求Go 1.9.x 或以上版本(推荐1.13一样的版本),请查看https://golang.org/doc/install
+
+下面以Go 1.13.x为例:
+
+安装go (比如安装目录: /usr/local/go), 设置好GOROOT, GOPATH, 比如, linux下:
+```
+export GOROOT=/usr/local/go  #设置为go安装的路径
+export GOPATH=/root/gocode   #GOPATH
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+```
+
+如果在国内, 可以设置go代理:  
+```
+go env -w GOPROXY=https://goproxy.cn   
+```
+
+另外请设置go模式为:
+```
+go env -w GO111MODULE=auto
+```
+
+进入 GOPATH目录
+```
+go get -u github.com/TarsCloud/TarsGo/tars
+```
+
+此时tarsgo下载到
+```
+$GOPATH/src/github.com/TarsCloud/TarsGo/
+```
+
+如果此目录不存在tarsgo源码, 请检查以上步骤.
+
+tarsgo源码下载完毕后, 请安装tars2go工具:
+```
+go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
+```
 
 ## 快速开始
 - 快速开始，请查看 [tars\_go\_quickstart.md](docs/tars_go_quickstart.md)
@@ -56,14 +88,13 @@ Tars整体介绍文档请阅读: https://tarscloud.gitbook.io/
 	
 ```
 	
-
 #### 1.2 编译接口定义文件
 
 ##### 1.2.1 构建 tars2go
-编译并安装tars2go工具
-
+如果还没有编译tars2go, 则编译并安装tars2go工具
+```
 	go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
-
+```
 ##### 1.2.2 编译tars文件并转成go文
 	tars2go --outdir=./vendor hello.tars
 #### 1.3 接口实现
