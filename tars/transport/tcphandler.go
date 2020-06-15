@@ -61,6 +61,7 @@ func (h *tcpHandler) Listen() (err error) {
 
 func (h *tcpHandler) handleConn(connSt *connInfo, pkg []byte) {
 	handler := func() {
+		defer atomic.AddInt32(&connSt.numInvoke, -1)
 		ctx := current.ContextWithTarsCurrent(context.Background())
 		ipPort := strings.Split(connSt.conn.RemoteAddr().String(), ":")
 		current.SetClientIPWithContext(ctx, ipPort[0])
@@ -82,8 +83,6 @@ func (h *tcpHandler) handleConn(connSt *connInfo, pkg []byte) {
 			TLOG.Errorf("send pkg to %v failed %v", connSt.conn.RemoteAddr(), err)
 		}
 		connSt.writeLock.Unlock()
-
-		atomic.AddInt32(&connSt.numInvoke, -1)
 	}
 
 	cfg := h.conf
