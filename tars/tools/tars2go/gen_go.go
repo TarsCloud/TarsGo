@@ -1615,7 +1615,7 @@ _tupRsp_ := tup.NewUniAttribute()
 	_rspJson_ := map[string]interface{} {}
 `)
 	if fun.HasRet {
-		c.WriteString(`_rspJson_[""] = _funRet_` + "\n")
+		//c.WriteString(`_rspJson_[""] = _funRet_` + "\n")
 		c.WriteString(`_rspJson_["tars_ret"] = _funRet_` + "\n")
 	}
 
