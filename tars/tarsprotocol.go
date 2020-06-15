@@ -114,7 +114,31 @@ func (s *TarsProtocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 	return s.rsp2Byte(&rspPackage)
 }
 
+func (s *TarsProtocol) req2Byte(rsp *requestf.ResponsePacket) []byte {
+	req := requestf.RequestPacket{}
+	req.IVersion = rsp.IVersion
+	req.IRequestId = rsp.IRequestId
+	req.IMessageType = rsp.IMessageType
+	req.CPacketType = rsp.CPacketType
+	req.Context = rsp.Context
+	req.Status = rsp.Status
+	req.SBuffer = rsp.SBuffer
+	
+	os := codec.NewBuffer()
+	req.WriteTo(os)
+	bs := os.ToBytes()
+	sbuf := bytes.NewBuffer(nil)
+	sbuf.Write(make([]byte, 4))
+	sbuf.Write(bs)
+	len := sbuf.Len()
+	binary.BigEndian.PutUint32(sbuf.Bytes(), uint32(len))
+	return sbuf.Bytes()
+}
+
 func (s *TarsProtocol) rsp2Byte(rsp *requestf.ResponsePacket) []byte {
+	if rsp.IVersion == basef.TUPVERSION {
+		return s.req2Byte(rsp)
+	}
 	os := codec.NewBuffer()
 	rsp.WriteTo(os)
 	bs := os.ToBytes()
