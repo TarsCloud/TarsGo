@@ -76,6 +76,18 @@ func (s *ServantProxy) TarsSetProtocol(proto model.Protocol) {
 	s.proto = proto
 }
 
+// 生成请求 ID
+func (s *ServantProxy) genRequestID() int32 {
+	// 尽力防止溢出
+	atomic.CompareAndSwapInt32(&msgID, maxInt32, 1)
+	for {
+		v := atomic.AddInt32(&msgID, 1) // 溢出后回转成负数
+		if v != 0 {                     // 0比较特殊,用于表示 server 端推送消息给 client 端进行主动 close()
+			return v
+		}
+	}
+}
+
 // Tars_invoke is use for client inoking server.
 func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	sFuncName string,
@@ -84,8 +96,6 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	reqContext map[string]string,
 	resp *requestf.ResponsePacket) error {
 	defer CheckPanic()
-	//TODO 重置sid，防止溢出
-	atomic.CompareAndSwapInt32(&msgID, maxInt32, 1)
 
 	// 将ctx中的dyeinglog信息传入到request中
 	var msgType int32
@@ -102,7 +112,7 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	req := requestf.RequestPacket{
 		IVersion:     s.version,
 		CPacketType:  int8(ctype),
-		IRequestId:   atomic.AddInt32(&msgID, 1),
+		IRequestId:   s.genRequestID(),
 		SServantName: s.name,
 		SFuncName:    sFuncName,
 		SBuffer:      tools.ByteToInt8(buf),
