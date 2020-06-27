@@ -3,7 +3,6 @@ package protocol
 import (
 	"bytes"
 	"encoding/binary"
-
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 )
@@ -30,19 +29,20 @@ func TarsRequest(rev []byte) (int, int) {
 	return iHeaderLen, PACKAGE_FULL
 }
 
-type TarsProtocol struct {
-	MaxPackageLength int
-}
+type TarsProtocol struct {}
 
 func (p *TarsProtocol) RequestPack(req *requestf.RequestPacket) ([]byte, error) {
 	sbuf := bytes.NewBuffer(nil)
 	sbuf.Write(make([]byte, 4))
 	os := codec.NewBuffer()
-	req.WriteTo(os)
+	err := req.WriteTo(os)
+	if err != nil {
+		return nil, err
+	}
 	bs := os.ToBytes()
 	sbuf.Write(bs)
-	len := sbuf.Len()
-	binary.BigEndian.PutUint32(sbuf.Bytes(), uint32(len))
+	l := sbuf.Len()
+	binary.BigEndian.PutUint32(sbuf.Bytes(), uint32(l))
 	return sbuf.Bytes(), nil
 
 }
