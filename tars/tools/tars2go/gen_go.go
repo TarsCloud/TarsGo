@@ -152,7 +152,8 @@ func (fun *FunInfo) rename() {
 	fun.Name = upperFirstLetter(fun.Name)
 	for i := range fun.Args {
 		fun.Args[i].OriginName = fun.Args[i].Name
-		fun.Args[i].Name = upperFirstLetter(fun.Args[i].Name)
+		// func args donot upper firs
+		//fun.Args[i].Name = upperFirstLetter(fun.Args[i].Name)
 	}
 }
 
@@ -336,7 +337,7 @@ import (
 	"context"
 	"fmt"
 	"unsafe"
-
+	"encoding/json"
 `)
 	if *gAddServant {
 		gen.code.WriteString("\"" + gen.tarsPath + "\"\n")
@@ -345,6 +346,8 @@ import (
 	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/res/requestf\"\n")
 	gen.code.WriteString("m \"" + gen.tarsPath + "/model\"\n")
 	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/codec\"\n")
+	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/tup\"\n")
+	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/res/basef\"\n")
 	gen.code.WriteString("\"" + gen.tarsPath + "/util/tools\"\n")
 	gen.code.WriteString("\"" + gen.tarsPath + "/util/current\"\n")
 
@@ -1131,10 +1134,10 @@ func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo, withContext boo
 	if withContext == true {
 		if isOneWay {
 			c.WriteString("//" + fun.Name + "OneWayWithContext is the proxy function for the method defined in the tars file, with the context\n")
-			c.WriteString("func (_obj *" + interfName + ") " + fun.Name + "OneWayWithContext(ctx context.Context,")
+			c.WriteString("func (_obj *" + interfName + ") " + fun.Name + "OneWayWithContext(tarsCtx context.Context,")
 		} else {
 			c.WriteString("//" + fun.Name + "WithContext is the proxy function for the method defined in the tars file, with the context\n")
-			c.WriteString("func (_obj *" + interfName + ") " + fun.Name + "WithContext(ctx context.Context,")
+			c.WriteString("func (_obj *" + interfName + ") " + fun.Name + "WithContext(tarsCtx context.Context,")
 		}
 	} else {
 		c.WriteString("//" + fun.Name + " is the proxy function for the method defined in the tars file, with the context\n")
@@ -1186,7 +1189,7 @@ if len(_opt) == 1{
 	_status = _opt[1]
 }
 _resp := new(requestf.ResponsePacket)
-ctx := context.Background()
+tarsCtx := context.Background()
 `)
 	} else {
 		c.WriteString(`var _status map[string]string
@@ -1203,12 +1206,12 @@ _resp := new(requestf.ResponsePacket)
 
 	if isOneWay {
 		c.WriteString(`
-		err = _obj.s.Tars_invoke(ctx, 1, "` + fun.OriginName + `", _os.ToBytes(), _status, _context, _resp)
+		err = _obj.s.Tars_invoke(tarsCtx, 1, "` + fun.OriginName + `", _os.ToBytes(), _status, _context, _resp)
 		` + errStr + `
 		`)
 	} else {
 		c.WriteString(`
-		err = _obj.s.Tars_invoke(ctx, 0, "` + fun.OriginName + `", _os.ToBytes(), _status, _context, _resp)
+		err = _obj.s.Tars_invoke(tarsCtx, 0, "` + fun.OriginName + `", _os.ToBytes(), _status, _context, _resp)
 		` + errStr + `
 		`)
 	}
@@ -1319,7 +1322,7 @@ func (gen *GenGo) genIFServerFun(fun *FunInfo) {
 
 func (gen *GenGo) genIFServerFunWithContext(fun *FunInfo) {
 	c := &gen.code
-	c.WriteString(fun.Name + "(ctx context.Context, ")
+	c.WriteString(fun.Name + "(tarsCtx context.Context, ")
 	for _, v := range fun.Args {
 		gen.genArgs(&v)
 	}
@@ -1333,8 +1336,8 @@ func (gen *GenGo) genIFServerFunWithContext(fun *FunInfo) {
 
 func (gen *GenGo) genIFDispatch(itf *InterfaceInfo) {
 	c := &gen.code
-	c.WriteString("// Dispatch is used to call the server side implemnet for the method defined in the tars file. withContext shows using context or not.  \n")
-	c.WriteString("func(_obj *" + itf.Name + `) Dispatch(ctx context.Context, _val interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket,withContext bool) (err error) {
+	c.WriteString("// Dispatch is used to call the server side implemnet for the method defined in the tars file. _withContext shows using context or not.  \n")
+	c.WriteString("func(_obj *" + itf.Name + `) Dispatch(tarsCtx context.Context, _val interface{}, tarsReq *requestf.RequestPacket, tarsResp *requestf.ResponsePacket, _withContext bool) (err error) {
 	var length int32
 	var have bool
 	var ty byte
@@ -1349,13 +1352,13 @@ func (gen *GenGo) genIFDispatch(itf *InterfaceInfo) {
 	}
 
 	if param {
-		c.WriteString("_is := codec.NewReader(tools.Int8ToByte(req.SBuffer))")
+		c.WriteString("_is := codec.NewReader(tools.Int8ToByte(tarsReq.SBuffer))")
 	} else {
 		c.WriteString("_is := codec.NewReader(nil)")
 	}
 	c.WriteString(`
 	_os := codec.NewBuffer()
-	switch req.SFuncName {
+	switch tarsReq.SFuncName {
 `)
 
 	for _, v := range itf.Fun {
@@ -1367,19 +1370,19 @@ func (gen *GenGo) genIFDispatch(itf *InterfaceInfo) {
 		return fmt.Errorf("func mismatch")
 	}
 	var _status map[string]string
-	s, ok := current.GetResponseStatus(ctx)
+	s, ok := current.GetResponseStatus(tarsCtx)
 	if ok  && s != nil {
 		_status = s
 	}
 	var _context map[string]string
-	c, ok := current.GetResponseContext(ctx)
+	c, ok := current.GetResponseContext(tarsCtx)
 	if ok && c != nil  {
 		_context = c
 	}
-	*resp = requestf.ResponsePacket{
-		IVersion:     1,
+	*tarsResp = requestf.ResponsePacket{
+		IVersion:     tarsReq.IVersion,
 		CPacketType:  0,
-		IRequestId:   req.IRequestId,
+		IRequestId:   tarsReq.IRequestId,
 		IMessageType: 0,
 		IRet:         0,
 		SBuffer:      tools.ByteToInt8(_os.ToBytes()),
@@ -1402,24 +1405,95 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 	c := &gen.code
 	c.WriteString(`case "` + fun.OriginName + `":` + "\n")
 
-	for k, v := range fun.Args {
-		c.WriteString("var " + v.Name + " " + gen.genType(v.Type))
-		dummy := &StructMember{}
-		dummy.Type = v.Type
-		dummy.Key = v.Name
-		dummy.Tag = int32(k + 1)
-		if !v.IsOut {
-			dummy.Require = true
+	inArgsCount := 0
+	outArgsCount := 0
+	for _, v := range fun.Args {
+		c.WriteString("var " + v.Name + " " + gen.genType(v.Type) + "\n")
+		if v.IsOut {
+			outArgsCount++
 		} else {
-			dummy.Require = false
+			inArgsCount++
 		}
-		gen.genReadVar(dummy, "", false)
+	}
+
+	//fmt.Println("args count, in, out:", inArgsCount, outArgsCount)
+
+	c.WriteString("\n")
+
+	if inArgsCount > 0 {
+		c.WriteString("if tarsReq.IVersion == basef.TARSVERSION {" + "\n")
+
+		for k, v := range fun.Args {
+			//c.WriteString("var " + v.Name + " " + gen.genType(v.Type))
+			if !v.IsOut {
+				dummy := &StructMember{}
+				dummy.Type = v.Type
+				dummy.Key = v.Name
+				dummy.Tag = int32(k + 1)
+				dummy.Require = true
+				gen.genReadVar(dummy, "", false)
+			}
+			//else {
+			//	c.WriteString("\n")
+			//}
+		}
+		//c.WriteString("}")
+
+		c.WriteString(`} else if tarsReq.IVersion == basef.TUPVERSION {
+		_reqTup_ := tup.NewUniAttribute()
+		_reqTup_.Decode(_is)
+
+		var _tupBuffer_ []byte
+
+		`)
+		for _, v := range fun.Args {
+			if !v.IsOut {
+				c.WriteString("\n")
+				c.WriteString(`_reqTup_.GetBuffer("` + v.Name + `", &_tupBuffer_)` + "\n")
+				c.WriteString("_is.Reset(_tupBuffer_)")
+
+				dummy := &StructMember{}
+				dummy.Type = v.Type
+				dummy.Key = v.Name
+				dummy.Tag = 0
+				dummy.Require = true
+				gen.genReadVar(dummy, "", false)
+			}
+		}
+
+		c.WriteString(`} else if tarsReq.IVersion == basef.JSONVERSION {
+		var _jsonDat_ map[string]interface{}
+		err = json.Unmarshal(_is.ToBytes(), &_jsonDat_)
+		`)
+
+		for _, v := range fun.Args {
+			if !v.IsOut {
+				c.WriteString("{\n")
+				c.WriteString(`_jsonStr_, _ := json.Marshal(_jsonDat_["` + v.Name + `"])` + "\n")
+				c.WriteString("if err = json.Unmarshal([]byte(_jsonStr_), &" + v.Name + "); err != nil {")
+				c.WriteString(`
+					return err
+				}
+				}
+				`)
+			}
+		}
+
+		c.WriteString(`
+		} else {
+			err = fmt.Errorf("Decode reqpacket fail, error version:", tarsReq.IVersion)
+			return err
+		}`)
+
+		c.WriteString("\n\n")
 	}
 
 	if fun.HasRet {
-		c.WriteString(`if !withContext {
+		c.WriteString("var _funRet_ " + gen.genType(fun.RetType) + "\n")
+
+		c.WriteString(`if _withContext == false {
 		_imp := _val.(_imp` + tname + `)
-		ret, err := _imp.` + fun.Name + `(`)
+		_funRet_, err = _imp.` + fun.Name + `(`)
 		for _, v := range fun.Args {
 			if v.IsOut || v.Type.CType == tkStruct {
 				c.WriteString("&" + v.Name + ",")
@@ -1428,21 +1502,11 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 			}
 		}
 		c.WriteString(")")
+
 		c.WriteString(`
-		if err != nil {
-			return err
-		}
-		`)
-		dummy := &StructMember{}
-		dummy.Type = fun.RetType
-		dummy.Key = "ret"
-		dummy.Tag = 0
-		dummy.Require = true
-		gen.genWriteVar(dummy, "", false)
-		c.WriteString("}else{")
-		c.WriteString(`
+		} else {
 		_imp := _val.(_imp` + tname + `WithContext)
-		ret, err := _imp.` + fun.Name + `(ctx ,`)
+		_funRet_, err = _imp.` + fun.Name + `(tarsCtx ,`)
 		for _, v := range fun.Args {
 			if v.IsOut || v.Type.CType == tkStruct {
 				c.WriteString("&" + v.Name + ",")
@@ -1450,22 +1514,10 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 				c.WriteString(v.Name + ",")
 			}
 		}
-		c.WriteString(")")
-		c.WriteString(`
-		if err != nil {
-			return err
-		}
-		`)
-		dummy = &StructMember{}
-		dummy.Type = fun.RetType
-		dummy.Key = "ret"
-		dummy.Tag = 0
-		dummy.Require = true
-		gen.genWriteVar(dummy, "", false)
-		c.WriteString("}\n")
+		c.WriteString(")" + "\n } \n")
 
 	} else {
-		c.WriteString(`if !withContext {
+		c.WriteString(`if _withContext == false {
 		_imp := _val.(_imp` + tname + `)
 		err = _imp.` + fun.Name + `(`)
 		for _, v := range fun.Args {
@@ -1476,15 +1528,11 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 			}
 		}
 		c.WriteString(")")
+
 		c.WriteString(`
-		if err != nil {
-			return err
-		}
-		`)
-		c.WriteString("}else{")
-		c.WriteString(`
+		} else {
 		_imp := _val.(_imp` + tname + `WithContext)
-		err = _imp.` + fun.Name + `(ctx ,`)
+		err = _imp.` + fun.Name + `(tarsCtx ,`)
 		for _, v := range fun.Args {
 			if v.IsOut || v.Type.CType == tkStruct {
 				c.WriteString("&" + v.Name + ",")
@@ -1492,13 +1540,26 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 				c.WriteString(v.Name + ",")
 			}
 		}
-		c.WriteString(")")
+		c.WriteString(") \n}\n")
+	}
+
+	c.WriteString(`
+	if err != nil {
+		return err
+	}
+	`)
+
+	c.WriteString(`
+	if tarsReq.IVersion == basef.TARSVERSION {
+	_os.Reset()
+	`)
+	if fun.HasRet {
 		c.WriteString(`
+		err = _os.Write_int32(_funRet_, 0)
 		if err != nil {
 			return err
-		}
-		`)
-		c.WriteString("}\n")
+		}		
+`)
 	}
 
 	for k, v := range fun.Args {
@@ -1511,6 +1572,73 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 			gen.genWriteVar(dummy, "", false)
 		}
 	}
-}
 
+	c.WriteString(`
+} else if tarsReq.IVersion == basef.TUPVERSION {
+_tupRsp_ := tup.NewUniAttribute()
+`)
+
+	if fun.HasRet {
+		c.WriteString(`
+		_os.Reset()
+		err = _os.Write_int32(_funRet_, 0)
+		if err != nil {
+			return err
+		}
+		_tupRsp_.PutBuffer("", _os.ToBytes())
+		_tupRsp_.PutBuffer("tars_ret", _os.ToBytes())
+`)
+	}
+
+	for _, v := range fun.Args {
+		if v.IsOut {
+			c.WriteString(`
+		_os.Reset()`)
+			dummy := &StructMember{}
+			dummy.Type = v.Type
+			dummy.Key = v.Name
+			dummy.Tag = 0
+			dummy.Require = true
+			gen.genWriteVar(dummy, "", false)
+
+			c.WriteString(`_tupRsp_.PutBuffer("` + v.Name + `", _os.ToBytes())` + "\n")
+		}
+	}
+
+	c.WriteString(`
+	_os.Reset()
+	err = _tupRsp_.Encode(_os)
+	if err != nil {
+		return err
+	}	
+} else if tarsReq.IVersion == basef.JSONVERSION {
+	_rspJson_ := map[string]interface{} {}
+`)
+	if fun.HasRet {
+		//c.WriteString(`_rspJson_[""] = _funRet_` + "\n")
+		c.WriteString(`_rspJson_["tars_ret"] = _funRet_` + "\n")
+	}
+
+	for _, v := range fun.Args {
+		if v.IsOut {
+			c.WriteString(`_rspJson_["` + v.Name + `"] = ` + v.Name + "\n")
+		}
+	}
+
+	c.WriteString(`
+		var _rspByte_ []byte
+		if _rspByte_, err = json.Marshal(_rspJson_); err != nil {
+			return err
+		}
+
+		_os.Reset()
+		err = _os.Write_slice_uint8(_rspByte_)
+		if err != nil {
+			return err
+		}
+}`)
+
+c.WriteString("\n")
+
+}
 
