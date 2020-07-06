@@ -53,8 +53,13 @@ func (s *StatFHelper) addUpMsg(statList *list.List, fromServer bool) {
 			body.TimeoutCount = (body.TimeoutCount + statInfo.Body.TimeoutCount)
 			body.ExecCount = (body.ExecCount + statInfo.Body.ExecCount)
 			body.TotalRspTime = (body.TotalRspTime + statInfo.Body.TotalRspTime)
-			body.MaxRspTime = (body.MaxRspTime + statInfo.Body.MaxRspTime)
-			body.MinRspTime = (body.MinRspTime + statInfo.Body.MinRspTime)
+			if body.MaxRspTime < statInfo.Body.MaxRspTime {
+				body.MaxRspTime = statInfo.Body.MaxRspTime
+			}
+			if body.MinRspTime > statInfo.Body.MinRspTime {
+				body.MinRspTime = statInfo.Body.MinRspTime
+			}
+
 			//body.WeightValue = (body.WeightValue + statInfo.Body.WeightValue)
 			//body.WeightCount = (body.WeightCount + statInfo.Body.WeightCount)
 			s.mStatInfo[statInfo.Head] = body
