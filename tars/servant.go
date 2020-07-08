@@ -39,6 +39,11 @@ type ServantProxy struct {
 	queueLen int32
 }
 
+// NewServantProxy creates and initializes a servant proxy
+func NewServantProxy(comm *Communicator, objName string) *ServantProxy {
+	return newServantProxy(comm, objName)
+}
+
 func newServantProxy(comm *Communicator, objName string) *ServantProxy {
 	s := &ServantProxy{}
 	pos := strings.Index(objName, "@")
@@ -76,7 +81,7 @@ func (s *ServantProxy) TarsSetProtocol(proto model.Protocol) {
 	s.proto = proto
 }
 
-// Tars_invoke is use for client inoking server.
+// Tars_invoke is used for client inoking server.
 func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	sFuncName string,
 	buf []byte,
