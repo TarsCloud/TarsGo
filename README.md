@@ -6,7 +6,7 @@
 - Go's goroutine concurrency mechanism means Go is very suitable for large-scale high-concurrency back-end server program development. The Go language has near C/C++ performance and near Python productivity.
 - At Tencent, part of the existing C++ development team has gradually turned into Go developers. Tars, a widely used RPC framework, supports C++, Java, NodeJS, and PHP, and now Go. The combination with Go language has become a general trend. Therefore, in the voice of users, we launched Tarsgo, and we have applied to Tencent map application, YingYongbao application, Internet plus and other projects.
 
-- Learn more about the whole Tars architecture and design at [Introduction](https://github.com/TarsCloud/TarsDocs_en/blob/master/begin/introduction.md).
+- Learn more about the whole Tars architecture and design at [Introduction](https://tarscloud.github.io/TarsDocs_en/SUMMARY.html).
 
 
 ## Function & features
@@ -23,11 +23,38 @@
 
 
 ## Install
-- For install OSS and other basic servers, see the [Installation](https://github.com/TarsCloud/TarsDocs_en/blob/master/begin/installation/step-by-step.md) document.
-For quick install OSS and other basic servers, see more about [Deploy](https://github.com/TarsCloud/TarsDocs_en/blob/master/begin/installation/automatic-script.md)
-- Requires Go 1.9.x or above (see https://golang.org/doc/install for help installing Go)
-- go get -u github.com/TarsCloud/TarsGo/tars
+- For install OSS and other basic servers, see the [Installation](https://tarscloud.github.io/TarsDocs/installation/) document.
+- Install go 1.13.x or above (for example go install path: /usr/local/go), set GOROOT, GOPATH, for example: in Linux:
+```
+export GOROOT=/usr/local/go  
+export GOPATH=/root/gocode   
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+```
 
+If you in china, you can set go proxy:  
+```
+go env -w GOPROXY=https://goproxy.cn   
+```
+
+Please set go mod:
+```
+go env -w GO111MODULE=auto
+```
+
+cd $GOPATH
+```
+go get -u github.com/TarsCloud/TarsGo/tars
+```
+
+now tarsgo downloaded to path:
+```
+$GOPATH/src/github.com/TarsCloud/TarsGo/
+```
+
+After tarsgo src be downloaded, please install tars2go:
+```
+go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
+```
 
 ## Quickstart
 - For quickstart, see [tars_go_quickstart_en.md](docs/tars_go_quickstart_en.md)
@@ -63,9 +90,10 @@ module TestApp
 #### 1.2 compile interface definition file
 
 ##### 1.2.1 build tars2go
-Compile and install the tars2go tools.
-
+If not install tars2go, Compile and install the tars2go tools.
+```
     go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
+```
 
 ##### 1.2.2 compile the tars file and translate into go file
 	tars2go --outdir=./vendor hello.tars
