@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.4 (2020/06/15)
+### ChangLogs
+- merge from feature/tars-gateway branch (add tup && json protocol support)
+
+
+## 1.1.3 (2020/06/02)
+### ChangLogs
+- fixed RequestPacket not set timeout bug
+- fix README
+
 ## 1.1.2 (2020/04/23)
 ### ChangLogs
 - merge from tars internal version

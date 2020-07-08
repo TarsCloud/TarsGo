@@ -84,6 +84,13 @@ tar: $(TARGET) $(CONFIG)
 		echo "tar cvfz $(TARGET).tgz ..."; \
 	fi
 
+TARS_WEB_HOST    := http://172.16.8.227:3000
+TARS_TOKEN 	:= ""
+m	:= "upload-by-developer"
+upload: tar
+	@echo "$(TARGET).tgz --- $(APP).$(TARGET).tgz"
+	curl ${TARS_WEB_HOST}/api/upload_and_publish?ticket=${TARS_TOKEN} -Fsuse=@${TARGET}.tgz -Fapplication=${APP} -Fmodule_name=${TARGET} -Fcomment=developer-auto-upload
+	@echo "\n---------------------------------------------------------------------------\n"
 
 HELP += $(HELP_TAR)
 

@@ -21,6 +21,7 @@ module basef
 
     const short TARSVERSION  = 0x01;
     const short TUPVERSION  = 0x03;
+    const short JSONVERSION = 0x05;
 
     ////////////////////////////////////////////////////////////////
     // 定义消息的类型
