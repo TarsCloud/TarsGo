@@ -15,7 +15,7 @@
 - Auto service discovery.
 - TCP/UDP/Http server & Client.
 - The support of local logging and remote logging.
-- The support of statistical reporting,  property statistics,and anormaly reporting.
+- The support of statistical reporting,  property statistics,and anomaly reporting.
 - The support of set division.
 - The support of protocol buffers. See more in [pb2tarsgo](tars/tools/pb2tarsgo/README.md)
 - The support of filter.
@@ -628,7 +628,7 @@ after every client call server ，no matter success or failure. And the success 
 > * The reported data is reported regularly and can be set in the configuration of the communicator.
 
 
-### 7 Anormaly reporting
+### 7 Anomaly reporting
 For better monitoring, the TARS framework supports reporting abnormal situation directly to tarsnotify in the program and can be viewed on the WEB management page.
 
 The framework provides three macros to report different kinds of exceptions:
