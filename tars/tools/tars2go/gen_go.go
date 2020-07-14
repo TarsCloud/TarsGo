@@ -1553,9 +1553,11 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 	if tarsReq.IVersion == basef.TARSVERSION {
 	_os.Reset()
 	`)
+
 	if fun.HasRet {
+		funRetType := gen.genType(fun.RetType)
 		c.WriteString(`
-		err = _os.Write_int32(_funRet_, 0)
+		err = _os.Write_`+funRetType+`(_funRet_, 0)
 		if err != nil {
 			return err
 		}		
@@ -1579,9 +1581,10 @@ _tupRsp_ := tup.NewUniAttribute()
 `)
 
 	if fun.HasRet {
+		funRetType := gen.genType(fun.RetType)
 		c.WriteString(`
 		_os.Reset()
-		err = _os.Write_int32(_funRet_, 0)
+		err = _os.Write_`+funRetType+`(_funRet_, 0)
 		if err != nil {
 			return err
 		}
