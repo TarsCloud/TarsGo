@@ -1554,22 +1554,14 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 	_os.Reset()
 	`)
 
-//	if fun.HasRet {
-//		c.WriteString(`
-//		err = _os.Write_int32(_funRet_, 0)
-//		if err != nil {
-//			return err
-//		}
-//`)
-//	}
-
 	if fun.HasRet {
-		dummy := &StructMember{}
-		dummy.Type = fun.RetType
-		dummy.Key = "_funRet_"
-		dummy.Tag = 0
-		dummy.Require = true
-		gen.genWriteVar(dummy, "", false)
+		funRetType := gen.genType(fun.RetType)
+		c.WriteString(`
+		err = _os.Write_`+funRetType+`(_funRet_, 0)
+		if err != nil {
+			return err
+		}		
+`)
 	}
 
 	for k, v := range fun.Args {
@@ -1588,27 +1580,14 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 _tupRsp_ := tup.NewUniAttribute()
 `)
 
-//	if fun.HasRet {
-//		c.WriteString(`
-//		_os.Reset()
-//		err = _os.Write_int32(_funRet_, 0)
-//		if err != nil {
-//			return err
-//		}
-//		_tupRsp_.PutBuffer("", _os.ToBytes())
-//		_tupRsp_.PutBuffer("tars_ret", _os.ToBytes())
-//`)
-//	}
-
 	if fun.HasRet {
-		dummy := &StructMember{}
-		dummy.Type = fun.RetType
-		dummy.Key = "_funRet_"
-		dummy.Tag = 0
-		dummy.Require = true
-		gen.genWriteVar(dummy, "", false)
-
+		funRetType := gen.genType(fun.RetType)
 		c.WriteString(`
+		_os.Reset()
+		err = _os.Write_`+funRetType+`(_funRet_, 0)
+		if err != nil {
+			return err
+		}
 		_tupRsp_.PutBuffer("", _os.ToBytes())
 		_tupRsp_.PutBuffer("tars_ret", _os.ToBytes())
 `)
