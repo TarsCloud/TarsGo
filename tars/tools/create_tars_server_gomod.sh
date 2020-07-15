@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # check params
 if [ $# -lt 4 ]
@@ -10,7 +10,7 @@ fi
 
 GOPATH=$(go env GOPATH)
 # export GOPATH=$(echo $GOPATH | cut -f1 -d ':')
-if [ "$GOPATH" == "" ]; then
+if [ "$GOPATH" = "" ]; then
     echo "GOPATH must be set"
     exit 1
 fi
@@ -28,9 +28,9 @@ if [ -d $TARGET ];then
 fi
 
 
-if [ "$SERVER" == "$SERVANT" ]
+if [ "$SERVER" = "$SERVANT" ]
 then
-    echo "Error!(ServerName == ServantName)"
+    echo "Error!(ServerName = ServantName)"
     exit 1
 fi
 echo "[create server: $APP.$SERVER ...]"
@@ -48,7 +48,7 @@ cd $TARGET || exit 1
 cp -r $DEMODIR/* $TARGET
 cp -r $DEBUGDIR $TARGET
 
-if [ `uname` == "Darwin" ] # support macOS
+if [ `uname` = "Darwin" ] # support macOS
 then
     for FILE in $SRC_FILE client/client.go debugtool/dumpstack.go
     do
@@ -82,9 +82,13 @@ else
     SERVANT_LC=`echo $SERVANT|tr 'A-Z' 'a-z'`
     for RENAMEFILE in `ls `
     do
-        rename "Server" "$SERVER" $RENAMEFILE
-        rename "Servant.tars" "${SERVANT}.tars" $RENAMEFILE
-        rename "Servant_imp.go" "${SERVANT_LC}_imp.go" $RENAMEFILE
+        #rename "Server" "$SERVER" $RENAMEFILE
+        #rename "Servant.tars" "${SERVANT}.tars" $RENAMEFILE
+        #rename "Servant_imp.go" "${SERVANT_LC}_imp.go" $RENAMEFILE
+
+        rename "s/Server/$SERVER/" $RENAMEFILE
+        rename "s/Servant.tars/${SERVANT}.tars/" $RENAMEFILE
+        rename "s/Servant_imp.go/${SERVANT_LC}_imp.go/" $RENAMEFILE
     done
 fi
 
