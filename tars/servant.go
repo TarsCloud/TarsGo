@@ -148,9 +148,9 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 		err = s.doInvoke(ctx, msg, timeout)
 		// execute post client filters
 		for i, v := range allFilters.postCfs {
-			err = v(ctx, msg, s.doInvoke, timeout)
-			if err != nil {
-				TLOG.Errorf("Post filter error, no: %v, err: %v", i, err.Error())
+			filterErr := v(ctx, msg, s.doInvoke, timeout)
+			if filterErr != nil {
+				TLOG.Errorf("Post filter error, no: %v, err: %v", i, filterErr.Error())
 			}
 		}
 	}
