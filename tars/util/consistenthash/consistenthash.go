@@ -79,10 +79,10 @@ func (c *ChMap) Add(node KV) error {
 		virtualKey := crc32.ChecksumIEEE([]byte(virtualHost))
 		c.hashRing[virtualKey] = node
 		c.sortedKeys = append(c.sortedKeys, virtualKey)
-		sort.Slice(c.sortedKeys, func(x int, y int) bool {
-			return c.sortedKeys[x] < c.sortedKeys[y]
-		})
 	}
+	sort.Slice(c.sortedKeys, func(x int, y int) bool {
+		return c.sortedKeys[x] < c.sortedKeys[y]
+	})
 	c.mapValues[node.String()] = true
 	return nil
 }
