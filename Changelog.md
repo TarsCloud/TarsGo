@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.5 (2020/07/19)
+- improve some features
+- export `newServantProxy` function as public
+
 ## 1.1.4 (2020/06/15)
 ### ChangLogs
 - merge from feature/tars-gateway branch (add tup && json protocol support)
