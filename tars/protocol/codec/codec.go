@@ -325,9 +325,20 @@ func (b *Buffer) Write_string(data string, tag byte) error {
 	return nil
 }
 
+// ToBytes make the buffer to []byte
+func (b *Buffer) ToBytes() []byte {
+	return b.buf.Bytes()
+}
+
+// Grow grows the size of the buffer.
+func (b *Buffer) Grow(size int) {
+	b.buf.Grow(size)
+}
+
 //Reset clean the Reader.
 func (b *Reader) Reset(data []byte) {
 	b.buf.Reset(data)
+	b.ref = data
 }
 
 //go:nosplit
@@ -348,9 +359,11 @@ func (b *Reader) readHead() (ty, tag byte, err error) {
 	return
 }
 
-func (b *Reader) unreadHead(tag byte) {
+// unreadHead 回退一个head byte， curTag为当前读到的tag信息，当tag超过4位时则回退两个head byte
+// unreadHead put back the current head byte.
+func (b *Reader) unreadHead(curTag byte) {
 	b.buf.UnreadByte()
-	if tag >= 15 {
+	if curTag >= 15 {
 		b.buf.UnreadByte()
 	}
 }
@@ -846,24 +859,14 @@ func (b *Reader) Read_string(data *string, tag byte, require bool) error {
 	return nil
 }
 
-// ToBytes make the buffer to []byte
-func (b *Buffer) ToBytes() []byte {
-	return b.buf.Bytes()
-}
-
-// Grow grows the size of the buffer.
-func (b *Buffer) Grow(size int) {
-	b.buf.Grow(size)
+//ToString make the reader to string
+func (b *Reader) ToString() string {
+	return string(b.ref[:])
 }
 
 //ToString make the reader to string
-func (r *Reader) ToString() string {
-	return string(r.ref[:])
-}
-
-//ToString make the reader to string
-func (r *Reader) ToBytes() []byte {
-	return r.ref
+func (b *Reader) ToBytes() []byte {
+	return b.ref
 }
 
 // NewReader returns *Reader

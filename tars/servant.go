@@ -39,6 +39,11 @@ type ServantProxy struct {
 	queueLen int32
 }
 
+// NewServantProxy creates and initializes a servant proxy
+func NewServantProxy(comm *Communicator, objName string) *ServantProxy {
+	return newServantProxy(comm, objName)
+}
+
 func newServantProxy(comm *Communicator, objName string) *ServantProxy {
 	s := &ServantProxy{}
 	pos := strings.Index(objName, "@")
@@ -81,14 +86,15 @@ func (s *ServantProxy) genRequestID() int32 {
 	// 尽力防止溢出
 	atomic.CompareAndSwapInt32(&msgID, maxInt32, 1)
 	for {
-		v := atomic.AddInt32(&msgID, 1) // 溢出后回转成负数
-		if v != 0 {                     // 0比较特殊,用于表示 server 端推送消息给 client 端进行主动 close()
+     // 0比较特殊,用于表示 server 端推送消息给 client 端进行主动 close()
+		 // 溢出后回转成负数
+		if v := atomic.AddInt32(&msgID, 1); v != 0 {  
 			return v
 		}
 	}
 }
 
-// Tars_invoke is use for client inoking server.
+// Tars_invoke is used for client inoking server.
 func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	sFuncName string,
 	buf []byte,
@@ -153,9 +159,9 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 		err = s.doInvoke(ctx, msg, timeout)
 		// execute post client filters
 		for i, v := range allFilters.postCfs {
-			err = v(ctx, msg, s.doInvoke, timeout)
-			if err != nil {
-				TLOG.Errorf("Post filter error, no: %v, err: %v", i, err.Error())
+			filterErr := v(ctx, msg, s.doInvoke, timeout)
+			if filterErr != nil {
+				TLOG.Errorf("Post filter error, no: %v, err: %v", i, filterErr.Error())
 			}
 		}
 	}
