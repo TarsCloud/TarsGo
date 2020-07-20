@@ -39,6 +39,11 @@ type ServantProxy struct {
 	queueLen int32
 }
 
+// NewServantProxy creates and initializes a servant proxy
+func NewServantProxy(comm *Communicator, objName string) *ServantProxy {
+	return newServantProxy(comm, objName)
+}
+
 func newServantProxy(comm *Communicator, objName string) *ServantProxy {
 	s := &ServantProxy{}
 	pos := strings.Index(objName, "@")
@@ -76,7 +81,20 @@ func (s *ServantProxy) TarsSetProtocol(proto model.Protocol) {
 	s.proto = proto
 }
 
-// Tars_invoke is use for client inoking server.
+// 生成请求 ID
+func (s *ServantProxy) genRequestID() int32 {
+	// 尽力防止溢出
+	atomic.CompareAndSwapInt32(&msgID, maxInt32, 1)
+	for {
+     // 0比较特殊,用于表示 server 端推送消息给 client 端进行主动 close()
+		 // 溢出后回转成负数
+		if v := atomic.AddInt32(&msgID, 1); v != 0 {  
+			return v
+		}
+	}
+}
+
+// Tars_invoke is used for client inoking server.
 func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	sFuncName string,
 	buf []byte,
@@ -84,8 +102,6 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	reqContext map[string]string,
 	resp *requestf.ResponsePacket) error {
 	defer CheckPanic()
-	//TODO 重置sid，防止溢出
-	atomic.CompareAndSwapInt32(&msgID, maxInt32, 1)
 
 	// 将ctx中的dyeinglog信息传入到request中
 	var msgType int32
@@ -102,7 +118,7 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	req := requestf.RequestPacket{
 		IVersion:     s.version,
 		CPacketType:  int8(ctype),
-		IRequestId:   atomic.AddInt32(&msgID, 1),
+		IRequestId:   s.genRequestID(),
 		SServantName: s.name,
 		SFuncName:    sFuncName,
 		SBuffer:      tools.ByteToInt8(buf),
@@ -143,9 +159,9 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 		err = s.doInvoke(ctx, msg, timeout)
 		// execute post client filters
 		for i, v := range allFilters.postCfs {
-			err = v(ctx, msg, s.doInvoke, timeout)
-			if err != nil {
-				TLOG.Errorf("Post filter error, no: %v, err: %v", i, err.Error())
+			filterErr := v(ctx, msg, s.doInvoke, timeout)
+			if filterErr != nil {
+				TLOG.Errorf("Post filter error, no: %v, err: %v", i, filterErr.Error())
 			}
 		}
 	}

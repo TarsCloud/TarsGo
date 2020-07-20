@@ -74,18 +74,16 @@ go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
 有关tars协议的更多详细信息, 请查看 https://github.com/TarsCloud/TarsTup/blob/master/docs-en/tars_tup.md
 
 ```
-	
-	module TestApp
-	{
-	
-	interface Hello
-	{
-	    int test();
-	    int testHello(string sReq, out string sRsp);
-	};
-	
-	}; 
-	
+module TestApp
+{
+
+    interface Hello
+    {
+        int test();
+        int testHello(string sReq, out string sRsp);
+    };
+
+}; 
 ```
 	
 #### 1.2 编译接口定义文件
@@ -93,7 +91,7 @@ go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
 ##### 1.2.1 构建 tars2go
 如果还没有编译tars2go, 则编译并安装tars2go工具
 ```
-	go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
+go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
 ```
 ##### 1.2.2 编译tars文件并转成go文
 	tars2go --outdir=./vendor hello.tars
@@ -415,9 +413,9 @@ comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h ... -p ...")
 #### 2.3 超时控制
 如果你想在客户端使用超时控制，请使用以ms为单位的TarsSetTimeout。
 ```go
-    app := new(TestApp.Hello)
-    comm.StringToProxy(obj, app)
-    app.TarsSetTimeout(3000)
+app := new(TestApp.Hello)
+comm.StringToProxy(obj, app)
+app.TarsSetTimeout(3000)
 ```
 
 #### 2.4 接口调用
@@ -444,9 +442,9 @@ tcp:Tcp协议
 
 如果HelloServer在两台服务器上运行，则应用程序初始化如下:
 ```
-    obj:= "Test.HelloServer.HelloObj@tcp -h 127.0.0.1 -p 9985:tcp -h 192.168.1.1 -p 9983"
-    app := new(TestApp.Hello)
-    comm.StringToProxy(obj, app)
+obj:= "Test.HelloServer.HelloObj@tcp -h 127.0.0.1 -p 9985:tcp -h 192.168.1.1 -p 9983"
+app := new(TestApp.Hello)
+comm.StringToProxy(obj, app)
 ```
 HelloObj的地址设置为两个服务器的地址。 此时，请求将被分发到两个服务器（可以指定分发方法，这里不再介绍）。 如果一台服务器关闭，请求将自动分配给另一台服务器，服务器将定期重新启动。
 
@@ -650,18 +648,18 @@ Info是一个字符串，可以直接将字符串上报给tarsnotify。 上报�
 
 示例代码如下：
 ```go
-    sum := tars.NewSum()
-    count := tars.NewCount()
-    max := tars.NewMax()
-    min := tars.NewMin()
-    d := []int{10, 20, 30, 50} 
-    distr := tars.NewDistr(d)
-    p := tars.CreatePropertyReport("testproperty", sum, count, max, min, distr)
-    for i := 0; i < 5; i++ {
-        v := rand.Intn(100)
-        p.Report(v)
+sum := tars.NewSum()
+count := tars.NewCount()
+max := tars.NewMax()
+min := tars.NewMin()
+d := []int{10, 20, 30, 50} 
+distr := tars.NewDistr(d)
+p := tars.CreatePropertyReport("testproperty", sum, count, max, min, distr)
+for i := 0; i < 5; i++ {
+    v := rand.Intn(100)
+    p.Report(v)
 
-    }   
+}   
 
 ```
 
