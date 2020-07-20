@@ -13,7 +13,8 @@ GOPATH=$(go env GOPATH)
 # echo ${GOPATH}
 
 # export GOPATH=$(echo $GOPATH | cut -f1 -d ':')
-if [ "$GOPATH" = "" ]; then
+
+if [ "$GOPATH" == "" ]; then
     echo "GOPATH must be set"
     exit 1
 fi
@@ -49,7 +50,7 @@ cd $TARGET || exit 1
 cp -r $DEMODIR/* $TARGET
 cp -r $DEBUGDIR $TARGET
 
-if [ `uname` = "Darwin" ] # support macOS
+if [ `uname` == "Darwin" ] # support macOS
 then
     for FILE in $SRC_FILE client/client.go vendor/vendor.json
     do
