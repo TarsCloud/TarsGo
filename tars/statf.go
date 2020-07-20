@@ -47,8 +47,12 @@ func (s *StatFHelper) collectMsg(statInfo StatInfo, mStatInfo map[statf.StatMicM
 		body.TimeoutCount += statInfo.Body.TimeoutCount
 		body.ExecCount += statInfo.Body.ExecCount
 		body.TotalRspTime += statInfo.Body.TotalRspTime
-		body.MaxRspTime += body.MaxRspTime + statInfo.Body.MaxRspTime
-		body.MinRspTime += body.MinRspTime + statInfo.Body.MinRspTime
+		if body.MaxRspTime < statInfo.Body.MaxRspTime {
+			body.MaxRspTime = statInfo.Body.MaxRspTime
+		}
+		if body.MinRspTime > statInfo.Body.MinRspTime {
+			body.MinRspTime = statInfo.Body.MinRspTime
+		}
 		s.mStatInfo[statInfo.Head] = body
 		s.mStatCount[statInfo.Head]++
 	} else {
