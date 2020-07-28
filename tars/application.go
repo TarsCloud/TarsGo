@@ -272,7 +272,15 @@ func Run() {
 				}
 
 				lisDone.Done()
-				err = s.Serve(ln)
+				configHasCert := s.TLSConfig != nil 
+				if configHasCert {
+					configHasCert = len(s.TLSConfig.Certificates) > 0 || s.TLSConfig.GetCertificate != nil 
+				}
+				if configHasCert {
+					err = s.ServeTLS(ln,"","")
+				} else {
+					err = s.Serve(ln)
+				}
 				if err != nil {
 					if err == http.ErrServerClosed {
 						TLOG.Infof("%s http server stop: %v", obj, err)
