@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"crypto/tls"	
 
 	"github.com/TarsCloud/TarsGo/tars/transport"
 )
@@ -61,5 +62,40 @@ func AddHttpServant(mux *TarsHttpMux, obj string) {
 	}
 	mux.SetConfig(httpConf)
 	s := &http.Server{Addr: cfg.Address, Handler: mux}
+	httpSvrs[obj] = s
+}
+
+//AddHttpsServant add https servant handler for obj.
+func AddHttpsServant(mux *TarsHttpMux, obj, certFile, keyFile string) {
+	cfg, ok := tarsConfig[obj]
+	if !ok {
+		TLOG.Debug("servant obj name not found ", obj)
+		return
+	}
+	TLOG.Debug("add http server:", cfg)
+	objRunList = append(objRunList, obj)
+	appConf := GetServerConfig()
+	addrInfo := strings.SplitN(cfg.Address, ":", 2)
+	var port int
+	if len(addrInfo) == 2 {
+		port, _ = strconv.Atoi(addrInfo[1])
+	}
+	httpConf := &TarsHttpConf{
+		Container: appConf.Container,
+		AppName:   fmt.Sprintf("%s.%s", appConf.App, appConf.Server),
+		Version:   appConf.Version,
+		IP:        addrInfo[0],
+		Port:      int32(port),
+		SetId:     appConf.Setdivision,
+	}
+	mux.SetConfig(httpConf)
+	s := &http.Server{Addr: cfg.Address, Handler: mux}
+	s.TLSConfig = &tls.Config{Certificates:make([]tls.Certificate, 1)}
+	var err error
+	s.TLSConfig.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		TLOG.Debug("servant can't load X509 Key Pair from file:"+certFile+","+keyFile)
+		return
+	}	
 	httpSvrs[obj] = s
 }
