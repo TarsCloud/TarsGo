@@ -712,8 +712,8 @@ config, _ := remoteConf.GetConfig("test.conf")
 
 ```go
 //number of worker routines to handle client request
-//zero means  no control, just one goroutine for a client request.
-//runtime.NumCpu() usually best performance in the benchmark.
+//zero means no control, just one goroutine for a client request.
+//runtime.NumCPU() usually best performance in the benchmark.
 var MaxInvoke int = 0
 
 const (
