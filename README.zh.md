@@ -687,13 +687,13 @@ config, _ := remoteConf.GetConfig("test.conf")
 tars包中的setting.go用于控制tarsgo性能和特性。有些选项应该从Getserverconfig()中更新。
 
 ```go
-//number of woker routine to handle client request
-//zero means  no contorl ,just one goroutine for a client request.
-//runtime.NumCpu() usually best performance in the benchmark.
+//number of worker routine to handle client request
+//zero means no control, just one goroutine for a client request.
+//runtime.NumCPU() usually best performance in the benchmark.
 var MaxInvoke int = 0
 
 const (
-	//for now ,some option shuold update from remote config
+	//for now ,some option should update from remote config
 
 	//version
 	TarsVsersion string = "1.0.0"

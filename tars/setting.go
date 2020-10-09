@@ -2,15 +2,15 @@ package tars
 
 import "time"
 
-//MaxInvoke number of woker routine to handle client request
-//zero means  no contorl ,just one goroutine for a client request.
-//runtime.NumCpu() usually best performance in the benchmark.
+//MaxInvoke number of worker routine to handle client request
+//zero means no control, just one goroutine for a client request.
+//runtime.NumCPU() usually best performance in the benchmark.
 var MaxInvoke int32
 
 const (
-	//for now ,some option shuold update from remote config
+	//for now ,some option should update from remote config
 
-	//TarsVersion is tars vesion
+	//TarsVersion is tars version
 	TarsVersion string = "1.1.2"
 
 	//server
@@ -48,7 +48,7 @@ const (
 	ObjQueueMax int32 = 100000
 
 	//log
-	defualtRotateN      = 10
+	defaultRotateN      = 10
 	defaultRotateSizeMB = 100
 
 	//remotelog
