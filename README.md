@@ -22,7 +22,7 @@
 
 
 ## Install
-- For installing OSS and other basic servers, see the [Installation](https://tarscloud.github.io/TarsDocs/installation/) document.
+- For installing OSS and other basic servers, see the [Installation](https://tarscloud.github.io/TarsDocs_en/installation/) document.
 - Install go 1.13.x or above (for example go install path: `/usr/local/go`), set `GOROOT`, `GOPATH`, for example: in Linux:
 
 ```bash
@@ -75,7 +75,7 @@ go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
 
 Create a tars file, like hello.tars, under `$GOPATH/src` (for example, `$GOPATH/src/TestApp/TestServer/hello.tars`).
 
-For more detail about tars protocol, see [tars_protocol](https://github.com/TarsCloud/TarsProtocol/blob/master/docs-en/tars_protocol.md)
+For more detail about tars protocol, see [tars_protocol](https://tarscloud.github.io/TarsDocs_en/base/tars-protocol.html)
 Tars protocol is a binary, IDL-based protocol similar to protocol buffers.
 	
 ```go
@@ -540,7 +540,7 @@ func main() {
 ```
 
 ##### 2.4.5 Call by Set
-The client can call server by set through configuration file mentioned. Which enableset will be y and setdivision will set `like gray.sz.*`. See https://github.com/TarsCloud/Tars/blob/master/docs-en/tars_idc_set.md for more detail.
+The client can call server by set through configuration file mentioned. Which enableset will be y and setdivision will set `like gray.sz.*`. See [IDC Set](https://tarscloud.github.io/TarsDocs_en/dev/tars-idc-set.html) for more detail.
 
 If you want to call by set manually, tarsgo will support this feature soon.
 
@@ -694,8 +694,7 @@ Description:
 > * Note that when you call `createPropertyReport`, you must create and save the created object after the service is enabled, and then just take the object to report, do not create it each time you use.
 
 ### 9 Remote Configuration
-Users can set up remote configuration from OSS. See more detail in https://github.com/TarsCloud/TarsFramework/blob/master/docs-en/tars_config.md.
-
+Users can set up remote configuration from OSS. See more detail in [tars-config](https://tarscloud.github.io/TarsDocs_en/dev/tarsphp/Framework/tars-config.html)
 That is an example to illustrate how to use this API to get a configuration file from remote.
 
 ```go
