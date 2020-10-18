@@ -11,6 +11,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	"github.com/TarsCloud/TarsGo/tars/transport"
+	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
 )
 
 var reconnectMsg = "_reconnect_"
@@ -91,7 +92,8 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 		ch := chIF.(chan *requestf.ResponsePacket)
 		select {
 		case ch <- packet:
-		default:
+		//after conf.ReadTimeout, release this goroutine to make sure response package is received by Tars_Invoke().
+		case <-rtimer.After(c.conf.ReadTimeout):
 			TLOG.Errorf("response timeout, write channel error, now time :%v, RequestId:%v",
 				time.Now().UnixNano()/1e6, packet.IRequestId)
 		}
