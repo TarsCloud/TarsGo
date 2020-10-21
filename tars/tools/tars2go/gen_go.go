@@ -323,7 +323,8 @@ func (gen *GenGo) genStructImport(module string, protoName string, mImports map[
 	// TarsTest/MyApp
 	var modulePath string
 	if gen.module != "" {
-		modulePath = fmt.Sprintf("%s/%s%s%s", gen.module, gen.prefix, jcePath, moduleStr)
+                mf := filepath.Clean(filepath.Join(gen.module, gen.prefix))
+                modulePath = fmt.Sprintf("%s/%s%s", mf, jcePath, moduleStr)
 	} else {
 		modulePath = fmt.Sprintf("%s%s", jcePath, moduleStr)
 	}
@@ -402,7 +403,8 @@ func (gen *GenGo) genIFImport(module string, protoName string) {
 	// TarsTest/MyApp
 	var modulePath string
 	if gen.module != "" {
-		modulePath = fmt.Sprintf("%s/%s%s%s", gen.module, gen.prefix, jcePath, moduleStr)
+                mf := filepath.Clean(filepath.Join(gen.module, gen.prefix))
+		modulePath = fmt.Sprintf("%s/%s%s", mf, jcePath, moduleStr)
 	} else {
 		modulePath = fmt.Sprintf("%s%s", jcePath, moduleStr)
 	}
