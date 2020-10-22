@@ -70,13 +70,12 @@ func initConfig() {
 	}
 
 	if len(ServerConfigPath) == 0 {
-		TLOG.Error("server config path empty")
 		return
 	}
 
 	c, err := conf.NewConf(ServerConfigPath)
 	if err != nil {
-		TLOG.Error("open server config fail")
+		TLOG.Errorf("Parse server config fail %v", err)
 		return
 	}
 
