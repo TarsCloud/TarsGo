@@ -123,16 +123,14 @@ func (ts *TarsServer) invoke(ctx context.Context, pkg []byte) []byte {
 		done := make(chan struct{})
 		go func() {
 			rsp = ts.svr.Invoke(ctx, pkg)
-			select {
-			case done <- struct{}{}:
-			default:
-			}
+			done <- struct{}{}
 		}()
 		select {
 		case <-rtimer.After(cfg.HandleTimeout):
 			rsp = ts.svr.InvokeTimeout(pkg)
 		case <-done:
 		}
+		close(done)
 	}
 	return rsp
 }
