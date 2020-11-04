@@ -323,8 +323,8 @@ func (gen *GenGo) genStructImport(module string, protoName string, mImports map[
 	// TarsTest/MyApp
 	var modulePath string
 	if gen.module != "" {
-                mf := filepath.Clean(filepath.Join(gen.module, gen.prefix))
-                modulePath = fmt.Sprintf("%s/%s%s", mf, jcePath, moduleStr)
+		mf := filepath.Clean(filepath.Join(gen.module, gen.prefix))
+		modulePath = fmt.Sprintf("%s/%s%s", mf, jcePath, moduleStr)
 	} else {
 		modulePath = fmt.Sprintf("%s%s", jcePath, moduleStr)
 	}
@@ -403,7 +403,7 @@ func (gen *GenGo) genIFImport(module string, protoName string) {
 	// TarsTest/MyApp
 	var modulePath string
 	if gen.module != "" {
-                mf := filepath.Clean(filepath.Join(gen.module, gen.prefix))
+		mf := filepath.Clean(filepath.Join(gen.module, gen.prefix))
 		modulePath = fmt.Sprintf("%s/%s%s", mf, jcePath, moduleStr)
 	} else {
 		modulePath = fmt.Sprintf("%s%s", jcePath, moduleStr)
@@ -1483,7 +1483,7 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 
 		c.WriteString(`
 		} else {
-			err = fmt.Errorf("Decode reqpacket fail, error version:", tarsReq.IVersion)
+			err = fmt.Errorf("Decode reqpacket fail, error version: %d", tarsReq.IVersion)
 			return err
 		}`)
 
@@ -1556,14 +1556,14 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 	_os.Reset()
 	`)
 
-//	if fun.HasRet {
-//		c.WriteString(`
-//		err = _os.Write_int32(_funRet_, 0)
-//		if err != nil {
-//			return err
-//		}
-//`)
-//	}
+	//	if fun.HasRet {
+	//		c.WriteString(`
+	//		err = _os.Write_int32(_funRet_, 0)
+	//		if err != nil {
+	//			return err
+	//		}
+	//`)
+	//	}
 
 	if fun.HasRet {
 		dummy := &StructMember{}
@@ -1590,17 +1590,17 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 _tupRsp_ := tup.NewUniAttribute()
 `)
 
-//	if fun.HasRet {
-//		c.WriteString(`
-//		_os.Reset()
-//		err = _os.Write_int32(_funRet_, 0)
-//		if err != nil {
-//			return err
-//		}
-//		_tupRsp_.PutBuffer("", _os.ToBytes())
-//		_tupRsp_.PutBuffer("tars_ret", _os.ToBytes())
-//`)
-//	}
+	//	if fun.HasRet {
+	//		c.WriteString(`
+	//		_os.Reset()
+	//		err = _os.Write_int32(_funRet_, 0)
+	//		if err != nil {
+	//			return err
+	//		}
+	//		_tupRsp_.PutBuffer("", _os.ToBytes())
+	//		_tupRsp_.PutBuffer("tars_ret", _os.ToBytes())
+	//`)
+	//	}
 
 	if fun.HasRet {
 		dummy := &StructMember{}
@@ -1636,7 +1636,7 @@ _tupRsp_ := tup.NewUniAttribute()
 	err = _tupRsp_.Encode(_os)
 	if err != nil {
 		return err
-	}	
+	}
 } else if tarsReq.IVersion == basef.JSONVERSION {
 	_rspJson_ := map[string]interface{} {}
 `)
@@ -1664,7 +1664,6 @@ _tupRsp_ := tup.NewUniAttribute()
 		}
 }`)
 
-c.WriteString("\n")
+	c.WriteString("\n")
 
 }
-
