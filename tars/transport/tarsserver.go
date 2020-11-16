@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/util/rogger"
-	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
 )
 
 // TLOG  is logger for transport.
@@ -120,17 +119,17 @@ func (ts *TarsServer) invoke(ctx context.Context, pkg []byte) []byte {
 	if cfg.HandleTimeout == 0 {
 		rsp = ts.svr.Invoke(ctx, pkg)
 	} else {
-		done := make(chan struct{})
+		invokeDone, cancelFunc := context.WithTimeout(context.Background(), cfg.HandleTimeout)
 		go func() {
 			rsp = ts.svr.Invoke(ctx, pkg)
-			done <- struct{}{}
+			cancelFunc()
 		}()
 		select {
-		case <-rtimer.After(cfg.HandleTimeout):
-			rsp = ts.svr.InvokeTimeout(pkg)
-		case <-done:
+		case <-invokeDone.Done():
+			if len(rsp) == 0 { // The rsp must be none-empty
+				rsp = ts.svr.InvokeTimeout(pkg)
+			}
 		}
-		close(done)
 	}
 	return rsp
 }
