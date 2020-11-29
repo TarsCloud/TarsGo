@@ -15,13 +15,13 @@ func main() {
 	app := new(StressTest.ContextTest)
 	comm.StringToProxy(obj, app)
 	var out, i int32
-	i = 123
+	i = 1111
 	ctx := context.Background()
 	c := make(map[string]string)
 	c["a"] = "b"
 	ret, err := app.AddWithContext(ctx, i, i*2, &out, c)
-	if err != nil {
-		fmt.Println(err)
+	if code := tars.GetErrorCode(err); code != 0 {
+		fmt.Printf("error code: %d, message %v\n", code, err)
 		return
 	}
 	fmt.Println(c)

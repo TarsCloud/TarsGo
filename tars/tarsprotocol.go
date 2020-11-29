@@ -19,9 +19,9 @@ type dispatch interface {
 
 // TarsProtocol is struct for dispatch with tars protocol.
 type TarsProtocol struct {
-	dispatcher       dispatch
-	serverImp        interface{}
-	withContext      bool
+	dispatcher  dispatch
+	serverImp   interface{}
+	withContext bool
 }
 
 // NewTarsProtocol return a TarsProtocol with dipatcher and implement interface.
@@ -101,6 +101,9 @@ func (s *TarsProtocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 			rspPackage.IRequestId = reqPackage.IRequestId
 			rspPackage.IRet = 1
 			rspPackage.SResultDesc = err.Error()
+			if tarsErr, ok := err.(*Error); ok {
+				rspPackage.IRet = tarsErr.Code
+			}
 		}
 	}
 
@@ -123,7 +126,7 @@ func (s *TarsProtocol) req2Byte(rsp *requestf.ResponsePacket) []byte {
 	req.Context = rsp.Context
 	req.Status = rsp.Status
 	req.SBuffer = rsp.SBuffer
-	
+
 	os := codec.NewBuffer()
 	req.WriteTo(os)
 	bs := os.ToBytes()
