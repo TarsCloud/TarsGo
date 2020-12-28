@@ -86,9 +86,9 @@ func (s *ServantProxy) genRequestID() int32 {
 	// 尽力防止溢出
 	atomic.CompareAndSwapInt32(&msgID, maxInt32, 1)
 	for {
-     // 0比较特殊,用于表示 server 端推送消息给 client 端进行主动 close()
-		 // 溢出后回转成负数
-		if v := atomic.AddInt32(&msgID, 1); v != 0 {  
+		// 0比较特殊,用于表示 server 端推送消息给 client 端进行主动 close()
+		// 溢出后回转成负数
+		if v := atomic.AddInt32(&msgID, 1); v != 0 {
 			return v
 		}
 	}
@@ -147,6 +147,8 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	s.manager.preInvoke()
 	if allFilters.cf != nil {
 		err = allFilters.cf(ctx, msg, s.doInvoke, timeout)
+	} else if cf := getMiddlewareClientFilter(); cf != nil {
+		err = cf(ctx, msg, s.doInvoke, timeout)
 	} else {
 		// execute pre client filters
 		for i, v := range allFilters.preCfs {

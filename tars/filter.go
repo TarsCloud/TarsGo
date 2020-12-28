@@ -11,13 +11,15 @@ type filters struct {
 	cf      ClientFilter
 	preCfs  []ClientFilter
 	postCfs []ClientFilter
+	cfms    []ClientFilterMiddleware
 
 	sf      ServerFilter
 	preSfs  []ServerFilter
 	postSfs []ServerFilter
+	sfms    []ServerFilterMiddleware
 }
 
-var allFilters = filters{nil, nil, nil, nil, nil, nil}
+var allFilters = filters{nil, nil, nil, nil, nil, nil, nil, nil}
 
 // Invoke is used for Invoke tars server service
 type Invoke func(ctx context.Context, msg *Message, timeout time.Duration) (err error)
@@ -47,6 +49,33 @@ type ServerFilter func(ctx context.Context, d Dispatch, f interface{},
 //ClientFilter is used for filter request & response for client, for implementing plugins like opentracing
 type ClientFilter func(ctx context.Context, msg *Message, invoke Invoke, timeout time.Duration) (err error)
 
+//ServerFilterMiddleware is used for add multiple filter middlewares for dispatcher, for using multiple filter such as breaker, rate limit and trace.
+type ServerFilterMiddleware func(next ServerFilter) ServerFilter
+
+//ClientFilterMiddleware is used for add multiple filter middleware for client, for using multiple filter such as breaker, rate limit and trace.
+type ClientFilterMiddleware func(next ClientFilter) ClientFilter
+
+//UseClientFilterMiddleware uses the client filter middleware.
+func UseClientFilterMiddleware(cfm ...ClientFilterMiddleware) {
+	allFilters.cfms = append(allFilters.cfms, cfm...)
+}
+
+func getMiddlewareClientFilter() ClientFilter {
+	if len(allFilters.cfms) <= 0 {
+		return nil
+	}
+
+	cf := func(ctx context.Context, msg *Message, invoke Invoke, timeout time.Duration) (err error) {
+		return invoke(ctx, msg, timeout)
+	}
+
+	for i := len(allFilters.cfms) - 1; i >= 0; i-- {
+		cf = allFilters.cfms[i](cf)
+	}
+
+	return cf
+}
+
 // RegisterServerFilter register the server filter.
 func RegisterServerFilter(f ServerFilter) {
 	allFilters.sf = f
@@ -60,4 +89,25 @@ func RegisterPreServerFilter(f ServerFilter) {
 // RegisterPostServerFilter registers the server filter, executed in order after every request
 func RegisterPostServerFilter(f ServerFilter) {
 	allFilters.postSfs = append(allFilters.postSfs, f)
+}
+
+//UserServerFilterMiddleware uses the server filter middleware.
+func UseServerFilterMiddleware(sfm ...ServerFilterMiddleware) {
+	allFilters.sfms = append(allFilters.sfms, sfm...)
+}
+
+func getMiddlewareServerFilter() ServerFilter {
+	if len(allFilters.sfms) <= 0 {
+		return nil
+	}
+
+	sf := func(ctx context.Context, d Dispatch, f interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error) {
+		return d(ctx, f, req, resp, withContext)
+	}
+
+	for i := len(allFilters.sfms) - 1; i >= 0; i-- {
+		sf = allFilters.sfms[i](sf)
+	}
+
+	return sf
 }
