@@ -335,6 +335,7 @@ func (gen *GenGo) genIFPackage(itf *InterfaceInfo) {
 	gen.code.WriteString("package " + gen.p.Module + "\n\n")
 	gen.code.WriteString(`
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"unsafe"
@@ -1464,8 +1465,11 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 		}
 
 		c.WriteString(`} else if tarsReq.IVersion == basef.JSONVERSION {
-		var _jsonDat_ map[string]interface{}
-		err = json.Unmarshal(_is.ToBytes(), &_jsonDat_)
+		var _jsonTmp_ interface{}
+		_jsonDecoder_ := json.NewDecoder(bytes.NewReader(_is.ToBytes()))
+		_jsonDecoder_.UseNumber()
+		err = _jsonDecoder_.Decode(&_jsonTmp_)
+		_jsonDat_ := _jsonTmp_.(map[string]interface{})
 		`)
 
 		for _, v := range fun.Args {
