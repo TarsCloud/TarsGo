@@ -527,7 +527,46 @@ func main() {
 
 ##### 2.4.6. Hash调用
 
-由于可以部署多个服务端，因此客户端的请求会随机分发到服务端上，但在某些情况下，希望始终将某些请求发送到特定的服务端。 在这种情况下，Tars提供了一种简单的实现方法，称为hash调用。 Tarsgo很快将支持此功能。
+由于可以部署多个服务端，因此客户端的请求会随机分发到服务端上，但在某些情况下，希望始终将某些请求发送到特定的服务端。 在这种情况下，Tars提供了一种简单的实现方法，称为hash调用。  Tarsgo 在v1.1.5版本已支持hash调用
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/TarsCloud/TarsGo/tars"
+    "github.com/TarsCloud/TarsGo/tars/util/current"
+    "context"
+    "time"
+    "TestApp"
+)
+func main() {
+    var comm *tars.Communicator
+    comm = tars.NewCommunicator()
+    obj := "TestApp.TestServer.HelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
+    app := new(TestApp.Hello)
+    comm.StringToProxy(obj, app)
+	go func(){
+        var req string="Hello Wold"
+    	var res string
+        ctx := context.Background()
+        ctx = current.ContextWithClientCurrent(ctx)
+        // the request parameter hashtype, ModHash is 0, ConsistentHash is 1
+        hashType := 0
+        hashCode := uint32(123)
+        current.SetClientHash(ctx, hashType, hashCode)
+    	ret, err := app.TestHelloWithContext(ctx, req, &res)
+    	if err != nil {
+        	fmt.Println(err)
+        	return
+    	} 
+		fmt.Println(ret, res)
+	}()
+    time.Sleep(1)  
+}
+
+```
+
+
 
 ### 3   tars定义的返回码.
 ```go
