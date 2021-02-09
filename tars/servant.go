@@ -237,6 +237,9 @@ func (s *ServantProxy) doInvoke(ctx context.Context, msg *Message, timeout time.
 				if msg.Resp.SResultDesc == "" {
 					return fmt.Errorf("basef error code %d", msg.Resp.IRet)
 				}
+				if msg.Resp.IRet != 0 && msg.Resp.IRet != 1 {
+					return &Error{Code: msg.Resp.IRet, Message: msg.Resp.SResultDesc}
+				}
 				return errors.New(msg.Resp.SResultDesc)
 			}
 		} else {

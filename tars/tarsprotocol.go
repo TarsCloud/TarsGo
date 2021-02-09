@@ -103,6 +103,9 @@ func (s *TarsProtocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 			rspPackage.IRequestId = reqPackage.IRequestId
 			rspPackage.IRet = 1
 			rspPackage.SResultDesc = err.Error()
+			if tarsErr, ok := err.(*Error); ok {
+				rspPackage.IRet = tarsErr.Code
+			}
 		}
 	}
 
