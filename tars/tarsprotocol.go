@@ -171,3 +171,9 @@ func (s *TarsProtocol) GetCloseMsg() []byte {
 	rspPackage.SResultDesc = reconnectMsg
 	return s.rsp2Byte(&rspPackage)
 }
+
+// DoClose be called when close connection
+func (s *TarsProtocol) DoClose(ctx context.Context) {
+	TLOG.Debug("DoClose!")
+}
+
