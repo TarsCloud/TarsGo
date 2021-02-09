@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -761,7 +762,10 @@ func (p *Parse) analyzeHashKey() {
 
 func (p *Parse) analyzeDepend() {
 	for _, v := range p.Include {
-		pInc := ParseFile(v, p.IncChain)
+		//#include support relative path,example: ../test.tars
+		relativePath := path.Dir(p.Source)
+		dependFile := relativePath + "/" + v
+		pInc := ParseFile(dependFile, p.IncChain)
 		p.IncParse = append(p.IncParse, pInc)
 		fmt.Println("parse include: ", v)
 	}
