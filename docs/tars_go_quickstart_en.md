@@ -82,9 +82,10 @@ Click "Submit", after successful, the TestApp application under the menu number 
 Run the create_tars_server.sh script to automatically create the files necessary for the service, If there is a syntax error during execution, try to use `dos2unix create_tars_server.sh` to transcode.
 
 ```shell
-sh $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/create_tars_server.sh [App] [Server] [Servant]
+chmod +x $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/create_tars_server.sh
+$GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/create_tars_server.sh [App] [Server] [Servant]
 E.g:  
-sh $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/create_tars_server.sh TestApp HelloGo SayHello
+$GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/create_tars_server.sh TestApp HelloGo SayHello
 ```
 
 After the command is executed, the code will be generated into GOPATH, and the directory will be named in `APP/Server`. The generated code also prompts the specific path.

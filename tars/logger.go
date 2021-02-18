@@ -8,42 +8,44 @@ import (
 
 // GetLogger Get a logger
 func GetLogger(name string) *rogger.Logger {
-	cfg, name := logName(name)
-	lg := rogger.GetLogger(name)
-	logpath := filepath.Join(cfg.LogPath, cfg.App, cfg.Server)
-	lg.SetFileRoller(logpath, int(cfg.LogNum), int(cfg.LogSize))
+	logPath, cfg, lg := getLogger(name)
+	if cfg == nil {
+		return lg
+	}
+	lg.SetFileRoller(logPath, int(cfg.LogNum), int(cfg.LogSize))
 	return lg
 }
 
-func logName(name string) (*serverConfig, string) {
-	cfg := GetServerConfig()
+func getLogger(name string) (logPath string, cfg *serverConfig, lg *rogger.Logger) {
+	cfg = GetServerConfig()
+	if cfg == nil {
+		return "", nil, rogger.GetLogger(name)
+	}
 	if name == "" {
 		name = cfg.App + "." + cfg.Server
 	} else {
 		name = cfg.App + "." + cfg.Server + "_" + name
 	}
-	return cfg, name
+	logPath = filepath.Join(cfg.LogPath, cfg.App, cfg.Server)
+	lg = rogger.GetLogger(name)
+	return
 }
 
 // GetDayLogger Get a logger roll by day
 func GetDayLogger(name string, numDay int) *rogger.Logger {
-	cfg, name := logName(name)
-	lg := rogger.GetLogger(name)
-	logpath := filepath.Join(cfg.LogPath, cfg.App, cfg.Server)
-	lg.SetDayRoller(logpath, numDay)
+	logPath, _, lg := getLogger(name)
+	lg.SetDayRoller(logPath, numDay)
 	return lg
 }
 
 // GetHourLogger Get a logger roll by hour
 func GetHourLogger(name string, numHour int) *rogger.Logger {
-	cfg, name := logName(name)
-	lg := rogger.GetLogger(name)
-	logpath := filepath.Join(cfg.LogPath, cfg.App, cfg.Server)
-	lg.SetHourRoller(logpath, numHour)
+	logPath, _, lg := getLogger(name)
+	lg.SetHourRoller(logPath, numHour)
 	return lg
 }
 
-//GetRemoteLogger returns a remote logger
+// GetRemoteLogger returns a remote logger
 func GetRemoteLogger(name string) *rogger.Logger {
 	cfg := GetServerConfig()
 	lg := rogger.GetLogger(name)

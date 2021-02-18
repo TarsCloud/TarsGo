@@ -8,10 +8,13 @@ import (
 
 	"github.com/TarsCloud/TarsGo/tars"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
-	opentracing "github.com/opentracing/opentracing-go"
+
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	oplog "github.com/opentracing/opentracing-go/log"
-	zipkin "github.com/openzipkin-contrib/zipkin-go-opentracing"
+	zipkinot "github.com/openzipkin-contrib/zipkin-go-opentracing"
+	"github.com/openzipkin/zipkin-go"
+	zipkinhttp "github.com/openzipkin/zipkin-go/reporter/http"
 )
 
 var logger = tars.GetLogger("tracing")
@@ -19,22 +22,28 @@ var logger = tars.GetLogger("tracing")
 //Init is use to init opentracing and zipkin
 func Init(zipkinHTTPEndpoint string, sameSpan bool, traceID128Bit bool, debug bool,
 	hostPort, serviceName string) {
-	//create collector
-	collector, err := zipkin.NewHTTPCollector(zipkinHTTPEndpoint)
+
+	// set up a span reporter
+	reporter := zipkinhttp.NewReporter(zipkinHTTPEndpoint)
+	//defer reporter.Close()
+
+	// create our local service endpoint
+	endpoint, err := zipkin.NewEndpoint(serviceName, hostPort)
 	if err != nil {
-		log.Fatal("Fail to create Zipkin HTTP collector:", err)
+		log.Fatalf("unable to create local endpoint: %+v\n", err)
 	}
-	//create recorder
-	recorder := zipkin.NewRecorder(collector, debug, hostPort, serviceName)
-	tracer, err := zipkin.NewTracer(
-		recorder,
-		zipkin.ClientServerSameSpan(sameSpan),
-		zipkin.TraceID128Bit(traceID128Bit),
-	)
+
+	// initialize our tracer
+	nativeTracer, err := zipkin.NewTracer(reporter, zipkin.WithLocalEndpoint(endpoint))
 	if err != nil {
-		log.Fatal("Fail to NewTracer")
+		log.Fatalf("unable to create tracer: %+v\n", err)
 	}
-	opentracing.InitGlobalTracer(tracer)
+
+	// use zipkin-go-opentracing to wrap our tracer
+	tracer := zipkinot.Wrap(nativeTracer)
+
+	// optionally set as Global OpenTracing tracer instance
+	opentracing.SetGlobalTracer(tracer)
 }
 
 //ZipkinClientFilter gets tars client filter for zipkin opentracing.

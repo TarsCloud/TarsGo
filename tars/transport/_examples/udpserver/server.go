@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
 	"time"
@@ -8,19 +9,19 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/transport"
 )
 
-//MyServer testing tars udp server
+// MyServer testing tars udp server
 type MyServer struct{}
 
-//Invoke recv package and make response.
-func (s *MyServer) Invoke(req []byte) (rsp []byte) {
+// Invoke recv package and make response.
+func (s *MyServer) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 	rsp = make([]byte, 4)
 	rsp = append(rsp, []byte("Hello ")...)
-	rsp = append(rsp, req...)
+	rsp = append(rsp, req[4:]...)
 	binary.BigEndian.PutUint32(rsp[:4], uint32(len(rsp)))
 	return
 }
 
-//ParsePackage parse full tars package.
+// ParsePackage parse full tars package.
 func (s *MyServer) ParsePackage(buff []byte) (pkgLen, status int) {
 	if len(buff) < 4 {
 		return 0, transport.PACKAGE_LESS
@@ -36,7 +37,7 @@ func (s *MyServer) ParsePackage(buff []byte) (pkgLen, status int) {
 	return int(length), transport.PACKAGE_FULL
 }
 
-//InvokeTimeout show how to deal with timeout response.
+// InvokeTimeout show how to deal with timeout response.
 func (s *MyServer) InvokeTimeout(pkg []byte) []byte {
 	payload := []byte("timeout")
 	ret := make([]byte, 4+len(payload))
@@ -49,7 +50,6 @@ func main() {
 	conf := &transport.TarsServerConf{
 		Proto:   "udp",
 		Address: "127.0.0.1:3333",
-		//MaxAccept:     500,
 		MaxInvoke:     20,
 		AcceptTimeout: time.Millisecond * 500,
 		ReadTimeout:   time.Millisecond * 100,

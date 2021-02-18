@@ -14,20 +14,61 @@ import (
 
 var gE = flag.Bool("E", false, "Generate code before fmt for troubleshooting")
 var gAddServant = flag.Bool("add-servant", true, "Generate AddServant function")
+var gModuleCycle = flag.Bool("module-cycle", false, "support jce module cycle include(do not support jce file cycle include)")
+var gModuleUpper = flag.Bool("module-upper", false, "native module names are supported, otherwise the system will upper the first letter of the module name")
+var gJsonOmitEmpty = flag.Bool("json-omitempty", false, "Generate json emitempty support")
+
+var gFileMap map[string]bool
+
+func init() {
+	gFileMap = make(map[string]bool)
+}
 
 //GenGo record go code information.
 type GenGo struct {
-	code     bytes.Buffer
-	vc       int      // var count. Used to generate unique variable names
 	I        []string // imports with path
+	code     bytes.Buffer
+	vc       int // var count. Used to generate unique variable names
 	path     string
-	prefix   string
 	tarsPath string
+	module   string
+	prefix   string
 	p        *Parse
+
+	// proto file name(not include .tars)
+	ProtoName string
+}
+
+//NewGenGo build up a new path
+func NewGenGo(path string, module string, outdir string) *GenGo {
+	if outdir != "" {
+		b := []byte(outdir)
+		last := b[len(b)-1:]
+		if string(last) != "/" {
+			outdir += "/"
+		}
+	}
+
+	return &GenGo{path: path, module: module, prefix: outdir, ProtoName: path2ProtoName(path)}
+}
+
+func path2ProtoName(path string) string {
+	iBegin := strings.LastIndex(path, "/")
+	if iBegin == -1 || iBegin >= len(path)-1 {
+		iBegin = 0
+	} else {
+		iBegin++
+	}
+	iEnd := strings.LastIndex(path, ".tars")
+	if iEnd == -1 {
+		iEnd = len(path)
+	}
+
+	return path[iBegin:iEnd]
 }
 
 //Initial capitalization
-func upperFirstLatter(s string) string {
+func upperFirstLetter(s string) string {
 	if len(s) == 0 {
 		return ""
 	}
@@ -37,58 +78,135 @@ func upperFirstLatter(s string) string {
 	return strings.ToUpper(string(s[0])) + s[1:]
 }
 
+func getShortTypeName(src string) string {
+	vec := strings.Split(src, "::")
+	return vec[len(vec)-1]
+}
+
+func errString(hasRet bool) string {
+	var retStr string
+	if hasRet {
+		retStr = "return ret, err"
+	} else {
+		retStr = "return err"
+	}
+	return `if err != nil {
+  ` + retStr + `
+  }` + "\n"
+}
+
+func genForHead(vc string) string {
+	i := `i` + vc
+	e := `e` + vc
+	return ` for ` + i + `,` + e + ` := int32(0),length;` + i + `<` + e + `;` + i + `++ `
+}
+
 // === rename area ===
 // 0. rename module
 func (p *Parse) rename() {
 	p.OriginModule = p.Module
-	p.Module = upperFirstLatter(p.Module)
+	if *gModuleUpper {
+		p.Module = upperFirstLetter(p.Module)
+	}
 }
 
 // 1. struct rename
-// struct TName { 1 require Mb type}
+// struct Name { 1 require Mb type}
 func (st *StructInfo) rename() {
-	st.TName = upperFirstLatter(st.TName)
+	st.OriginName = st.Name
+	st.Name = upperFirstLetter(st.Name)
 	for i := range st.Mb {
-		st.Mb[i].KeyStr = st.Mb[i].Key
-		// Member variables force initial capitalization.
-		st.Mb[i].Key = upperFirstLatter(st.Mb[i].Key)
+		st.Mb[i].OriginKey = st.Mb[i].Key
+		st.Mb[i].Key = upperFirstLetter(st.Mb[i].Key)
 	}
 }
 
 // 1. interface rename
-// interface TName { Fun }
+// interface Name { Fun }
 func (itf *InterfaceInfo) rename() {
-	itf.TName = upperFirstLatter(itf.TName)
+	itf.OriginName = itf.Name
+	itf.Name = upperFirstLetter(itf.Name)
 	for i := range itf.Fun {
 		itf.Fun[i].rename()
 	}
 }
 
 func (en *EnumInfo) rename() {
-	en.TName = upperFirstLatter(en.TName)
+	en.OriginName = en.Name
+	en.Name = upperFirstLetter(en.Name)
 	for i := range en.Mb {
-		en.Mb[i].Key = upperFirstLatter(en.Mb[i].Key)
+		en.Mb[i].Key = upperFirstLetter(en.Mb[i].Key)
 	}
 }
 
 func (cst *ConstInfo) rename() {
-	cst.Key = upperFirstLatter(cst.Key)
+	cst.OriginName = cst.Name
+	cst.Name = upperFirstLetter(cst.Name)
 }
 
 // 2. func rename
 // type Fun (arg ArgType), in case keyword and name conflicts,argname need to capitalize.
 // Fun (type int32)
 func (fun *FunInfo) rename() {
-	fun.NameStr = fun.Name
-	fun.Name = upperFirstLatter(fun.Name)
+	fun.OriginName = fun.Name
+	fun.Name = upperFirstLetter(fun.Name)
 	for i := range fun.Args {
-		fun.Args[i].Name = upperFirstLatter(fun.Args[i].Name)
+		fun.Args[i].OriginName = fun.Args[i].Name
+		// func args donot upper firs
+		//fun.Args[i].Name = upperFirstLetter(fun.Args[i].Name)
 	}
 }
 
 // 3. genType rename all Type
 
 // === rename end ===
+
+//Gen to parse file.
+func (gen *GenGo) Gen() {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println(err)
+			// set exit code
+			os.Exit(1)
+		}
+	}()
+
+	gen.p = ParseFile(gen.path, make([]string, 0))
+	gen.genAll()
+}
+
+func (gen *GenGo) genAll() {
+	if gFileMap[gen.path] {
+		// already compiled
+		return
+	}
+
+	gen.p.rename()
+	gen.genInclude(gen.p.IncParse)
+
+	gen.code.Reset()
+	gen.genHead()
+	gen.genPackage()
+
+	for _, v := range gen.p.Enum {
+		gen.genEnum(&v)
+	}
+
+	gen.genConst(gen.p.Const)
+
+	for _, v := range gen.p.Struct {
+		gen.genStruct(&v)
+	}
+	if len(gen.p.Enum) > 0 || len(gen.p.Const) > 0 || len(gen.p.Struct) > 0 {
+		gen.saveToSourceFile(path2ProtoName(gen.path) + ".go")
+	}
+
+	for _, v := range gen.p.Interface {
+		gen.genInterface(&v)
+	}
+
+	gFileMap[gen.path] = true
+}
 
 func (gen *GenGo) genErr(err string) {
 	panic(err)
@@ -102,7 +220,7 @@ func (gen *GenGo) saveToSourceFile(filename string) {
 	if !*gE {
 		beauty, err = format.Source(gen.code.Bytes())
 		if err != nil {
-			gen.genErr("go fmt fail. " + err.Error())
+			gen.genErr("go fmt fail. " + filename + " " + err.Error())
 		}
 	} else {
 		beauty = gen.code.Bytes()
@@ -111,12 +229,18 @@ func (gen *GenGo) saveToSourceFile(filename string) {
 	if filename == "stdout" {
 		fmt.Println(string(beauty))
 	} else {
-		err = os.MkdirAll(prefix+gen.p.Module, 0766)
+		var mkPath string
+		if *gModuleCycle == true {
+			mkPath = prefix + gen.ProtoName + "/" + gen.p.Module
+		} else {
+			mkPath = prefix + gen.p.Module
+		}
+		err = os.MkdirAll(mkPath, 0766)
 
 		if err != nil {
 			gen.genErr(err.Error())
 		}
-		err = ioutil.WriteFile(prefix+gen.p.Module+"/"+filename, beauty, 0666)
+		err = ioutil.WriteFile(mkPath+"/"+filename, beauty, 0666)
 
 		if err != nil {
 			gen.genErr(err.Error())
@@ -125,66 +249,166 @@ func (gen *GenGo) saveToSourceFile(filename string) {
 }
 
 func (gen *GenGo) genHead() {
-	gen.code.WriteString(`//Package ` + gen.p.Module + ` comment
-// This file war generated by tars2go ` + VERSION + `
+	gen.code.WriteString(`// Package ` + gen.p.Module + ` comment
+// This file was generated by tars2go ` + VERSION + `
 // Generated from ` + filepath.Base(gen.path) + `
 `)
 }
 
 func (gen *GenGo) genPackage() {
 	gen.code.WriteString("package " + gen.p.Module + "\n\n")
+	gen.code.WriteString(`
+import (
+	"fmt"
+
+`)
+	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/codec\"\n")
+
+	mImports := make(map[string]bool)
+	for _, st := range gen.p.Struct {
+		if *gModuleCycle == true {
+			for k, v := range st.DependModuleWithJce {
+				gen.genStructImport(k, v, mImports)
+			}
+		} else {
+			for k := range st.DependModule {
+				gen.genStructImport(k, "", mImports)
+			}
+		}
+	}
+	for path := range mImports {
+		gen.code.WriteString(path + "\n")
+	}
+
+	gen.code.WriteString(`)
+
+	// Reference imports to suppress errors if they are not otherwise used.
+	var _ = fmt.Errorf
+	var _ = codec.FromInt8
+
+`)
 }
 
-func (gen *GenGo) genImport(module string) {
+func (gen *GenGo) genStructImport(module string, protoName string, mImports map[string]bool) {
+	var moduleStr string
+	var jcePath string
+	var moduleAlia string
+	if *gModuleCycle == true {
+		moduleStr = module[len(protoName)+1:]
+		jcePath = protoName + "/"
+		moduleAlia = module + " "
+	} else {
+		moduleStr = module
+	}
+
 	for _, p := range gen.I {
-		if strings.HasSuffix(p, "/"+module) {
-			gen.code.WriteString(`"` + p + `"` + "\n")
+		if strings.HasSuffix(p, "/"+moduleStr) {
+			mImports[`"`+p+`"`] = true
 			return
 		}
 	}
-	if *gAddServant == true {
-		gen.code.WriteString(`"` + upperFirstLatter(module) + `"` + "\n")
+
+	if *gModuleUpper {
+		moduleAlia = upperFirstLetter(moduleAlia)
+	}
+
+	// example:
+	// TarsTest.tars, MyApp
+	// gomod:
+	// github.com/xxx/yyy/tars-protocol/MyApp
+	// github.com/xxx/yyy/tars-protocol/TarsTest/MyApp
+	//
+	// gopath:
+	// MyApp
+	// TarsTest/MyApp
+	var modulePath string
+	if gen.module != "" {
+		mf := filepath.Clean(filepath.Join(gen.module, gen.prefix))
+		modulePath = fmt.Sprintf("%s/%s%s", mf, jcePath, moduleStr)
 	} else {
-		gen.code.WriteString(`"` + module + `"` + "\n")
+		modulePath = fmt.Sprintf("%s%s", jcePath, moduleStr)
 	}
-}
-
-func (gen *GenGo) genStructPackage(st *StructInfo) {
-	gen.code.WriteString("package " + gen.p.Module + "\n\n")
-	gen.code.WriteString(`
-import (
-"fmt"
-`)
-	//"tars/protocol/codec"
-	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/codec\"\n")
-	for k := range st.DependModule {
-		gen.genImport(k)
-	}
-	gen.code.WriteString(")" + "\n")
-
+	mImports[moduleAlia+`"`+modulePath+`"`] = true
 }
 
 func (gen *GenGo) genIFPackage(itf *InterfaceInfo) {
 	gen.code.WriteString("package " + gen.p.Module + "\n\n")
 	gen.code.WriteString(`
 import (
-"fmt"
-"context"
+	"context"
+	"fmt"
+	"unsafe"
+	"encoding/json"
 `)
-	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/res/requestf\"\n")
-	gen.code.WriteString("m \"" + gen.tarsPath + "/model\"\n")
-	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/codec\"\n")
-	gen.code.WriteString("\"" + gen.tarsPath + "/util/tools\"\n")
-	gen.code.WriteString("\"" + gen.tarsPath + "/util/current\"\n")
-
 	if *gAddServant {
 		gen.code.WriteString("\"" + gen.tarsPath + "\"\n")
 	}
-	for k := range itf.DependModule {
-		gen.genImport(k)
-	}
-	gen.code.WriteString(")" + "\n")
 
+	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/res/requestf\"\n")
+	gen.code.WriteString("m \"" + gen.tarsPath + "/model\"\n")
+	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/codec\"\n")
+	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/tup\"\n")
+	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/res/basef\"\n")
+	gen.code.WriteString("\"" + gen.tarsPath + "/util/tools\"\n")
+	gen.code.WriteString("\"" + gen.tarsPath + "/util/current\"\n")
+
+	if *gModuleCycle == true {
+		for k, v := range itf.DependModuleWithJce {
+			gen.genIFImport(k, v)
+		}
+	} else {
+		for k := range itf.DependModule {
+			gen.genIFImport(k, "")
+		}
+	}
+	gen.code.WriteString(`)
+
+	// Reference imports to suppress errors if they are not otherwise used.
+	var _ = fmt.Errorf
+	var _ = codec.FromInt8
+	var _ = unsafe.Pointer(nil)
+`)
+}
+
+func (gen *GenGo) genIFImport(module string, protoName string) {
+	var moduleStr string
+	var jcePath string
+	var moduleAlia string
+	if *gModuleCycle == true {
+		moduleStr = module[len(protoName)+1:]
+		jcePath = protoName + "/"
+		moduleAlia = module + " "
+	} else {
+		moduleStr = module
+	}
+	for _, p := range gen.I {
+		if strings.HasSuffix(p, "/"+moduleStr) {
+			gen.code.WriteString(`"` + p + `"` + "\n")
+			return
+		}
+	}
+
+	if *gModuleUpper {
+		moduleAlia = upperFirstLetter(moduleAlia)
+	}
+
+	// example:
+	// TarsTest.tars, MyApp
+	// gomod:
+	// github.com/xxx/yyy/tars-protocol/MyApp
+	// github.com/xxx/yyy/tars-protocol/TarsTest/MyApp
+	//
+	// gopath:
+	// MyApp
+	// TarsTest/MyApp
+	var modulePath string
+	if gen.module != "" {
+		mf := filepath.Clean(filepath.Join(gen.module, gen.prefix))
+		modulePath = fmt.Sprintf("%s/%s%s", mf, jcePath, moduleStr)
+	} else {
+		modulePath = fmt.Sprintf("%s%s", jcePath, moduleStr)
+	}
+	gen.code.WriteString(moduleAlia + `"` + modulePath + `"` + "\n")
 }
 
 func (gen *GenGo) genType(ty *VarType) string {
@@ -227,19 +451,20 @@ func (gen *GenGo) genType(ty *VarType) string {
 	case tkTMap:
 		ret = "map[" + gen.genType(ty.TypeK) + "]" + gen.genType(ty.TypeV)
 	case tkName:
-		//Actrually ret is useless here
-		//ret = strings.Replace(ty.TypeSt, "::", ".", -1)
+		ret = strings.Replace(ty.TypeSt, "::", ".", -1)
 		vec := strings.Split(ty.TypeSt, "::")
 		for i := range vec {
-			if *gAddServant == true {
-				vec[i] = upperFirstLatter(vec[i])
+			if *gModuleUpper {
+				vec[i] = upperFirstLetter(vec[i])
 			} else {
 				if i == (len(vec) - 1) {
-					vec[i] = upperFirstLatter(vec[i])
+					vec[i] = upperFirstLetter(vec[i])
 				}
 			}
 		}
 		ret = strings.Join(vec, ".")
+	case tkTArray:
+		ret = "[" + fmt.Sprintf("%v", ty.TypeL) + "]" + gen.genType(ty.TypeK)
 	default:
 		gen.genErr("Unknow Type " + TokenMap[ty.Type])
 	}
@@ -248,11 +473,15 @@ func (gen *GenGo) genType(ty *VarType) string {
 
 func (gen *GenGo) genStructDefine(st *StructInfo) {
 	c := &gen.code
-	c.WriteString("//" + st.TName + " strcut implement\n")
-	c.WriteString("type " + st.TName + " struct {\n")
+	c.WriteString("// " + st.Name + " struct implement\n")
+	c.WriteString("type " + st.Name + " struct {\n")
 
 	for _, v := range st.Mb {
-		c.WriteString("\t" + v.Key + " " + gen.genType(v.Type) + "`json:\"" + v.KeyStr + "\"`\n")
+		if *gJsonOmitEmpty {
+			c.WriteString("\t" + v.Key + " " + gen.genType(v.Type) + " `json:\"" + v.OriginKey + ",omitempty\"`\n")
+		} else {
+			c.WriteString("\t" + v.Key + " " + gen.genType(v.Type) + " `json:\"" + v.OriginKey + "\"`\n")
+		}
 	}
 	c.WriteString("}\n")
 }
@@ -260,27 +489,18 @@ func (gen *GenGo) genStructDefine(st *StructInfo) {
 func (gen *GenGo) genFunResetDefault(st *StructInfo) {
 	c := &gen.code
 
-	c.WriteString("func (st *" + st.TName + ") resetDefault() {\n")
+	c.WriteString("func (st *" + st.Name + ") ResetDefault() {\n")
 
 	for _, v := range st.Mb {
+		if v.Type.CType == tkStruct {
+			c.WriteString("st." + v.Key + ".ResetDefault()\n")
+		}
 		if v.Default == "" {
 			continue
 		}
 		c.WriteString("st." + v.Key + " = " + v.Default + "\n")
 	}
 	c.WriteString("}\n")
-}
-
-func errString(hasRet bool) string {
-	var retStr string
-	if hasRet {
-		retStr = "return ret, err"
-	} else {
-		retStr = "return err"
-	}
-	return `if err != nil {
-  ` + retStr + `
-  }`
 }
 
 func (gen *GenGo) genWriteSimpleList(mb *StructMember, prefix string, hasRet bool) {
@@ -304,6 +524,35 @@ err = _os.Write_slice_` + unsign + `int8(` + prefix + mb.Key + `)
 }
 
 func (gen *GenGo) genWriteVector(mb *StructMember, prefix string, hasRet bool) {
+	c := &gen.code
+
+	// SIMPLE_LIST
+	if mb.Type.TypeK.Type == tkTByte && !mb.Type.TypeK.Unsigned {
+		gen.genWriteSimpleList(mb, prefix, hasRet)
+		return
+	}
+	errStr := errString(hasRet)
+
+	// LIST
+	tag := strconv.Itoa(int(mb.Tag))
+	c.WriteString(`
+err = _os.WriteHead(codec.LIST, ` + tag + `)
+` + errStr + `
+err = _os.Write_int32(int32(len(` + prefix + mb.Key + `)), 0)
+` + errStr + `
+for _, v := range ` + prefix + mb.Key + ` {
+`)
+	// for _, v := range can nesting for _, v := range，does not conflict, support multidimensional arrays
+
+	dummy := &StructMember{}
+	dummy.Type = mb.Type.TypeK
+	dummy.Key = "v"
+	gen.genWriteVar(dummy, "", hasRet)
+
+	c.WriteString("}\n")
+}
+
+func (gen *GenGo) genWriteArray(mb *StructMember, prefix string, hasRet bool) {
 	c := &gen.code
 
 	// SIMPLE_LIST
@@ -376,6 +625,8 @@ func (gen *GenGo) genWriteVar(v *StructMember, prefix string, hasRet bool) {
 	switch v.Type.Type {
 	case tkTVector:
 		gen.genWriteVector(v, prefix, hasRet)
+	case tkTArray:
+		gen.genWriteArray(v, prefix, hasRet)
 	case tkTMap:
 		gen.genWriteMap(v, prefix, hasRet)
 	case tkName:
@@ -403,14 +654,17 @@ func (gen *GenGo) genFunWriteBlock(st *StructInfo) {
 
 	// WriteBlock function head
 	c.WriteString(`//WriteBlock encode struct
-func (st *` + st.TName + `) WriteBlock(_os *codec.Buffer, tag byte) error {
+func (st *` + st.Name + `) WriteBlock(_os *codec.Buffer, tag byte) error {
 	var err error
 	err = _os.WriteHead(codec.STRUCT_BEGIN, tag)
 	if err != nil {
 		return err
 	}
 
-  st.WriteTo(_os)
+	err = st.WriteTo(_os)
+	if err != nil {
+		return err
+	}
 
 	err = _os.WriteHead(codec.STRUCT_END, 0)
 	if err != nil {
@@ -425,7 +679,7 @@ func (gen *GenGo) genFunWriteTo(st *StructInfo) {
 	c := &gen.code
 
 	c.WriteString(`//WriteTo encode struct to buffer
-func (st *` + st.TName + `) WriteTo(_os *codec.Buffer) error {
+func (st *` + st.Name + `) WriteTo(_os *codec.Buffer) error {
 	var err error
 `)
 	for _, v := range st.Mb {
@@ -433,6 +687,8 @@ func (st *` + st.TName + `) WriteTo(_os *codec.Buffer) error {
 	}
 
 	c.WriteString(`
+	_ = err
+
 	return nil
 }
 `)
@@ -456,12 +712,6 @@ err = _is.Read_slice_` + unsign + `int8(&` + prefix + mb.Key + `, length, true)
 `)
 }
 
-func genForHead(vc string) string {
-	i := `i` + vc
-	e := `e` + vc
-	return ` for ` + i + `,` + e + ` := int32(0),length;` + i + `<` + e + `;` + i + `++ `
-}
-
 func (gen *GenGo) genReadVector(mb *StructMember, prefix string, hasRet bool) {
 	c := &gen.code
 	errStr := errString(hasRet)
@@ -474,25 +724,19 @@ func (gen *GenGo) genReadVector(mb *StructMember, prefix string, hasRet bool) {
 	if mb.Require {
 		require = "true"
 	}
-
+	c.WriteString(`
+err, have, ty = _is.SkipToNoCheck(` + tag + `,` + require + `)
+` + errStr + `
+`)
 	if require == "false" {
-		c.WriteString(`
-		err, have, ty = _is.SkipToNoCheck(` + tag + `,` + require + `)
-		` + errStr + `
-		`)
 		c.WriteString("if have {")
-	} else {
-		c.WriteString(`
-		err, _, ty = _is.SkipToNoCheck(` + tag + `,` + require + `)
-		` + errStr + `
-		`)
 	}
 
 	c.WriteString(`
 if ty == codec.LIST {
 	err = _is.Read_int32(&length, 0, true)
   ` + errStr + `
-  ` + prefix + mb.Key + ` = make(` + gen.genType(mb.Type) + `, length, length)
+  ` + prefix + mb.Key + ` = make(` + gen.genType(mb.Type) + `, length)
   ` + genForHead(vc) + `{
 `)
 
@@ -513,6 +757,59 @@ if ty == codec.LIST {
 	c.WriteString(`
 } else {
   err = fmt.Errorf("require vector, but not")
+  ` + errStr + `
+}
+`)
+
+	if require == "false" {
+		c.WriteString("}\n")
+	}
+}
+
+func (gen *GenGo) genReadArray(mb *StructMember, prefix string, hasRet bool) {
+	c := &gen.code
+	errStr := errString(hasRet)
+
+	// LIST
+	tag := strconv.Itoa(int(mb.Tag))
+	vc := strconv.Itoa(gen.vc)
+	gen.vc++
+	require := "false"
+	if mb.Require {
+		require = "true"
+	}
+	c.WriteString(`
+err, have, ty = _is.SkipToNoCheck(` + tag + `,` + require + `)
+` + errStr + `
+`)
+	if require == "false" {
+		c.WriteString("if have {")
+	}
+
+	c.WriteString(`
+if ty == codec.LIST {
+	err = _is.Read_int32(&length, 0, true)
+  ` + errStr + `
+  ` + genForHead(vc) + `{
+`)
+
+	dummy := &StructMember{}
+	dummy.Type = mb.Type.TypeK
+	dummy.Key = mb.Key + "[i" + vc + "]"
+	gen.genReadVar(dummy, prefix, hasRet)
+
+	c.WriteString(`}
+} else if ty == codec.SIMPLE_LIST {
+`)
+	if mb.Type.TypeK.Type == tkTByte {
+		gen.genReadSimpleList(mb, prefix, hasRet)
+	} else {
+		c.WriteString(`err = fmt.Errorf("not support simple_list type")
+    ` + errStr)
+	}
+	c.WriteString(`
+} else {
+  err = fmt.Errorf("require array, but not")
   ` + errStr + `
 }
 `)
@@ -587,6 +884,8 @@ func (gen *GenGo) genReadVar(v *StructMember, prefix string, hasRet bool) {
 	switch v.Type.Type {
 	case tkTVector:
 		gen.genReadVector(v, prefix, hasRet)
+	case tkTArray:
+		gen.genReadArray(v, prefix, hasRet)
 	case tkTMap:
 		gen.genReadMap(v, prefix, hasRet)
 	case tkName:
@@ -620,12 +919,12 @@ func (gen *GenGo) genFunReadFrom(st *StructInfo) {
 	c := &gen.code
 
 	c.WriteString(`//ReadFrom reads  from _is and put into struct.
-func (st *` + st.TName + `) ReadFrom(_is *codec.Reader) error {
+func (st *` + st.Name + `) ReadFrom(_is *codec.Reader) error {
 	var err error
 	var length int32
 	var have bool
 	var ty byte
-	st.resetDefault()
+	st.ResetDefault()
 
 `)
 
@@ -634,6 +933,7 @@ func (st *` + st.TName + `) ReadFrom(_is *codec.Reader) error {
 	}
 
 	c.WriteString(`
+	_ = err
 	_ = length
 	_ = have
 	_ = ty
@@ -646,24 +946,26 @@ func (gen *GenGo) genFunReadBlock(st *StructInfo) {
 	c := &gen.code
 
 	c.WriteString(`//ReadBlock reads struct from the given tag , require or optional.
-func (st *` + st.TName + `) ReadBlock(_is *codec.Reader, tag byte, require bool) error {
+func (st *` + st.Name + `) ReadBlock(_is *codec.Reader, tag byte, require bool) error {
 	var err error
 	var have bool
-	st.resetDefault()
+	st.ResetDefault()
 
 	err, have = _is.SkipTo(codec.STRUCT_BEGIN, tag, require)
 	if err != nil {
 		return err
 	}
-  if !have {
-    if require {
-      return fmt.Errorf("require ` + st.TName + `, but not exist. tag %d", tag)    
-    } 
-      return nil
-    
-  }
+	if !have {
+		if require {
+			return fmt.Errorf("require ` + st.Name + `, but not exist. tag %d", tag)
+		}
+		return nil
+	}
 
-  st.ReadFrom(_is)
+  	err = st.ReadFrom(_is)
+  	if err != nil {
+		return err
+	}
 
 	err = _is.SkipToStructEnd()
 	if err != nil {
@@ -676,25 +978,21 @@ func (st *` + st.TName + `) ReadBlock(_is *codec.Reader, tag byte, require bool)
 }
 
 func (gen *GenGo) genStruct(st *StructInfo) {
-	gen.code.Reset()
 	gen.vc = 0
 	st.rename()
 
-	gen.genHead()
-	gen.genStructPackage(st)
-
 	gen.genStructDefine(st)
 	gen.genFunResetDefault(st)
+
 	gen.genFunReadFrom(st)
 	gen.genFunReadBlock(st)
+
 	gen.genFunWriteTo(st)
 	gen.genFunWriteBlock(st)
-
-	gen.saveToSourceFile(st.TName + ".go")
 }
 
 func (gen *GenGo) makeEnumName(en *EnumInfo, mb *EnumMember) string {
-	return upperFirstLatter(en.TName) + "_" + upperFirstLatter(mb.Key)
+	return upperFirstLetter(en.Name) + "_" + upperFirstLetter(mb.Key)
 }
 
 func (gen *GenGo) genEnum(en *EnumInfo) {
@@ -702,23 +1000,43 @@ func (gen *GenGo) genEnum(en *EnumInfo) {
 		return
 	}
 
-	gen.code.Reset()
 	en.rename()
-	gen.genHead()
-	gen.genPackage()
 
 	c := &gen.code
-
-	c.WriteString("type " + en.TName + " int32\n")
+	c.WriteString("type " + en.Name + " int32\n")
 	c.WriteString("const (\n")
+	var it int32
 	for _, v := range en.Mb {
-		c.WriteString("//" + gen.makeEnumName(en, &v) + " enum\n")
-		c.WriteString(gen.makeEnumName(en, &v) + ` = ` + strconv.Itoa(int(v.Value)) + "\n")
+		if v.Type == 0 {
+			//use value
+			c.WriteString(gen.makeEnumName(en, &v) + ` = ` + strconv.Itoa(int(v.Value)) + "\n")
+			it = v.Value + 1
+		} else if v.Type == 1 {
+			// use name
+			find := false
+			for _, ref := range en.Mb {
+				if ref.Key == v.Name {
+					find = true
+					c.WriteString(gen.makeEnumName(en, &v) + ` = ` + gen.makeEnumName(en, &ref) + "\n")
+					it = ref.Value + 1
+					break
+				}
+				if ref.Key == v.Key {
+					break
+				}
+			}
+			if !find {
+				gen.genErr(v.Name + " not define before use.")
+			}
+		} else {
+			// use auto add
+			c.WriteString(gen.makeEnumName(en, &v) + ` = ` + strconv.Itoa(int(it)) + "\n")
+			it++
+		}
+
 	}
 
 	c.WriteString(")\n")
-
-	gen.saveToSourceFile(en.TName + ".go")
 }
 
 func (gen *GenGo) genConst(cst []ConstInfo) {
@@ -726,55 +1044,29 @@ func (gen *GenGo) genConst(cst []ConstInfo) {
 		return
 	}
 
-	gen.code.Reset()
-	gen.genHead()
-	gen.genPackage()
-
 	c := &gen.code
 	c.WriteString("//const as define in tars file\n")
 	c.WriteString("const (\n")
 
 	for _, v := range gen.p.Const {
 		v.rename()
-		c.WriteString(v.Key + " " + gen.genType(v.Type) + " = " + v.Value + "\n")
+		c.WriteString(v.Name + " " + gen.genType(v.Type) + " = " + v.Value + "\n")
 	}
 
 	c.WriteString(")\n")
-
-	realName := filepath.Base(gen.path)
-	ss := strings.Split(realName, ".")
-	if len(ss) >= 2 {
-		realName = strings.Join(ss[:len(ss)-1], "")
-	}
-	gen.saveToSourceFile(realName + "_const.go")
 }
 
 func (gen *GenGo) genInclude(ps []*Parse) {
 	for _, v := range ps {
-		gen2 := &GenGo{path: v.Source, prefix: gen.prefix, tarsPath: gTarsPath}
+		gen2 := &GenGo{
+			path:      v.Source,
+			module:    gen.module,
+			prefix:    gen.prefix,
+			tarsPath:  gTarsPath,
+			ProtoName: path2ProtoName(v.Source),
+		}
 		gen2.p = v
 		gen2.genAll()
-	}
-}
-
-func (gen *GenGo) genAll() {
-	if *gAddServant == true {
-		gen.p.rename()
-	}
-	gen.genInclude(gen.p.IncParse)
-
-	for _, v := range gen.p.Enum {
-		gen.genEnum(&v)
-	}
-
-	gen.genConst(gen.p.Const)
-
-	for _, v := range gen.p.Struct {
-		gen.genStruct(&v)
-	}
-
-	for _, v := range gen.p.Interface {
-		gen.genInterface(&v)
 	}
 }
 
@@ -786,80 +1078,69 @@ func (gen *GenGo) genInterface(itf *InterfaceInfo) {
 	gen.genIFPackage(itf)
 
 	gen.genIFProxy(itf)
+
 	gen.genIFServer(itf)
 	gen.genIFServerWithContext(itf)
+
 	gen.genIFDispatch(itf)
 
-	gen.saveToSourceFile(itf.TName + "_IF.go")
+	gen.saveToSourceFile(itf.Name + ".tars.go")
 }
 
 func (gen *GenGo) genIFProxy(itf *InterfaceInfo) {
 	c := &gen.code
-	c.WriteString("//" + itf.TName + " struct\n")
-	c.WriteString("type " + itf.TName + " struct {" + "\n")
+	c.WriteString("//" + itf.Name + " struct\n")
+	c.WriteString("type " + itf.Name + " struct {" + "\n")
 	c.WriteString("s m.Servant" + "\n")
 	c.WriteString("}" + "\n")
 
 	for _, v := range itf.Fun {
-		gen.genIFProxyFun(itf.TName, &v, false)
-		gen.genIFProxyFun(itf.TName, &v, true)
-
+		gen.genIFProxyFun(itf.Name, &v, false, false)
+		gen.genIFProxyFun(itf.Name, &v, true, false)
+		gen.genIFProxyFun(itf.Name, &v, true, true)
 	}
 
 	c.WriteString(`//SetServant sets servant for the service.
-func (_obj *` + itf.TName + `) SetServant(s m.Servant) {
+func (_obj *` + itf.Name + `) SetServant(s m.Servant) {
 	_obj.s = s
 }
 `)
 	c.WriteString(`//TarsSetTimeout sets the timeout for the servant which is in ms.
-func (_obj *` + itf.TName + `) TarsSetTimeout(t int) {
+func (_obj *` + itf.Name + `) TarsSetTimeout(t int) {
 	_obj.s.TarsSetTimeout(t)
 }
 `)
-	c.WriteString(`func (_obj *` + itf.TName + `) setMap(l int, res *requestf.ResponsePacket,  ctx map[string]string, sts map[string]string) {
-		if l == 1{
-			for k, _ := range(ctx){
-				delete(ctx, k)
-			}
-			for k, v := range(res.Context){
-				ctx[k] = v
-			}
-		}else if l == 2 {
-			for k, _ := range(ctx){
-				delete(ctx, k)
-			}
-			for k, v := range(res.Context){
-				ctx[k] = v
-			}
-			for k, _ := range(sts){
-				delete(sts, k)
-			}
-			for k, v := range(res.Status){
-				sts[k] = v
-			}
-		}
-		}
-	`)
+
+	c.WriteString(`//TarsSetProtocol sets the protocol for the servant.
+func (_obj *` + itf.Name + `) TarsSetProtocol(p m.Protocol) {
+	_obj.s.TarsSetProtocol(p)
+}
+`)
 
 	if *gAddServant {
 		c.WriteString(`//AddServant adds servant  for the service.
-func (_obj *` + itf.TName + `) AddServant(imp _imp` + itf.TName + `, obj string) {
+func (_obj *` + itf.Name + `) AddServant(imp _imp` + itf.Name + `, obj string) {
   tars.AddServant(_obj, imp, obj)
 }
 `)
 		c.WriteString(`//AddServant adds servant  for the service with context.
-func (_obj *` + itf.TName + `) AddServantWithContext(imp _imp` + itf.TName + `WithContext, obj string) {
+func (_obj *` + itf.Name + `) AddServantWithContext(imp _imp` + itf.Name + `WithContext, obj string) {
   tars.AddServantWithContext(_obj, imp, obj)
 }
 `)
 	}
 }
 
-func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo, withContext bool) {
+func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo, withContext bool, isOneWay bool) {
 	c := &gen.code
 	if withContext == true {
-		c.WriteString("//" + fun.Name + "WithContext is the proxy function for the method defined in the tars file, with the context\n")
-		c.WriteString("func (_obj *" + interfName + ") " + fun.Name + "WithContext(ctx context.Context,")
+		if isOneWay {
+			c.WriteString("//" + fun.Name + "OneWayWithContext is the proxy function for the method defined in the tars file, with the context\n")
+			c.WriteString("func (_obj *" + interfName + ") " + fun.Name + "OneWayWithContext(tarsCtx context.Context,")
+		} else {
+			c.WriteString("//" + fun.Name + "WithContext is the proxy function for the method defined in the tars file, with the context\n")
+			c.WriteString("func (_obj *" + interfName + ") " + fun.Name + "WithContext(tarsCtx context.Context,")
+		}
 	} else {
 		c.WriteString("//" + fun.Name + " is the proxy function for the method defined in the tars file, with the context\n")
 		c.WriteString("func (_obj *" + interfName + ") " + fun.Name + "(")
@@ -885,15 +1166,17 @@ func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo, withContext boo
 	for k, v := range fun.Args {
 		if v.IsOut {
 			isOut = true
-		} else {
-			dummy := &StructMember{}
-			dummy.Type = v.Type
-			dummy.Key = v.Name
-			dummy.Tag = int32(k + 1)
-			gen.genWriteVar(dummy, "", fun.HasRet)
 		}
+		dummy := &StructMember{}
+		dummy.Type = v.Type
+		dummy.Key = v.Name
+		dummy.Tag = int32(k + 1)
+		if v.IsOut {
+			dummy.Key = "(*" + dummy.Key + ")"
+		}
+		gen.genWriteVar(dummy, "", fun.HasRet)
 	}
-	// empty args and below separate
+	// empty args and below seperate
 	c.WriteString("\n")
 	errStr := errString(fun.HasRet)
 
@@ -908,9 +1191,7 @@ if len(_opt) == 1{
 	_status = _opt[1]
 }
 _resp := new(requestf.ResponsePacket)
-ctx := context.Background()
-err = _obj.s.Tars_invoke(ctx, 0, "` + fun.NameStr + `", _os.ToBytes(), _status, _context, _resp)
-` + errStr + `
+tarsCtx := context.Background()
 `)
 	} else {
 		c.WriteString(`var _status map[string]string
@@ -922,15 +1203,25 @@ if len(_opt) == 1{
 	_status = _opt[1]
 }
 _resp := new(requestf.ResponsePacket)
-err = _obj.s.Tars_invoke(ctx, 0, "` + fun.NameStr + `", _os.ToBytes(), _status, _context, _resp)
-` + errStr + `
 `)
 	}
 
-	if isOut || fun.HasRet {
+	if isOneWay {
+		c.WriteString(`
+		err = _obj.s.Tars_invoke(tarsCtx, 1, "` + fun.OriginName + `", _os.ToBytes(), _status, _context, _resp)
+		` + errStr + `
+		`)
+	} else {
+		c.WriteString(`
+		err = _obj.s.Tars_invoke(tarsCtx, 0, "` + fun.OriginName + `", _os.ToBytes(), _status, _context, _resp)
+		` + errStr + `
+		`)
+	}
+
+	if (isOut || fun.HasRet) && !isOneWay {
 		c.WriteString("_is := codec.NewReader(tools.Int8ToByte(_resp.SBuffer))")
 	}
-	if fun.HasRet {
+	if fun.HasRet && !isOneWay {
 		dummy := &StructMember{}
 		dummy.Type = fun.RetType
 		dummy.Key = "ret"
@@ -939,19 +1230,42 @@ err = _obj.s.Tars_invoke(ctx, 0, "` + fun.NameStr + `", _os.ToBytes(), _status, 
 		gen.genReadVar(dummy, "", fun.HasRet)
 	}
 
-	for k, v := range fun.Args {
-		if v.IsOut {
-			dummy := &StructMember{}
-			dummy.Type = v.Type
-			dummy.Key = "(*" + v.Name + ")"
-			dummy.Tag = int32(k + 1)
-			dummy.Require = true
-			gen.genReadVar(dummy, "", fun.HasRet)
+	if !isOneWay {
+		for k, v := range fun.Args {
+			if v.IsOut {
+				dummy := &StructMember{}
+				dummy.Type = v.Type
+				dummy.Key = "(*" + v.Name + ")"
+				dummy.Tag = int32(k + 1)
+				dummy.Require = true
+				gen.genReadVar(dummy, "", fun.HasRet)
+			}
 		}
 	}
 
 	c.WriteString(`
-	_obj.setMap(len(_opt), _resp,_context,_status )
+if len(_opt) == 1{
+	for k := range(_context){
+		delete(_context, k)
+	}
+	for k, v := range(_resp.Context){
+		_context[k] = v
+	}
+}else if len(_opt) == 2 {
+	for k := range(_context){
+		delete(_context, k)
+	}
+	for k, v := range(_resp.Context){
+		_context[k] = v
+	}
+	for k := range(_status){
+		delete(_status, k)
+	}
+	for k, v := range(_resp.Status){
+		_status[k] = v
+	}
+
+}
   _ = length
   _ = have
   _ = ty
@@ -978,7 +1292,7 @@ func (gen *GenGo) genArgs(arg *ArgInfo) {
 
 func (gen *GenGo) genIFServer(itf *InterfaceInfo) {
 	c := &gen.code
-	c.WriteString("type _imp" + itf.TName + " interface {" + "\n")
+	c.WriteString("type _imp" + itf.Name + " interface {" + "\n")
 	for _, v := range itf.Fun {
 		gen.genIFServerFun(&v)
 	}
@@ -987,7 +1301,7 @@ func (gen *GenGo) genIFServer(itf *InterfaceInfo) {
 
 func (gen *GenGo) genIFServerWithContext(itf *InterfaceInfo) {
 	c := &gen.code
-	c.WriteString("type _imp" + itf.TName + "WithContext interface {" + "\n")
+	c.WriteString("type _imp" + itf.Name + "WithContext interface {" + "\n")
 	for _, v := range itf.Fun {
 		gen.genIFServerFunWithContext(&v)
 	}
@@ -1010,7 +1324,7 @@ func (gen *GenGo) genIFServerFun(fun *FunInfo) {
 
 func (gen *GenGo) genIFServerFunWithContext(fun *FunInfo) {
 	c := &gen.code
-	c.WriteString(fun.Name + "(ctx context.Context, ")
+	c.WriteString(fun.Name + "(tarsCtx context.Context, ")
 	for _, v := range fun.Args {
 		gen.genArgs(&v)
 	}
@@ -1022,33 +1336,166 @@ func (gen *GenGo) genIFServerFunWithContext(fun *FunInfo) {
 	c.WriteString("err error)" + "\n")
 }
 
-func (gen *GenGo) genSwitchCaseBody(tname string, fun *FunInfo) {
+func (gen *GenGo) genIFDispatch(itf *InterfaceInfo) {
 	c := &gen.code
-	c.WriteString(`func ` + fun.NameStr + `(ctx context.Context, _val interface{},_os *codec.Buffer, _is *codec.Reader, withContext bool)(err error){`)
-	c.WriteString(`
+	c.WriteString("// Dispatch is used to call the server side implemnet for the method defined in the tars file. _withContext shows using context or not.  \n")
+	c.WriteString("func(_obj *" + itf.Name + `) Dispatch(tarsCtx context.Context, _val interface{}, tarsReq *requestf.RequestPacket, tarsResp *requestf.ResponsePacket, _withContext bool) (err error) {
 	var length int32
 	var have bool
 	var ty byte
-	`)
+  `)
 
-	for k, v := range fun.Args {
-		c.WriteString("var " + v.Name + " " + gen.genType(v.Type))
-		if !v.IsOut {
-			dummy := &StructMember{}
-			dummy.Type = v.Type
-			dummy.Key = v.Name
-			dummy.Tag = int32(k + 1)
-			dummy.Require = true
-			gen.genReadVar(dummy, "", false)
-		} else {
-			c.WriteString("\n")
+	var param bool
+	for _, v := range itf.Fun {
+		if len(v.Args) > 0 {
+			param = true
+			break
 		}
 	}
 
+	if param {
+		c.WriteString("_is := codec.NewReader(tools.Int8ToByte(tarsReq.SBuffer))")
+	} else {
+		c.WriteString("_is := codec.NewReader(nil)")
+	}
+	c.WriteString(`
+	_os := codec.NewBuffer()
+	switch tarsReq.SFuncName {
+`)
+
+	for _, v := range itf.Fun {
+		gen.genSwitchCase(itf.Name, &v)
+	}
+
+	c.WriteString(`
+	default:
+		return fmt.Errorf("func mismatch")
+	}
+	var _status map[string]string
+	s, ok := current.GetResponseStatus(tarsCtx)
+	if ok  && s != nil {
+		_status = s
+	}
+	var _context map[string]string
+	c, ok := current.GetResponseContext(tarsCtx)
+	if ok && c != nil  {
+		_context = c
+	}
+	*tarsResp = requestf.ResponsePacket{
+		IVersion:     tarsReq.IVersion,
+		CPacketType:  0,
+		IRequestId:   tarsReq.IRequestId,
+		IMessageType: 0,
+		IRet:         0,
+		SBuffer:      tools.ByteToInt8(_os.ToBytes()),
+		Status:       _status,
+		SResultDesc:  "",
+		Context:      _context,
+	}
+
+	_ = _is
+	_ = _os
+	_ = length
+	_ = have
+	_ = ty
+	return nil
+}
+`)
+}
+
+func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
+	c := &gen.code
+	c.WriteString(`case "` + fun.OriginName + `":` + "\n")
+
+	inArgsCount := 0
+	outArgsCount := 0
+	for _, v := range fun.Args {
+		c.WriteString("var " + v.Name + " " + gen.genType(v.Type) + "\n")
+		if v.IsOut {
+			outArgsCount++
+		} else {
+			inArgsCount++
+		}
+	}
+
+	//fmt.Println("args count, in, out:", inArgsCount, outArgsCount)
+
+	c.WriteString("\n")
+
+	if inArgsCount > 0 {
+		c.WriteString("if tarsReq.IVersion == basef.TARSVERSION {" + "\n")
+
+		for k, v := range fun.Args {
+			//c.WriteString("var " + v.Name + " " + gen.genType(v.Type))
+			if !v.IsOut {
+				dummy := &StructMember{}
+				dummy.Type = v.Type
+				dummy.Key = v.Name
+				dummy.Tag = int32(k + 1)
+				dummy.Require = true
+				gen.genReadVar(dummy, "", false)
+			}
+			//else {
+			//	c.WriteString("\n")
+			//}
+		}
+		//c.WriteString("}")
+
+		c.WriteString(`} else if tarsReq.IVersion == basef.TUPVERSION {
+		_reqTup_ := tup.NewUniAttribute()
+		_reqTup_.Decode(_is)
+
+		var _tupBuffer_ []byte
+
+		`)
+		for _, v := range fun.Args {
+			if !v.IsOut {
+				c.WriteString("\n")
+				c.WriteString(`_reqTup_.GetBuffer("` + v.Name + `", &_tupBuffer_)` + "\n")
+				c.WriteString("_is.Reset(_tupBuffer_)")
+
+				dummy := &StructMember{}
+				dummy.Type = v.Type
+				dummy.Key = v.Name
+				dummy.Tag = 0
+				dummy.Require = true
+				gen.genReadVar(dummy, "", false)
+			}
+		}
+
+		c.WriteString(`} else if tarsReq.IVersion == basef.JSONVERSION {
+		var _jsonDat_ map[string]interface{}
+		err = json.Unmarshal(_is.ToBytes(), &_jsonDat_)
+		`)
+
+		for _, v := range fun.Args {
+			if !v.IsOut {
+				c.WriteString("{\n")
+				c.WriteString(`_jsonStr_, _ := json.Marshal(_jsonDat_["` + v.Name + `"])` + "\n")
+				c.WriteString("if err = json.Unmarshal([]byte(_jsonStr_), &" + v.Name + "); err != nil {")
+				c.WriteString(`
+					return err
+				}
+				}
+				`)
+			}
+		}
+
+		c.WriteString(`
+		} else {
+			err = fmt.Errorf("Decode reqpacket fail, error version: %d", tarsReq.IVersion)
+			return err
+		}`)
+
+		c.WriteString("\n\n")
+	}
+
 	if fun.HasRet {
-		c.WriteString(`if withContext == false {
+		c.WriteString("var _funRet_ " + gen.genType(fun.RetType) + "\n")
+
+		c.WriteString(`if _withContext == false {
 		_imp := _val.(_imp` + tname + `)
-		ret, err := _imp.` + fun.Name + `(`)
+		_funRet_, err = _imp.` + fun.Name + `(`)
 		for _, v := range fun.Args {
 			if v.IsOut || v.Type.CType == tkStruct {
 				c.WriteString("&" + v.Name + ",")
@@ -1057,21 +1504,11 @@ func (gen *GenGo) genSwitchCaseBody(tname string, fun *FunInfo) {
 			}
 		}
 		c.WriteString(")")
+
 		c.WriteString(`
-		if err != nil {
-			return err
-		}
-		`)
-		dummy := &StructMember{}
-		dummy.Type = fun.RetType
-		dummy.Key = "ret"
-		dummy.Tag = 0
-		dummy.Require = true
-		gen.genWriteVar(dummy, "", false)
-		c.WriteString("}else{")
-		c.WriteString(`
+		} else {
 		_imp := _val.(_imp` + tname + `WithContext)
-		ret, err := _imp.` + fun.Name + `(ctx ,`)
+		_funRet_, err = _imp.` + fun.Name + `(tarsCtx ,`)
 		for _, v := range fun.Args {
 			if v.IsOut || v.Type.CType == tkStruct {
 				c.WriteString("&" + v.Name + ",")
@@ -1079,22 +1516,10 @@ func (gen *GenGo) genSwitchCaseBody(tname string, fun *FunInfo) {
 				c.WriteString(v.Name + ",")
 			}
 		}
-		c.WriteString(")")
-		c.WriteString(`
-		if err != nil {
-			return err
-		}
-		`)
-		dummy = &StructMember{}
-		dummy.Type = fun.RetType
-		dummy.Key = "ret"
-		dummy.Tag = 0
-		dummy.Require = true
-		gen.genWriteVar(dummy, "", false)
-		c.WriteString("}\n")
+		c.WriteString(")" + "\n } \n")
 
 	} else {
-		c.WriteString(`if withContext == false {
+		c.WriteString(`if _withContext == false {
 		_imp := _val.(_imp` + tname + `)
 		err = _imp.` + fun.Name + `(`)
 		for _, v := range fun.Args {
@@ -1105,15 +1530,11 @@ func (gen *GenGo) genSwitchCaseBody(tname string, fun *FunInfo) {
 			}
 		}
 		c.WriteString(")")
+
 		c.WriteString(`
-		if err != nil {
-			return err
-		}
-		`)
-		c.WriteString("}else{")
-		c.WriteString(`
+		} else {
 		_imp := _val.(_imp` + tname + `WithContext)
-		err = _imp.` + fun.Name + `(ctx ,`)
+		err = _imp.` + fun.Name + `(tarsCtx ,`)
 		for _, v := range fun.Args {
 			if v.IsOut || v.Type.CType == tkStruct {
 				c.WriteString("&" + v.Name + ",")
@@ -1121,13 +1542,36 @@ func (gen *GenGo) genSwitchCaseBody(tname string, fun *FunInfo) {
 				c.WriteString(v.Name + ",")
 			}
 		}
-		c.WriteString(")")
-		c.WriteString(`
-		if err != nil {
-			return err
-		}
-		`)
-		c.WriteString("}\n")
+		c.WriteString(") \n}\n")
+	}
+
+	c.WriteString(`
+	if err != nil {
+		return err
+	}
+	`)
+
+	c.WriteString(`
+	if tarsReq.IVersion == basef.TARSVERSION {
+	_os.Reset()
+	`)
+
+	//	if fun.HasRet {
+	//		c.WriteString(`
+	//		err = _os.Write_int32(_funRet_, 0)
+	//		if err != nil {
+	//			return err
+	//		}
+	//`)
+	//	}
+
+	if fun.HasRet {
+		dummy := &StructMember{}
+		dummy.Type = fun.RetType
+		dummy.Key = "_funRet_"
+		dummy.Tag = 0
+		dummy.Require = true
+		gen.genWriteVar(dummy, "", false)
 	}
 
 	for k, v := range fun.Args {
@@ -1140,108 +1584,86 @@ func (gen *GenGo) genSwitchCaseBody(tname string, fun *FunInfo) {
 			gen.genWriteVar(dummy, "", false)
 		}
 	}
+
 	c.WriteString(`
-_ = length
-_ = have
-_ = ty
+} else if tarsReq.IVersion == basef.TUPVERSION {
+_tupRsp_ := tup.NewUniAttribute()
 `)
-	c.WriteString(`return nil 
-	}`)
-	c.WriteString("\n")
 
-}
-func (gen *GenGo) genIFDispatch(itf *InterfaceInfo) {
-	c := &gen.code
-	for _, v := range itf.Fun {
-		gen.genSwitchCaseBody(itf.TName, &v)
+	//	if fun.HasRet {
+	//		c.WriteString(`
+	//		_os.Reset()
+	//		err = _os.Write_int32(_funRet_, 0)
+	//		if err != nil {
+	//			return err
+	//		}
+	//		_tupRsp_.PutBuffer("", _os.ToBytes())
+	//		_tupRsp_.PutBuffer("tars_ret", _os.ToBytes())
+	//`)
+	//	}
+
+	if fun.HasRet {
+		dummy := &StructMember{}
+		dummy.Type = fun.RetType
+		dummy.Key = "_funRet_"
+		dummy.Tag = 0
+		dummy.Require = true
+		gen.genWriteVar(dummy, "", false)
+
+		c.WriteString(`
+		_tupRsp_.PutBuffer("", _os.ToBytes())
+		_tupRsp_.PutBuffer("tars_ret", _os.ToBytes())
+`)
 	}
-	c.WriteString("//Dispatch is used to call the server side implemnet for the method defined in the tars file. withContext shows using context or not.  \n")
-	c.WriteString("func(_obj *" + itf.TName + `) Dispatch(ctx context.Context, _val interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket,withContext bool) (err error) {
-  `)
 
-	var param bool
-	for _, v := range itf.Fun {
-		if len(v.Args) > 0 {
-			param = true
-			break
+	for _, v := range fun.Args {
+		if v.IsOut {
+			c.WriteString(`
+		_os.Reset()`)
+			dummy := &StructMember{}
+			dummy.Type = v.Type
+			dummy.Key = v.Name
+			dummy.Tag = 0
+			dummy.Require = true
+			gen.genWriteVar(dummy, "", false)
+
+			c.WriteString(`_tupRsp_.PutBuffer("` + v.Name + `", _os.ToBytes())` + "\n")
 		}
 	}
 
-	if param {
-		c.WriteString("_is := codec.NewReader(tools.Int8ToByte(req.SBuffer))")
-	}
 	c.WriteString(`
-_os := codec.NewBuffer()
-switch req.SFuncName {
+	_os.Reset()
+	err = _tupRsp_.Encode(_os)
+	if err != nil {
+		return err
+	}
+} else if tarsReq.IVersion == basef.JSONVERSION {
+	_rspJson_ := map[string]interface{} {}
 `)
+	if fun.HasRet {
+		//c.WriteString(`_rspJson_[""] = _funRet_` + "\n")
+		c.WriteString(`_rspJson_["tars_ret"] = _funRet_` + "\n")
+	}
 
-	for _, v := range itf.Fun {
-		gen.genSwitchCase(itf.TName, &v)
+	for _, v := range fun.Args {
+		if v.IsOut {
+			c.WriteString(`_rspJson_["` + v.Name + `"] = ` + v.Name + "\n")
+		}
 	}
 
 	c.WriteString(`
-default:
-	return fmt.Errorf("func mismatch")
-}
-var _status map[string]string
-s, ok := current.GetResponseStatus(ctx)
-if ok  && s != nil {
-	_status = s
-}
-var _context map[string]string
-c, ok := current.GetResponseContext(ctx)
-if ok && c != nil  {
-	_context = c
-}
-*resp = requestf.ResponsePacket{
-	IVersion:     1,
-	CPacketType:  0,
-	IRequestId:   req.IRequestId,
-	IMessageType: 0,
-	IRet:         0,
-	SBuffer:      tools.ByteToInt8(_os.ToBytes()),
-	Status:       _status,
-	SResultDesc:  "",
-	Context:      _context,
-}
-return nil
-}
-`)
-}
+		var _rspByte_ []byte
+		if _rspByte_, err = json.Marshal(_rspJson_); err != nil {
+			return err
+		}
 
-func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
-	c := &gen.code
-	c.WriteString(`case "` + fun.NameStr + `":` + "\n")
-	c.WriteString(`err := ` + fun.NameStr + `(ctx, _val, _os, _is, withContext)
+		_os.Reset()
+		err = _os.Write_slice_uint8(_rspByte_)
 		if err != nil {
 			return err
 		}
-	`)
-}
+}`)
 
-//Gen to parse file.
-func (gen *GenGo) Gen() {
-	defer func() {
-		if err := recover(); err != nil {
-			fmt.Println(err)
-			// set exit code
-			os.Exit(1)
-		}
-	}()
+	c.WriteString("\n")
 
-	gen.p = ParseFile(gen.path)
-	gen.genAll()
-}
-
-//NewGenGo build up a new path
-func NewGenGo(path string, outdir string) *GenGo {
-	if outdir != "" {
-		b := []byte(outdir)
-		last := b[len(b)-1:]
-		if string(last) != "/" {
-			outdir += "/"
-		}
-	}
-
-	return &GenGo{path: path, prefix: outdir}
 }

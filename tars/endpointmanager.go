@@ -1,190 +1,367 @@
 package tars
 
 import (
+	"encoding/json"
+	"fmt"
+	"hash/crc32"
+	"io/ioutil"
+	"math/rand"
+	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/queryf"
+	"github.com/TarsCloud/TarsGo/tars/util/consistenthash"
 	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
-	"github.com/TarsCloud/TarsGo/tars/util/set"
+	"github.com/TarsCloud/TarsGo/tars/util/gtime"
 )
 
-// EndpointManager is a struct which contains endpoint information.
-type EndpointManager struct {
-	objName         string
-	directproxy     bool
-	adapters        map[endpoint.Endpoint]*AdapterProxy
-	index           []interface{} //cache the set
-	pointsSet       *set.Set
-	comm            *Communicator
-	mlock           *sync.Mutex
-	refreshInterval int
-	pos             int32
-	depth           int32
+//EndpointManager interface of naming system
+type EndpointManager interface {
+	SelectAdapterProxy(msg *Message) (*AdapterProxy, bool)
+	GetAllEndpoint() []*endpoint.Endpoint
+	preInvoke()
+	postInvoke()
+	addAliveEp(ep endpoint.Endpoint)
 }
 
-func (e *EndpointManager) setObjName(objName string) {
-	if objName == "" {
-		return
+var (
+	gManager         *globalManager
+	gManagerInitOnce sync.Once
+)
+
+type globalManager struct {
+	eps                 map[string]*tarsEndpointManager
+	mlock               *sync.Mutex
+	refreshInterval     int
+	checkStatusInterval int
+}
+
+func initOnceGManager(refreshInterval int, checkStatusInterval int) {
+	gManagerInitOnce.Do(func() {
+		gManager = &globalManager{refreshInterval: refreshInterval, checkStatusInterval: checkStatusInterval}
+		gManager.eps = make(map[string]*tarsEndpointManager)
+		gManager.mlock = &sync.Mutex{}
+		go gManager.updateEndpoints()
+		go gManager.checkEpStatus()
+	})
+}
+
+// GetManager return a endpoint manager from global endpoint manager
+func GetManager(comm *Communicator, objName string) EndpointManager {
+	//taf
+	initOnceGManager(comm.Client.RefreshEndpointInterval, comm.Client.CheckStatusInterval)
+	g := gManager
+	g.mlock.Lock()
+	key := objName + comm.hashKey()
+	if v, ok := g.eps[key]; ok {
+		g.mlock.Unlock()
+		return v
 	}
+	g.mlock.Unlock()
+
+	TLOG.Debug("Create endpoint manager for ", objName)
+	em := newTarsEndpointManager(objName, comm) // avoid dead lock
+	g.mlock.Lock()
+	if v, ok := g.eps[key]; ok {
+		g.mlock.Unlock()
+		return v
+	}
+	g.eps[key] = em
+	err := em.doFresh()
+	// if fresh is error,we should get it from cache
+	if err != nil {
+		for _, cache := range appCache.ObjCaches {
+			if objName == cache.Name && comm.GetLocator() == cache.Locator {
+				em.activeEpf = cache.Endpoints
+				newEps := make([]endpoint.Endpoint, len(em.activeEpf))
+				for i, ep := range em.activeEpf {
+					newEps[i] = endpoint.Tars2endpoint(ep)
+				}
+				em.activeEp = newEps[:] // replace ep list
+				chmap := consistenthash.NewChMap(32)
+				for _, e := range em.activeEp {
+					chmap.Add(e)
+				}
+				em.activeEpHashMap = chmap
+				TLOG.Debugf("init endpoint %s %v %v", objName, em.activeEp, em.inactiveEpf)
+			}
+		}
+	}
+	g.mlock.Unlock()
+	return em
+}
+
+func (g *globalManager) checkEpStatus() {
+	loop := time.NewTicker(time.Duration(g.checkStatusInterval) * time.Millisecond)
+	for range loop.C {
+		g.mlock.Lock()
+		eps := make([]*tarsEndpointManager, 0)
+		for _, v := range g.eps {
+			if v.locator != nil {
+				eps = append(eps, v)
+			}
+		}
+		g.mlock.Unlock()
+		for _, e := range eps {
+			e.checkStatus()
+		}
+	}
+}
+func (g *globalManager) updateEndpoints() {
+	loop := time.NewTicker(time.Duration(g.refreshInterval) * time.Millisecond)
+	for range loop.C {
+		g.mlock.Lock()
+		eps := make([]*tarsEndpointManager, 0)
+		for _, v := range g.eps {
+			if v.locator != nil {
+				eps = append(eps, v)
+			}
+		}
+		g.mlock.Unlock()
+		TLOG.Debugf("start refresh %d endpoints %d", len(eps), g.refreshInterval)
+		for _, e := range eps {
+			err := e.doFresh()
+			if err != nil {
+				TLOG.Errorf("update endoint error, %s.", e.objName)
+			}
+
+		}
+
+		//cache to file
+		cfg := GetServerConfig()
+		if cfg != nil && cfg.DataPath != "" {
+			cachePath := filepath.Join(cfg.DataPath, cfg.Server) + ".tarsdat"
+			appCache.ModifyTime = gtime.CurrDateTime
+			objCache := make([]ObjCache, len(eps))
+			for i, e := range eps {
+				objCache[i].Name = e.objName
+				objCache[i].Locator = e.comm.GetLocator()
+				objCache[i].Endpoints = e.activeEpf
+				objCache[i].InactiveEndpoints = e.inactiveEpf
+			}
+			appCache.ObjCaches = objCache
+			data, _ := json.MarshalIndent(&appCache, "", "    ")
+			ioutil.WriteFile(cachePath, data, 0644)
+		}
+	}
+}
+
+// tarsEndpointManager is a struct which contains endpoint information.
+type tarsEndpointManager struct {
+	objName     string // name only, no ip list
+	directproxy bool
+	comm        *Communicator
+	locator     *queryf.QueryF
+
+	epList      *sync.Map
+	epLock      *sync.Mutex
+	activeEp    []endpoint.Endpoint
+	pos         int32
+	activeEpf   []endpointf.EndpointF
+	inactiveEpf []endpointf.EndpointF
+	aliveCheck  chan endpointf.EndpointF
+
+	checkAdapterList *sync.Map
+	checkAdapter     chan *AdapterProxy
+
+	activeEpHashMap *consistenthash.ChMap
+	freshLock       *sync.Mutex
+	lastInvoke      int64
+	invokeNum       int32
+}
+
+func newTarsEndpointManager(objName string, comm *Communicator) *tarsEndpointManager {
+	if objName == "" {
+		return nil
+	}
+	e := &tarsEndpointManager{}
+	e.comm = comm
+	e.freshLock = &sync.Mutex{}
+	e.epList = &sync.Map{}
+	e.epLock = &sync.Mutex{}
+	e.checkAdapterList = &sync.Map{}
 	pos := strings.Index(objName, "@")
 	if pos > 0 {
 		//[direct]
 		e.objName = objName[0:pos]
 		endpoints := objName[pos+1:]
 		e.directproxy = true
-		for _, end := range strings.Split(endpoints, ":") {
-			e.pointsSet.Add(endpoint.Parse(end))
+		ends := strings.Split(endpoints, ":")
+		eps := make([]endpoint.Endpoint, len(ends))
+		for i, end := range ends {
+			eps[i] = endpoint.Parse(end)
 		}
-		e.index = e.pointsSet.Slice()
+		e.activeEp = eps
 
+		chmap := consistenthash.NewChMap(32)
+		for _, e := range e.activeEp {
+			chmap.Add(e)
+		}
+		e.activeEpHashMap = chmap
 	} else {
 		//[proxy] TODO singleton
 		TLOG.Debug("proxy mode:", objName)
 		e.objName = objName
-		//comm := NewCommunicator()
-		//comm.SetProperty("netthread", 1)
+		e.directproxy = false
 		obj, _ := e.comm.GetProperty("locator")
-		q := new(queryf.QueryF)
-		e.comm.StringToProxy(obj, q)
-		e.findAndSetObj(q)
-		go func() {
-			loop := time.NewTicker(time.Duration(e.refreshInterval) * time.Millisecond)
-			for range loop.C {
-				//TODO exit
-				e.findAndSetObj(q)
-			}
-		}()
+		e.locator = new(queryf.QueryF)
+		TLOG.Debug("string to proxy locator ", obj)
+		e.comm.StringToProxy(obj, e.locator)
+		e.checkAdapter = make(chan *AdapterProxy, 1000)
 	}
-}
 
-// Init endpoint struct.
-func (e *EndpointManager) Init(objName string, comm *Communicator) error {
-	e.comm = comm
-	e.mlock = new(sync.Mutex)
-	e.adapters = make(map[endpoint.Endpoint]*AdapterProxy)
-	e.pointsSet = set.NewSet()
-	e.directproxy = false
-	e.refreshInterval = comm.Client.refreshEndpointInterval
-	e.pos = 0
-	e.depth = 0
-	//ObjName要放到最后初始化
-	e.setObjName(objName)
-	return nil
-}
-
-// GetNextValidProxy returns polling adapter information.
-func (e *EndpointManager) GetNextValidProxy() *AdapterProxy {
-	e.mlock.Lock()
-	ep := e.GetNextEndpoint()
-	if ep == nil {
-		e.mlock.Unlock()
-		return nil
-	}
-	if adp, ok := e.adapters[*ep]; ok {
-		// returns nil if recursively all nodes have not found an available node.
-		if adp.status {
-			e.mlock.Unlock()
-			return adp
-		} else if e.depth > e.pointsSet.Len() {
-			e.mlock.Unlock()
-			return nil
-		} else {
-			e.depth++
-			e.mlock.Unlock()
-			return e.GetNextValidProxy()
-		}
-	}
-	err := e.createProxy(*ep)
-	if err != nil {
-		TLOG.Error("create adapter fail:", *ep, err)
-		e.mlock.Unlock()
-		return nil
-	}
-	a := e.adapters[*ep]
-	e.mlock.Unlock()
-	return a
-}
-
-// GetNextEndpoint returns the endpoint basic information.
-func (e *EndpointManager) GetNextEndpoint() *endpoint.Endpoint {
-	length := len(e.index)
-	if length <= 0 {
-		return nil
-	}
-	var ep endpoint.Endpoint
-	e.pos = (e.pos + 1) % int32(length)
-	ep = e.index[e.pos].(endpoint.Endpoint)
-	return &ep
+	return e
 }
 
 // GetAllEndpoint returns all endpoint information as a array(support not tars service).
-func (e *EndpointManager) GetAllEndpoint() []*endpoint.Endpoint {
-	es := make([]*endpoint.Endpoint, len(e.index))
-	e.mlock.Lock()
-	defer e.mlock.Unlock()
-	for i, v := range e.index {
-		e := v.(endpoint.Endpoint)
-		es[i] = &e
+func (e *tarsEndpointManager) GetAllEndpoint() []*endpoint.Endpoint {
+	eps := e.activeEp[:]
+	out := make([]*endpoint.Endpoint, len(eps))
+	for i := 0; i < len(eps); i++ {
+		out[i] = &eps[i]
 	}
-	return es
+	return out
 }
 
-func (e *EndpointManager) createProxy(ep endpoint.Endpoint) error {
-	TLOG.Debug("create adapter:", ep)
-	adp := new(AdapterProxy)
-	//TODO
-	end := endpoint.Endpoint2tars(ep)
-	err := adp.New(&end, e.comm)
-	if err != nil {
-		return err
+func (e *tarsEndpointManager) checkStatus() {
+	//only in active epf need to check.
+	for _, ef := range e.activeEpf {
+		ep := endpoint.Tars2endpoint(ef)
+		if v, ok := e.epList.Load(ep.Key); ok {
+			firstTime, needCheck := v.(*AdapterProxy).checkActive()
+			if !firstTime && !needCheck {
+				continue
+			}
+
+			if firstTime {
+				e.epLock.Lock()
+				for i := range e.activeEp {
+					if e.activeEp[i] == ep {
+						e.activeEp = append(e.activeEp[:i], e.activeEp[i+1:]...)
+						break
+					}
+				}
+				e.epLock.Unlock()
+
+				e.activeEpHashMap.Remove(ep.Key)
+			}
+
+			if needCheck {
+				if _, ok := e.checkAdapterList.Load(ep.Key); !ok {
+					adp := v.(*AdapterProxy)
+					e.checkAdapterList.Store(ep.Key, adp)
+					e.checkAdapter <- adp
+					TLOG.Errorf("checkStatus|insert check adapter, ep: %+v", ep.Key)
+				}
+			}
+		}
 	}
-	e.adapters[ep] = adp
-	return nil
 }
 
-// GetHashProxy returns hash adapter information.
-func (e *EndpointManager) GetHashProxy(hashcode int64) *AdapterProxy {
-	// very unsafe.
-	ep := e.GetHashEndpoint(hashcode)
-	if ep == nil {
+func (e *tarsEndpointManager) addAliveEp(ep endpoint.Endpoint) {
+	e.epLock.Lock()
+	sortedEps := e.activeEp[:]
+	sortedEps = append(sortedEps, ep)
+	sort.Slice(sortedEps, func(i int, j int) bool {
+		return crc32.ChecksumIEEE([]byte(sortedEps[i].Key)) < crc32.ChecksumIEEE([]byte(sortedEps[i].Key))
+	})
+	e.activeEp = sortedEps
+	e.activeEpHashMap.Add(ep)
+	e.epLock.Unlock()
+}
+
+// SelectAdapterProxy returns the selected adapter.
+func (e *tarsEndpointManager) SelectAdapterProxy(msg *Message) (*AdapterProxy, bool) {
+	e.epLock.Lock()
+	eps := e.activeEp[:]
+	e.epLock.Unlock()
+
+	if e.directproxy && len(eps) == 0 {
+		return nil, false
+	}
+	if !e.directproxy && len(e.activeEpf) == 0 {
+		return nil, false
+	}
+	select {
+	case adp := <-e.checkAdapter:
+		TLOG.Errorf("SelectAdapterProxy|check adapter, ep: %+v", adp.GetPoint())
+		e.checkAdapterList.Delete(endpoint.Tars2endpoint(*adp.GetPoint()).Key)
+		return adp, true
+	default:
+	}
+	var adp *AdapterProxy
+	if msg.isHash && msg.hashType == ConsistentHash {
+		if epi, ok := e.activeEpHashMap.FindUint32(uint32(msg.hashCode)); ok {
+			ep := epi.(endpoint.Endpoint)
+			if v, ok := e.epList.Load(ep.Key); ok {
+				adp = v.(*AdapterProxy)
+			} else {
+				epf := endpoint.Endpoint2tars(ep)
+				adp = NewAdapterProxy(&epf, e.comm)
+				e.epList.Store(ep.Key, adp)
+			}
+		}
+	} else {
+		if len(eps) != 0 {
+			var index int
+			if msg.isHash && msg.hashType == ModHash {
+				index = int(msg.hashCode) % len(eps)
+			} else {
+				e.pos = (e.pos + 1) % int32(len(eps))
+				index = int(e.pos)
+			}
+			ep := eps[index]
+			if v, ok := e.epList.Load(ep.Key); ok {
+				adp = v.(*AdapterProxy)
+			} else {
+				epf := endpoint.Endpoint2tars(ep)
+				adp = NewAdapterProxy(&epf, e.comm)
+				e.epList.Store(ep.Key, adp)
+			}
+		}
+	}
+	if adp == nil && !e.directproxy {
+		//No any node is alive ,just select a random one.
+		randomIndex := rand.Intn(len(e.activeEpf))
+		randomEpf := e.activeEpf[randomIndex]
+		randomEp := endpoint.Tars2endpoint(randomEpf)
+		if v, ok := e.epList.Load(randomEp.Key); ok {
+			adp = v.(*AdapterProxy)
+		} else {
+			adp = NewAdapterProxy(&randomEpf, e.comm)
+			e.epList.Store(randomEp.Key, adp)
+		}
+	}
+	return adp, false
+}
+
+func (e *tarsEndpointManager) doFresh() error {
+	if e.directproxy {
 		return nil
 	}
-	if adp, ok := e.adapters[*ep]; ok {
-		return adp
-	}
-	err := e.createProxy(*ep)
-	if err != nil {
-		TLOG.Error("create adapter fail:", ep, err)
-		return nil
-	}
-	return e.adapters[*ep]
+	e.freshLock.Lock()
+	defer e.freshLock.Unlock()
+	err := e.findAndSetObj(e.locator)
+	return err
 }
 
-// GetHashEndpoint returns hash endpoint information.
-func (e *EndpointManager) GetHashEndpoint(hashcode int64) *endpoint.Endpoint {
-	length := len(e.index)
-	if length <= 0 {
-		return nil
-	}
-	pos := hashcode % int64(length)
-	ep := e.index[pos].(endpoint.Endpoint)
-	return &ep
+func (e *tarsEndpointManager) preInvoke() {
+	atomic.AddInt32(&e.invokeNum, 1)
+	e.lastInvoke = gtime.CurrUnixTime
 }
 
-// SelectAdapterProxy returns selected adapter.
-func (e *EndpointManager) SelectAdapterProxy(msg *Message) *AdapterProxy {
-	if msg.isHash {
-		return e.GetHashProxy(msg.hashCode)
-	}
-	return e.GetNextValidProxy()
+func (e *tarsEndpointManager) postInvoke() {
+	atomic.AddInt32(&e.invokeNum, -1)
 }
 
-func (e *EndpointManager) findAndSetObj(q *queryf.QueryF) {
-	activeEp := new([]endpointf.EndpointF)
-	inactiveEp := new([]endpointf.EndpointF)
+func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
+	activeEp := make([]endpointf.EndpointF, 0)
+	inactiveEp := make([]endpointf.EndpointF, 0)
 	var setable, ok bool
 	var setID string
 	var ret int32
@@ -193,45 +370,94 @@ func (e *EndpointManager) findAndSetObj(q *queryf.QueryF) {
 		setID, _ = e.comm.GetProperty("setdivision")
 	}
 	if setable {
-		ret, err = q.FindObjectByIdInSameSet(e.objName, setID, activeEp, inactiveEp)
+		ret, err = q.FindObjectByIdInSameSet(e.objName, setID, &activeEp, &inactiveEp)
 	} else {
-		ret, err = q.FindObjectByIdInSameGroup(e.objName, activeEp, inactiveEp)
+		ret, err = q.FindObjectByIdInSameGroup(e.objName, &activeEp, &inactiveEp)
 	}
 	if err != nil {
-		TLOG.Error("find obj end fail:", err.Error())
-		return
+		TLOG.Errorf("findAndSetObj %s fail, error: %v", e.objName, err)
+		return err
 	}
-	TLOG.Debug("find obj endpoint:", e.objName, ret, *activeEp, *inactiveEp)
+	if ret != 0 {
+		e := fmt.Errorf("findAndSetObj %s fail, ret: %d", e.objName, ret)
+		TLOG.Error(e.Error())
+		return e
+	}
 
-	e.mlock.Lock()
-	if (len(*inactiveEp)) > 0 {
-		for _, ep := range *inactiveEp {
-			end := endpoint.Tars2endpoint(ep)
-			e.pointsSet.Remove(end)
-			if a, ok := e.adapters[end]; ok {
-				delete(e.adapters, end)
-				a.Close()
+	// compare, assert in same order
+	/*
+		if endpoint.IsEqaul(activeEp, &e.activeEpf) {
+			TLOG.Debug("endpoint not change: ", e.objName)
+			return nil
+		}
+	*/
+	if len(activeEp) == 0 {
+		TLOG.Errorf("findAndSetObj %s, empty of active endpoint", e.objName)
+		return nil
+	}
+	TLOG.Debugf("findAndSetObj|call FindObjectById ok, obj: %s, ret: %d, active: %v, inative: %v", e.objName, ret, activeEp, inactiveEp)
+
+	newEps := make([]endpoint.Endpoint, len(activeEp))
+	for i, ep := range activeEp {
+		newEps[i] = endpoint.Tars2endpoint(ep)
+	}
+
+	//delete useless cache
+	e.epList.Range(func(key, value interface{}) bool {
+		flagActive := false
+		flagInactive := false
+
+		for _, ep := range newEps {
+			if key == ep.Key {
+				flagActive = true
+				break
 			}
 		}
-	}
-	if (len(*activeEp)) > 0 {
-		// clean it first,then add back .this action must lead to add lock,
-		// but if don't clean may lead to leakage.it's better to use remove.
-		e.pointsSet.Clear()
-		for _, ep := range *activeEp {
-			end := endpoint.Tars2endpoint(ep)
-			e.pointsSet.Add(end)
-		}
-		e.index = e.pointsSet.Slice()
-	}
-	for end := range e.adapters {
-		// clean up dirty data
-		if !e.pointsSet.Has(end) {
-			if a, ok := e.adapters[end]; ok {
-				delete(e.adapters, end)
-				a.Close()
+		for _, epf := range inactiveEp {
+			tep := endpoint.Tars2endpoint(epf)
+			if key == tep.Key {
+				flagInactive = true
+				break
 			}
 		}
+		if !flagActive && !flagInactive {
+			value.(*AdapterProxy).Close()
+			e.epList.Delete(key)
+			TLOG.Debugf("findAndSetObj|delete useless endpoint from epList: %+v", key)
+		}
+		return true
+	})
+
+	//delete active endpoint which status is false
+	sortedEps := make([]endpoint.Endpoint, 0)
+	for _, ep := range newEps {
+		if v, ok := e.epList.Load(ep.Key); ok {
+			adp := v.(*AdapterProxy)
+			if adp.status {
+				sortedEps = append(sortedEps, ep)
+			}
+		} else {
+			sortedEps = append(sortedEps, ep)
+		}
 	}
-	e.mlock.Unlock()
+
+	//make endponit slice sorted
+	sort.Slice(sortedEps, func(i int, j int) bool {
+		return crc32.ChecksumIEEE([]byte(sortedEps[i].Key)) < crc32.ChecksumIEEE([]byte(sortedEps[i].Key))
+	})
+
+	chmap := consistenthash.NewChMap(32)
+	for _, e := range sortedEps {
+		chmap.Add(e)
+	}
+
+	e.epLock.Lock()
+	e.activeEpf = activeEp
+	e.inactiveEpf = inactiveEp
+	e.activeEp = sortedEps
+	e.activeEpHashMap = chmap
+	e.epLock.Unlock()
+
+	TLOG.Debugf("findAndSetObj|activeEp: %+v", sortedEps)
+	return nil
 }

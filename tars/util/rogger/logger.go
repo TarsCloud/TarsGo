@@ -2,11 +2,14 @@ package rogger
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"strings"
+	"sync"
 	"time"
 )
 
@@ -21,24 +24,27 @@ const (
 
 var (
 	logLevel = DEBUG
+	colored  = false
 
-	logQueue  = make(chan *logValue, 10000)
-	loggerMap = make(map[string]*Logger)
-	writeDone = make(chan bool)
+	logQueue    = make(chan *logValue, 10000)
+	loggerMutex sync.Mutex
+	loggerMap   = make(map[string]*Logger)
+	writeDone   = make(chan bool)
+	callerSkip  = 2
+	callerFlag  = true
 
-	currUnixTime int64
-	currDateTime string
-	currDateHour string
-	currDateDay  string
+	waitFlushTimeout       = time.Second
+	syncDone, syncCancel   = context.WithCancel(context.Background())
+	asyncDone, asyncCancel = context.WithCancel(context.Background())
 )
 
-//Logger is the struct with name and wirter.
+// Logger is the struct with name and wirter.
 type Logger struct {
 	name   string
 	writer LogWriter
 }
 
-//LogLevel is uint8 type
+// LogLevel is uint8 type
 type LogLevel uint8
 
 type logValue struct {
@@ -49,31 +55,10 @@ type logValue struct {
 }
 
 func init() {
-	now := time.Now()
-	currUnixTime = now.Unix()
-	currDateTime = now.Format("2006-01-02 15:04:05")
-	currDateHour = now.Format("2006010215")
-	currDateDay = now.Format("20060102")
-	go func() {
-		tm := time.NewTimer(time.Second)
-		if err := recover(); err != nil { // avoid timer panic
-		}
-		for {
-			now := time.Now()
-			d := time.Second - time.Duration(now.Nanosecond())
-			tm.Reset(d)
-			<-tm.C
-			now = time.Now()
-			currUnixTime = now.Unix()
-			currDateTime = now.Format("2006-01-02 15:04:05")
-			currDateHour = now.Format("2006010215")
-			currDateDay = now.Format("20060102")
-		}
-	}()
-	go flushLog(true)
+	go flushLog()
 }
 
-//String return turns the LogLevel to string.
+// String turns the LogLevel to string.
 func (lv *LogLevel) String() string {
 	switch *lv {
 	case DEBUG:
@@ -89,8 +74,26 @@ func (lv *LogLevel) String() string {
 	}
 }
 
+// Colored enable colored level string when use console writer
+func (lv *LogLevel) coloredString() string {
+	switch *lv {
+	case DEBUG:
+		return "\x1b[34mDEBUG\x1b[0m" //blue
+	case INFO:
+		return "\x1b[32mINFO\x1b[0m" //green
+	case WARN:
+		return "\x1b[33mWARN\x1b[0m" // yellow
+	case ERROR:
+		return "\x1b[31mERROR\x1b[0m" //cred
+	default:
+		return "\x1b[37mUNKNOWN\x1b[0m" // white
+	}
+}
+
 // GetLogger return an logger instance
 func GetLogger(name string) *Logger {
+	loggerMutex.Lock()
+	defer loggerMutex.Unlock()
 	if lg, ok := loggerMap[name]; ok {
 		return lg
 	}
@@ -98,16 +101,32 @@ func GetLogger(name string) *Logger {
 		name:   name,
 		writer: &ConsoleWriter{},
 	}
+
 	loggerMap[name] = lg
 	return lg
 }
 
-//SetLevel sets the log level
+// SetLevel sets the log level
 func SetLevel(level LogLevel) {
 	logLevel = level
 }
 
-//StringToLevel turns string to LogLevel
+// GetLogLevel get global log level
+func GetLogLevel() LogLevel {
+	return logLevel
+}
+
+// GetLevel get global log level and return string
+func GetLevel() string {
+	return logLevel.String()
+}
+
+// Colored enable colored level string when use console writer
+func Colored() {
+	colored = true
+}
+
+// StringToLevel turns string to LogLevel
 func StringToLevel(level string) LogLevel {
 	switch level {
 	case "DEBUG":
@@ -123,12 +142,22 @@ func StringToLevel(level string) LogLevel {
 	}
 }
 
-//SetLogName sets the log name
+// SetCallerSkip sets the caller skip
+func SetCallerSkip(skip int) {
+	callerSkip = skip
+}
+
+// SetCallerFlag enable/disable caller string when write log
+func SetCallerFlag(flag bool) {
+	callerFlag = flag
+}
+
+// SetLogName sets the log name
 func (l *Logger) SetLogName(name string) {
 	l.name = name
 }
 
-//SetFileRoller sets the file rolled by size in MB, with max num of files.
+// SetFileRoller sets the file rolled by size in MB, with max num of files.
 func (l *Logger) SetFileRoller(logpath string, num int, sizeMB int) error {
 	if err := os.MkdirAll(logpath, 0755); err != nil {
 		panic(err)
@@ -138,7 +167,7 @@ func (l *Logger) SetFileRoller(logpath string, num int, sizeMB int) error {
 	return nil
 }
 
-//IsConsoleWriter returns whether is consoleWriter or not.
+// IsConsoleWriter returns whether is consoleWriter or not.
 func (l *Logger) IsConsoleWriter() bool {
 	if reflect.TypeOf(l.writer) == reflect.TypeOf(&ConsoleWriter{}) {
 		return true
@@ -146,12 +175,12 @@ func (l *Logger) IsConsoleWriter() bool {
 	return false
 }
 
-//SetWriter sets the writer to the logger.
+// SetWriter sets the writer to the logger.
 func (l *Logger) SetWriter(w LogWriter) {
 	l.writer = w
 }
 
-//SetDayRoller sets the logger to rotate by day, with max num files.
+// SetDayRoller sets the logger to rotate by day, with max num files.
 func (l *Logger) SetDayRoller(logpath string, num int) error {
 	if err := os.MkdirAll(logpath, 0755); err != nil {
 		return err
@@ -161,7 +190,7 @@ func (l *Logger) SetDayRoller(logpath string, num int) error {
 	return nil
 }
 
-//SetHourRoller sets the logger to rotate by hour, with max num files.
+// SetHourRoller sets the logger to rotate by hour, with max num files.
 func (l *Logger) SetHourRoller(logpath string, num int) error {
 	if err := os.MkdirAll(logpath, 0755); err != nil {
 		return err
@@ -171,71 +200,75 @@ func (l *Logger) SetHourRoller(logpath string, num int) error {
 	return nil
 }
 
-//SetConsole sets the logger with console writer.
+// SetConsole sets the logger with console writer.
 func (l *Logger) SetConsole() {
 	l.writer = &ConsoleWriter{}
 }
 
-//Debug logs interface in debug loglevel.
+// Debug logs interface in debug loglevel.
 func (l *Logger) Debug(v ...interface{}) {
-	l.writef(DEBUG, "", v)
+	l.Writef(0, DEBUG, "", v)
 }
 
-//Info logs interface in Info loglevel.
+// Info logs interface in Info loglevel.
 func (l *Logger) Info(v ...interface{}) {
-	l.writef(INFO, "", v)
+	l.Writef(0, INFO, "", v)
 }
 
-//Warn logs interface in warning loglevel
+// Warn logs interface in warning loglevel
 func (l *Logger) Warn(v ...interface{}) {
-	l.writef(WARN, "", v)
+	l.Writef(0, WARN, "", v)
 }
 
-//Error logs interface in Error loglevel
+// Error logs interface in Error loglevel
 func (l *Logger) Error(v ...interface{}) {
-	l.writef(ERROR, "", v)
+	l.Writef(0, ERROR, "", v)
 }
 
-//Debugf logs interface in debug loglevel with formating string
+// Debugf logs interface in debug loglevel with formating string
 func (l *Logger) Debugf(format string, v ...interface{}) {
-	l.writef(DEBUG, format, v)
+	l.Writef(0, DEBUG, format, v)
 }
 
-//Infof logs interface in Infof loglevel with formating string
+// Infof logs interface in Infof loglevel with formating string
 func (l *Logger) Infof(format string, v ...interface{}) {
-	l.writef(INFO, format, v)
+	l.Writef(0, INFO, format, v)
 }
 
-//Warnf logs interface in warning loglevel with formating string
+// Warnf logs interface in warning loglevel with formating string
 func (l *Logger) Warnf(format string, v ...interface{}) {
-	l.writef(WARN, format, v)
+	l.Writef(0, WARN, format, v)
 }
 
-//Errorf logs interface in Error loglevel with formating string
+// Errorf logs interface in Error loglevel with formating string
 func (l *Logger) Errorf(format string, v ...interface{}) {
-	l.writef(ERROR, format, v)
+	l.Writef(0, ERROR, format, v)
 }
 
-func (l *Logger) writef(level LogLevel, format string, v []interface{}) {
+func (l *Logger) Writef(depth int, level LogLevel, format string, v []interface{}) {
 	if level < logLevel {
 		return
 	}
 
 	buf := bytes.NewBuffer(nil)
 	if l.writer.NeedPrefix() {
-		fmt.Fprintf(buf, "%s|", currDateTime)
-		if logLevel == DEBUG {
-			_, file, line, ok := runtime.Caller(2)
+		fmt.Fprintf(buf, "%s|", time.Now().Format("2006-01-02 15:04:05.000"))
+
+		if callerFlag {
+			pc, file, line, ok := runtime.Caller(depth + callerSkip)
 			if !ok {
 				file = "???"
 				line = 0
 			} else {
 				file = filepath.Base(file)
 			}
-			fmt.Fprintf(buf, "%s:%d|", file, line)
+			fmt.Fprintf(buf, "%s:%s:%d|", file, getFuncName(runtime.FuncForPC(pc).Name()), line)
 		}
-
-		buf.WriteString(level.String())
+		if colored && l.IsConsoleWriter() {
+			buf.WriteString(level.coloredString())
+		} else {
+			buf.WriteString(level.String())
+		}
 		buf.WriteByte('|')
 	}
 
@@ -250,23 +283,43 @@ func (l *Logger) writef(level LogLevel, format string, v []interface{}) {
 	logQueue <- &logValue{value: buf.Bytes(), writer: l.writer}
 }
 
-//FlushLogger flushs all log to disk.
-func FlushLogger() {
-	flushLog(false)
+func getFuncName(name string) string {
+	idx := strings.LastIndexByte(name, '/')
+	if idx != -1 {
+		name = name[idx:]
+		idx = strings.IndexByte(name, '.')
+		if idx != -1 {
+			name = strings.TrimPrefix(name[idx:], ".")
+		}
+	}
+	return name
 }
 
-func flushLog(sync bool) {
-	if sync {
-		for v := range logQueue {
+// WriteLog write log into log files ignore the log level and log prefix
+func (l *Logger) WriteLog(msg []byte) {
+	logQueue <- &logValue{value: msg, writer: l.writer}
+}
+
+// FlushLogger flushs all log to disk.
+func FlushLogger() {
+	syncCancel()
+	select {
+	case <-time.After(waitFlushTimeout):
+	case <-asyncDone.Done():
+	}
+}
+
+func flushLog() {
+	for {
+		select {
+		case v := <-logQueue:
 			v.writer.Write(v.value)
-		}
-	} else {
-		for {
+		default:
 			select {
 			case v := <-logQueue:
 				v.writer.Write(v.value)
-				continue
-			default:
+			case <-syncDone.Done():
+				asyncCancel()
 				return
 			}
 		}

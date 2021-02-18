@@ -2,17 +2,22 @@ package tars
 
 import "github.com/TarsCloud/TarsGo/tars/protocol/res/notifyf"
 
-//NotifyHelper is the helper struct for the Notify service.
+const (
+	NOTIFY_NORMAL = 0
+	NOTIFY_WARN   = 1
+	NOTIFY_ERROR  = 2
+)
+
+// NotifyHelper is the helper struct for the Notify service.
 type NotifyHelper struct {
 	comm *Communicator
 	tn   *notifyf.Notify
 	tm   notifyf.ReportInfo
 }
 
-//SetNotifyInfo sets the notify server location for the Communicator.
+// SetNotifyInfo sets the communicator's notify info with communicator, notify name, app name, server name, and container name
 func (n *NotifyHelper) SetNotifyInfo(comm *Communicator, notify string, app string, server string, container string) {
 	n.comm = comm
-	n.comm.SetProperty("netthread", 1)
 	n.tn = new(notifyf.Notify)
 	comm.StringToProxy(notify, n.tn)
 	//TODO:params
@@ -32,27 +37,30 @@ func (n *NotifyHelper) SetNotifyInfo(comm *Communicator, notify string, app stri
 	}
 }
 
-//ReportNotifyInfo report the info to the notify server.
-func (n *NotifyHelper) ReportNotifyInfo(info string) {
+// ReportNotifyInfo reports notify information with level and info
+func (n *NotifyHelper) ReportNotifyInfo(level int32, info string) {
+	n.tm.ELevel = notifyf.NOTIFYLEVEL(level)
 	n.tm.SMessage = info
 	TLOG.Debug(n.tm)
 	n.tn.ReportNotifyInfo(&n.tm)
 }
 
-func reportNotifyInfo(info string) {
+// ReportNotifyInfo reports notify information with level and info
+func ReportNotifyInfo(level int32, info string) {
 	ha := new(NotifyHelper)
 	comm := NewCommunicator()
-	comm.SetProperty("netthread", 1)
-	notify := GetServerConfig().notify
+	notify := GetServerConfig().Notify
+	if notify == "" {
+		return
+	}
 	app := GetServerConfig().App
 	server := GetServerConfig().Server
 	container := GetServerConfig().Container
-	//container := ""
 	ha.SetNotifyInfo(comm, notify, app, server, container)
 	defer func() {
 		if err := recover(); err != nil {
 			TLOG.Debug(err)
 		}
 	}()
-	ha.ReportNotifyInfo(info)
+	ha.ReportNotifyInfo(level, info)
 }

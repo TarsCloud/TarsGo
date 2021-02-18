@@ -3,8 +3,8 @@ Tars整体介绍文档请阅读: https://tarscloud.gitbook.io/
 # Tarsgo  文档
 
 ## 关于
-- 	Tarsgo是基于Golang编程语言使用Tars协议的高性能RPC框架。随着docker,k8s,etcd等容器化技术的兴起，Go语言变得流行起来。Go的goroutine并发机制使Go非常适合用于大规模高并发后端服务程序的开发。 Go语言具有接近C/C++的性能和接近python的生产力。在腾讯，一部分现有的C++开发人员正逐渐向Go转型，Tars作为广泛使用的RPC框架，现已支持C++/Java/Nodejs/Php，其与Go语言的结合已成为大势所趋。因此，在广大用户的呼声中我们推出了Tarsgo,并且已经将它应用于腾讯地图、应用宝、互联网+以及其他项目中。
-- 关于tars的整体架构和设计理念，请阅读 [Tars介绍](https://github.com/TarsCloud/Tars/blob/master/Introduction.md)
+- Tarsgo是基于Golang编程语言使用Tars协议的高性能RPC框架。随着docker,k8s,etcd等容器化技术的兴起，Go语言变得流行起来。Go的goroutine并发机制使Go非常适合用于大规模高并发后端服务程序的开发。 Go语言具有接近C/C++的性能和接近python的生产力。在腾讯，一部分现有的C++开发人员正逐渐向Go转型，Tars作为广泛使用的RPC框架，现已支持C++/Java/Nodejs/Php，其与Go语言的结合已成为大势所趋。因此，在广大用户的呼声中我们推出了Tarsgo,并且已经将它应用于腾讯地图、应用宝、互联网+以及其他项目中。
+- 关于tars的整体架构和设计理念，请阅读 [Tars文档](https://tarscloud.github.io/TarsDocs/SUMMARY.html)
 
 ## 功能特性
 - Tars2go工具: tars文件自动生成并转换为go语言，包含用go语言实现的RPC服务端/客户端代码
@@ -16,14 +16,46 @@ Tars整体介绍文档请阅读: https://tarscloud.gitbook.io/
 - 提供set分组
 - 提供 protocol buffers 支持， 详见 [pb2tarsgo](tars/tools/pb2tarsgo/README.md) 
 
-
-
 ## 安装
-- 对于安装OSS和其他基本服务, 请[安装文档](https://github.com/TarsCloud/Tars/blob/master/Install.zh.md)，
-快速安装，请查看[快速部署](https://github.com/TarsCloud/Tars/tree/master/deploy)
-- 要求Go 1.9.x 或以上版本,请查看https://golang.org/doc/install
-- go get -u github.com/TarsCloud/TarsGo/tars
+- 对于安装OSS和其他基本服务, 请[安装文档](https://tarscloud.github.io/TarsDocs/installation/)，
 
+- 要求Go 1.9.x 或以上版本(推荐1.13一样的版本),请查看https://golang.org/doc/install
+
+下面以Go 1.13.x为例:
+
+安装go (比如安装目录: /usr/local/go), 设置好GOROOT, GOPATH, 比如, linux下:
+```
+export GOROOT=/usr/local/go  #设置为go安装的路径
+export GOPATH=/root/gocode   #GOPATH
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+```
+
+如果在国内, 可以设置go代理:  
+```
+go env -w GOPROXY=https://goproxy.cn   
+```
+
+另外请设置go模式为:
+```
+go env -w GO111MODULE=auto
+```
+
+进入 GOPATH目录
+```
+go get -u github.com/TarsCloud/TarsGo/tars
+```
+
+此时tarsgo下载到
+```
+$GOPATH/src/github.com/TarsCloud/TarsGo/
+```
+
+如果此目录不存在tarsgo源码, 请检查以上步骤.
+
+tarsgo源码下载完毕后, 请安装tars2go工具:
+```
+go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
+```
 
 ## 快速开始
 - 快速开始，请查看 [tars\_go\_quickstart.md](docs/tars_go_quickstart.md)
@@ -42,28 +74,25 @@ Tars整体介绍文档请阅读: https://tarscloud.gitbook.io/
 有关tars协议的更多详细信息, 请查看 https://github.com/TarsCloud/TarsTup/blob/master/docs-en/tars_tup.md
 
 ```
-	
-	module TestApp
-	{
-	
-	interface Hello
-	{
-	    int test();
-	    int testHello(string sReq, out string sRsp);
-	};
-	
-	}; 
-	
+module TestApp
+{
+
+    interface Hello
+    {
+        int test();
+        int testHello(string sReq, out string sRsp);
+    };
+
+}; 
 ```
 	
-
 #### 1.2 编译接口定义文件
 
 ##### 1.2.1 构建 tars2go
-编译并安装tars2go工具
-
-	go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
-
+如果还没有编译tars2go, 则编译并安装tars2go工具
+```
+go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
+```
 ##### 1.2.2 编译tars文件并转成go文
 	tars2go --outdir=./vendor hello.tars
 #### 1.3 接口实现
@@ -307,13 +336,13 @@ func main() {
     comm.StringToProxy(obj, app)
 	var req string="Hello Wold"
     var res string
-    ret, err := app.TestHello(req, &out)
+    ret, err := app.TestHello(req, &res)
     if err != nil {
         fmt.Println(err)
         return
     }   
-    fmt.Println(ret, out)
-
+    fmt.Println(ret, res)
+}
 ```
 
 说明:
@@ -384,9 +413,9 @@ comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h ... -p ...")
 #### 2.3 超时控制
 如果你想在客户端使用超时控制，请使用以ms为单位的TarsSetTimeout。
 ```go
-    app := new(TestApp.Hello)
-    comm.StringToProxy(obj, app)
-    app.TarsSetTimeout(3000)
+app := new(TestApp.Hello)
+comm.StringToProxy(obj, app)
+app.TarsSetTimeout(3000)
 ```
 
 #### 2.4 接口调用
@@ -413,9 +442,9 @@ tcp:Tcp协议
 
 如果HelloServer在两台服务器上运行，则应用程序初始化如下:
 ```
-    obj:= "Test.HelloServer.HelloObj@tcp -h 127.0.0.1 -p 9985:tcp -h 192.168.1.1 -p 9983"
-    app := new(TestApp.Hello)
-    comm.StringToProxy(obj, app)
+obj:= "Test.HelloServer.HelloObj@tcp -h 127.0.0.1 -p 9985:tcp -h 192.168.1.1 -p 9983"
+app := new(TestApp.Hello)
+comm.StringToProxy(obj, app)
 ```
 HelloObj的地址设置为两个服务器的地址。 此时，请求将被分发到两个服务器（可以指定分发方法，这里不再介绍）。 如果一台服务器关闭，请求将自动分配给另一台服务器，服务器将定期重新启动。
 
@@ -454,7 +483,8 @@ func main() {
         fmt.Println(err)
         return
     }   
-    fmt.Println(ret, out)
+    fmt.Println(ret, res)
+}
 
 ```
 
@@ -470,8 +500,8 @@ import (
     "time"
     "TestApp"
 )
-var *tars.Communicator
 func main() {
+    var comm *tars.Communicator
     comm = tars.NewCommunicator()
     obj := "TestApp.TestServer.HelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
     app := new(TestApp.Hello)
@@ -479,14 +509,15 @@ func main() {
 	go func(){
 		var req string="Hello Wold"
     	var res string
-    	ret, err := app.TestHello(req, &out)
+    	ret, err := app.TestHello(req, &res)
     	if err != nil {
         	fmt.Println(err)
         	return
     	} 
-		fmt.Println(ret, out)
+		fmt.Println(ret, res)
 	}()
     time.Sleep(1)  
+}
 
 ```
 
@@ -496,7 +527,46 @@ func main() {
 
 ##### 2.4.6. Hash调用
 
-由于可以部署多个服务端，因此客户端的请求会随机分发到服务端上，但在某些情况下，希望始终将某些请求发送到特定的服务端。 在这种情况下，Tars提供了一种简单的实现方法，称为hash调用。 Tarsgo很快将支持此功能。
+由于可以部署多个服务端，因此客户端的请求会随机分发到服务端上，但在某些情况下，希望始终将某些请求发送到特定的服务端。 在这种情况下，Tars提供了一种简单的实现方法，称为hash调用。  Tarsgo 在v1.1.5版本已支持hash调用
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/TarsCloud/TarsGo/tars"
+    "github.com/TarsCloud/TarsGo/tars/util/current"
+    "context"
+    "time"
+    "TestApp"
+)
+func main() {
+    var comm *tars.Communicator
+    comm = tars.NewCommunicator()
+    obj := "TestApp.TestServer.HelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
+    app := new(TestApp.Hello)
+    comm.StringToProxy(obj, app)
+	go func(){
+        var req string="Hello Wold"
+    	var res string
+        ctx := context.Background()
+        ctx = current.ContextWithClientCurrent(ctx)
+        // the request parameter hashtype, ModHash is 0, ConsistentHash is 1
+        hashType := 0
+        hashCode := uint32(123)
+        current.SetClientHash(ctx, hashType, hashCode)
+    	ret, err := app.TestHelloWithContext(ctx, req, &res)
+    	if err != nil {
+        	fmt.Println(err)
+        	return
+    	} 
+		fmt.Println(ret, res)
+	}()
+    time.Sleep(1)  
+}
+
+```
+
+
 
 ### 3   tars定义的返回码.
 ```go
@@ -617,18 +687,18 @@ Info是一个字符串，可以直接将字符串上报给tarsnotify。 上报�
 
 示例代码如下：
 ```go
-    sum := tars.NewSum()
-    count := tars.NewCount()
-    max := tars.NewMax()
-    min := tars.NewMin()
-    d := []int{10, 20, 30, 50} 
-    distr := tars.NewDistr(d)
-    p := tars.CreatePropertyReport("testproperty", sum, count, max, min, distr)
-    for i := 0; i < 5; i++ {
-        v := rand.Intn(100)
-        p.Report(v)
+sum := tars.NewSum()
+count := tars.NewCount()
+max := tars.NewMax()
+min := tars.NewMin()
+d := []int{10, 20, 30, 50} 
+distr := tars.NewDistr(d)
+p := tars.CreatePropertyReport("testproperty", sum, count, max, min, distr)
+for i := 0; i < 5; i++ {
+    v := rand.Intn(100)
+    p.Report(v)
 
-    }   
+}   
 
 ```
 
@@ -656,13 +726,13 @@ config, _ := remoteConf.GetConfig("test.conf")
 tars包中的setting.go用于控制tarsgo性能和特性。有些选项应该从Getserverconfig()中更新。
 
 ```go
-//number of woker routine to handle client request
-//zero means  no contorl ,just one goroutine for a client request.
-//runtime.NumCpu() usually best performance in the benchmark.
+//number of worker routine to handle client request
+//zero means no control, just one goroutine for a client request.
+//runtime.NumCPU() usually best performance in the benchmark.
 var MaxInvoke int = 0
 
 const (
-	//for now ,some option shuold update from remote config
+	//for now ,some option should update from remote config
 
 	//version
 	TarsVsersion string = "1.0.0"

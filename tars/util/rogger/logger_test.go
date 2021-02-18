@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-//XTestLogger test logger writes.
+// XTestLogger test logger writes.
 func XTestLogger(t *testing.T) {
 	SetLevel(DEBUG)
 	lg := GetLogger("debug")
@@ -27,13 +27,13 @@ func XTestLogger(t *testing.T) {
 	FlushLogger()
 }
 
-//XTestGetLogList test get log list
+// XTestGetLogList test get log list
 func XTestGetLogList(t *testing.T) {
 	w := NewDateWriter("./logs", "abc", HOUR, 0)
 	w.cleanOldLogs()
 }
 
-//BenchmarkRogger benchmark rogger writes.
+// BenchmarkRogger benchmark rogger writes.
 func BenchmarkRogger(b *testing.B) {
 	SetLevel(DEBUG)
 	bs := make([]byte, 1024)
@@ -46,5 +46,27 @@ func BenchmarkRogger(b *testing.B) {
 		lg.Warn("warn")
 		lg.Error("ERROR")
 	}
+	FlushLogger()
+}
+
+// TestColoredLogger test colored logger.
+func TestColoredLogger(t *testing.T) {
+	SetLevel(DEBUG)
+	Colored()
+	lg := GetLogger("debug")
+	bs := make([]byte, 1024)
+	longmsg := string(bs)
+	for i := 0; i < 10; i++ {
+		lg.Debug("debugxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+		lg.Info(longmsg)
+		lg.Warn("warn")
+		lg.Error("ERROR")
+		func() {
+			lg.Info("closure func  log")
+		}()
+		time.Sleep(time.Second)
+	}
+	time.Sleep(time.Millisecond * 100)
+
 	FlushLogger()
 }
