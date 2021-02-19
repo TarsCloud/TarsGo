@@ -19,9 +19,9 @@ type dispatch interface {
 
 // TarsProtocol is struct for dispatch with tars protocol.
 type TarsProtocol struct {
-	dispatcher       dispatch
-	serverImp        interface{}
-	withContext      bool
+	dispatcher  dispatch
+	serverImp   interface{}
+	withContext bool
 }
 
 // NewTarsProtocol return a TarsProtocol with dipatcher and implement interface.
@@ -76,6 +76,8 @@ func (s *TarsProtocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 		}
 		if allFilters.sf != nil {
 			err = allFilters.sf(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
+		} else if sf := getMiddlewareServerFilter(); sf != nil {
+			err = sf(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
 		} else {
 			// execute pre server filters
 			for i, v := range allFilters.preSfs {
@@ -101,6 +103,9 @@ func (s *TarsProtocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 			rspPackage.IRequestId = reqPackage.IRequestId
 			rspPackage.IRet = 1
 			rspPackage.SResultDesc = err.Error()
+			if tarsErr, ok := err.(*Error); ok {
+				rspPackage.IRet = tarsErr.Code
+			}
 		}
 	}
 
@@ -123,7 +128,7 @@ func (s *TarsProtocol) req2Byte(rsp *requestf.ResponsePacket) []byte {
 	req.Context = rsp.Context
 	req.Status = rsp.Status
 	req.SBuffer = rsp.SBuffer
-	
+
 	os := codec.NewBuffer()
 	req.WriteTo(os)
 	bs := os.ToBytes()
@@ -171,3 +176,9 @@ func (s *TarsProtocol) GetCloseMsg() []byte {
 	rspPackage.SResultDesc = reconnectMsg
 	return s.rsp2Byte(&rspPackage)
 }
+
+// DoClose be called when close connection
+func (s *TarsProtocol) DoClose(ctx context.Context) {
+	TLOG.Debug("DoClose!")
+}
+

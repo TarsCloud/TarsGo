@@ -1,5 +1,23 @@
 # Changelog
 
+
+## 1.1.6 (2021/02/09)
+- support rpc error code
+- Support registering multiple filter for TarsServer and TarsClient.
+- tars2go support: include support relative path
+- add DoClose callback
+- Fix panic when invoke timeout
+- fixed response occasionally timeout
+- fix missing formatting directives
+- Do not show error when using tars as client
+- support parent directory of outdir in tars2go
+- fix timeout for recv
+- mem use optimization
+- replace expired page links with new links
+- fix readme and setting.go comment typo
+- fix report max numInvoke bug
+- fix avoid create request id == 0
+- fix md format
 ## 1.1.5 (2020/07/19)
 - improve some features
 - export `newServantProxy` function as public

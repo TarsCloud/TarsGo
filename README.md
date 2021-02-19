@@ -545,7 +545,44 @@ The client can call server by set through configuration file mentioned. Which en
 If you want to call by set manually, tarsgo will support this feature soon.
 
 ##### 2.4.6. Hash Call
-Since multiple servers can be deployed, client requests are randomly distributed to the server, but in some cases, certain requests should be always sent to a particular server. In this case, Tars provides a simple way to achieve which is called hash-call. Tarsgo will support this feature soon.
+Since multiple servers can be deployed, client requests are randomly distributed to the server, but in some cases, certain requests should be always sent to a particular server. In this case, Tars provides a simple way to achieve which is called hash-call. Tarsgo Has supported this feature In version v1.1.5.
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/TarsCloud/TarsGo/tars"
+    "github.com/TarsCloud/TarsGo/tars/util/current"
+    "context"
+    "time"
+    "TestApp"
+)
+func main() {
+    var comm *tars.Communicator
+    comm = tars.NewCommunicator()
+    obj := "TestApp.TestServer.HelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
+    app := new(TestApp.Hello)
+    comm.StringToProxy(obj, app)
+	go func(){
+        var req string="Hello Wold"
+    	var res string
+        ctx := context.Background()
+        ctx = current.ContextWithClientCurrent(ctx)
+        // the request parameter hashtype, ModHash is 0, ConsistentHash is 1
+        hashType := 0
+        hashCode := uint32(123)
+        current.SetClientHash(ctx, hashType, hashCode)
+    	ret, err := app.TestHelloWithContext(ctx, req, &res)
+    	if err != nil {
+        	fmt.Println(err)
+        	return
+    	} 
+		fmt.Println(ret, res)
+	}()
+    time.Sleep(1)  
+}
+
+```
 
 ### 3 Return Code Defined by Tars.
 ```go

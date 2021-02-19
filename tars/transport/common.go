@@ -20,6 +20,7 @@ type ServerProtocol interface {
 	ParsePackage(buff []byte) (int, int)
 	InvokeTimeout(pkg []byte) []byte
 	GetCloseMsg() []byte
+	DoClose(ctx context.Context)
 }
 
 // ClientProtocol interface for handling tars client package.
