@@ -1468,7 +1468,10 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 		var _jsonTmp_ interface{}
 		_jsonDecoder_ := json.NewDecoder(bytes.NewReader(_is.ToBytes()))
 		_jsonDecoder_.UseNumber()
-		err = _jsonDecoder_.Decode(&_jsonTmp_)
+		if err = _jsonDecoder_.Decode(&_jsonTmp_); err != nil {
+			err = fmt.Errorf("Decode reqpacket fail, error %s", err.Error())
+			return err
+		}
 		_jsonDat_ := _jsonTmp_.(map[string]interface{})
 		`)
 
