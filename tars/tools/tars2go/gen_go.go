@@ -335,6 +335,7 @@ func (gen *GenGo) genIFPackage(itf *InterfaceInfo) {
 	gen.code.WriteString("package " + gen.p.Module + "\n\n")
 	gen.code.WriteString(`
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"unsafe"
@@ -367,6 +368,7 @@ import (
 	var _ = fmt.Errorf
 	var _ = codec.FromInt8
 	var _ = unsafe.Pointer(nil)
+	var _ = bytes.ErrTooLarge
 `)
 }
 
@@ -1465,7 +1467,12 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 
 		c.WriteString(`} else if tarsReq.IVersion == basef.JSONVERSION {
 		var _jsonDat_ map[string]interface{}
-		err = json.Unmarshal(_is.ToBytes(), &_jsonDat_)
+		_decoder_ := json.NewDecoder(bytes.NewReader(_is.ToBytes()))
+		_decoder_.UseNumber()
+		err = _decoder_.Decode(&_jsonDat_)
+		if err != nil {
+			return fmt.Errorf("Decode reqpacket failed, error: %+v", err)
+		}
 		`)
 
 		for _, v := range fun.Args {
