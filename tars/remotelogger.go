@@ -20,6 +20,9 @@ type RemoteTimeWriter struct {
 func NewRemoteTimeWriter() *RemoteTimeWriter {
 	rw := new(RemoteTimeWriter)
 	rw.logInfo = new(logf.LogInfo)
+	rw.logInfo.SFormat = "%Y%m%d"
+	rw.logInfo.SConcatStr = "_"
+
 	logs := make(chan string, remoteLogQueueSize)
 	rw.logs = logs
 	rw.logPtr = new(logf.Log)
@@ -28,6 +31,8 @@ func NewRemoteTimeWriter() *RemoteTimeWriter {
 	rw.EnableSufix(true)
 	rw.EnablePrefix(true)
 	rw.SetSeparator("|")
+	rw.SetPrefix(true)
+
 	comm.StringToProxy(node, rw.logPtr)
 	go rw.Sync2remote()
 	return rw
@@ -76,6 +81,7 @@ func (rw *RemoteTimeWriter) InitServerInfo(app string, server string, filename s
 	rw.logInfo.Servername = server
 	rw.logInfo.SFilename = filename
 	rw.logInfo.Setdivision = setdivision
+
 	serverInfo := app + "." + server + "." + filename
 	failServerInfo := serverInfo + "_log_send_fail"
 	failSum := NewSum()
