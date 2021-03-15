@@ -9,11 +9,11 @@ import (
 
 type TarsStructIF interface {
 	WriteBlock(os *codec.Buffer, tag byte) error
-    ReadBlock(is *codec.Reader, tag byte, require bool) error	
+	ReadBlock(is *codec.Reader, tag byte, require bool) error
 }
 
 type UniAttribute struct {
-	_data 	map[string][]byte
+	_data map[string][]byte
 	//os 		codec.Buffer
 	//is 		codec.Reader
 }
@@ -22,13 +22,12 @@ func NewUniAttribute() *UniAttribute {
 	return &UniAttribute{_data: make(map[string][]byte)}
 }
 
-
 func (u *UniAttribute) PutBuffer(k string, buf []byte) {
 	u._data[k] = make([]byte, len(buf))
 	copy(u._data[k], buf)
 }
 
-func (u *UniAttribute) GetBuffer(k string, buf *[]byte) error  {
+func (u *UniAttribute) GetBuffer(k string, buf *[]byte) error {
 	var err error
 	var ok bool = false
 	if *buf, ok = u._data[k]; !ok {
@@ -71,10 +70,10 @@ func (u *UniAttribute) Encode(os *codec.Buffer) error {
 		}
 	}
 
-	return  err
+	return err
 }
 
-func (u *UniAttribute) Decode(is *codec.Reader) error  {
+func (u *UniAttribute) Decode(is *codec.Reader) error {
 	err, have := is.SkipTo(codec.MAP, 0, false)
 	if err != nil {
 		return err
@@ -128,10 +127,10 @@ func (u *UniAttribute) Decode(is *codec.Reader) error  {
 		}
 	}
 
-	return  err
+	return err
 }
 
-func (u *UniAttribute) putBase(data interface{}, os *codec.Buffer) error  {
+func (u *UniAttribute) putBase(data interface{}, os *codec.Buffer) error {
 	var err error
 	//os := codec.NewBuffer()
 	switch data.(type) {
@@ -162,11 +161,11 @@ func (u *UniAttribute) putBase(data interface{}, os *codec.Buffer) error  {
 	default:
 		err = fmt.Errorf("Tup Put Error: not support type!")
 	}
-	
+
 	return err
 }
 
-func (u *UniAttribute) doPut(data interface{}, os *codec.Buffer) error  {
+func (u *UniAttribute) doPut(data interface{}, os *codec.Buffer) error {
 	var err error
 	switch reflect.TypeOf(data).Kind() {
 	case reflect.Slice, reflect.Array:
@@ -237,14 +236,14 @@ func (u *UniAttribute) doPut(data interface{}, os *codec.Buffer) error  {
 				}
 			}
 		}
-		
+
 	default:
 		err = u.putBase(data, os)
 	}
 	return err
 }
 
-func (u *UniAttribute) Put(k string, data interface{}) error  {
+func (u *UniAttribute) Put(k string, data interface{}) error {
 	var err error
 	os := codec.NewBuffer()
 	err = u.doPut(data, os)
@@ -291,17 +290,17 @@ func (u *UniAttribute) getBase(data interface{}, is *codec.Reader) error {
 	// } else {
 	// 	err = fmt.Errorf("Tup Get Error: donot find key: %s!", k)
 	// }
-	
+
 	return err
 }
 
-func (u *UniAttribute)doGet(data interface{}, is *codec.Reader) error {
+func (u *UniAttribute) doGet(data interface{}, is *codec.Reader) error {
 	var err error
 	//vOF := reflect.ValueOf(data).Elem()
 	switch reflect.TypeOf(data).Kind() {
 	case reflect.Slice:
 		fmt.Println("get slice ...")
-		
+
 		err, have, ty := is.SkipToNoCheck(0, false)
 		if err != nil {
 			return err
