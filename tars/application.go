@@ -134,7 +134,7 @@ func initConfig() {
 	svrCfg.WriteTimeout = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/server<writetimeout>", WriteTimeout))
 	svrCfg.HandleTimeout = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/server<handletimeout>", HandleTimeout))
 	svrCfg.IdleTimeout = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/server<idletimeout>", IdleTimeout))
-	svrCfg.ZombileTimeout = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/server<zombiletimeout>", ZombileTimeout))
+	svrCfg.ZombieTimeout = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/server<zombietimeout>", ZombieTimeout))
 	svrCfg.QueueCap = c.GetIntWithDef("/tars/application/server<queuecap>", QueueCap)
 	svrCfg.GracedownTimeout = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/server<gracedowntimeout>", GracedownTimeout))
 
@@ -485,7 +485,7 @@ func mainloop() {
 					continue
 				}
 				if s, ok := goSvrs[adapter.Obj]; ok {
-					if !s.IsZombie(GetServerConfig().ZombileTimeout) {
+					if !s.IsZombie(GetServerConfig().ZombieTimeout) {
 						ha.KeepAlive(name)
 					}
 				}
