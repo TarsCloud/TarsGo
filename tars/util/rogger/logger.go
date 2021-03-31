@@ -27,7 +27,7 @@ var (
 	colored  = false
 
 	logQueue    = make(chan *logValue, 10000)
-	loggerMutex sync.Mutex
+	loggerMutex sync.RWMutex
 	loggerMap   = make(map[string]*Logger)
 	writeDone   = make(chan bool)
 	callerSkip  = 2
@@ -92,17 +92,23 @@ func (lv *LogLevel) coloredString() string {
 
 // GetLogger return an logger instance
 func GetLogger(name string) *Logger {
-	loggerMutex.Lock()
-	defer loggerMutex.Unlock()
-	if lg, ok := loggerMap[name]; ok {
-		return lg
-	}
-	lg := &Logger{
-		name:   name,
-		writer: &ConsoleWriter{},
+	var (
+		lg *Logger
+		ok = false
+	)
+	loggerMutex.RLock()
+	if lg, ok = loggerMap[name]; ok == false {
+		loggerMutex.RUnlock()
+		loggerMutex.Lock()
+		lg = &Logger{
+			name:   name,
+		}
+		loggerMap[name] = lg
+		loggerMutex.Unlock()
+	} else {
+		loggerMutex.RUnlock()
 	}
 
-	loggerMap[name] = lg
 	return lg
 }
 
