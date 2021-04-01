@@ -94,14 +94,15 @@ func (lv *LogLevel) coloredString() string {
 func GetLogger(name string) *Logger {
 	var (
 		lg *Logger
-		ok = false
+		ok bool
 	)
 	loggerMutex.RLock()
-	if lg, ok = loggerMap[name]; ok == false {
+	if lg, ok = loggerMap[name]; !ok {
 		loggerMutex.RUnlock()
 		loggerMutex.Lock()
 		lg = &Logger{
 			name:   name,
+			writer: &ConsoleWriter{},
 		}
 		loggerMap[name] = lg
 		loggerMutex.Unlock()
