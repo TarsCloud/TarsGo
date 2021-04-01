@@ -6,7 +6,7 @@ import (
 )
 
 // CheckPanic used to dump stack info to file when catch panic
-func CheckPanic(onPanics ...func()) {
+func CheckPanic(onPanics ...func(err interface{})) {
 	if r := recover(); r != nil {
 		var msg string
 		if err, ok := r.(error); ok {
@@ -18,7 +18,7 @@ func CheckPanic(onPanics ...func()) {
 
 		// onPanic is callback func when catch panic
 		for _, onPanic := range onPanics {
-			onPanic()
+			onPanic(r)
 		}
 	}
 }
