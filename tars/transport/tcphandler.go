@@ -123,6 +123,7 @@ func (h *tcpHandler) Handle() error {
 		atomic.AddInt32(&h.ts.numConn, 1)
 		go func(conn *net.TCPConn) {
 			fd, _ := conn.File()
+			defer fd.Close()
 			key := fmt.Sprintf("%v", fd.Fd())
 			TLOG.Debugf("TCP accept: %s, %d, fd: %s", conn.RemoteAddr(), os.Getpid(), key)
 			conn.SetReadBuffer(cfg.TCPReadBuffer)
