@@ -17,6 +17,7 @@ var gAddServant = flag.Bool("add-servant", true, "Generate AddServant function")
 var gModuleCycle = flag.Bool("module-cycle", false, "support jce module cycle include(do not support jce file cycle include)")
 var gModuleUpper = flag.Bool("module-upper", false, "native module names are supported, otherwise the system will upper the first letter of the module name")
 var gJsonOmitEmpty = flag.Bool("json-omitempty", false, "Generate json emitempty support")
+var dispatchReporter = flag.Bool("dispatch-reporter", false, "Dispatch reporter support")
 
 var gFileMap map[string]bool
 
@@ -1552,6 +1553,29 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 		c.WriteString(") \n}\n")
 	}
 
+	if *dispatchReporter {
+		var inArgStr, outArgStr, retArgStr string
+		if fun.HasRet {
+			retArgStr = "_funRet_, err"
+		} else {
+			retArgStr = "err"
+		}
+		for _, v := range fun.Args {
+			prefix := ""
+			if v.Type.CType == tkStruct {
+				prefix = "&"
+			}
+			if v.IsOut {
+				outArgStr += prefix + v.Name + ","
+			} else {
+				inArgStr += prefix + v.Name + ","
+			}
+		}
+		c.WriteString(`if _dp_ := tars.GetDispatchReporter(); _dp_ != nil {
+			_dp_(tarsCtx, []interface{}{` + inArgStr + `}, []interface{}{` + outArgStr + `}, []interface{}{` + retArgStr + `})
+		}`)
+
+	}
 	c.WriteString(`
 	if err != nil {
 		return err
