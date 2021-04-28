@@ -369,6 +369,7 @@ import (
 	var _ = fmt.Errorf
 	var _ = codec.FromInt8
 	var _ = unsafe.Pointer(nil)
+	var _ = bytes.ErrTooLarge
 `)
 }
 
@@ -1472,14 +1473,13 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 		}
 
 		c.WriteString(`} else if tarsReq.IVersion == basef.JSONVERSION {
-		var _jsonTmp_ interface{}
-		_jsonDecoder_ := json.NewDecoder(bytes.NewReader(_is.ToBytes()))
-		_jsonDecoder_.UseNumber()
-		if err = _jsonDecoder_.Decode(&_jsonTmp_); err != nil {
-			err = fmt.Errorf("Decode reqpacket fail, error %s", err.Error())
-			return err
+		var _jsonDat_ map[string]interface{}
+		_decoder_ := json.NewDecoder(bytes.NewReader(_is.ToBytes()))
+		_decoder_.UseNumber()
+		err = _decoder_.Decode(&_jsonDat_)
+		if err != nil {
+			return fmt.Errorf("Decode reqpacket failed, error: %+v", err)
 		}
-		_jsonDat_ := _jsonTmp_.(map[string]interface{})
 		`)
 
 		for _, v := range fun.Args {
