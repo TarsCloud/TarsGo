@@ -1413,12 +1413,11 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 	inArgsCount := 0
 	outArgsCount := 0
 	for _, v := range fun.Args {
-		c.WriteString("var " + v.Name + " " + gen.genType(v.Type))
-		switch v.Type.Type {
-		case tkTMap:
-			c.WriteString(" = make(map[" + gen.genType(v.Type.TypeK) + "]" + gen.genType(v.Type.TypeV) + ")\n")
-		default:
-			c.WriteByte('\n')
+		c.WriteString("var " + v.Name + " " + gen.genType(v.Type) + "\n")
+		if v.Type.Type == tkTMap {
+			tk := gen.genType(v.Type.TypeK)
+			tv := gen.genType(v.Type.TypeV)
+			c.WriteString(v.Name + " = make(map[" + tk + "]" + tv + ")\n")
 		}
 		if v.IsOut {
 			outArgsCount++
