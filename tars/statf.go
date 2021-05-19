@@ -8,6 +8,13 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/statf"
 )
 
+var (
+	// ReportStat set the default stater(default is `ReportStatFromClient`).
+	ReportStat reportStatFunc = ReportStatFromClient
+)
+
+type reportStatFunc func(msg *Message, succ int32, timeout int32, exec int32)
+
 // StatInfo struct contains stat info' head and body.
 type StatInfo struct {
 	Head statf.StatMicMsgHead
@@ -228,9 +235,4 @@ func ReportStatFromServer(InterfaceName, MasterName string, ReturnValue int32, T
 	body.MaxRspTime = int32(body.TotalRspTime)
 	body.MinRspTime = int32(body.TotalRspTime)
 	ReportStatBase(&head, &body, true)
-}
-
-// ReportStat is same as ReportStatFromClient.
-func ReportStat(msg *Message, succ int32, timeout int32, exec int32) {
-	ReportStatFromClient(msg, succ, timeout, exec)
 }
