@@ -1480,6 +1480,9 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 			if !v.IsOut {
 				c.WriteString("{\n")
 				c.WriteString(`_jsonStr_, _ := json.Marshal(_jsonDat_["` + v.Name + `"])` + "\n")
+				if v.Type.CType == tkStruct {
+					c.WriteString(v.Name + ".ResetDefault()\n")
+				}
 				c.WriteString("if err = json.Unmarshal([]byte(_jsonStr_), &" + v.Name + "); err != nil {")
 				c.WriteString(`
 					return err
