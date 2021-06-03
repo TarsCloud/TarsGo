@@ -1191,7 +1191,7 @@ func (gen *GenGo) genIFDispatch(itf *InterfaceInfo) {
 	for _, v := range itf.Fun {
 		gen.genSwitchCaseBody(itf.TName, &v)
 	}
-	c.WriteString("//Dispatch is used to call the server side implemnet for the method defined in the tars file. withContext shows using context or not.  \n")
+	c.WriteString("//Dispatch is used to call the server side implement for the method defined in the tars file. withContext shows using context or not.  \n")
 	c.WriteString("func(_obj *" + itf.TName + `) Dispatch(ctx context.Context, _val interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket,withContext bool) (err error) {
   `)
 
