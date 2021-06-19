@@ -171,7 +171,7 @@ func (b *Buffer) Write_slice_int8(data []int8) error {
 }
 
 // Write_bytes write []byte to the buffer
-func (b *Buffer) Write_bytes(data []byte) error  {
+func (b *Buffer) Write_bytes(data []byte) error {
 	_, err := b.buf.Write(data)
 	return err
 }

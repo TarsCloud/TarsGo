@@ -25,8 +25,8 @@ const (
 	HandleTimeout = 0
 	//IdleTimeout idle timeout,defaultvalue is 600000 milliseconds
 	IdleTimeout = 600000
-	//ZombileTimeout zombile timeout,defaultvalue is 10000 milliseconds
-	ZombileTimeout = 10000
+	// ZombieTimeout zombie timeout,defaultvalue is 10000 milliseconds
+	ZombieTimeout = 10000
 	//QueueCap queue gap
 	QueueCap int = 10000000
 

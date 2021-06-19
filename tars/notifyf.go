@@ -26,14 +26,14 @@ func (n *NotifyHelper) SetNotifyInfo(comm *Communicator, notify string, app stri
 		set = v
 	}
 	n.tm = notifyf.ReportInfo{
-		0,
-		app,
-		set,
-		container,
-		server,
-		"",
-		"",
-		0,
+		EType:      0,
+		SApp:       app,
+		SSet:       set,
+		SContainer: container,
+		SServer:    server,
+		SMessage:   "",
+		SThreadId:  "",
+		ELevel:     0,
 	}
 }
 

@@ -10,7 +10,7 @@ import (
 func TestListener(t *testing.T) {
 	proto, addr := "tcp", "localhost:3333"
 	_, err := CreateListener(proto, addr)
-	key := fmt.Sprintf("%s_%s_%s", ListenFdPrefix, proto, addr)
+	key := fmt.Sprintf("%s_%s_%s", InheritFdPrefix, proto, addr)
 	fmt.Println(err, key, os.Getenv(key))
 	cmd := exec.Command("lsof", "-p", fmt.Sprint(os.Getpid()))
 	cmd.Stdout = os.Stdout
@@ -19,7 +19,7 @@ func TestListener(t *testing.T) {
 	cmd.Wait()
 	addr = "localhost:3334"
 	_, err = CreateUDPConn(addr)
-	key = fmt.Sprintf("%s_%s_%s", ListenFdPrefix, "udp", addr)
+	key = fmt.Sprintf("%s_%s_%s", InheritFdPrefix, "udp", addr)
 	fmt.Println(err, key, os.Getenv(key))
 	cmd = exec.Command("lsof", "-p", fmt.Sprint(os.Getpid()))
 	cmd.Stdout = os.Stdout

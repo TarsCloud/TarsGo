@@ -9,7 +9,7 @@ type _SERVANT_Imp struct {
 }
 
 // Init servant init
-func (imp *_SERVANT_Imp) Init() (error) {
+func (imp *_SERVANT_Imp) Init() error {
 	//initialize servant here:
 	//...
 	return nil

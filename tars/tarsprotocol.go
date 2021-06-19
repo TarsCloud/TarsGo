@@ -181,4 +181,3 @@ func (s *TarsProtocol) GetCloseMsg() []byte {
 func (s *TarsProtocol) DoClose(ctx context.Context) {
 	TLOG.Debug("DoClose!")
 }
-
