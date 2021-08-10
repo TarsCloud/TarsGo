@@ -34,8 +34,20 @@ module endpointf
         11 optional int weight;
         12 optional int weightType;
 	    13 optional int authType;
+	    14 optional string subset;
     };
     key[EndpointF, host, port, timeout, istcp, grid, qos, weight, weightType, authType];
+
+    /**
+     * Subset配置
+     */
+    struct SubsetConf{
+        0 require bool enable; // 是否启用subset
+        1 require string ruleType; // 类型，有按比例(ratio)和按路由key(key)两种
+        2 require string ruteData; // 规则内容，{"v1": 20, "v2": 80}
+    };
 };
+
+
 
 

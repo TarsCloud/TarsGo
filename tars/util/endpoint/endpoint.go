@@ -13,6 +13,7 @@ type Endpoint struct {
 	Container string
 	SetId     string
 	Key       string
+	Subset    string
 }
 
 // String returns readable string for Endpoint

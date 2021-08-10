@@ -12,5 +12,6 @@ require (
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/openzipkin-contrib/zipkin-go-opentracing v0.3.5
 	github.com/openzipkin/zipkin-go v0.2.2
+	github.com/serialx/hashring v0.0.0-20200727003509-22c0c7ab6b1b // indirect
 	github.com/stretchr/testify v1.6.1
 )

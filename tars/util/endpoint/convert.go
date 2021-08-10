@@ -16,7 +16,8 @@ func Tars2endpoint(end endpointf.EndpointF) Endpoint {
 		Proto:   proto,
 		Bind:    "",
 		//Container: end.ContainerName,
-		SetId: end.SetId,
+		SetId:  end.SetId,
+		Subset: end.Subset,
 	}
 	e.Key = e.String()
 	return e

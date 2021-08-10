@@ -47,6 +47,11 @@ func (s *TarsProtocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 		}
 	}
 
+	// 透传route key
+	if routeKey, ok := reqPackage.Status[current.STATUS_ROUTE_KEY]; ok {
+		current.SetRouteKey(ctx, routeKey)
+	}
+
 	if reqPackage.CPacketType == basef.TARSONEWAY {
 		defer func() func() {
 			beginTime := time.Now().UnixNano() / 1e6
@@ -181,4 +186,3 @@ func (s *TarsProtocol) GetCloseMsg() []byte {
 func (s *TarsProtocol) DoClose(ctx context.Context) {
 	TLOG.Debug("DoClose!")
 }
-

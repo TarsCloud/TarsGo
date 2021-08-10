@@ -114,6 +114,10 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 		status[current.STATUS_DYED_KEY] = dyeingKey
 		msgType = basef.TARSMESSAGETYPEDYED
 	}
+	// 透传route key
+	if vv, ok := current.GetRouteKey(ctx); ok {
+		status[current.STATUS_ROUTE_KEY] = vv
+	}
 
 	req := requestf.RequestPacket{
 		IVersion:     s.version,

@@ -104,6 +104,16 @@ func (c *ChMap) Remove(node string) error {
 	return nil
 }
 
+func (c *ChMap) GetNodes() []KV {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	ret := make([]KV, 0)
+	for _, v := range c.hashRing {
+		ret = append(ret, v)
+	}
+	return ret
+}
+
 func (c *ChMap) reBuildHashRing() {
 	c.sortedKeys = nil
 	for vk := range c.hashRing {

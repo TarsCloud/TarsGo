@@ -16,6 +16,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/queryf"
 	"github.com/TarsCloud/TarsGo/tars/util/consistenthash"
+	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 	"github.com/TarsCloud/TarsGo/tars/util/gtime"
 )
@@ -278,7 +279,9 @@ func (e *tarsEndpointManager) addAliveEp(ep endpoint.Endpoint) {
 // SelectAdapterProxy returns the selected adapter.
 func (e *tarsEndpointManager) SelectAdapterProxy(msg *Message) (*AdapterProxy, bool) {
 	e.epLock.Lock()
-	eps := e.activeEp[:]
+	// support subset
+	eps := subsetEndpointFilter(msg.Req.SServantName,
+		msg.Req.Status[current.STATUS_ROUTE_KEY], e.activeEp[:])
 	e.epLock.Unlock()
 
 	if e.directproxy && len(eps) == 0 {
@@ -296,7 +299,10 @@ func (e *tarsEndpointManager) SelectAdapterProxy(msg *Message) (*AdapterProxy, b
 	}
 	var adp *AdapterProxy
 	if msg.isHash && msg.hashType == ConsistentHash {
-		if epi, ok := e.activeEpHashMap.FindUint32(uint32(msg.hashCode)); ok {
+		// support subset
+		activeEpHashMap := subsetHashEpFilter(msg.Req.SServantName,
+			msg.Req.Status[current.STATUS_ROUTE_KEY], e.activeEpHashMap)
+		if epi, ok := activeEpHashMap.FindUint32(uint32(msg.hashCode)); ok {
 			ep := epi.(endpoint.Endpoint)
 			if v, ok := e.epList.Load(ep.Key); ok {
 				adp = v.(*AdapterProxy)

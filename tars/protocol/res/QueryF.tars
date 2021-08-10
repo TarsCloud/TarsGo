@@ -79,6 +79,13 @@ module queryf
         */
         int findObjectByIdInSameSet(string id, string setId, out vector<endpointf::EndpointF> activeEp, out vector<endpointf::EndpointF> inactiveEp);
 
+        /** 获取subset信息
+        *
+        * @param id         对象名称
+        * @param conf       Subset配置信息
+        * @return:  0-成功  others-失败
+        */
+        int findSubsetConfigById(string id, out endpointf::SubsetConf conf);
     };
 
 };

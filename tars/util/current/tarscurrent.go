@@ -2,6 +2,9 @@ package current
 
 import "context"
 
+const STATUS_DYED_KEY = "STATUS_DYED_KEY"
+const STATUS_ROUTE_KEY = "TARS_ROUTE_KEY"
+
 type tarsCurrentKey int64
 
 var tcKey = tarsCurrentKey(0x484900)
@@ -19,6 +22,7 @@ type Current struct {
 	resContext  map[string]string
 	needDyeing  bool
 	dyeingUser  string
+	routeValue  string
 }
 
 // NewCurrent return a Current point.
@@ -208,7 +212,31 @@ func SetReqStatusValue(ctx context.Context, key string, value string) bool {
 	return ok
 }
 
-const STATUS_DYED_KEY = "STATUS_DYED_KEY"
+// GetRouteKey gets route key from the context.
+func GetRouteKey(ctx context.Context) (string, bool) {
+	tc, ok := currentFromContext(ctx)
+	if ok {
+		if tc.reqStatus != nil {
+			if key, exists := tc.reqStatus[STATUS_ROUTE_KEY]; exists {
+				return key, true
+			}
+		}
+	}
+
+	return "", false
+}
+
+// SetRouteKey set Route key to the tars current.
+func SetRouteKey(ctx context.Context, RouteKey string) bool {
+	tc, ok := currentFromContext(ctx)
+	if ok {
+		if tc.reqStatus == nil {
+			tc.reqStatus = make(map[string]string)
+		}
+		tc.reqStatus[STATUS_ROUTE_KEY] = RouteKey
+	}
+	return ok
+}
 
 // GetDyeingKey gets dyeing key from the context.
 func GetDyeingKey(ctx context.Context) (string, bool) {
