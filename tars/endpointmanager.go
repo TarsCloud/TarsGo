@@ -268,7 +268,7 @@ func (e *tarsEndpointManager) addAliveEp(ep endpoint.Endpoint) {
 	sortedEps := e.activeEp[:]
 	sortedEps = append(sortedEps, ep)
 	sort.Slice(sortedEps, func(i int, j int) bool {
-		return crc32.ChecksumIEEE([]byte(sortedEps[i].Key)) < crc32.ChecksumIEEE([]byte(sortedEps[i].Key))
+		return crc32.ChecksumIEEE([]byte(sortedEps[i].Key)) < crc32.ChecksumIEEE([]byte(sortedEps[j].Key))
 	})
 	e.activeEp = sortedEps
 	e.activeEpHashMap.Add(ep)
@@ -443,7 +443,7 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 
 	//make endponit slice sorted
 	sort.Slice(sortedEps, func(i int, j int) bool {
-		return crc32.ChecksumIEEE([]byte(sortedEps[i].Key)) < crc32.ChecksumIEEE([]byte(sortedEps[i].Key))
+		return crc32.ChecksumIEEE([]byte(sortedEps[i].Key)) < crc32.ChecksumIEEE([]byte(sortedEps[j].Key))
 	})
 
 	chmap := consistenthash.NewChMap(32)
