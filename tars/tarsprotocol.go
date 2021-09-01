@@ -164,7 +164,7 @@ func (s *TarsProtocol) ParsePackage(buff []byte) (int, int) {
 // InvokeTimeout indicates how to deal with timeout.
 func (s *TarsProtocol) InvokeTimeout(pkg []byte) []byte {
 	rspPackage := requestf.ResponsePacket{}
-	//  invoketimeout need to point out failed requests
+	//  invoketimeout need to return IRequestId
 	reqPackage := requestf.RequestPacket{}
 	is := codec.NewReader(pkg[4:])
 	reqPackage.ReadFrom(is)
