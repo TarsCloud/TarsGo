@@ -3,11 +3,13 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"path"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
 )
+
+var fileNames = map[string]bool{}
 
 // VarType contains variable type(token)
 type VarType struct {
@@ -571,7 +573,31 @@ func (p *Parse) parseModule() {
 	p.expect(tkName)
 
 	if p.Module != "" {
-		p.parseErr("do not repeat define module")
+		// TODO: 解决一个tars文件中定义多个module
+		basePre := p.ProtoName + "_" + p.t.S.S
+		name := basePre + ".tars"
+		i := 1
+		for {
+			if !fileNames[name] {
+				fileNames[name] = true
+				break
+			}
+			name = basePre + "_" + strconv.Itoa(i) + ".tars"
+			i++
+		}
+		newp := newParse(name, p.lex.buff.Bytes(), p.IncChain)
+		newp.Module = p.t.S.S
+		newp.Include = p.Include
+		newp.IncParse = p.IncParse
+		copyP := *p
+		newp.IncParse = append(newp.IncParse, &copyP)
+		newp.parseModuleSegment()
+		newp.analyzeDepend()
+		// 增加已经解析的module
+		p.IncParse = append(p.IncParse, newp)
+		p.lex = newp.lex
+		//p.parseErr("do not repeat define module")
+		return
 	}
 	p.Module = p.t.S.S
 
@@ -762,10 +788,7 @@ func (p *Parse) analyzeHashKey() {
 
 func (p *Parse) analyzeDepend() {
 	for _, v := range p.Include {
-		//#include support relative path,example: ../test.tars
-		relativePath := path.Dir(p.Source)
-		dependFile := relativePath + "/" + v
-		pInc := ParseFile(dependFile, p.IncChain)
+		pInc := ParseFile(v, p.IncChain)
 		p.IncParse = append(p.IncParse, pInc)
 		fmt.Println("parse include: ", v)
 	}
@@ -809,8 +832,30 @@ func newParse(s string, b []byte, incChain []string) *Parse {
 	return p
 }
 
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true
+	}
+	if os.IsNotExist(err) {
+		return false
+	}
+	return false
+}
+
 //ParseFile parse a file,return grammer tree.
 func ParseFile(path string, incChain []string) *Parse {
+	// 查找tars文件路径
+	if !fileExists(path) {
+		for _, include := range includes {
+			include = strings.TrimRight(include, "/")
+			filePath := include + "/" + path
+			if fileExists(filePath) {
+				path = filePath
+				break
+			}
+		}
+	}
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		fmt.Println("file read error: " + path + ". " + err.Error())

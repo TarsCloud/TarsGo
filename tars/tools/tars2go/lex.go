@@ -236,6 +236,9 @@ func (ls *LexState) readIdent() (TK, *SemInfo) {
 	}
 	sem.S = ls.tokenBuff.String()
 	if strings.Count(sem.S, ":") > 0 {
+		if strings.Count(sem.S, "::") == 2 && strings.Count(sem.S, ":") == 4 {
+			sem.S = sem.S[strings.Index(sem.S, "::")+2:]
+		}
 		if strings.Count(sem.S, "::") != 1 || strings.Count(sem.S, ":") != 2 {
 			ls.lexErr("namespace qualifier::is illegal")
 		}

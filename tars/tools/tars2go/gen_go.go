@@ -17,7 +17,6 @@ var gAddServant = flag.Bool("add-servant", true, "Generate AddServant function")
 var gModuleCycle = flag.Bool("module-cycle", false, "support jce module cycle include(do not support jce file cycle include)")
 var gModuleUpper = flag.Bool("module-upper", false, "native module names are supported, otherwise the system will upper the first letter of the module name")
 var gJsonOmitEmpty = flag.Bool("json-omitempty", false, "Generate json emitempty support")
-var dispatchReporter = flag.Bool("dispatch-reporter", false, "Dispatch reporter support")
 
 var gFileMap map[string]bool
 
@@ -336,7 +335,6 @@ func (gen *GenGo) genIFPackage(itf *InterfaceInfo) {
 	gen.code.WriteString("package " + gen.p.Module + "\n\n")
 	gen.code.WriteString(`
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"unsafe"
@@ -369,7 +367,6 @@ import (
 	var _ = fmt.Errorf
 	var _ = codec.FromInt8
 	var _ = unsafe.Pointer(nil)
-	var _ = bytes.ErrTooLarge
 `)
 }
 
@@ -1414,9 +1411,6 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 	outArgsCount := 0
 	for _, v := range fun.Args {
 		c.WriteString("var " + v.Name + " " + gen.genType(v.Type) + "\n")
-		if v.Type.Type == tkTMap {
-			c.WriteString(v.Name + " = make(" + gen.genType(v.Type) + ")\n")
-		}
 		if v.IsOut {
 			outArgsCount++
 		} else {
@@ -1471,21 +1465,13 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 
 		c.WriteString(`} else if tarsReq.IVersion == basef.JSONVERSION {
 		var _jsonDat_ map[string]interface{}
-		_decoder_ := json.NewDecoder(bytes.NewReader(_is.ToBytes()))
-		_decoder_.UseNumber()
-		err = _decoder_.Decode(&_jsonDat_)
-		if err != nil {
-			return fmt.Errorf("Decode reqpacket failed, error: %+v", err)
-		}
+		err = json.Unmarshal(_is.ToBytes(), &_jsonDat_)
 		`)
 
 		for _, v := range fun.Args {
 			if !v.IsOut {
 				c.WriteString("{\n")
 				c.WriteString(`_jsonStr_, _ := json.Marshal(_jsonDat_["` + v.Name + `"])` + "\n")
-				if v.Type.CType == tkStruct {
-					c.WriteString(v.Name + ".ResetDefault()\n")
-				}
 				c.WriteString("if err = json.Unmarshal([]byte(_jsonStr_), &" + v.Name + "); err != nil {")
 				c.WriteString(`
 					return err
@@ -1559,29 +1545,6 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 		c.WriteString(") \n}\n")
 	}
 
-	if *dispatchReporter {
-		var inArgStr, outArgStr, retArgStr string
-		if fun.HasRet {
-			retArgStr = "_funRet_, err"
-		} else {
-			retArgStr = "err"
-		}
-		for _, v := range fun.Args {
-			prefix := ""
-			if v.Type.CType == tkStruct {
-				prefix = "&"
-			}
-			if v.IsOut {
-				outArgStr += prefix + v.Name + ","
-			} else {
-				inArgStr += prefix + v.Name + ","
-			}
-		}
-		c.WriteString(`if _dp_ := tars.GetDispatchReporter(); _dp_ != nil {
-			_dp_(tarsCtx, []interface{}{` + inArgStr + `}, []interface{}{` + outArgStr + `}, []interface{}{` + retArgStr + `})
-		}`)
-
-	}
 	c.WriteString(`
 	if err != nil {
 		return err
