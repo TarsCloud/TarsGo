@@ -213,7 +213,7 @@ func (s *ServantProxy) doInvoke(ctx context.Context, msg *Message, timeout time.
 		return err
 	}
 	if msg.Req.CPacketType == basef.TARSONEWAY {
-		adp.succssAdd()
+		adp.successAdd()
 		return nil
 	}
 	select {
@@ -231,7 +231,7 @@ func (s *ServantProxy) doInvoke(ctx context.Context, msg *Message, timeout time.
 				s.manager.addAliveEp(ep)
 			}()
 		}
-		adp.succssAdd()
+		adp.successAdd()
 		if msg.Resp != nil {
 			if msg.Status != basef.TARSSERVERSUCCESS || msg.Resp.IRet != 0 {
 				if msg.Resp.SResultDesc == "" {

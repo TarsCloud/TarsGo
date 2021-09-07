@@ -130,7 +130,7 @@ func (c *AdapterProxy) sendAdd() {
 	atomic.AddInt32(&c.sendCount, 1)
 }
 
-func (c *AdapterProxy) succssAdd() {
+func (c *AdapterProxy) successAdd() {
 	now := time.Now().Unix()
 	atomic.SwapInt64(&c.lastSuccessTime, now)
 	atomic.AddInt32(&c.successCount, 1)
