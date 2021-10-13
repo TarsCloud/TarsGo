@@ -1,10 +1,22 @@
 package current
 
-import "context"
+import (
+	"context"
+	"errors"
+)
 
 type tarsCurrentKey int64
 
 var tcKey = tarsCurrentKey(0x484900)
+
+// ServerHandler  is interface with listen and handler method
+type ServerHandler interface {
+	Listen() error
+	Handle() error
+	OnShutdown()
+	CloseIdles(n int64) bool
+	SendData(fd uintptr, data []byte) error
+}
 
 // Current contains message for the specify request.
 // This current is used for server side.
@@ -19,6 +31,8 @@ type Current struct {
 	resContext  map[string]string
 	needDyeing  bool
 	dyeingUser  string
+	fd          uintptr
+	handle      ServerHandler
 }
 
 // NewCurrent return a Current point.
@@ -253,4 +267,54 @@ func SetDyeingUser(ctx context.Context, user string) bool {
 		tc.dyeingUser = user
 	}
 	return ok
+}
+
+// SetHandleWithContext set handle to the tars current.
+func SetHandleWithContext(ctx context.Context, handle ServerHandler) bool {
+	tc, ok := currentFromContext(ctx)
+	if ok {
+		tc.handle = handle
+	}
+	return ok
+}
+
+func GetHandleWithContext(ctx context.Context) (ServerHandler, bool) {
+	tc, ok := currentFromContext(ctx)
+	if ok {
+		return tc.handle, ok
+	}
+	return nil, ok
+}
+
+// SetHandleWithContext set fd to the tars current.
+func SetClientFdWithContext(ctx context.Context, fd uintptr) bool {
+	tc, ok := currentFromContext(ctx)
+	if ok {
+		tc.fd = fd
+	}
+	return ok
+}
+
+func GetClientFdWithContext(ctx context.Context) (uintptr, bool) {
+	tc, ok := currentFromContext(ctx)
+	if ok {
+		return tc.fd, ok
+	}
+	return 0, ok
+}
+
+// SendResponse send data to client.
+func SendResponse(ctx context.Context, data []byte) error {
+	tc, ok := currentFromContext(ctx)
+	if !ok {
+		return errors.New("can't get current")
+	}
+
+	if tc.handle == nil {
+		return errors.New("handle is nil")
+	}
+
+	tc.handle.SendData(tc.fd, data)
+
+	return nil
 }

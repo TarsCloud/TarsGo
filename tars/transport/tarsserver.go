@@ -5,19 +5,12 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/rogger"
 )
 
 // TLOG  is logger for transport.
 var TLOG = rogger.GetLogger("TLOG")
-
-// ServerHandler  is interface with listen and handler method
-type ServerHandler interface {
-	Listen() error
-	Handle() error
-	OnShutdown()
-	CloseIdles(n int64) bool
-}
 
 // TarsServerConf server config for tars server side.
 type TarsServerConf struct {
@@ -39,7 +32,7 @@ type TarsServerConf struct {
 type TarsServer struct {
 	svr        ServerProtocol
 	conf       *TarsServerConf
-	handle     ServerHandler
+	handle     current.ServerHandler
 	lastInvoke time.Time
 	idleTime   time.Time
 	isClosed   int32
@@ -55,7 +48,7 @@ func NewTarsServer(svr ServerProtocol, conf *TarsServerConf) *TarsServer {
 	return ts
 }
 
-func (ts *TarsServer) getHandler() (sh ServerHandler) {
+func (ts *TarsServer) getHandler() (sh current.ServerHandler) {
 	if ts.conf.Proto == "tcp" {
 		sh = &tcpHandler{conf: ts.conf, ts: ts}
 	} else if ts.conf.Proto == "udp" {

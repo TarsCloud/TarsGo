@@ -100,3 +100,21 @@ func (h *udpHandler) CloseIdles(n int64) bool {
 	}
 	return false
 }
+
+func (h *udpHandler) SendData(fd uintptr, data []byte) error {
+	// key := fmt.Sprintf("%v", fd)
+	// val, ok := h.conns.Load(key)
+	// if !ok {
+	// 	return nil
+	// }
+
+	// connSt := val.(*connInfo)
+	// connSt.writeLock.Lock()
+	// _, err := connSt.conn.Write(data)
+	// if err != nil {
+	// 	TLOG.Errorf("send pkg to %v failed %v", connSt.conn.RemoteAddr(), err)
+	// }
+	// connSt.writeLock.Unlock()
+
+	return nil
+}
