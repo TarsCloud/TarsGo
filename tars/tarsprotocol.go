@@ -164,6 +164,11 @@ func (s *TarsProtocol) ParsePackage(buff []byte) (int, int) {
 // InvokeTimeout indicates how to deal with timeout.
 func (s *TarsProtocol) InvokeTimeout(pkg []byte) []byte {
 	rspPackage := requestf.ResponsePacket{}
+	//  invoketimeout need to return IRequestId
+	reqPackage := requestf.RequestPacket{}
+	is := codec.NewReader(pkg[4:])
+	reqPackage.ReadFrom(is)
+	rspPackage.IRequestId = reqPackage.IRequestId
 	rspPackage.IRet = 1
 	rspPackage.SResultDesc = "server invoke timeout"
 	return s.rsp2Byte(&rspPackage)
@@ -181,4 +186,3 @@ func (s *TarsProtocol) GetCloseMsg() []byte {
 func (s *TarsProtocol) DoClose(ctx context.Context) {
 	TLOG.Debug("DoClose!")
 }
-
