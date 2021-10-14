@@ -284,8 +284,6 @@ func (h *tcpHandler) SendData(fd uintptr, data []byte) error {
 		return errors.New("can't get conninfo for" + key)
 	}
 
-	TLOG.Debug("sendData", key)
-
 	connSt := val.(*connInfo)
 	connSt.writeLock.Lock()
 	_, err := connSt.conn.Write(data)
@@ -295,6 +293,6 @@ func (h *tcpHandler) SendData(fd uintptr, data []byte) error {
 	}
 	connSt.writeLock.Unlock()
 
-	TLOG.Infof("send pkg ok to %v", connSt.conn.RemoteAddr())
+	TLOG.Infof("send data to %v", connSt.conn.RemoteAddr())
 	return err
 }
