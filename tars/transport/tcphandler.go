@@ -2,6 +2,7 @@ package transport
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -66,7 +67,7 @@ func (h *tcpHandler) getConnContext(connSt *connInfo) context.Context {
 	current.SetClientIPWithContext(ctx, ipPort[0])
 	current.SetClientPortWithContext(ctx, ipPort[1])
 	current.SetRecvPkgTsFromContext(ctx, time.Now().UnixNano()/1e6)
-	current.SetHandleWithContext(ctx, h.ts.getHandler())
+	current.SetHandleWithContext(ctx, h.ts.handle)
 	current.SetClientFdWithContext(ctx, connSt.fd)
 
 	TLOG.Infof("client fd: %v remote:%v", connSt.fd, connSt.conn.RemoteAddr().String())
@@ -280,16 +281,20 @@ func (h *tcpHandler) SendData(fd uintptr, data []byte) error {
 	key := fmt.Sprintf("%v", fd)
 	val, ok := h.conns.Load(key)
 	if !ok {
-		return nil
+		return errors.New("can't get conninfo for" + key)
 	}
+
+	TLOG.Debug("sendData", key)
 
 	connSt := val.(*connInfo)
 	connSt.writeLock.Lock()
 	_, err := connSt.conn.Write(data)
 	if err != nil {
 		TLOG.Errorf("send pkg to %v failed %v", connSt.conn.RemoteAddr(), err)
+		return err
 	}
 	connSt.writeLock.Unlock()
 
+	TLOG.Infof("send pkg ok to %v", connSt.conn.RemoteAddr())
 	return err
 }
