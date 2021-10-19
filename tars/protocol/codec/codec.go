@@ -875,8 +875,12 @@ func NewReader(data []byte) *Reader {
 }
 
 // NewBuffer returns *Buffer
-func NewBuffer() *Buffer {
-	return &Buffer{buf: &bytes.Buffer{}}
+func NewBuffer(args ...*bytes.Buffer) *Buffer {
+	buf := &bytes.Buffer{}
+	if len(args) > 0 {
+		buf = args[0]
+	}
+	return &Buffer{buf: buf}
 }
 
 // FromInt8 NewReader(FromInt8(vec))
