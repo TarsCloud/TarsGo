@@ -15,7 +15,7 @@ type ServerHandler interface {
 	Handle() error
 	OnShutdown()
 	CloseIdles(n int64) bool
-	SendData(fd uintptr, data []byte) error
+	SendData(ctx context.Context, data []byte) error
 }
 
 // Current contains message for the specify request.
@@ -314,7 +314,7 @@ func SendResponse(ctx context.Context, data []byte) error {
 		return errors.New("handle is nil")
 	}
 
-	tc.handle.SendData(tc.fd, data)
+	tc.handle.SendData(ctx, data)
 
 	return nil
 }

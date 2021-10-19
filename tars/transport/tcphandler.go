@@ -277,7 +277,13 @@ func (h *tcpHandler) recv(connSt *connInfo) {
 	}
 }
 
-func (h *tcpHandler) SendData(fd uintptr, data []byte) error {
+func (h *tcpHandler) SendData(ctx context.Context, data []byte) error {
+
+	fd, ok := current.GetClientFdWithContext(ctx)
+	if !ok {
+		return errors.New("can't get fd")
+	}
+
 	key := fmt.Sprintf("%v", fd)
 	val, ok := h.conns.Load(key)
 	if !ok {
