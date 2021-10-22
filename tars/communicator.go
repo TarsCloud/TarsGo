@@ -81,7 +81,16 @@ func (c *Communicator) StringToProxy(servant string, p ProxyPrx) {
 	if servant == "" {
 		panic("empty servant")
 	}
-	sp := newServantProxy(c, servant)
+	sp := newServantProxy(c, servant, "")
+	p.SetServant(sp)
+}
+
+// StringToProxy sets the servant of ProxyPrx p with a string servant
+func (c *Communicator) StringToProxyWithSet(servant string, p ProxyPrx, setDivision string) {
+	if servant == "" {
+		panic("empty servant")
+	}
+	sp := newServantProxy(c, servant, setDivision)
 	p.SetServant(sp)
 }
 

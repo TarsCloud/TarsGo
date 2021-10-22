@@ -41,10 +41,10 @@ type ServantProxy struct {
 
 // NewServantProxy creates and initializes a servant proxy
 func NewServantProxy(comm *Communicator, objName string) *ServantProxy {
-	return newServantProxy(comm, objName)
+	return newServantProxy(comm, objName, "")
 }
 
-func newServantProxy(comm *Communicator, objName string) *ServantProxy {
+func newServantProxy(comm *Communicator, objName string, setDivision string) *ServantProxy {
 	s := &ServantProxy{}
 	pos := strings.Index(objName, "@")
 	if pos > 0 {
@@ -58,7 +58,7 @@ func newServantProxy(comm *Communicator, objName string) *ServantProxy {
 	}
 
 	// init manager
-	s.manager = GetManager(comm, objName)
+	s.manager = GetManager(comm, objName, setDivision)
 	s.comm = comm
 	s.proto = &protocol.TarsProtocol{}
 	s.timeout = s.comm.Client.AsyncInvokeTimeout

@@ -52,12 +52,19 @@ func initOnceGManager(refreshInterval int, checkStatusInterval int) {
 }
 
 // GetManager return a endpoint manager from global endpoint manager
-func GetManager(comm *Communicator, objName string) EndpointManager {
+func GetManager(comm *Communicator, objName string, setDivision string) EndpointManager {
 	//taf
 	initOnceGManager(comm.Client.RefreshEndpointInterval, comm.Client.CheckStatusInterval)
 	g := gManager
 	g.mlock.Lock()
-	key := objName + comm.hashKey()
+	var key string
+
+	if setDivision != "" {
+		key = objName + setDivision
+	} else {
+		key = objName + comm.hashKey()
+	}
+
 	if v, ok := g.eps[key]; ok {
 		g.mlock.Unlock()
 		return v
@@ -65,7 +72,7 @@ func GetManager(comm *Communicator, objName string) EndpointManager {
 	g.mlock.Unlock()
 
 	TLOG.Debug("Create endpoint manager for ", objName)
-	em := newTarsEndpointManager(objName, comm) // avoid dead lock
+	em := newTarsEndpointManager(objName, comm, setDivision) // avoid dead lock
 	g.mlock.Lock()
 	if v, ok := g.eps[key]; ok {
 		g.mlock.Unlock()
@@ -173,9 +180,10 @@ type tarsEndpointManager struct {
 	freshLock       *sync.Mutex
 	lastInvoke      int64
 	invokeNum       int32
+	setDivision     string
 }
 
-func newTarsEndpointManager(objName string, comm *Communicator) *tarsEndpointManager {
+func newTarsEndpointManager(objName string, comm *Communicator, setDivision string) *tarsEndpointManager {
 	if objName == "" {
 		return nil
 	}
@@ -185,6 +193,7 @@ func newTarsEndpointManager(objName string, comm *Communicator) *tarsEndpointMan
 	e.epList = &sync.Map{}
 	e.epLock = &sync.Mutex{}
 	e.checkAdapterList = &sync.Map{}
+	e.setDivision = setDivision
 	pos := strings.Index(objName, "@")
 	if pos > 0 {
 		//[direct]
@@ -369,6 +378,12 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 	if setable, ok = e.comm.GetPropertyBool("enableset"); ok {
 		setID, _ = e.comm.GetProperty("setdivision")
 	}
+
+	if e.setDivision != "" {
+		setable = true
+		setID = e.setDivision
+	}
+
 	if setable {
 		ret, err = q.FindObjectByIdInSameSet(e.objName, setID, &activeEp, &inactiveEp)
 	} else {

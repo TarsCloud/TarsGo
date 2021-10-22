@@ -70,7 +70,7 @@ go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
 ## Usage
 ### 1 Server
  - Below is a full example illustrating how to use tarsgo to build a server.
-  
+
 #### 1.1 Interface Definition
 
 Create a tars file, like hello.tars, under `$GOPATH/src` (for example, `$GOPATH/src/TestApp/TestServer/hello.tars`).
@@ -90,7 +90,7 @@ module TestApp
 	
 };	
 ```
-	
+
 
 #### 1.2 Compile Interface Definition File
 
@@ -542,7 +542,37 @@ func main() {
 ##### 2.4.5 Call by Set
 The client can call server by set through configuration file mentioned. Which enableset will be y and setdivision will set `like gray.sz.*`. See [IDC Set](https://tarscloud.github.io/TarsDocs_en/dev/tars-idc-set.html) for more detail.
 
-If you want to call by set manually, tarsgo will support this feature soon.
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/TarsCloud/TarsGo/tars"
+    "TestApp"
+)
+
+var *tars.Communicator
+func main() {
+    comm = tars.NewCommunicator()
+    app := new(TestApp.Hello)
+    obj := "TestApp.HelloGo.SayHelloObj"
+    comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h ... -p ...")
+    comm.SetProperty("enableset", true)
+    comm.SetProperty("setdivision", "gray.sz.*")
+	comm.StringToProxyWithSet(obj, app, "cn.all.dev")
+    
+	var req string="Hello Wold"
+    var res string
+    ret, err := app.TestHello(req, &out)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }   
+    fmt.Println(ret, res)
+}
+```
+
+
 
 ##### 2.4.6. Hash Call
 Since multiple servers can be deployed, client requests are randomly distributed to the server, but in some cases, certain requests should be always sent to a particular server. In this case, Tars provides a simple way to achieve which is called hash-call. Tarsgo Has supported this feature In version v1.1.5.
