@@ -67,7 +67,7 @@ go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
 ## 使用
 ### 1 服务端
  - 下面是一个完整的示例，用于说明如何使用tarsgo去构建服务端。
-  
+
 #### 1.1 接口定义
 
 在 $GOPATH/src下编写一个tars文件，如hello.tars , 比如 $GOPATH/src/TestApp/TestServer/hello.tars.
@@ -85,7 +85,7 @@ module TestApp
 
 }; 
 ```
-	
+
 #### 1.2 编译接口定义文件
 
 ##### 1.2.1 构建 tars2go
@@ -523,7 +523,37 @@ func main() {
 
 ##### 2.4.5 通过set调用
 客户端可以通过set来调用服务端，只需要配置上文提到的配置文件，其中enableset置为y，setdivision比如设置为gray.sz. *。 有关更多详细信息，请参阅https://github.com/TarsCloud/Tars/blob/master/docs-en/tars_idc_set.md。
-如果您想手动通过set调用，tarsgo将很快支持此功能。
+
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/TarsCloud/TarsGo/tars"
+    "TestApp"
+)
+
+var *tars.Communicator
+func main() {
+    comm = tars.NewCommunicator()
+    app := new(TestApp.Hello)
+    obj := "TestApp.HelloGo.SayHelloObj"
+    comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h ... -p ...")
+    comm.SetProperty("enableset", true)
+    comm.SetProperty("setdivision", "gray.sz.*")
+    
+    var req string="Hello Wold"
+    var res string
+    ret, err := app.TestHello(req, &out)
+    if err != nil {
+        fmt.Println(err)
+        return
+    }   
+    fmt.Println(ret, res)
+}
+```
+
+
 
 ##### 2.4.6. Hash调用
 

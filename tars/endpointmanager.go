@@ -58,6 +58,7 @@ func GetManager(comm *Communicator, objName string) EndpointManager {
 	g := gManager
 	g.mlock.Lock()
 	key := objName + comm.hashKey()
+
 	if v, ok := g.eps[key]; ok {
 		g.mlock.Unlock()
 		return v
@@ -369,6 +370,7 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 	if setable, ok = e.comm.GetPropertyBool("enableset"); ok {
 		setID, _ = e.comm.GetProperty("setdivision")
 	}
+
 	if setable {
 		ret, err = q.FindObjectByIdInSameSet(e.objName, setID, &activeEp, &inactiveEp)
 	} else {
