@@ -16,7 +16,9 @@ func Tars2endpoint(end endpointf.EndpointF) Endpoint {
 		Proto:   proto,
 		Bind:    "",
 		//Container: end.ContainerName,
-		SetId: end.SetId,
+		SetId:      end.SetId,
+		WeightType: end.WeightType,
+		Weight:     end.Weight,
 	}
 	e.Key = e.String()
 	return e
@@ -30,7 +32,9 @@ func Endpoint2tars(end Endpoint) endpointf.EndpointF {
 		Timeout: int32(end.Timeout),
 		Istcp:   end.Istcp,
 		//ContainerName: end.Container,
-		SetId: end.SetId,
+		SetId:      end.SetId,
+		WeightType: end.WeightType,
+		Weight:     end.Weight,
 	}
 }
 

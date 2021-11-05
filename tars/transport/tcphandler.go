@@ -42,6 +42,7 @@ type connInfo struct {
 }
 
 func (h *tcpHandler) Listen() (err error) {
+
 	cfg := h.conf
 	ln, err := grace.CreateListener("tcp", cfg.Address)
 	if err == nil {

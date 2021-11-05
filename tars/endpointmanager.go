@@ -18,6 +18,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/util/consistenthash"
 	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 	"github.com/TarsCloud/TarsGo/tars/util/gtime"
+	"github.com/TarsCloud/TarsGo/tars/util/wrr"
 )
 
 //EndpointManager interface of naming system
@@ -89,6 +90,15 @@ func GetManager(comm *Communicator, objName string) EndpointManager {
 					chmap.Add(e)
 				}
 				em.activeEpHashMap = chmap
+
+				wrr := wrr.NewWrrBalance()
+				if em.weightType == E_STATIC_WEIGHT {
+					for _, e := range em.activeEp {
+						wrr.Add(e, e.Weight)
+					}
+				}
+				em.wrrCache = wrr
+
 				TLOG.Debugf("init endpoint %s %v %v", objName, em.activeEp, em.inactiveEpf)
 			}
 		}
@@ -152,6 +162,11 @@ func (g *globalManager) updateEndpoints() {
 	}
 }
 
+const (
+	E_LOOP          int32 = 0
+	E_STATIC_WEIGHT int32 = 1
+)
+
 // tarsEndpointManager is a struct which contains endpoint information.
 type tarsEndpointManager struct {
 	objName     string // name only, no ip list
@@ -174,6 +189,10 @@ type tarsEndpointManager struct {
 	freshLock       *sync.Mutex
 	lastInvoke      int64
 	invokeNum       int32
+
+	//静态权重相关
+	weightType int32
+	wrrCache   *wrr.WrrBalance
 }
 
 func newTarsEndpointManager(objName string, comm *Communicator) *tarsEndpointManager {
@@ -185,6 +204,7 @@ func newTarsEndpointManager(objName string, comm *Communicator) *tarsEndpointMan
 	e.freshLock = &sync.Mutex{}
 	e.epList = &sync.Map{}
 	e.epLock = &sync.Mutex{}
+	e.weightType = E_LOOP
 	e.checkAdapterList = &sync.Map{}
 	pos := strings.Index(objName, "@")
 	if pos > 0 {
@@ -204,6 +224,9 @@ func newTarsEndpointManager(objName string, comm *Communicator) *tarsEndpointMan
 			chmap.Add(e)
 		}
 		e.activeEpHashMap = chmap
+		wrr := wrr.NewWrrBalance()
+		e.wrrCache = wrr
+
 	} else {
 		//[proxy] TODO singleton
 		TLOG.Debug("proxy mode:", objName)
@@ -249,6 +272,7 @@ func (e *tarsEndpointManager) checkStatus() {
 				}
 				e.epLock.Unlock()
 
+				e.wrrCache.Remove(ep.Key)
 				e.activeEpHashMap.Remove(ep.Key)
 			}
 
@@ -272,6 +296,9 @@ func (e *tarsEndpointManager) addAliveEp(ep endpoint.Endpoint) {
 		return crc32.ChecksumIEEE([]byte(sortedEps[i].Key)) < crc32.ChecksumIEEE([]byte(sortedEps[j].Key))
 	})
 	e.activeEp = sortedEps
+	if e.weightType == E_STATIC_WEIGHT {
+		e.wrrCache.Add(ep, ep.Weight)
+	}
 	e.activeEpHashMap.Add(ep)
 	e.epLock.Unlock()
 }
@@ -307,6 +334,18 @@ func (e *tarsEndpointManager) SelectAdapterProxy(msg *Message) (*AdapterProxy, b
 				e.epList.Store(ep.Key, adp)
 			}
 		}
+	} else if e.weightType == E_STATIC_WEIGHT {
+		if epi, ok := e.wrrCache.Next(); ok {
+			ep := epi.(endpoint.Endpoint)
+			if v, ok := e.epList.Load(ep.Key); ok {
+				adp = v.(*AdapterProxy)
+			} else {
+				epf := endpoint.Endpoint2tars(ep)
+				adp = NewAdapterProxy(&epf, e.comm)
+				e.epList.Store(ep.Key, adp)
+			}
+		}
+
 	} else {
 		if len(eps) != 0 {
 			var index int
@@ -431,6 +470,8 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 	})
 
 	//delete active endpoint which status is false
+	bSameType := true
+	lastType := newEps[0].WeightType
 	sortedEps := make([]endpoint.Endpoint, 0)
 	for _, ep := range newEps {
 		if v, ok := e.epList.Load(ep.Key); ok {
@@ -441,7 +482,20 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 		} else {
 			sortedEps = append(sortedEps, ep)
 		}
+
+		//update weightType
+		if ep.WeightType != lastType {
+			bSameType = false
+		}
 	}
+
+	if bSameType == false {
+		e.weightType = E_LOOP
+	} else {
+		e.weightType = lastType
+	}
+
+	TLOG.Debugf("findAndSetObj|obj: %s, weightType: %v", e.objName, e.weightType)
 
 	//make endponit slice sorted
 	sort.Slice(sortedEps, func(i int, j int) bool {
@@ -453,11 +507,19 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 		chmap.Add(e)
 	}
 
+	wrr := wrr.NewWrrBalance()
+	if e.weightType == E_STATIC_WEIGHT {
+		for _, e := range sortedEps {
+			wrr.Add(e, e.Weight)
+		}
+	}
+
 	e.epLock.Lock()
 	e.activeEpf = activeEp
 	e.inactiveEpf = inactiveEp
 	e.activeEp = sortedEps
 	e.activeEpHashMap = chmap
+	e.wrrCache = wrr
 	e.epLock.Unlock()
 
 	TLOG.Debugf("findAndSetObj|activeEp: %+v", sortedEps)

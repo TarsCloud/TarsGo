@@ -13,9 +13,11 @@ type Endpoint struct {
 	Container string
 	SetId     string
 	Key       string
+	WeightType int32
+	Weight     int32
 }
 
 // String returns readable string for Endpoint
 func (e Endpoint) String() string {
-	return fmt.Sprintf("%s -h %s -p %d -t %d -d %s", e.Proto, e.Host, e.Port, e.Timeout, e.Container)
+	return fmt.Sprintf("%s -h %s -p %d -t %d -d %s -v %d -w %d", e.Proto, e.Host, e.Port, e.Timeout, e.Container, e.WeightType, e.Weight)
 }

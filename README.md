@@ -559,6 +559,7 @@ func main() {
     comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h ... -p ...")
     comm.SetProperty("enableset", true)
     comm.SetProperty("setdivision", "gray.sz.*")
+    comm.StringToProxy(obj, app)
     
     var req string="Hello Wold"
     var res string
