@@ -128,7 +128,7 @@ func (g *globalManager) updateEndpoints() {
 		for _, e := range eps {
 			err := e.doFresh()
 			if err != nil {
-				TLOG.Errorf("update endoint error, %s.", e.objName)
+				TLOG.Errorf("update endpoint error, %s.", e.objName)
 			}
 
 		}
