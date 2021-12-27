@@ -1,3 +1,3 @@
 #!/bin/bash
 make
-./build/_SERVER_ --config=config.conf
+./build/bin/_SERVER_ --config=config.conf
