@@ -43,22 +43,13 @@ Please set go mod:
 go env -w GO111MODULE=auto
 ```
 
-cd `$GOPATH`
+install `tars2go`:
 
 ```bash
-go get -u github.com/TarsCloud/TarsGo/tars
-```
-
-now tarsgo downloaded to path:
-
-```bash
-$GOPATH/src/github.com/TarsCloud/TarsGo/
-```
-
-After tarsgo src be downloaded, please install `tars2go`:
-
-```bash
-go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
+# < go 1.17 
+go get -u github.com/TarsCloud/TarsGo/tars/tools/tars2go
+# >= go 1.17
+go install github.com/TarsCloud/TarsGo/tars/tools/tars2go@latest
 ```
 
 ## Quickstart
@@ -98,7 +89,10 @@ module TestApp
 If not install `tars2go`, compile and install the `tars2go` tools.
 
 ```bash
-go install $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go
+# < go 1.17 
+go get -u github.com/TarsCloud/TarsGo/tars/tools/tars2go
+# >= go 1.17
+go install github.com/TarsCloud/TarsGo/tars/tools/tars2go@latest
 ```
 
 ##### 1.2.2 Compile the Tars File and Translate into Go File
