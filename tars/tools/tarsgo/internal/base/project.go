@@ -81,6 +81,6 @@ func (p *Project) Create(ctx context.Context, dir string, layout string, branch 
 	fmt.Println(color.WhiteString("$ cd %s", p.Server))
 	fmt.Println(color.WhiteString("$ ./start.sh"))
 	fmt.Println("🤝 Thanks for using TarsGo")
-	fmt.Println("📚 Tutorial: https://doc.tarsyun.com/")
+	fmt.Println("📚 Tutorial: https://tarscloud.github.io/TarsDocs/")
 	return nil
 }
