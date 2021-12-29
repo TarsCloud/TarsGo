@@ -99,6 +99,8 @@ func (r *Repo) CopyTo(ctx context.Context, p *Project, to string, demoDir string
 		"_SERVER_", p.Server,
 		"_SERVANT_", p.Servant,
 		"_MODULE_", p.GoModuleName,
+		// makefile
+		"$(path)/src/github.com/TarsCloud/TarsGo/tars", "scripts",
 		// CMakeLists.txt
 		"${GOPATH}/src/github.com/TarsCloud/TarsGo/", "${CMAKE_CURRENT_SOURCE_DIR}/",
 	}
@@ -108,10 +110,6 @@ func (r *Repo) CopyTo(ctx context.Context, p *Project, to string, demoDir string
 	}
 	err = copyDir(path.Join(r.Path(), "tars", "tools", "debugtool"), path.Join(to, "debugtool"), replaces, ignores)
 	if demoDir == consts.MakeDemoDir {
-		replaces = []string{
-			// make
-			"$(path)/src/github.com/TarsCloud/TarsGo/tars", "scripts",
-		}
 		_ = os.MkdirAll(path.Join(to, "scripts"), 0755)
 		_ = copyFile(path.Join(r.Path(), "tars", "makefile.tars.gomod"), path.Join(to, "scripts", "makefile.tars.gomod"), replaces)
 	} else {
@@ -121,6 +119,5 @@ func (r *Repo) CopyTo(ctx context.Context, p *Project, to string, demoDir string
 		}
 		_ = copyDir(path.Join(r.Path(), "cmake"), path.Join(to, "cmake"), replaces, ignores)
 	}
-	fmt.Println("aaaaa")
 	return err
 }
