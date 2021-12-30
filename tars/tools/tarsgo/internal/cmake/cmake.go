@@ -14,11 +14,11 @@ import (
 
 // CmdNew represents the new command.
 var CmdNew = &cobra.Command{
-	Use: `cmake App Server Servant GoModuleName
-  tarsgo cmake TeleSafe PhonenumSogouServer SogouInfo github.com/TeleSafe/PhonenumSogouServer`,
+	Use:   "cmake App Server Servant GoModuleName",
 	Short: "Create a service cmake template",
-	Long:  "Create a service cmake project using the repository template. Example: TarsGo new helloworld",
-	Run:   run,
+	Long: `Create a service cmake project using the repository template. Example:
+tarsgo cmake TeleSafe PhonenumSogouServer SogouInfo github.com/TeleSafe/PhonenumSogouServer`,
+	Run: run,
 }
 
 var (

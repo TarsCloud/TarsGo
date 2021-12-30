@@ -14,11 +14,11 @@ import (
 
 // CmdNew represents the new command.
 var CmdNew = &cobra.Command{
-	Use: `make App Server Servant GoModuleName
-  tarsgo make TeleSafe PhonenumSogouServer SogouInfo github.com/TeleSafe/PhonenumSogouServer`,
+	Use:   "make App Server Servant GoModuleName",
 	Short: "Create a server make template",
-	Long:  "Create a server make project using the repository template. Example: TarsGo new helloworld",
-	Run:   run,
+	Long: `Create a server make project using the repository template. Example: 
+tarsgo make TeleSafe PhonenumSogouServer SogouInfo github.com/TeleSafe/PhonenumSogouServer`,
+	Run: run,
 }
 
 var (
