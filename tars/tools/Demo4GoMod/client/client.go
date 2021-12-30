@@ -5,7 +5,7 @@ import (
 
 	"github.com/TarsCloud/TarsGo/tars"
 
-	"_APP_"
+	"_MODULE_/tars-protocol/_APP_"
 )
 
 func main() {
