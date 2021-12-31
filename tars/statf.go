@@ -2,6 +2,8 @@ package tars
 
 import (
 	"fmt"
+	"github.com/TarsCloud/TarsGo/tars/util/sync"
+	"github.com/TarsCloud/TarsGo/tars/util/tools"
 	"strings"
 	"time"
 
@@ -28,15 +30,15 @@ type StatFHelper struct {
 	mStatCount           map[statf.StatMicMsgHead]int
 	comm                 *Communicator
 	sf                   *statf.StatF
-	node                 string
+	servant              string
 	chStatInfoFromServer chan StatInfo
 	mStatInfoFromServer  map[statf.StatMicMsgHead]statf.StatMicMsgBody
 	mStatCountFromServer map[statf.StatMicMsgHead]int
 }
 
-// Init init the StatFHelper
-func (s *StatFHelper) Init(comm *Communicator, node string) {
-	s.node = node
+// Init the StatFHelper
+func (s *StatFHelper) Init(comm *Communicator, servant string) {
+	s.servant = servant
 	s.chStatInfo = make(chan StatInfo, GetServerConfig().StatReportChannelBufLen)
 	s.chStatInfoFromServer = make(chan StatInfo, GetServerConfig().StatReportChannelBufLen)
 	s.mStatInfo = make(map[statf.StatMicMsgHead]statf.StatMicMsgBody)
@@ -45,7 +47,7 @@ func (s *StatFHelper) Init(comm *Communicator, node string) {
 	s.mStatCountFromServer = make(map[statf.StatMicMsgHead]int)
 	s.comm = comm
 	s.sf = new(statf.StatF)
-	s.comm.StringToProxy(s.node, s.sf)
+	s.comm.StringToProxy(s.servant, s.sf)
 }
 
 func (s *StatFHelper) collectMsg(statInfo StatInfo, mStatInfo map[statf.StatMicMsgHead]statf.StatMicMsgBody, mStatCount map[statf.StatMicMsgHead]int) {
@@ -96,7 +98,7 @@ func (s *StatFHelper) reportAndClear(mStat string, bFromClient bool) {
 	}
 }
 
-// Run run stat report loop
+// Run stat report loop
 func (s *StatFHelper) Run() {
 	ticker := time.NewTicker(GetServerConfig().StatReportInterval)
 	for {
@@ -132,24 +134,26 @@ func (s *StatFHelper) ReportMicMsg(stStatInfo StatInfo, fromServer bool) {
 // StatReport instance pointer of StatFHelper
 var StatReport *StatFHelper
 var statInited = make(chan struct{}, 1)
+var statInitOnce sync.Once
 
-func initReport() {
-	if GetClientConfig() == nil || GetClientConfig().Stat == "" {
+func initReport() error {
+	cfg := GetClientConfig()
+	if cfg.Stat == "" || (cfg.Locator == "" && strings.Index(cfg.Stat, "@") < 0) {
 		statInited <- struct{}{}
-		return
+		return fmt.Errorf("stat init error")
 	}
 	comm := NewCommunicator()
 	StatReport = new(StatFHelper)
 	StatReport.Init(comm, GetClientConfig().Stat)
 	statInited <- struct{}{}
 	go StatReport.Run()
+	return nil
 }
 
 // ReportStatBase is base method for report statitics.
 func ReportStatBase(head *statf.StatMicMsgHead, body *statf.StatMicMsgBody, FromServer bool) {
-	cfg := GetServerConfig()
 	statInfo := StatInfo{Head: *head, Body: *body}
-	statInfo.Head.TarsVersion = cfg.Version
+	statInfo.Head.TarsVersion = TarsVersion
 	//statInfo.Head.IStatVer = 2
 	if StatReport != nil {
 		StatReport.ReportMicMsg(statInfo, FromServer)
@@ -158,19 +162,15 @@ func ReportStatBase(head *statf.StatMicMsgHead, body *statf.StatMicMsgBody, From
 
 // ReportStatFromClient report the statics from client.
 func ReportStatFromClient(msg *Message, succ int32, timeout int32, exec int32) {
-	cfg := GetServerConfig()
-	if cfg == nil {
-		return
-	}
+	cCfg := GetClientConfig()
 	var head statf.StatMicMsgHead
 	var body statf.StatMicMsgBody
-	head.MasterName = fmt.Sprintf("%s.%s", cfg.App, cfg.Server)
-	head.MasterIp = cfg.LocalIP
-	//head.SMasterContainer = cfg.Container
-	if cfg.Enableset {
-		setList := strings.Split(cfg.Setdivision, ".")
-		head.MasterName = fmt.Sprintf("%s.%s.%s%s%s@%s", cfg.App, cfg.Server, setList[0], setList[1], setList[2], cfg.Version)
-		//head.SMasterSetInfo = cfg.Setdivision
+	head.MasterName = cCfg.ModuleName
+	head.MasterIp = tools.GetLocalIP()
+	if sCfg := GetServerConfig(); sCfg != nil && sCfg.Enableset {
+		head.MasterIp = sCfg.LocalIP
+		setList := strings.Split(sCfg.Setdivision, ".")
+		head.MasterName = fmt.Sprintf("%s.%s.%s%s%s@%s", sCfg.App, sCfg.Server, setList[0], setList[1], setList[2], sCfg.Version)
 	}
 
 	head.InterfaceName = msg.Req.SFuncName
@@ -181,7 +181,6 @@ func ReportStatFromClient(msg *Message, succ int32, timeout int32, exec int32) {
 	}
 	head.SlaveName = fmt.Sprintf("%s.%s", sNames[0], sNames[1])
 	if msg.Adp != nil {
-		//head.SSlaveContainer = msg.Adp.GetPoint().ContainerName
 		head.SlaveIp = msg.Adp.GetPoint().Host
 		head.SlavePort = msg.Adp.GetPoint().Port
 		if msg.Adp.GetPoint().SetId != "" {
@@ -214,7 +213,6 @@ func ReportStatFromServer(InterfaceName, MasterName string, ReturnValue int32, T
 	var body statf.StatMicMsgBody
 	head.SlaveName = fmt.Sprintf("%s.%s", cfg.App, cfg.Server)
 	head.SlaveIp = cfg.LocalIP
-	//head.SSlaveContainer = cfg.Container
 	if cfg.Enableset {
 		setList := strings.Split(cfg.Setdivision, ".")
 		head.SlaveName = fmt.Sprintf("%s.%s.%s%s%s", cfg.App, cfg.Server, setList[0], setList[1], setList[2])

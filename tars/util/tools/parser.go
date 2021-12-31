@@ -84,10 +84,10 @@ func ParseLogSizeMb(oriSize string) (ret uint64) {
 
 // ParseLogNum : Parse uint64 from string
 func ParseLogNum(strVal string) (ret uint64) {
-	var defualtLogNum uint64 = 10
+	var defaultLogNum uint64 = 10
 	ret, err := strconv.ParseUint(strVal, 10, 64)
 	if err != nil {
-		return defualtLogNum
+		return defaultLogNum
 	}
 	return ret
 }
