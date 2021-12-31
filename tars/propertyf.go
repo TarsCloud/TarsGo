@@ -1,6 +1,8 @@
 package tars
 
 import (
+	"fmt"
+	sync2 "github.com/TarsCloud/TarsGo/tars/util/sync"
 	"reflect"
 	"sort"
 	"strconv"
@@ -320,29 +322,26 @@ type PropertyReportHelper struct {
 
 // ProHelper is global PropertyReportHelper instance
 var ProHelper *PropertyReportHelper
-var proOnce sync.Once
+var proOnce sync2.Once
 
 // ReportToServer report to the remote propertyreport server.
 func (p *PropertyReportHelper) ReportToServer() {
-	cfg := GetServerConfig()
 	statMsg := make(map[propertyf.StatPropMsgHead]propertyf.StatPropMsgBody)
 
 	var head propertyf.StatPropMsgHead
 	head.IPropertyVer = 2
-	if cfg != nil {
+	head.ModuleName = GetClientConfig().ModuleName
+	head.Ip = tools.GetLocalIP()
+	if cfg := GetServerConfig(); cfg != nil {
+		head.Ip = cfg.LocalIP
 		if cfg.Enableset {
 			setList := strings.Split(cfg.Setdivision, ".")
 			head.ModuleName = cfg.App + "." + cfg.Server + "." + setList[0] + setList[1] + setList[2]
 			head.SetName = setList[0]
 			head.SetArea = setList[1]
 			head.SetID = setList[2]
-		} else {
-			head.ModuleName = cfg.App + "." + cfg.Server
 		}
-	} else {
-		return
 	}
-	head.Ip = cfg.LocalIP
 	//head.SContainer = cfg.Container
 
 	p.reportPtrs.Range(func(key, val interface{}) bool {
@@ -433,14 +432,16 @@ func (p *PropertyReportHelper) Init(comm *Communicator, node string) {
 	p.comm.StringToProxy(p.node, p.pf)
 }
 
-func initProReport() {
-	if GetClientConfig() == nil || GetClientConfig().Property == "" {
-		return
+func initProReport() error {
+	cfg := GetClientConfig()
+	if cfg.Property == "" || (cfg.Locator == "" && strings.Index(cfg.Stat, "@") < 0) {
+		return fmt.Errorf("property emptry")
 	}
 	comm := NewCommunicator()
 	ProHelper = new(PropertyReportHelper)
 	ProHelper.Init(comm, GetClientConfig().Property)
 	go ProHelper.Run()
+	return nil
 }
 
 // AddToReport adds the user's PropertyReport to the PropertyReportHelper

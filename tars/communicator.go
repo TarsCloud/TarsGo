@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	s "github.com/TarsCloud/TarsGo/tars/model"
-	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
 // ProxyPrx interface
@@ -30,27 +29,8 @@ type Communicator struct {
 }
 
 func (c *Communicator) init() {
-	if GetClientConfig() != nil {
-		c.SetProperty("locator", GetClientConfig().Locator)
-		//TODO
-		c.Client = GetClientConfig()
-	} else {
-		c.Client = &clientConfig{
-			RefreshEndpointInterval: refreshEndpointInterval,
-			ReportInterval:          reportInterval,
-			CheckStatusInterval:     checkStatusInterval,
-			AsyncInvokeTimeout:      AsyncInvokeTimeout,
-			ClientQueueLen:          ClientQueueLen,
-			ClientIdleTimeout:       tools.ParseTimeOut(ClientIdleTimeout),
-			ClientReadTimeout:       tools.ParseTimeOut(ClientReadTimeout),
-			ClientWriteTimeout:      tools.ParseTimeOut(ClientWriteTimeout),
-			ClientDialTimeout:       tools.ParseTimeOut(ClientDialTimeout),
-			ReqDefaultTimeout:       ReqDefaultTimeout,
-			ObjQueueMax:             ObjQueueMax,
-			AdapterProxyTicker:      tools.ParseTimeOut(AdapterProxyTicker),
-			AdapterProxyResetCount:  AdapterProxyResetCount,
-		}
-	}
+	c.Client = GetClientConfig()
+	c.SetProperty("locator", c.Client.Locator)
 	c.SetProperty("isclient", true)
 	c.SetProperty("enableset", false)
 	if GetServerConfig() != nil {
@@ -73,6 +53,12 @@ func (c *Communicator) GetLocator() string {
 
 // SetLocator sets locator with obj
 func (c *Communicator) SetLocator(obj string) {
+	defer func() {
+		go func() {
+			_ = statInitOnce.Do(initReport)
+		}()
+	}()
+	c.Client.Locator = obj
 	c.SetProperty("locator", obj)
 }
 
