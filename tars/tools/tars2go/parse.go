@@ -573,17 +573,15 @@ func (p *Parse) parseModule() {
 	p.expect(tkName)
 
 	if p.Module != "" {
-		// TODO: 解决一个tars文件中定义多个module
+		// 解决一个tars文件中定义多个module
 		basePre := p.ProtoName + "_" + p.t.S.S
 		name := basePre + ".tars"
-		i := 1
-		for {
+		for i := 1; ; i++ {
 			if !fileNames[name] {
 				fileNames[name] = true
 				break
 			}
-			name = basePre + "_" + strconv.Itoa(i) + ".tars"
-			i++
+			name = fmt.Sprintf("%s_%d.tars", basePre, i)
 		}
 		newp := newParse(name, p.lex.buff.Bytes(), p.IncChain)
 		newp.Module = p.t.S.S
@@ -596,12 +594,10 @@ func (p *Parse) parseModule() {
 		// 增加已经解析的module
 		p.IncParse = append(p.IncParse, newp)
 		p.lex = newp.lex
-		//p.parseErr("do not repeat define module")
-		return
+	} else {
+		p.Module = p.t.S.S
+		p.parseModuleSegment()
 	}
-	p.Module = p.t.S.S
-
-	p.parseModuleSegment()
 }
 
 func (p *Parse) parseInclude() {
@@ -832,25 +828,14 @@ func newParse(s string, b []byte, incChain []string) *Parse {
 	return p
 }
 
-func fileExists(path string) bool {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true
-	}
-	if os.IsNotExist(err) {
-		return false
-	}
-	return false
-}
-
 //ParseFile parse a file,return grammer tree.
 func ParseFile(path string, incChain []string) *Parse {
-	// 查找tars文件路径
-	if !fileExists(path) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		// 查找tars文件路径
 		for _, include := range includes {
 			include = strings.TrimRight(include, "/")
 			filePath := include + "/" + path
-			if fileExists(filePath) {
+			if _, err = os.Stat(filePath); err == nil {
 				path = filePath
 				break
 			}
