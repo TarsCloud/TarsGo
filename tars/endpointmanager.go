@@ -443,7 +443,7 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 		}
 	}
 
-	//make endponit slice sorted
+	//make endpoint slice sorted
 	sort.Slice(sortedEps, func(i int, j int) bool {
 		return crc32.ChecksumIEEE([]byte(sortedEps[i].Key)) < crc32.ChecksumIEEE([]byte(sortedEps[j].Key))
 	})

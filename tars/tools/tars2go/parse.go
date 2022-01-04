@@ -3,11 +3,13 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"path"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
 )
+
+var fileNames = map[string]bool{}
 
 // VarType contains variable type(token)
 type VarType struct {
@@ -571,11 +573,31 @@ func (p *Parse) parseModule() {
 	p.expect(tkName)
 
 	if p.Module != "" {
-		p.parseErr("do not repeat define module")
+		// 解决一个tars文件中定义多个module
+		basePre := p.ProtoName + "_" + p.t.S.S
+		name := basePre + ".tars"
+		for i := 1; ; i++ {
+			if !fileNames[name] {
+				fileNames[name] = true
+				break
+			}
+			name = fmt.Sprintf("%s_%d.tars", basePre, i)
+		}
+		newp := newParse(name, p.lex.buff.Bytes(), p.IncChain)
+		newp.Module = p.t.S.S
+		newp.Include = p.Include
+		newp.IncParse = p.IncParse
+		copyP := *p
+		newp.IncParse = append(newp.IncParse, &copyP)
+		newp.parseModuleSegment()
+		newp.analyzeDepend()
+		// 增加已经解析的module
+		p.IncParse = append(p.IncParse, newp)
+		p.lex = newp.lex
+	} else {
+		p.Module = p.t.S.S
+		p.parseModuleSegment()
 	}
-	p.Module = p.t.S.S
-
-	p.parseModuleSegment()
 }
 
 func (p *Parse) parseInclude() {
@@ -762,10 +784,7 @@ func (p *Parse) analyzeHashKey() {
 
 func (p *Parse) analyzeDepend() {
 	for _, v := range p.Include {
-		//#include support relative path,example: ../test.tars
-		relativePath := path.Dir(p.Source)
-		dependFile := relativePath + "/" + v
-		pInc := ParseFile(dependFile, p.IncChain)
+		pInc := ParseFile(v, p.IncChain)
 		p.IncParse = append(p.IncParse, pInc)
 		fmt.Println("parse include: ", v)
 	}
@@ -811,6 +830,17 @@ func newParse(s string, b []byte, incChain []string) *Parse {
 
 //ParseFile parse a file,return grammer tree.
 func ParseFile(path string, incChain []string) *Parse {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		// 查找tars文件路径
+		for _, include := range includes {
+			include = strings.TrimRight(include, "/")
+			filePath := include + "/" + path
+			if _, err = os.Stat(filePath); err == nil {
+				path = filePath
+				break
+			}
+		}
+	}
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		fmt.Println("file read error: " + path + ". " + err.Error())
