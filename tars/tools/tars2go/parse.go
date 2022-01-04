@@ -9,8 +9,6 @@ import (
 	"strings"
 )
 
-var fileNames = map[string]bool{}
-
 // VarType contains variable type(token)
 type VarType struct {
 	Type     TK       // basic type
@@ -133,6 +131,7 @@ type Parse struct {
 	ProtoName string
 
 	DependModuleWithJce map[string]bool
+	fileNames           map[string]bool
 }
 
 func (p *Parse) parseErr(err string) {
@@ -574,25 +573,34 @@ func (p *Parse) parseModule() {
 
 	if p.Module != "" {
 		// 解决一个tars文件中定义多个module
-		basePre := p.ProtoName + "_" + p.t.S.S
-		name := basePre + ".tars"
-		for i := 1; ; i++ {
-			if !fileNames[name] {
-				fileNames[name] = true
-				break
-			}
-			name = fmt.Sprintf("%s_%d.tars", basePre, i)
-		}
-		newp := newParse(name, p.lex.buff.Bytes(), p.IncChain)
-		newp.Module = p.t.S.S
+		name := p.ProtoName + "_" + p.t.S.S + ".tars"
+		newp := newParse(name, nil, nil)
+		newp.IncChain = p.IncChain
+		newp.lex = p.lex
 		newp.Include = p.Include
 		newp.IncParse = p.IncParse
-		copyP := *p
-		newp.IncParse = append(newp.IncParse, &copyP)
+		cowp := *p
+		newp.IncParse = append(newp.IncParse, &cowp)
+		newp.Module = p.t.S.S
 		newp.parseModuleSegment()
 		newp.analyzeDepend()
-		// 增加已经解析的module
-		p.IncParse = append(p.IncParse, newp)
+		if p.fileNames[name] {
+			// merge
+			for _, incParse := range p.IncParse {
+				if incParse.ProtoName == newp.ProtoName {
+					incParse.Struct = append(incParse.Struct, newp.Struct...)
+					incParse.Interface = append(incParse.Interface, newp.Interface...)
+					incParse.Enum = append(incParse.Enum, newp.Enum...)
+					incParse.Const = append(incParse.Const, newp.Const...)
+					incParse.HashKey = append(incParse.HashKey, newp.HashKey...)
+					break
+				}
+			}
+		} else {
+			// 增加已经解析的module
+			p.IncParse = append(p.IncParse, newp)
+			p.fileNames[name] = true
+		}
 		p.lex = newp.lex
 	} else {
 		p.Module = p.t.S.S
@@ -825,6 +833,7 @@ func newParse(s string, b []byte, incChain []string) *Parse {
 	fmt.Println(s, p.IncChain)
 
 	p.lex = NewLexState(s, b)
+	p.fileNames = map[string]bool{}
 	return p
 }
 
