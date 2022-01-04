@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 func GetArgs(cmd *cobra.Command, args []string) (app, server, servant, goModuleName string, err error) {
@@ -51,4 +52,20 @@ func GetArgs(cmd *cobra.Command, args []string) (app, server, servant, goModuleN
 		goModuleName = args[3]
 	}
 	return app, server, servant, goModuleName, nil
+}
+
+// FirstUpper 字符串首字母大写
+func FirstUpper(s string) string {
+	if s == "" {
+		return ""
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+// FirstLower 字符串首字母小写
+func FirstLower(s string) string {
+	if s == "" {
+		return ""
+	}
+	return strings.ToLower(s[:1]) + s[1:]
 }

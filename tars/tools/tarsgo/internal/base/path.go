@@ -52,6 +52,9 @@ func copyFile(src, dst string, replaces []string) error {
 			old = next
 			continue
 		}
+		if !strings.HasSuffix(dst, ".tars") && old == "_SERVANT_" {
+			next = FirstUpper(next)
+		}
 		buf = bytes.ReplaceAll(buf, []byte(old), []byte(next))
 	}
 	return os.WriteFile(dst, buf, srcinfo.Mode())
