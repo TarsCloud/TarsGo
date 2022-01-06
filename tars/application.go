@@ -152,6 +152,12 @@ func initConfig() {
 	// maxPackageLength
 	svrCfg.MaxPackageLength = c.GetIntWithDef("/tars/application/server<maxPackageLength>", MaxPackageLength)
 	protocol.SetMaxPackageLength(svrCfg.MaxPackageLength)
+	// tls
+	svrCfg.CA = c.GetString("/tars/application/server<ca>")
+	svrCfg.Cert = c.GetString("/tars/application/server<cert>")
+	svrCfg.Key = c.GetString("/tars/application/server<key>")
+	svrCfg.VerifyClient = c.GetStringWithDef("/tars/application/server<verifyclient>", "0") == "0"
+	svrCfg.Ciphers = c.GetString("/tars/application/server<ciphers>")
 
 	//client
 	cltCfg = new(clientConfig)
