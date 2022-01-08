@@ -43,7 +43,7 @@ type connInfo struct {
 
 func (h *tcpHandler) Listen() (err error) {
 	cfg := h.conf
-	ln, err := grace.CreateListener("tcp", cfg.Address)
+	ln, err := grace.CreateListener("tcp", cfg.Address, cfg.TlsConfig)
 	if err == nil {
 		TLOG.Infof("Listening on %s", cfg.Address)
 		h.lis = ln.(*net.TCPListener)

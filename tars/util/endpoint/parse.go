@@ -18,7 +18,7 @@ func Parse(endpoint string) Endpoint {
 	pFlag.StringVar(&bind, "b", "", "bind")
 	pFlag.Parse(strings.Fields(endpoint)[1:])
 	istcp := int32(0)
-	if proto == "tcp" {
+	if proto == "tcp" || proto == "ssl" {
 		istcp = int32(1)
 	} else if proto == "ssl" {
 		proto = "tcp"

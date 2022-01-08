@@ -2,6 +2,7 @@ package transport
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"io"
 	"net"
@@ -21,6 +22,7 @@ type TarsClientConf struct {
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
 	DialTimeout  time.Duration
+	TlsConfig    *tls.Config
 }
 
 // TarsClient is struct for tars client.
@@ -192,7 +194,12 @@ func (c *connection) ReConnect() (err error) {
 	c.connLock.Lock()
 	if c.isClosed {
 		TLOG.Debug("Connect:", c.tc.address)
-		c.conn, err = net.DialTimeout(c.tc.conf.Proto, c.tc.address, c.dialTimeout)
+		if c.tc.conf.TlsConfig == nil {
+			c.conn, err = net.DialTimeout(c.tc.conf.Proto, c.tc.address, c.dialTimeout)
+		} else {
+			d := net.Dialer{Timeout: c.dialTimeout}
+			c.conn, err = tls.DialWithDialer(&d, c.tc.conf.Proto, c.tc.address, c.tc.conf.TlsConfig)
+		}
 
 		if err != nil {
 			c.connLock.Unlock()

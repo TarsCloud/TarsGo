@@ -3,10 +3,11 @@ package transport
 import (
 	"context"
 	"crypto/tls"
+
+	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
+	"github.com/TarsCloud/TarsGo/tars/util/rogger"
 	"sync/atomic"
 	"time"
-
-	"github.com/TarsCloud/TarsGo/tars/util/rogger"
 )
 
 // TLOG  is logger for transport.
@@ -34,6 +35,7 @@ type TarsServerConf struct {
 	TCPReadBuffer  int
 	TCPWriteBuffer int
 	TCPNoDelay     bool
+	Endpoint       endpoint.Endpoint
 	TlsConfig      *tls.Config
 }
 

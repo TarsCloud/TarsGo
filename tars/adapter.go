@@ -3,6 +3,7 @@ package tars
 import (
 	"context"
 	"fmt"
+	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -38,22 +39,28 @@ type AdapterProxy struct {
 }
 
 // NewAdapterProxy : Construct an adapter proxy
-func NewAdapterProxy(point *endpointf.EndpointF, comm *Communicator) *AdapterProxy {
+func NewAdapterProxy(objName string, point *endpointf.EndpointF, comm *Communicator) *AdapterProxy {
 	c := &AdapterProxy{}
 	c.comm = comm
 	c.point = point
 	proto := "tcp"
-	if point.Istcp == 0 {
+	if point.Istcp == endpoint.UDP {
 		proto = "udp"
 	}
 	conf := &transport.TarsClientConf{
-		Proto: proto,
-		//NumConnect:   netthread,
+		Proto:        proto,
 		QueueLen:     comm.Client.ClientQueueLen,
 		IdleTimeout:  comm.Client.ClientIdleTimeout,
 		ReadTimeout:  comm.Client.ClientReadTimeout,
 		WriteTimeout: comm.Client.ClientWriteTimeout,
 		DialTimeout:  comm.Client.ClientDialTimeout,
+	}
+	if point.Istcp == endpoint.SSL {
+		if tlsConfig, ok := clientObjTlsConfig[objName]; ok {
+			conf.TlsConfig = tlsConfig
+		} else {
+			conf.TlsConfig = clientTlsConfig
+		}
 	}
 	c.conf = conf
 	c.tarsClient = transport.NewTarsClient(fmt.Sprintf("%s:%d", point.Host, point.Port), c, conf)

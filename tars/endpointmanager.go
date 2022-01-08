@@ -303,7 +303,7 @@ func (e *tarsEndpointManager) SelectAdapterProxy(msg *Message) (*AdapterProxy, b
 				adp = v.(*AdapterProxy)
 			} else {
 				epf := endpoint.Endpoint2tars(ep)
-				adp = NewAdapterProxy(&epf, e.comm)
+				adp = NewAdapterProxy(e.objName, &epf, e.comm)
 				e.epList.Store(ep.Key, adp)
 			}
 		}
@@ -321,7 +321,7 @@ func (e *tarsEndpointManager) SelectAdapterProxy(msg *Message) (*AdapterProxy, b
 				adp = v.(*AdapterProxy)
 			} else {
 				epf := endpoint.Endpoint2tars(ep)
-				adp = NewAdapterProxy(&epf, e.comm)
+				adp = NewAdapterProxy(e.objName, &epf, e.comm)
 				e.epList.Store(ep.Key, adp)
 			}
 		}
@@ -334,7 +334,7 @@ func (e *tarsEndpointManager) SelectAdapterProxy(msg *Message) (*AdapterProxy, b
 		if v, ok := e.epList.Load(randomEp.Key); ok {
 			adp = v.(*AdapterProxy)
 		} else {
-			adp = NewAdapterProxy(&randomEpf, e.comm)
+			adp = NewAdapterProxy(e.objName, &randomEpf, e.comm)
 			e.epList.Store(randomEp.Key, adp)
 		}
 	}
@@ -393,6 +393,7 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 			return nil
 		}
 	*/
+
 	if len(activeEp) == 0 {
 		TLOG.Errorf("findAndSetObj %s, empty of active endpoint", e.objName)
 		return nil
