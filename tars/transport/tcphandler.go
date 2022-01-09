@@ -2,6 +2,7 @@ package transport
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net"
@@ -21,8 +22,9 @@ import (
 type tcpHandler struct {
 	conf *TarsServerConf
 
-	lis *net.TCPListener
-	ts  *TarsServer
+	tcpListener *net.TCPListener
+	listener    net.Listener
+	ts          *TarsServer
 
 	readBuffer  int
 	writeBuffer int
@@ -35,7 +37,7 @@ type tcpHandler struct {
 }
 
 type connInfo struct {
-	conn      *net.TCPConn
+	conn      net.Conn
 	idleTime  int64
 	numInvoke int32
 	writeLock sync.Mutex
@@ -43,10 +45,16 @@ type connInfo struct {
 
 func (h *tcpHandler) Listen() (err error) {
 	cfg := h.conf
-	ln, err := grace.CreateListener("tcp", cfg.Address, cfg.TlsConfig)
+	TLOG.Info(cfg)
+	ln, err := grace.CreateListener("tcp", cfg.Address)
 	if err == nil {
 		TLOG.Infof("Listening on %s", cfg.Address)
-		h.lis = ln.(*net.TCPListener)
+		h.tcpListener = ln.(*net.TCPListener)
+		if h.conf.Proto == "ssl" {
+			h.listener = tls.NewListener(ln, h.conf.TlsConfig)
+		} else {
+			h.listener = ln
+		}
 	} else {
 		TLOG.Infof("Listening on %s error: %v", cfg.Address, err)
 	}
@@ -109,27 +117,36 @@ func (h *tcpHandler) Handle() error {
 		}
 		if cfg.AcceptTimeout > 0 {
 			// set accept timeout
-			h.lis.SetDeadline(time.Now().Add(cfg.AcceptTimeout))
+			h.tcpListener.SetDeadline(time.Now().Add(cfg.AcceptTimeout))
 		}
-		conn, err := h.lis.AcceptTCP()
+		conn, err := h.listener.Accept()
 		if err != nil {
 			if !isNoDataError(err) {
 				TLOG.Errorf("Accept error: %v", err)
 			} else if conn != nil {
-				conn.SetKeepAlive(true)
+				switch c := conn.(type) {
+				case *net.TCPConn:
+					c.SetKeepAlive(true)
+				}
 			}
 			continue
 		}
 		atomic.AddInt32(&h.ts.numConn, 1)
-		go func(conn *net.TCPConn) {
-			fd, _ := conn.File()
-			defer fd.Close()
-			key := fmt.Sprintf("%v", fd.Fd())
-			TLOG.Debugf("TCP accept: %s, %d, fd: %s", conn.RemoteAddr(), os.Getpid(), key)
-			conn.SetReadBuffer(cfg.TCPReadBuffer)
-			conn.SetWriteBuffer(cfg.TCPWriteBuffer)
-			conn.SetNoDelay(cfg.TCPNoDelay)
-
+		go func(conn net.Conn) {
+			var key string
+			switch c := conn.(type) {
+			case *net.TCPConn:
+				fd, _ := c.File()
+				defer fd.Close()
+				key := fmt.Sprintf("%v", fd.Fd())
+				TLOG.Debugf("TCP accept: %s, %d, fd: %s", conn.RemoteAddr(), os.Getpid(), key)
+				c.SetReadBuffer(cfg.TCPReadBuffer)
+				c.SetWriteBuffer(cfg.TCPWriteBuffer)
+				c.SetNoDelay(cfg.TCPNoDelay)
+			case *tls.Conn:
+				key := c.RemoteAddr().String()
+				TLOG.Debugf("TCP accept: %s, %d, fd: %s", conn.RemoteAddr(), os.Getpid(), key)
+			}
 			cf := &connInfo{conn: conn}
 			h.conns.Store(key, cf)
 			h.recv(cf)
@@ -144,7 +161,7 @@ func (h *tcpHandler) Handle() error {
 
 func (h *tcpHandler) OnShutdown() {
 	// close listeners
-	h.lis.SetDeadline(time.Now())
+	h.tcpListener.SetDeadline(time.Now())
 	if atomic.LoadInt32(&h.isListenClosed) == 1 {
 		h.sendCloseMsg()
 		atomic.StoreInt32(&h.isListenClosed, 2)

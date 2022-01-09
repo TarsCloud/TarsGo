@@ -194,11 +194,11 @@ func (c *connection) ReConnect() (err error) {
 	c.connLock.Lock()
 	if c.isClosed {
 		TLOG.Debug("Connect:", c.tc.address)
-		if c.tc.conf.TlsConfig == nil {
+		if c.tc.conf.Proto != "ssl" {
 			c.conn, err = net.DialTimeout(c.tc.conf.Proto, c.tc.address, c.dialTimeout)
 		} else {
 			d := net.Dialer{Timeout: c.dialTimeout}
-			c.conn, err = tls.DialWithDialer(&d, c.tc.conf.Proto, c.tc.address, c.tc.conf.TlsConfig)
+			c.conn, err = tls.DialWithDialer(&d, "tcp", c.tc.address, c.tc.conf.TlsConfig)
 		}
 
 		if err != nil {

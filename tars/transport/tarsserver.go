@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 
-	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 	"github.com/TarsCloud/TarsGo/tars/util/rogger"
 	"sync/atomic"
 	"time"
@@ -35,7 +34,6 @@ type TarsServerConf struct {
 	TCPReadBuffer  int
 	TCPWriteBuffer int
 	TCPNoDelay     bool
-	Endpoint       endpoint.Endpoint
 	TlsConfig      *tls.Config
 }
 
@@ -60,7 +58,7 @@ func NewTarsServer(svr ServerProtocol, conf *TarsServerConf) *TarsServer {
 }
 
 func (ts *TarsServer) getHandler() (sh ServerHandler) {
-	if ts.conf.Proto == "tcp" {
+	if ts.conf.Proto == "tcp" || ts.conf.Proto == "ssl" {
 		sh = &tcpHandler{conf: ts.conf, ts: ts}
 	} else if ts.conf.Proto == "udp" {
 		sh = &udpHandler{conf: ts.conf, ts: ts}

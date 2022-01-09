@@ -46,6 +46,8 @@ func NewAdapterProxy(objName string, point *endpointf.EndpointF, comm *Communica
 	proto := "tcp"
 	if point.Istcp == endpoint.UDP {
 		proto = "udp"
+	} else if point.Istcp == endpoint.SSL {
+		proto = "ssl"
 	}
 	conf := &transport.TarsClientConf{
 		Proto:        proto,

@@ -1,7 +1,6 @@
 package grace
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net"
 	"os"
@@ -22,7 +21,7 @@ func init() {
 
 // CreateListener creates a listener from inherited fd
 // if there is no inherited fd, create a now one.
-func CreateListener(proto string, addr string, tlsConfig *tls.Config) (net.Listener, error) {
+func CreateListener(proto string, addr string) (net.Listener, error) {
 	key := fmt.Sprintf("%s_%s_%s", InheritFdPrefix, proto, addr)
 	val := os.Getenv(key)
 	for val != "" {
@@ -40,13 +39,7 @@ func CreateListener(proto string, addr string, tlsConfig *tls.Config) (net.Liste
 		return ln, nil
 	}
 	// not inherit, create new
-	var ln net.Listener
-	var err error
-	if tlsConfig == nil {
-		ln, err = net.Listen(proto, addr)
-	} else {
-		ln, err = tls.Listen(proto, addr, tlsConfig)
-	}
+	ln, err := net.Listen(proto, addr)
 	if err == nil {
 		allListenFds.Store(key, ln)
 	}

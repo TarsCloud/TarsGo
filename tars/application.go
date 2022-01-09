@@ -236,16 +236,16 @@ func initConfig() {
 			TCPNoDelay:     svrCfg.TCPNoDelay,
 			TCPReadBuffer:  svrCfg.TCPReadBuffer,
 			TCPWriteBuffer: svrCfg.TCPWriteBuffer,
-			Endpoint:       end,
 		}
+
 		if end.IsSSL() {
 			cert := c.GetString("/tars/application/server/" + adapter + "<cert>")
 			if cert != "" {
-				ca := c.GetString("/tars/application/server/" + adapter + "<ca>")
+				ca = c.GetString("/tars/application/server/" + adapter + "<ca>")
 				key := c.GetString("/tars/application/server/" + adapter + "<key>")
 				verifyClient := c.GetString("/tars/application/server/"+adapter+"<verifyclient>") != "0"
 				ciphers := c.GetString("/tars/application/server/" + adapter + "<ciphers>")
-				conf.TlsConfig, err = ssl.NewServerTlsConfig(ca, key, svrCfg.Key, verifyClient, ciphers)
+				conf.TlsConfig, err = ssl.NewServerTlsConfig(ca, cert, key, verifyClient, ciphers)
 				if err != nil {
 					panic(err)
 				}
@@ -307,10 +307,12 @@ func initConfig() {
 		clientObjInfo[objName] = authInfo
 
 		if authInfo["ca"] != "" {
-			clientObjTlsConfig[objName], err = ssl.NewClientTlsConfig(authInfo["ca"], authInfo["cert"], authInfo["key"], authInfo["ciphers"])
+			var objTlsConfig *tls.Config
+			objTlsConfig, err = ssl.NewClientTlsConfig(authInfo["ca"], authInfo["cert"], authInfo["key"], authInfo["ciphers"])
 			if err != nil {
 				panic(err)
 			}
+			clientObjTlsConfig[objName] = objTlsConfig
 		}
 	}
 }
@@ -347,7 +349,7 @@ func Run() {
 					teerDown(fmt.Errorf("empty addr for %s", obj))
 					return
 				}
-				ln, err := grace.CreateListener("tcp", addr, s.TLSConfig)
+				ln, err := grace.CreateListener("tcp", addr)
 				if err != nil {
 					lisDone.Done()
 					teerDown(fmt.Errorf("start http server for %s failed: %v", obj, err))
