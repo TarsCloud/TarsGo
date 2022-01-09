@@ -12,7 +12,6 @@ import (
 )
 
 func main() {
-	tars.ServerConfigPath = "config.conf"
 	// Get server config
 	cfg := tars.GetServerConfig()
 
