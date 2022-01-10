@@ -20,6 +20,9 @@ func Parse(endpoint string) Endpoint {
 	istcp := int32(0)
 	if proto == "tcp" {
 		istcp = int32(1)
+	} else if proto == "ssl" {
+		proto = "tcp"
+		istcp = int32(2)
 	}
 	e := Endpoint{
 		Host:    host,

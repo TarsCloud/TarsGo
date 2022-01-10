@@ -69,7 +69,7 @@ func AddHttpServantWithExceptionStatusChecker(mux *TarsHttpMux, obj string, exce
 		ExceptionStatusChecker: exceptionStatusChecker,
 	}
 	mux.SetConfig(httpConf)
-	s := &http.Server{Addr: cfg.Address, Handler: mux}
+	s := &http.Server{Addr: cfg.Address, Handler: mux, TLSConfig: cfg.TlsConfig}
 	httpSvrs[obj] = s
 }
 

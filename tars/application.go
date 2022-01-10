@@ -4,6 +4,7 @@ package tars
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -24,6 +25,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 	"github.com/TarsCloud/TarsGo/tars/util/grace"
 	"github.com/TarsCloud/TarsGo/tars/util/rogger"
+	"github.com/TarsCloud/TarsGo/tars/util/ssl"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
@@ -156,8 +158,15 @@ func initConfig() {
 	svrCfg.CA = c.GetString("/tars/application/server<ca>")
 	svrCfg.Cert = c.GetString("/tars/application/server<cert>")
 	svrCfg.Key = c.GetString("/tars/application/server<key>")
-	svrCfg.VerifyClient = c.GetStringWithDef("/tars/application/server<verifyclient>", "0") == "0"
+	svrCfg.VerifyClient = c.GetStringWithDef("/tars/application/server<verifyclient>", "0") != "0"
 	svrCfg.Ciphers = c.GetString("/tars/application/server<ciphers>")
+	var tlsConfig *tls.Config
+	if svrCfg.Cert != "" {
+		tlsConfig, err = ssl.NewServerTlsConfig(svrCfg.CA, svrCfg.Cert, svrCfg.Key, svrCfg.VerifyClient, svrCfg.Ciphers)
+		if err != nil {
+			panic(err)
+		}
+	}
 
 	//client
 	cltCfg = new(clientConfig)
@@ -167,7 +176,6 @@ func initConfig() {
 	cltCfg.Property = cMap["property"]
 	cltCfg.AsyncInvokeTimeout = c.GetIntWithDef("/tars/application/client<async-invoke-timeout>", AsyncInvokeTimeout)
 	cltCfg.RefreshEndpointInterval = c.GetIntWithDef("/tars/application/client<refresh-endpoint-interval>", refreshEndpointInterval)
-	serList = c.GetDomain("/tars/application/server")
 	cltCfg.ReportInterval = c.GetIntWithDef("/tars/application/client<report-interval>", reportInterval)
 	cltCfg.CheckStatusInterval = c.GetIntWithDef("/tars/application/client<check-status-interval>", checkStatusInterval)
 
@@ -182,6 +190,7 @@ func initConfig() {
 	cltCfg.AdapterProxyTicker = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/client<adapterproxyticker>", AdapterProxyTicker))
 	cltCfg.AdapterProxyResetCount = c.GetIntWithDef("/tars/application/client<adapterproxyresetcount>", AdapterProxyResetCount)
 
+	serList = c.GetDomain("/tars/application/server")
 	for _, adapter := range serList {
 		endString := c.GetString("/tars/application/server/" + adapter + "<endpoint>")
 		end := endpoint.Parse(endString)
@@ -208,6 +217,21 @@ func initConfig() {
 			TCPWriteBuffer: svrCfg.TCPWriteBuffer,
 		}
 
+		if end.IsSSL() {
+			cert := c.GetString("/tars/application/server/" + adapter + "<cert>")
+			if cert != "" {
+				ca := c.GetString("/tars/application/server/" + adapter + "<ca>")
+				key := c.GetString("/tars/application/server/" + adapter + "<key>")
+				verifyClient := c.GetString("/tars/application/server/"+adapter+"<verifyclient>") != "0"
+				ciphers := c.GetString("/tars/application/server/" + adapter + "<ciphers>")
+				conf.TlsConfig, err = ssl.NewServerTlsConfig(ca, cert, key, verifyClient, ciphers)
+				if err != nil {
+					panic(err)
+				}
+			} else {
+				conf.TlsConfig = tlsConfig
+			}
+		}
 		tarsConfig[svrObj] = conf
 	}
 	TLOG.Debug("config add ", tarsConfig)
@@ -277,7 +301,11 @@ func Run() {
 				}
 
 				lisDone.Done()
-				err = s.Serve(ln)
+				if s.TLSConfig != nil {
+					err = s.ServeTLS(ln, "", "")
+				} else {
+					err = s.Serve(ln)
+				}
 				if err != nil {
 					if err == http.ErrServerClosed {
 						TLOG.Infof("%s http server stop: %v", obj, err)
