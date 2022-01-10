@@ -12,6 +12,13 @@ import (
 // MyServer struct for testing tars tcp server
 type MyServer struct{}
 
+func (s *MyServer) GetCloseMsg() []byte {
+	return []byte("")
+}
+
+func (s *MyServer) DoClose(ctx context.Context) {
+}
+
 // Invoke recv request and make response.
 func (s *MyServer) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 	fmt.Println("recv", string(req))

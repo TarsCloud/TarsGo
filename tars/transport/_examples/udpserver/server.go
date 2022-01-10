@@ -12,6 +12,13 @@ import (
 // MyServer testing tars udp server
 type MyServer struct{}
 
+func (s *MyServer) GetCloseMsg() []byte {
+	return []byte("")
+}
+
+func (s *MyServer) DoClose(ctx context.Context) {
+}
+
 // Invoke recv package and make response.
 func (s *MyServer) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 	rsp = make([]byte, 4)
@@ -48,8 +55,8 @@ func (s *MyServer) InvokeTimeout(pkg []byte) []byte {
 
 func main() {
 	conf := &transport.TarsServerConf{
-		Proto:   "udp",
-		Address: "127.0.0.1:3333",
+		Proto:         "udp",
+		Address:       "127.0.0.1:3333",
 		MaxInvoke:     20,
 		AcceptTimeout: time.Millisecond * 500,
 		ReadTimeout:   time.Millisecond * 100,
