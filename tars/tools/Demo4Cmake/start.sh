@@ -1,3 +1,8 @@
 #!/bin/bash
+set -ex
+mkdir -p build
+cd build
+cmake ..
 make
-./build/_SERVER_ --config=config.conf
+cd -
+./build/bin/_SERVER_ --config=config.conf

@@ -1,0 +1,29 @@
+#include "demo1.tars"
+module DemoV1
+{
+    struct DemoV1
+    {
+        0 optional string ip;
+    };
+};
+module DemoV2
+{
+    struct DemoRoom
+    {
+        0 optional long id;
+    };
+};
+module DemoV1
+{
+    struct DemoV11
+    {
+        1 optional long id;
+    };
+};
+
+module DemoV3
+{
+    interface V3Test{
+        int echo(DemoV1::DemoV1 sIn, out DemoV1::DemoV11 sOut);
+    };
+};

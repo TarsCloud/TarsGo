@@ -138,7 +138,7 @@ func (g *globalManager) updateEndpoints() {
 		for _, e := range eps {
 			err := e.doFresh()
 			if err != nil {
-				TLOG.Errorf("update endoint error, %s.", e.objName)
+				TLOG.Errorf("update endpoint error, %s.", e.objName)
 			}
 
 		}
@@ -489,6 +489,7 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 		}
 	}
 
+
 	if bSameType == false {
 		e.weightType = E_LOOP
 	} else {
@@ -498,6 +499,7 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 	TLOG.Debugf("findAndSetObj|obj: %s, weightType: %v", e.objName, e.weightType)
 
 	//make endponit slice sorted
+
 	sort.Slice(sortedEps, func(i int, j int) bool {
 		return crc32.ChecksumIEEE([]byte(sortedEps[i].Key)) < crc32.ChecksumIEEE([]byte(sortedEps[j].Key))
 	})
