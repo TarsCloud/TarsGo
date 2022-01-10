@@ -388,7 +388,7 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 
 	// compare, assert in same order
 	/*
-		if endpoint.IsEqaul(activeEp, &e.activeEpf) {
+		if endpoint.IsEqual(&activeEp, &e.activeEpf) {
 			TLOG.Debug("endpoint not change: ", e.objName)
 			return nil
 		}

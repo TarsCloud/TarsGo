@@ -34,7 +34,7 @@ func Endpoint2tars(end Endpoint) endpointf.EndpointF {
 	}
 }
 
-func IsEqaul(a, b *[]endpointf.EndpointF) bool {
+func IsEqual(a, b *[]endpointf.EndpointF) bool {
 	if a == nil && b == nil {
 		return true
 	}

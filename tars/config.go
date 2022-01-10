@@ -71,6 +71,13 @@ type serverConfig struct {
 	StatReportChannelBufLen int32
 	MaxPackageLength        int
 	GracedownTimeout        time.Duration
+
+	// tls
+	CA           string
+	Cert         string
+	Key          string
+	VerifyClient bool
+	Ciphers      string
 }
 
 type clientConfig struct {
