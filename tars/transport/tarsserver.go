@@ -3,10 +3,10 @@ package transport
 import (
 	"context"
 	"crypto/tls"
-
-	"github.com/TarsCloud/TarsGo/tars/util/rogger"
 	"sync/atomic"
 	"time"
+
+	"github.com/TarsCloud/TarsGo/tars/util/rogger"
 )
 
 // TLOG  is logger for transport.
@@ -58,7 +58,7 @@ func NewTarsServer(svr ServerProtocol, conf *TarsServerConf) *TarsServer {
 }
 
 func (ts *TarsServer) getHandler() (sh ServerHandler) {
-	if ts.conf.Proto == "tcp" || ts.conf.Proto == "ssl" {
+	if ts.conf.Proto == "tcp" {
 		sh = &tcpHandler{conf: ts.conf, ts: ts}
 	} else if ts.conf.Proto == "udp" {
 		sh = &udpHandler{conf: ts.conf, ts: ts}

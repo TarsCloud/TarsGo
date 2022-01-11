@@ -241,22 +241,6 @@ func initConfig() {
 		if end.IsSSL() {
 			cert := c.GetString("/tars/application/server/" + adapter + "<cert>")
 			if cert != "" {
-				ca = c.GetString("/tars/application/server/" + adapter + "<ca>")
-				key := c.GetString("/tars/application/server/" + adapter + "<key>")
-				verifyClient := c.GetString("/tars/application/server/"+adapter+"<verifyclient>") != "0"
-				ciphers := c.GetString("/tars/application/server/" + adapter + "<ciphers>")
-				conf.TlsConfig, err = ssl.NewServerTlsConfig(ca, cert, key, verifyClient, ciphers)
-				if err != nil {
-					panic(err)
-				}
-			} else {
-				conf.TlsConfig = tlsConfig
-			}
-		}
-
-		if end.IsSSL() {
-			cert := c.GetString("/tars/application/server/" + adapter + "<cert>")
-			if cert != "" {
 				ca := c.GetString("/tars/application/server/" + adapter + "<ca>")
 				key := c.GetString("/tars/application/server/" + adapter + "<key>")
 				verifyClient := c.GetString("/tars/application/server/"+adapter+"<verifyclient>") != "0"
@@ -315,6 +299,8 @@ func initConfig() {
 			clientObjTlsConfig[objName] = objTlsConfig
 		}
 	}
+
+	go initReport()
 }
 
 // Run the application

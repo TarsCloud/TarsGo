@@ -50,7 +50,8 @@ func NewAdapterProxy(objName string, point *endpointf.EndpointF, comm *Communica
 		proto = "ssl"
 	}
 	conf := &transport.TarsClientConf{
-		Proto:        proto,
+		Proto: proto,
+		//NumConnect:   netthread,
 		QueueLen:     comm.Client.ClientQueueLen,
 		IdleTimeout:  comm.Client.ClientIdleTimeout,
 		ReadTimeout:  comm.Client.ClientReadTimeout,

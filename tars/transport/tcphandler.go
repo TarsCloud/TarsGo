@@ -50,7 +50,7 @@ func (h *tcpHandler) Listen() (err error) {
 	if err == nil {
 		TLOG.Infof("Listening on %s", cfg.Address)
 		h.tcpListener = ln.(*net.TCPListener)
-		if h.conf.Proto == "ssl" {
+		if h.conf.TlsConfig != nil {
 			h.listener = tls.NewListener(ln, h.conf.TlsConfig)
 		} else {
 			h.listener = ln
