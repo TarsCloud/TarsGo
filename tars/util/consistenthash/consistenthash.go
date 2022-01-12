@@ -88,15 +88,15 @@ func (c *ChMap) Add(node KV) error {
 }
 
 // Remove remove the node and all the vatual nodes from the key
-func (c *ChMap) Remove(node string) error {
+func (c *ChMap) Remove(node KV) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	if _, ok := c.mapValues[node]; !ok {
+	if _, ok := c.mapValues[node.HashKey()]; !ok {
 		return errors.New("host already removed")
 	}
-	delete(c.mapValues, node)
+	delete(c.mapValues, node.HashKey())
 	for i := 0; i < c.replicates; i++ {
-		virtualHost := fmt.Sprintf("%d#%s", i, node)
+		virtualHost := fmt.Sprintf("%d#%s", i, node.HashKey())
 		virtualKey := crc32.ChecksumIEEE([]byte(virtualHost))
 		delete(c.hashRing, virtualKey)
 	}
