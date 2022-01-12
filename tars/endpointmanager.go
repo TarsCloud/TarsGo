@@ -249,7 +249,7 @@ func (e *tarsEndpointManager) checkStatus() {
 				}
 				e.epLock.Unlock()
 
-				e.activeEpHashMap.Remove(ep.Key)
+				e.activeEpHashMap.Remove(ep)
 			}
 
 			if needCheck {

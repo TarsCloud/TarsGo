@@ -26,6 +26,10 @@ func (e Endpoint) String() string {
 	return fmt.Sprintf("%s -h %s -p %d -t %d -d %s", e.Proto, e.Host, e.Port, e.Timeout, e.Container)
 }
 
+func (e Endpoint) HashKey() string {
+	return e.Host
+}
+
 func (e Endpoint) IsTcp() bool {
 	return e.Istcp == TCP || e.Istcp == SSL
 }
