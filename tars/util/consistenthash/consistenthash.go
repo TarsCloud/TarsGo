@@ -19,7 +19,7 @@ type ChMap struct {
 
 // KV is the key value type.
 type KV interface {
-	String() string
+	HashKey() string
 }
 
 // NewChMap  create a ChMap which has replicates of virtual nodes.
@@ -71,11 +71,11 @@ func (c *ChMap) FindUint32(key uint32) (KV, bool) {
 func (c *ChMap) Add(node KV) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	if _, ok := c.mapValues[node.String()]; ok {
+	if _, ok := c.mapValues[node.HashKey()]; ok {
 		return errors.New("node already exists")
 	}
 	for i := 0; i < c.replicates; i++ {
-		virtualHost := fmt.Sprintf("%d#%s", i, node.String())
+		virtualHost := fmt.Sprintf("%d#%s", i, node.HashKey())
 		virtualKey := crc32.ChecksumIEEE([]byte(virtualHost))
 		c.hashRing[virtualKey] = node
 		c.sortedKeys = append(c.sortedKeys, virtualKey)
@@ -83,7 +83,7 @@ func (c *ChMap) Add(node KV) error {
 	sort.Slice(c.sortedKeys, func(x int, y int) bool {
 		return c.sortedKeys[x] < c.sortedKeys[y]
 	})
-	c.mapValues[node.String()] = true
+	c.mapValues[node.HashKey()] = true
 	return nil
 }
 
