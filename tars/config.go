@@ -1,6 +1,7 @@
 package tars
 
 import (
+	"github.com/TarsCloud/TarsGo/tars/util/tools"
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
@@ -84,7 +85,7 @@ type clientConfig struct {
 	Locator                 string
 	Stat                    string
 	Property                string
-	Modulename              string
+	ModuleName              string
 	RefreshEndpointInterval int
 	ReportInterval          int
 	CheckStatusInterval     int
@@ -99,4 +100,68 @@ type clientConfig struct {
 	ObjQueueMax            int32
 	AdapterProxyTicker     time.Duration
 	AdapterProxyResetCount int
+}
+
+func newServerConfig() *serverConfig {
+	return &serverConfig{
+		Node:                    "",
+		App:                     "",
+		Server:                  "",
+		LogPath:                 "",
+		LogSize:                 defaultRotateSizeMB,
+		LogNum:                  defaultRotateN,
+		LogLevel:                "INFO",
+		Version:                 TarsVersion,
+		LocalIP:                 tools.GetLocalIP(),
+		Local:                   "",
+		BasePath:                "",
+		DataPath:                "",
+		Config:                  "",
+		Notify:                  "",
+		Log:                     "",
+		Adapters:                make(map[string]adapterConfig),
+		Container:               "",
+		Isdocker:                false,
+		Enableset:               false,
+		Setdivision:             "",
+		AcceptTimeout:           tools.ParseTimeOut(AcceptTimeout),
+		ReadTimeout:             tools.ParseTimeOut(ReadTimeout),
+		WriteTimeout:            tools.ParseTimeOut(ReadTimeout),
+		HandleTimeout:           tools.ParseTimeOut(HandleTimeout),
+		IdleTimeout:             tools.ParseTimeOut(IdleTimeout),
+		ZombileTimeout:          tools.ParseTimeOut(ZombileTimeout),
+		QueueCap:                QueueCap,
+		TCPReadBuffer:           TCPReadBuffer,
+		TCPWriteBuffer:          TCPWriteBuffer,
+		TCPNoDelay:              TCPNoDelay,
+		MaxInvoke:               MaxInvoke,
+		PropertyReportInterval:  tools.ParseTimeOut(PropertyReportInterval),
+		StatReportInterval:      tools.ParseTimeOut(StatReportInterval),
+		MainLoopTicker:          tools.ParseTimeOut(MainLoopTicker),
+		StatReportChannelBufLen: StatReportChannelBufLen,
+		MaxPackageLength:        MaxPackageLength,
+		GracedownTimeout:        tools.ParseTimeOut(GracedownTimeout),
+	}
+}
+
+func newClientConfig() *clientConfig {
+	conf := &clientConfig{
+		Stat:                    Stat,
+		Property:                Property,
+		ModuleName:              ModuleName,
+		RefreshEndpointInterval: refreshEndpointInterval,
+		ReportInterval:          reportInterval,
+		CheckStatusInterval:     checkStatusInterval,
+		AsyncInvokeTimeout:      AsyncInvokeTimeout,
+		ClientQueueLen:          ClientQueueLen,
+		ClientIdleTimeout:       tools.ParseTimeOut(ClientIdleTimeout),
+		ClientReadTimeout:       tools.ParseTimeOut(ClientReadTimeout),
+		ClientWriteTimeout:      tools.ParseTimeOut(ClientWriteTimeout),
+		ClientDialTimeout:       tools.ParseTimeOut(ClientDialTimeout),
+		ReqDefaultTimeout:       ReqDefaultTimeout,
+		ObjQueueMax:             ObjQueueMax,
+		AdapterProxyTicker:      tools.ParseTimeOut(AdapterProxyTicker),
+		AdapterProxyResetCount:  AdapterProxyResetCount,
+	}
+	return conf
 }

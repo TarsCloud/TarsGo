@@ -65,6 +65,13 @@ func init() {
 var ServerConfigPath string
 
 func initConfig() {
+	defer func() {
+		go func() {
+			_ = statInitOnce.Do(initReport)
+		}()
+	}()
+	svrCfg = newServerConfig()
+	cltCfg = newClientConfig()
 	if ServerConfigPath == "" {
 		svrFlag := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 		svrFlag.StringVar(&ServerConfigPath, "config", "", "server config path")
@@ -82,8 +89,7 @@ func initConfig() {
 	}
 
 	//Config.go
-	//Server
-	svrCfg = new(serverConfig)
+	//init server config
 	if strings.EqualFold(c.GetString("/tars/application<enableset>"), "Y") {
 		svrCfg.Enableset = true
 		svrCfg.Setdivision = c.GetString("/tars/application<setdivision>")
@@ -168,12 +174,12 @@ func initConfig() {
 		}
 	}
 
-	//client
-	cltCfg = new(clientConfig)
+	//init client config
 	cMap := c.GetMap("/tars/application/client")
 	cltCfg.Locator = cMap["locator"]
 	cltCfg.Stat = cMap["stat"]
 	cltCfg.Property = cMap["property"]
+	cltCfg.ModuleName = cMap["modulename"]
 	cltCfg.AsyncInvokeTimeout = c.GetIntWithDef("/tars/application/client<async-invoke-timeout>", AsyncInvokeTimeout)
 	cltCfg.RefreshEndpointInterval = c.GetIntWithDef("/tars/application/client<refresh-endpoint-interval>", refreshEndpointInterval)
 	cltCfg.ReportInterval = c.GetIntWithDef("/tars/application/client<report-interval>", reportInterval)
@@ -257,8 +263,6 @@ func initConfig() {
 		svrCfg.Adapters["AdminAdapter"] = adapterConfig{localpoint, "tcp", "AdminObj", 1}
 		RegisterAdmin(rogger.Admin, rogger.HandleDyeingAdmin)
 	}
-
-	go initReport()
 }
 
 // Run the application
