@@ -6,6 +6,7 @@ import (
 	"encoding/pem"
 	"github.com/TarsCloud/TarsGo/tars/util/rogger"
 	"io/ioutil"
+	"reflect"
 )
 
 var log = rogger.GetLogger("ssl")
@@ -123,4 +124,12 @@ func ReadPEMData(pemFile string, pemPass []byte) ([]byte, error) {
 		pemData = pem.EncodeToMemory(&newBlock)
 	}
 	return pemData, nil
+}
+
+func FDFromTLSConn(conn *tls.Conn) uintptr {
+	tcpConn := reflect.Indirect(reflect.ValueOf(conn)).FieldByName("conn").Elem().Elem()
+	fdVal := tcpConn.FieldByName("fd")
+	pfdVal := reflect.Indirect(fdVal).FieldByName("pfd")
+
+	return uintptr(pfdVal.FieldByName("Sysfd").Int())
 }

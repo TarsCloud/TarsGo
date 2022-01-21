@@ -17,6 +17,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/gpool"
 	"github.com/TarsCloud/TarsGo/tars/util/grace"
+	"github.com/TarsCloud/TarsGo/tars/util/ssl"
 )
 
 type tcpHandler struct {
@@ -138,14 +139,14 @@ func (h *tcpHandler) Handle() error {
 			case *net.TCPConn:
 				fd, _ := c.File()
 				defer fd.Close()
-				key := fmt.Sprintf("%v", fd.Fd())
+				key = fmt.Sprintf("%v", fd.Fd())
 				TLOG.Debugf("TCP accept: %s, %d, fd: %s", conn.RemoteAddr(), os.Getpid(), key)
 				c.SetReadBuffer(cfg.TCPReadBuffer)
 				c.SetWriteBuffer(cfg.TCPWriteBuffer)
 				c.SetNoDelay(cfg.TCPNoDelay)
 			case *tls.Conn:
-				key := c.RemoteAddr().String()
-				TLOG.Debugf("TCP accept: %s, %d, fd: %s", conn.RemoteAddr(), os.Getpid(), key)
+				key = fmt.Sprintf("%v", ssl.FDFromTLSConn(c))
+				TLOG.Debugf("TLS accept: %s, %d, fd: %s", conn.RemoteAddr(), os.Getpid(), key)
 			}
 			cf := &connInfo{conn: conn}
 			h.conns.Store(key, cf)
