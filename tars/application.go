@@ -299,8 +299,6 @@ func initConfig() {
 			clientObjTlsConfig[objName] = objTlsConfig
 		}
 	}
-
-	go initReport()
 }
 
 // Run the application
