@@ -58,15 +58,15 @@ func (r *Repo) Pull(ctx context.Context) error {
 	cmd.Dir = r.Path()
 	_, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil
+		return err
 	}
 	cmd = exec.CommandContext(ctx, "git", "pull")
 	cmd.Dir = r.Path()
 	out, err := cmd.CombinedOutput()
+	fmt.Println(string(out))
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(out))
 	return err
 }
 
