@@ -192,7 +192,7 @@ func (s *ServantProxy) doInvoke(ctx context.Context, msg *Message, timeout time.
 	if adp == nil {
 		return errors.New("no adapter Proxy selected:" + msg.Req.SServantName)
 	}
-	if s.queueLen > ObjQueueMax {
+	if s.queueLen > adp.comm.Client.ObjQueueMax {
 		return errors.New("invoke queue is full:" + msg.Req.SServantName)
 	}
 	ep := adp.GetPoint()
