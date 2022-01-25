@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strings"
 	"sync"
@@ -15,7 +16,9 @@ import (
 
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/queryf"
-	"github.com/TarsCloud/TarsGo/tars/util/consistenthash"
+	"github.com/TarsCloud/TarsGo/tars/selector/consistenthash"
+	"github.com/TarsCloud/TarsGo/tars/selector/modhash"
+	"github.com/TarsCloud/TarsGo/tars/selector/roundrobin"
 	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 	"github.com/TarsCloud/TarsGo/tars/util/gtime"
 )
@@ -86,12 +89,7 @@ func GetManager(comm *Communicator, objName string, opts ...EndpointManagerOptio
 				for i, ep := range em.activeEpf {
 					newEps[i] = endpoint.Tars2endpoint(ep)
 				}
-				em.activeEp = newEps[:] // replace ep list
-				chmap := consistenthash.NewChMap(32)
-				for _, e := range em.activeEp {
-					chmap.Add(e)
-				}
-				em.activeEpHashMap = chmap
+				em.firstUpdateActiveEp(newEps)
 				TLOG.Debugf("init endpoint %s %v %v", objName, em.activeEp, em.inactiveEpf)
 			}
 		}
@@ -167,17 +165,20 @@ type tarsEndpointManager struct {
 	epList      *sync.Map
 	epLock      *sync.Mutex
 	activeEp    []endpoint.Endpoint
-	pos         int32
 	activeEpf   []endpointf.EndpointF
 	inactiveEpf []endpointf.EndpointF
+	rand        *rand.Rand
 
 	checkAdapterList *sync.Map
 	checkAdapter     chan *AdapterProxy
 
-	activeEpHashMap *consistenthash.ChMap
-	freshLock       *sync.Mutex
-	lastInvoke      int64
-	invokeNum       int32
+	weightType         endpoint.WeightType
+	activeEpRoundRobin *roundrobin.RoundRobin
+	activeEpConHash    *consistenthash.ConsistentHash
+	activeEpModHash    *modhash.ModHash
+	freshLock          *sync.Mutex
+	lastInvoke         int64
+	invokeNum          int32
 }
 
 type EndpointManagerOption interface {
@@ -227,6 +228,7 @@ func newTarsEndpointManager(objName string, comm *Communicator, opts ...Endpoint
 	e.epList = &sync.Map{}
 	e.epLock = &sync.Mutex{}
 	e.checkAdapterList = &sync.Map{}
+	e.rand = rand.New(rand.NewSource(time.Now().UnixNano()))
 	for _, opt := range opts {
 		opt.apply(e)
 	}
@@ -241,13 +243,7 @@ func newTarsEndpointManager(objName string, comm *Communicator, opts ...Endpoint
 		for i, end := range ends {
 			eps[i] = endpoint.Parse(end)
 		}
-		e.activeEp = eps
-
-		chmap := consistenthash.NewChMap(32)
-		for _, e := range e.activeEp {
-			chmap.Add(e)
-		}
-		e.activeEpHashMap = chmap
+		e.firstUpdateActiveEp(eps)
 	} else {
 		// [proxy] TODO singleton
 		TLOG.Debug("proxy mode:", objName)
@@ -297,7 +293,9 @@ func (e *tarsEndpointManager) checkStatus() {
 				}
 				e.epLock.Unlock()
 
-				e.activeEpHashMap.Remove(ep)
+				e.activeEpRoundRobin.Remove(ep)
+				e.activeEpConHash.Remove(ep)
+				e.activeEpModHash.Remove(ep)
 			}
 
 			if needCheck {
@@ -320,7 +318,9 @@ func (e *tarsEndpointManager) addAliveEp(ep endpoint.Endpoint) {
 		return crc32.ChecksumIEEE([]byte(sortedEps[i].Key)) < crc32.ChecksumIEEE([]byte(sortedEps[j].Key))
 	})
 	e.activeEp = sortedEps
-	e.activeEpHashMap.Add(ep)
+	e.activeEpRoundRobin.Add(ep)
+	e.activeEpConHash.Add(ep)
+	e.activeEpModHash.Add(ep)
 	e.epLock.Unlock()
 }
 
@@ -343,41 +343,33 @@ func (e *tarsEndpointManager) SelectAdapterProxy(msg *Message) (*AdapterProxy, b
 		return adp, true
 	default:
 	}
-	var adp *AdapterProxy
+	var (
+		adp *AdapterProxy
+		ep  endpoint.Endpoint
+		err error
+	)
 	if msg.isHash && msg.hashType == ConsistentHash {
-		if epi, ok := e.activeEpHashMap.FindUint32(uint32(msg.hashCode)); ok {
-			ep := epi.(endpoint.Endpoint)
-			if v, ok := e.epList.Load(ep.Key); ok {
-				adp = v.(*AdapterProxy)
-			} else {
-				epf := endpoint.Endpoint2tars(ep)
-				adp = NewAdapterProxy(e.objName, &epf, e.comm)
-				e.epList.Store(ep.Key, adp)
-			}
-		}
+		ep, err = e.activeEpConHash.Select(msg) // ConsistentHash
+	} else if msg.isHash && msg.hashType == ModHash {
+		ep, err = e.activeEpModHash.Select(msg) // ModHash
 	} else {
-		if len(eps) != 0 {
-			var index int
-			if msg.isHash && msg.hashType == ModHash {
-				index = int(msg.hashCode) % len(eps)
-			} else {
-				e.pos = (e.pos + 1) % int32(len(eps))
-				index = int(e.pos)
-			}
-			ep := eps[index]
-			if v, ok := e.epList.Load(ep.Key); ok {
-				adp = v.(*AdapterProxy)
-			} else {
-				epf := endpoint.Endpoint2tars(ep)
-				adp = NewAdapterProxy(e.objName, &epf, e.comm)
-				e.epList.Store(ep.Key, adp)
-			}
-		}
+		ep, err = e.activeEpRoundRobin.Select(msg) // RoundRobin
 	}
+	if err != nil {
+		TLOG.Errorf("SelectAdapterProxy|enableWeight: %b, isHash: %b, hashType: %s, err: %+v", e.enableWeight(), msg.isHash, msg.hashType, err)
+		goto random
+	}
+	if v, ok := e.epList.Load(ep.Key); ok {
+		adp = v.(*AdapterProxy)
+	} else {
+		epf := endpoint.Endpoint2tars(ep)
+		adp = NewAdapterProxy(e.objName, &epf, e.comm)
+		e.epList.Store(ep.Key, adp)
+	}
+random:
 	if adp == nil && !e.directProxy {
-		// No any node is alive ,just select a random one.
-		randomIndex := rand.Intn(len(e.activeEpf))
-		randomEpf := e.activeEpf[randomIndex]
+		// not any node is alive, just select a random one.
+		randomEpf := e.activeEpf[e.rand.Intn(len(e.activeEpf))]
 		randomEp := endpoint.Tars2endpoint(randomEpf)
 		if v, ok := e.epList.Load(randomEp.Key); ok {
 			adp = v.(*AdapterProxy)
@@ -412,19 +404,18 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 	activeEp := make([]endpointf.EndpointF, 0)
 	inactiveEp := make([]endpointf.EndpointF, 0)
 	var enableSet, ok bool
-	var setID string
+	var setDivision string
 	var ret int32
 	var err error
-	if enableSet, ok = e.comm.GetPropertyBool("enableset"); ok {
-		setID, _ = e.comm.GetProperty("setdivision")
-	}
 	if e.enableSet && e.setDivision != "" {
 		enableSet = e.enableSet
-		setID = e.setDivision
+		setDivision = e.setDivision
+	} else if enableSet, ok = e.comm.GetPropertyBool("enableset"); ok {
+		setDivision, _ = e.comm.GetProperty("setdivision")
 	}
 
 	if enableSet {
-		ret, err = q.FindObjectByIdInSameSet(e.objName, setID, &activeEp, &inactiveEp)
+		ret, err = q.FindObjectByIdInSameSet(e.objName, setDivision, &activeEp, &inactiveEp)
 	} else {
 		ret, err = q.FindObjectByIdInSameGroup(e.objName, &activeEp, &inactiveEp)
 	}
@@ -446,11 +437,16 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 		}
 	*/
 
+	if reflect.DeepEqual(&activeEp, &e.activeEpf) {
+		TLOG.Debugf("endpoint not change: %s, set: %s", e.objName, setDivision)
+		return nil
+	}
+
 	if len(activeEp) == 0 {
 		TLOG.Errorf("findAndSetObj %s, empty of active endpoint", e.objName)
 		return nil
 	}
-	TLOG.Debugf("findAndSetObj|call FindObjectById ok, obj: %s, ret: %d, active: %v, inative: %v", e.objName, ret, activeEp, inactiveEp)
+	TLOG.Debugf("findAndSetObj|call FindObjectById ok, obj: %s, ret: %d, active: %v, inactive: %v", e.objName, ret, activeEp, inactiveEp)
 
 	newEps := make([]endpoint.Endpoint, len(activeEp))
 	for i, ep := range activeEp {
@@ -483,6 +479,7 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 		return true
 	})
 
+	bSameType, lastType := true, newEps[0].WeightType
 	// delete active endpoint which status is false
 	sortedEps := make([]endpoint.Endpoint, 0)
 	for _, ep := range newEps {
@@ -494,6 +491,16 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 		} else {
 			sortedEps = append(sortedEps, ep)
 		}
+
+		// check weightType
+		if ep.WeightType != lastType {
+			bSameType = false
+		}
+	}
+
+	e.weightType = endpoint.ELoop
+	if bSameType {
+		e.weightType = endpoint.WeightType(lastType)
 	}
 
 	// make endpoint slice sorted
@@ -501,18 +508,61 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 		return crc32.ChecksumIEEE([]byte(sortedEps[i].Key)) < crc32.ChecksumIEEE([]byte(sortedEps[j].Key))
 	})
 
-	chmap := consistenthash.NewChMap(32)
-	for _, e := range sortedEps {
-		chmap.Add(e)
-	}
+	roundRobinSelector := roundrobin.New(e.enableWeight())
+	roundRobinSelector.Refresh(sortedEps)
+	conHashSelector := consistenthash.New(e.enableWeight(), consistenthash.KetamaHash)
+	conHashSelector.Refresh(sortedEps)
+	modHashSelector := modhash.New(e.enableWeight())
+	roundRobinSelector.Refresh(sortedEps)
 
 	e.epLock.Lock()
 	e.activeEpf = activeEp
 	e.inactiveEpf = inactiveEp
 	e.activeEp = sortedEps
-	e.activeEpHashMap = chmap
+	e.activeEpRoundRobin = roundRobinSelector
+	e.activeEpConHash = conHashSelector
+	e.activeEpModHash = modHashSelector
 	e.epLock.Unlock()
 
 	TLOG.Debugf("findAndSetObj|activeEp: %+v", sortedEps)
 	return nil
+}
+
+func (e *tarsEndpointManager) firstUpdateActiveEp(eps []endpoint.Endpoint) {
+	if len(eps) == 0 {
+		return
+	}
+	bSameType, lastType := true, eps[0].WeightType
+	sortedEps := make([]endpoint.Endpoint, 0, len(eps))
+	for _, ep := range eps {
+		sortedEps = append(sortedEps, ep)
+		// check weightType
+		if ep.WeightType != lastType {
+			bSameType = false
+		}
+	}
+
+	e.weightType = endpoint.ELoop
+	if bSameType {
+		e.weightType = endpoint.WeightType(lastType)
+	}
+
+	// make endpoint slice sorted
+	sort.Slice(sortedEps, func(i int, j int) bool {
+		return crc32.ChecksumIEEE([]byte(sortedEps[i].Key)) < crc32.ChecksumIEEE([]byte(sortedEps[j].Key))
+	})
+	roundRobinSelector := roundrobin.New(e.enableWeight())
+	roundRobinSelector.Refresh(sortedEps)
+	conHashSelector := consistenthash.New(e.enableWeight(), consistenthash.KetamaHash)
+	conHashSelector.Refresh(sortedEps)
+	modHashSelector := modhash.New(e.enableWeight())
+	modHashSelector.Refresh(sortedEps)
+	e.activeEp = sortedEps
+	e.activeEpRoundRobin = roundRobinSelector
+	e.activeEpConHash = conHashSelector
+	e.activeEpModHash = modHashSelector
+}
+
+func (e *tarsEndpointManager) enableWeight() bool {
+	return e.weightType == endpoint.EStaticWeight
 }

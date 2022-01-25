@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
+	"github.com/TarsCloud/TarsGo/tars/selector"
 )
 
 // HashType is the hash type
@@ -52,4 +53,16 @@ func (m *Message) SetHash(code uint32, h HashType) {
 	m.hashCode = code
 	m.hashType = h
 	m.isHash = true
+}
+
+func (m *Message) HashCode() uint32 {
+	return m.hashCode
+}
+
+func (m *Message) HashType() selector.HashType {
+	return selector.HashType(m.hashType)
+}
+
+func (m *Message) IsHash() bool {
+	return m.isHash
 }
