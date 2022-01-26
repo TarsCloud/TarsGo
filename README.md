@@ -964,3 +964,11 @@ func ZipkinClientFilter() tars.ClientFilter {
 The server will add filters, which exact the span context from the request package's status and start a new span.
 
 Read more under `TarsGo/tars/plugin/zipkintracing`. For client-side and server-side example code, read `ZipkinTraceClient` & `ZipkinTraceServer` under the examples.
+
+## Contributors
+
+Thank you for considering contributing to the TarsGo framework!
+
+<a href="https://github.com/TarsCloud/TarsGo/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=TarsCloud/TarsGo" />
+</a>
