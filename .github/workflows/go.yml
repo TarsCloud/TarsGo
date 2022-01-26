@@ -24,14 +24,12 @@ jobs:
       - name: tars2go
         run: |
           cd tars/tools/tars2go
-          go mod download
           go build ./...
           go test ./...
 
       - name: tarsgo
         run: |
           cd tars/tools/tarsgo
-          go mod tidy
           go build ./...
           go test ./...
 
@@ -39,18 +37,6 @@ jobs:
         run: |
           go mod download
           go build ./tars
-
-      - name: Examples
-        run: |
-          cd _examples
-          go build ./...
-          go test ./...
-
-      - name: Lint
-        run: |
-          go vet -stdmethods=false $(go list ./...)
-          go install mvdan.cc/gofumpt@latest
-          test -z "$(gofumpt -s -l -extra .)" || echo "Please run 'gofumpt -l -w -extra .'"
 
       - name: Codecov
         uses: codecov/codecov-action@v2
