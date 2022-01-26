@@ -96,6 +96,9 @@ const (
 	//check endpoint status every 1000 ms
 	checkStatusInterval int = 1000
 
+	// adapter proxy keepAvlie with server ,defaultvalue is 0 means close keepAlive. milliseconds
+	keepAliveInverval int = 0
+
 	//try interval after every 30s
 	tryTimeInterval int64 = 30
 	//failN & failInterval shows how many times fail in the failInterval second,the server will be blocked.
