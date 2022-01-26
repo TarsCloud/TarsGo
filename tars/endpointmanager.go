@@ -234,7 +234,12 @@ func (e *tarsEndpointManager) checkStatus() {
 	for _, ef := range e.activeEpf {
 		ep := endpoint.Tars2endpoint(ef)
 		if v, ok := e.epList.Load(ep.Key); ok {
-			firstTime, needCheck := v.(*AdapterProxy).checkActive()
+			adp := v.(*AdapterProxy)
+			if e.comm.Client.KeepAliveInterval > 0 {
+				adp.doKeepAlive()
+			}
+
+			firstTime, needCheck := adp.checkActive()
 			if !firstTime && !needCheck {
 				continue
 			}

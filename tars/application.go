@@ -184,6 +184,7 @@ func initConfig() {
 	cltCfg.RefreshEndpointInterval = c.GetIntWithDef("/tars/application/client<refresh-endpoint-interval>", refreshEndpointInterval)
 	cltCfg.ReportInterval = c.GetIntWithDef("/tars/application/client<report-interval>", reportInterval)
 	cltCfg.CheckStatusInterval = c.GetIntWithDef("/tars/application/client<check-status-interval>", checkStatusInterval)
+	cltCfg.KeepAliveInterval = c.GetIntWithDef("/tars/application/client<keep-alive-interval>", keepAliveInverval)
 
 	// add client timeout
 	cltCfg.ClientQueueLen = c.GetIntWithDef("/tars/application/client<clientqueuelen>", ClientQueueLen)
