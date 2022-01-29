@@ -147,7 +147,7 @@ func GetRequestContext(ctx context.Context) (map[string]string, bool) {
 	return nil, ok
 }
 
-// GetRecvTsFromContext gets the recvTs from the context.
+// GetRecvPkgTsFromContext gets the recvTs from the context.
 func GetRecvPkgTsFromContext(ctx context.Context) (int64, bool) {
 	tc, ok := currentFromContext(ctx)
 	if ok {
@@ -156,7 +156,7 @@ func GetRecvPkgTsFromContext(ctx context.Context) (int64, bool) {
 	return 0, ok
 }
 
-// SetRecvTsFromContext set recv Ts to the tars current.
+// SetRecvPkgTsFromContext set recv Ts to the tars current.
 func SetRecvPkgTsFromContext(ctx context.Context, recvPkgTs int64) bool {
 	tc, ok := currentFromContext(ctx)
 	if ok {
