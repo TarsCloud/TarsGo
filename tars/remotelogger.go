@@ -108,7 +108,7 @@ func (rw *RemoteTimeWriter) SetFileNameConcatStr(s string) {
 
 }
 
-// SetSeparator set seprator between logs.
+// SetSeparator set separator between logs.
 func (rw *RemoteTimeWriter) SetSeparator(s string) {
 	rw.logInfo.SSepar = s
 }
@@ -139,7 +139,7 @@ func (rw *RemoteTimeWriter) SetPrefix(enable bool) {
 	rw.hasPrefix = enable
 }
 
-// Write Writes the logs to the buffer.
+// Write the logs to the buffer.
 func (rw *RemoteTimeWriter) Write(b []byte) {
 	s := string(b[:])
 	select {

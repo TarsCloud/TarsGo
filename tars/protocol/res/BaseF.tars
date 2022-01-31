@@ -14,14 +14,15 @@
  * specific language governing permissions and limitations under the License.
  */
 
-module basef 
+module basef
 {
     ////////////////////////////////////////////////////////////////
     // 定义协议的版本号
 
-    const short TARSVERSION  = 0x01;
-    const short TUPVERSION  = 0x03;
-    const short JSONVERSION = 0x05;
+    const short TARSVERSION   = 0x01;
+    const short TUPVERSION    = 0x03;
+    const short XMLVERSION    = 0x04;
+    const short JSONVERSION   = 0x05;
 
     ////////////////////////////////////////////////////////////////
     // 定义消息的类型
@@ -49,6 +50,7 @@ module basef
     const int TARSADAPTERNULL         = -10;     //客户端选路为空，服务不存在或者所有服务down掉了
     const int TARSINVOKEBYINVALIDESET = -11;     //客户端按set规则调用非法
     const int TARSCLIENTDECODEERR     = -12;     //客户端解码异常
+    const int TARSSENDREQUESTERR      = -13;     //发送出错
     const int TARSSERVERUNKNOWNERR    = -99;     //服务器端位置异常
 
     /////////////////////////////////////////////////////////////////
@@ -63,5 +65,6 @@ module basef
     //const int TARSMESSAGETYPELOADED = 0x20;    //按负载值调用程序
     //const int TARSMESSAGETYPESETED = 0x40;     //按set规则调用类型，此字段后面将不使用
     const int TARSMESSAGETYPESETNAME = 0x80;     //按setname规则调用类型
+    const int TARSMESSAGETYPETRACE   = 0x100;    //trace调用链消息
     /////////////////////////////////////////////////////////////////
 };
