@@ -66,6 +66,11 @@ func newServantProxy(comm *Communicator, objName string) *ServantProxy {
 	return s
 }
 
+// Name is obj name
+func (s *ServantProxy) Name() string {
+	return s.name
+}
+
 // TarsSetTimeout sets the timeout for client calling the server , which is in ms.
 func (s *ServantProxy) TarsSetTimeout(t int) {
 	s.timeout = t
@@ -103,7 +108,7 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	resp *requestf.ResponsePacket) error {
 	defer CheckPanic()
 
-	// 将ctx中的dyeinglog信息传入到request中
+	// 将ctx中的dyeing信息传入到request中
 	var msgType int32
 	dyeingKey, ok := current.GetDyeingKey(ctx)
 	if ok {
@@ -112,7 +117,19 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 			status = make(map[string]string)
 		}
 		status[current.STATUS_DYED_KEY] = dyeingKey
-		msgType = basef.TARSMESSAGETYPEDYED
+		msgType |= basef.TARSMESSAGETYPEDYED
+	}
+
+	// 将ctx中的trace信息传入到request中
+	traceData, ok := current.GetTraceData(ctx)
+	if ok && traceData.TraceCall {
+		traceKey := traceData.GetTraceKeyFull(false)
+		TLOG.Debug("trace debug: find trace key:", traceKey)
+		if status == nil {
+			status = make(map[string]string)
+		}
+		status[current.STATUS_TRACE_KEY] = traceKey
+		msgType |= basef.TARSMESSAGETYPETRACE
 	}
 
 	req := requestf.RequestPacket{

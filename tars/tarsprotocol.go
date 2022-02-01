@@ -47,6 +47,16 @@ func (s *TarsProtocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 		}
 	}
 
+	// 处理TARS下的调用链追踪
+	if reqPackage.HasMessageType(basef.TARSMESSAGETYPETRACE) {
+		if traceKey, ok := reqPackage.Status[current.STATUS_TRACE_KEY]; ok {
+			TLOG.Info("[TARS] servant got a trace request, trace key:", traceKey)
+			if ok := current.InitTrace(ctx, traceKey); !ok {
+				TLOG.Error("trace-debug: set trace key in current status error, trace key:", traceKey)
+			}
+		}
+	}
+
 	if reqPackage.CPacketType == basef.TARSONEWAY {
 		defer func() func() {
 			beginTime := time.Now().UnixNano() / 1e6
@@ -67,7 +77,7 @@ func (s *TarsProtocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 		if s.withContext {
 			ok := current.SetRequestStatus(ctx, reqPackage.Status)
 			if !ok {
-				TLOG.Error("Set reqeust status in context fail!")
+				TLOG.Error("Set request status in context fail!")
 			}
 			ok = current.SetRequestContext(ctx, reqPackage.Context)
 			if !ok {
@@ -164,7 +174,7 @@ func (s *TarsProtocol) ParsePackage(buff []byte) (int, int) {
 // InvokeTimeout indicates how to deal with timeout.
 func (s *TarsProtocol) InvokeTimeout(pkg []byte) []byte {
 	rspPackage := requestf.ResponsePacket{}
-	//  invoketimeout need to return IRequestId
+	//  invokeTimeout need to return IRequestId
 	reqPackage := requestf.RequestPacket{}
 	is := codec.NewReader(pkg[4:])
 	reqPackage.ReadFrom(is)

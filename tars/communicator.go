@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"github.com/TarsCloud/TarsGo/tars/util/tarstrace"
 	"sync"
 
 	s "github.com/TarsCloud/TarsGo/tars/model"
@@ -77,6 +78,7 @@ func (c *Communicator) StringToProxy(servant string, p ProxyPrx) {
 // e.g. comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h ... -p ...")
 func (c *Communicator) SetProperty(key string, value interface{}) {
 	c.properties.Store(key, value)
+	c.SetTraceParam(key)
 }
 
 // GetProperty returns communicator property value as string and true for key, or empty string
@@ -86,6 +88,16 @@ func (c *Communicator) GetProperty(key string) (string, bool) {
 		return v.(string), ok
 	}
 	return "", false
+}
+
+func (c *Communicator) SetTraceParam(name string) {
+	if name != "trace_param_max_len" && len(name) == 0 {
+		return
+	}
+	defaultValue, ok  := c.GetPropertyInt("trace_param_max_len")
+	if ok {
+		tarstrace.SetTraceParamMaxLen(uint(defaultValue))
+	}
 }
 
 // GetPropertyInt returns communicator property value as int and true for key, or 0 and false

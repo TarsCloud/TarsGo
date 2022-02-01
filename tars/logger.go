@@ -1,10 +1,39 @@
 package tars
 
 import (
+	"encoding/base64"
+	"fmt"
 	"path/filepath"
+	"strconv"
+	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/util/rogger"
+	"github.com/TarsCloud/TarsGo/tars/util/sync"
 )
+
+var (
+	traceLogger *rogger.Logger
+	loggerOnce  sync.Once
+)
+
+func Trace(traceKey, annotation, client, server, funcName string, ret int, data, ex string) {
+	loggerOnce.Do(func() (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("%+v", r)
+			}
+		}()
+		traceLogger = GetRemoteLogger("_t_trace_")
+		return nil
+	})
+	msg := traceKey + "|" + annotation + "|" + client + "|" + server + "|" + funcName + "|" + strconv.FormatInt(time.Now().UnixNano()/1e6, 10) + "|" + strconv.Itoa(ret) + "|" + base64.StdEncoding.EncodeToString([]byte(data)) + "|" + ex + "\n"
+	fmt.Print(msg)
+	if traceLogger == nil {
+		//TLOG.Error("trace logger no init")
+		return
+	}
+	traceLogger.WriteLog([]byte(msg))
+}
 
 // GetLogger Get a logger
 func GetLogger(name string) *rogger.Logger {
@@ -61,5 +90,4 @@ func GetRemoteLogger(name string) *rogger.Logger {
 	remoteWriter.InitServerInfo(cfg.App, cfg.Server, name, set)
 	lg.SetWriter(remoteWriter)
 	return lg
-
 }

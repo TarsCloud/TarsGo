@@ -1,6 +1,9 @@
 package current
 
-import "context"
+import (
+	"context"
+	"github.com/TarsCloud/TarsGo/tars/util/tarstrace"
+)
 
 type tarsCurrentKey int64
 
@@ -19,6 +22,7 @@ type Current struct {
 	resContext  map[string]string
 	needDyeing  bool
 	dyeingUser  string
+	traceData   *tarstrace.TraceData
 }
 
 // NewCurrent return a Current point.
@@ -251,6 +255,57 @@ func SetDyeingUser(ctx context.Context, user string) bool {
 	tc, ok := currentFromContext(ctx)
 	if ok {
 		tc.dyeingUser = user
+	}
+	return ok
+}
+
+const STATUS_TRACE_KEY = "STATUS_TRACE_KEY"
+
+// TarsOpenTrace gets trace key from the context.
+func TarsOpenTrace(ctx context.Context, traceParams bool) bool {
+	tc, ok := currentFromContext(ctx)
+	if ok {
+		traceData := tarstrace.NewTraceData()
+		if traceParams {
+			traceData.OpenTrace(15, 0)
+		} else {
+			traceData.OpenTrace(0, 0)
+		}
+		tc.traceData = traceData
+	}
+	return ok
+}
+
+// InitTrace gets trace key from the context.
+func InitTrace(ctx context.Context, traceKey string) bool {
+	tc, ok := currentFromContext(ctx)
+	if ok {
+		traceData := tarstrace.NewTraceData()
+		if !traceData.InitTrace(traceKey) {
+			return false
+		}
+		traceData.TraceCall = true
+		tc.traceData = traceData
+	}
+	return ok
+}
+
+// GetTraceData gets trace key from the context.
+func GetTraceData(ctx context.Context) (*tarstrace.TraceData, bool) {
+	tc, ok := currentFromContext(ctx)
+	if ok {
+		if tc.traceData != nil {
+			return tc.traceData, true
+		}
+	}
+	return nil, false
+}
+
+// SetTraceData set trace key to the tars current.
+func SetTraceData(ctx context.Context, traceData *tarstrace.TraceData) bool {
+	tc, ok := currentFromContext(ctx)
+	if ok {
+		tc.traceData = traceData
 	}
 	return ok
 }

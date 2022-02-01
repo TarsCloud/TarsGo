@@ -342,6 +342,10 @@ func (b *Buffer) ToBytes() []byte {
 	return b.buf.Bytes()
 }
 
+func (b *Buffer) Len() int {
+	return b.buf.Len()
+}
+
 // Grow grows the size of the buffer.
 func (b *Buffer) Grow(size int) {
 	b.buf.Grow(size)
@@ -864,6 +868,10 @@ func (b *Reader) ToString() string {
 // ToBytes make the reader to string
 func (b *Reader) ToBytes() []byte {
 	return b.ref
+}
+
+func (b *Reader) Len() int {
+	return len(b.ref)
 }
 
 // NewReader returns *Reader

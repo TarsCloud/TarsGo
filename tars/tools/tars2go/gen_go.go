@@ -221,7 +221,7 @@ func (gen *GenGo) saveToSourceFile(filename string) {
 	if !*gE {
 		beauty, err = format.Source(gen.code.Bytes())
 		if err != nil {
-			gen.genErr("go fmt fail. " + filename + " " + err.Error())
+			gen.genErr(string(gen.code.Bytes()) + "go fmt fail. " + filename + " " + err.Error())
 		}
 	} else {
 		beauty = gen.code.Bytes()
@@ -353,6 +353,7 @@ import (
 	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/res/basef\"\n")
 	gen.code.WriteString("\"" + gen.tarsPath + "/util/tools\"\n")
 	gen.code.WriteString("\"" + gen.tarsPath + "/util/current\"\n")
+	gen.code.WriteString("\"" + gen.tarsPath + "/util/tarstrace\"\n")
 
 	if *gModuleCycle == true {
 		for k, v := range itf.DependModuleWithJce {
@@ -1217,6 +1218,23 @@ _resp := new(requestf.ResponsePacket)
 tarsCtx := context.Background()
 `)
 	} else {
+		// trace
+		if !isOneWay {
+			c.WriteString(`
+traceData, ok := current.GetTraceData(tarsCtx)
+if ok && traceData.TraceCall {
+	traceData.NewSpan()
+	var traceParam string
+	traceParamFlag := traceData.NeedTraceParam(tarstrace.EstCS, uint(_os.Len()))
+	if traceParamFlag == tarstrace.EnpNormal {
+		traceParam = ""
+	} else if traceParamFlag == tarstrace.EnpOverMaxLen {
+		traceParam = "{\"trace_param_over_max_len\":true}"
+	}
+	tars.Trace(traceData.GetTraceKey(tarstrace.EstCS), tarstrace.TraceAnnotationCS, tars.GetClientConfig().ModuleName, _obj.s.Name(), "` + fun.Name + `", 0, traceParam, "")
+}`)
+			c.WriteString("\n\n")
+		}
 		c.WriteString(`var _status map[string]string
 var _context map[string]string
 if len(_opt) == 1{
@@ -1254,6 +1272,20 @@ _resp := new(requestf.ResponsePacket)
 	}
 
 	if !isOneWay {
+		if withContext {
+			c.WriteString(`
+if ok && traceData.TraceCall {
+	var traceParam string
+	traceParamFlag := traceData.NeedTraceParam(tarstrace.EstCR, uint(_is.Len()))
+	if traceParamFlag == tarstrace.EnpNormal {
+		traceParam = ""
+	} else if traceParamFlag == tarstrace.EnpOverMaxLen {
+		traceParam = "{\"trace_param_over_max_len\":true}"
+	}
+	tars.Trace(traceData.GetTraceKey(tarstrace.EstCR), tarstrace.TraceAnnotationCR, tars.GetClientConfig().ModuleName, _obj.s.Name(), "` + fun.Name + `", 0, traceParam, "")
+}`)
+			c.WriteString("\n\n")
+		}
 		for k, v := range fun.Args {
 			if v.IsOut {
 				dummy := &StructMember{}
@@ -1525,6 +1557,19 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 
 		c.WriteString("\n\n")
 	}
+	c.WriteString(`
+traceData, ok := current.GetTraceData(tarsCtx)
+if ok && traceData.TraceCall {
+	var traceParam string
+	traceParamFlag := traceData.NeedTraceParam(tarstrace.EstSR, uint(_is.Len()))
+	if traceParamFlag == tarstrace.EnpNormal {
+		traceParam = ""
+	} else if traceParamFlag == tarstrace.EnpOverMaxLen {
+		traceParam = "{\"trace_param_over_max_len\":true}"
+	}
+	tars.Trace(traceData.GetTraceKey(tarstrace.EstSR), tarstrace.TraceAnnotationSR, tars.GetClientConfig().ModuleName, tarsReq.SServantName, "` + fun.OriginName + `", 0, traceParam, "")
+}`)
+	c.WriteString("\n\n")
 
 	if fun.HasRet {
 		c.WriteString("var _funRet_ " + gen.genType(fun.RetType) + "\n")
@@ -1724,5 +1769,16 @@ _tupRsp_ := tup.NewUniAttribute()
 }`)
 
 	c.WriteString("\n")
-
+	c.WriteString(`
+if ok && traceData.TraceCall {
+	var traceParam string
+	traceParamFlag := traceData.NeedTraceParam(tarstrace.EstSS, uint(_os.Len()))
+	if traceParamFlag == tarstrace.EnpNormal {
+		traceParam = ""
+	} else if traceParamFlag == tarstrace.EnpOverMaxLen {
+		traceParam = "{\"trace_param_over_max_len\":true}"
+	}
+	tars.Trace(traceData.GetTraceKey(tarstrace.EstSS), tarstrace.TraceAnnotationSS, tars.GetClientConfig().ModuleName, tarsReq.SServantName, "` + fun.OriginName + `", 0, traceParam, "")
+}`)
+	c.WriteString("\n\n")
 }

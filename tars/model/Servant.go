@@ -16,6 +16,7 @@ type Servant interface {
 		Resp *requestf.ResponsePacket) error
 	TarsSetTimeout(t int)
 	TarsSetProtocol(Protocol)
+	Name() string
 }
 
 type Protocol interface {
