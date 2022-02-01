@@ -29,6 +29,8 @@ var (
 	gModule   string
 	gInclude  string
 	includes  []string
+
+	withoutTrace bool
 )
 
 func printhelp() {
@@ -49,6 +51,7 @@ func main() {
 	flag.StringVar(&gOutdir, "outdir", "", "which dir to put generated code")
 	flag.StringVar(&gModule, "module", "", "current go module path")
 	flag.StringVar(&gInclude, "include", "", "set search path of tars protocol")
+	flag.BoolVar(&withoutTrace, "without-trace", false, "不需要调用链追踪逻辑")
 	flag.Parse()
 
 	if flag.NArg() == 0 {

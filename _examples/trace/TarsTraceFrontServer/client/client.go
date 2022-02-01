@@ -3,14 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/TarsCloud/TarsGo/tars/util/current"
-
 	"github.com/TarsCloud/TarsGo/tars"
+	"github.com/TarsCloud/TarsGo/tars/util/current"
 
 	"trace/frontend/tars-protocol/Trace"
 )
 
 func main() {
+	tars.ServerConfigPath = "config.conf"
 	comm := tars.NewCommunicator()
 	obj := fmt.Sprintf("Trace.TarsTraceFrontServer.FrontendObj@tcp -h 127.0.0.1 -p 10015 -t 60000")
 	app := new(Trace.Frontend)

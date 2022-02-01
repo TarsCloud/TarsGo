@@ -154,7 +154,7 @@ func TraceContextNeedParam(es ESpanType, tType int, len uint, maxLen uint) ENeed
 	} else if es == EstTE {
 		es = EstCR
 	}
-	if (int(es) & tType) > 0 {
+	if (int(es) & tType) == 0 {
 		return EnpNo
 	} else if len > maxLen*1024 {
 		return EnpOverMaxLen

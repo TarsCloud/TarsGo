@@ -26,12 +26,11 @@ func Trace(traceKey, annotation, client, server, funcName string, ret int, data,
 		traceLogger = GetRemoteLogger("_t_trace_")
 		return nil
 	})
-	msg := traceKey + "|" + annotation + "|" + client + "|" + server + "|" + funcName + "|" + strconv.FormatInt(time.Now().UnixNano()/1e6, 10) + "|" + strconv.Itoa(ret) + "|" + base64.StdEncoding.EncodeToString([]byte(data)) + "|" + ex + "\n"
-	fmt.Print(msg)
 	if traceLogger == nil {
-		//TLOG.Error("trace logger no init")
+		TLOG.Error("trace logger init error")
 		return
 	}
+	msg := traceKey + "|" + annotation + "|" + client + "|" + server + "|" + funcName + "|" + strconv.FormatInt(time.Now().UnixNano()/1e6, 10) + "|" + strconv.Itoa(ret) + "|" + base64.StdEncoding.EncodeToString([]byte(data)) + "|" + ex + "\n"
 	traceLogger.WriteLog([]byte(msg))
 }
 
