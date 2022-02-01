@@ -35,7 +35,7 @@ jobs:
 
       - name: Build
         run: |
-          go mod download
+          go mod tidy
           go build ./tars
 
       - name: Codecov
