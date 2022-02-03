@@ -1308,7 +1308,7 @@ if ok && traceData.TraceCall {
 	} else if traceParamFlag == tarstrace.EnpOverMaxLen {
 		traceParam = "{\"trace_param_over_max_len\":true}"
 	}
-	tars.Trace(traceData.GetTraceKey(tarstrace.EstCR), tarstrace.TraceAnnotationCR, tars.GetClientConfig().ModuleName, _obj.s.Name(), "` + fun.Name + `", 0, traceParam, "")
+	tars.Trace(traceData.GetTraceKey(tarstrace.EstCR), tarstrace.TraceAnnotationCR, tars.GetClientConfig().ModuleName, _obj.s.Name(), "` + fun.Name + `", int(_resp.IRet), traceParam, "")
 }`)
 			c.WriteString("\n\n")
 		}
