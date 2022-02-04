@@ -30,8 +30,8 @@ func Trace(traceKey, annotation, client, server, funcName string, ret int, data,
 		TLOG.Error("trace logger init error")
 		return
 	}
-	msg := traceKey + "|" + annotation + "|" + client + "|" + server + "|" + funcName + "|" + strconv.FormatInt(time.Now().UnixNano()/1e6, 10) + "|" + strconv.Itoa(ret) + "|" + base64.StdEncoding.EncodeToString([]byte(data)) + "|" + ex + "\n"
-	traceLogger.WriteLog([]byte(msg))
+	msg := traceKey + "|" + annotation + "|" + client + "|" + server + "|" + funcName + "|" + strconv.FormatInt(time.Now().UnixNano()/1e6, 10) + "|" + strconv.Itoa(ret) + "|" + base64.StdEncoding.EncodeToString([]byte(data)) + "|" + ex
+	traceLogger.Trace(msg)
 }
 
 // GetLogger Get a logger

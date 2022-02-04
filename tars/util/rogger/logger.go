@@ -222,6 +222,19 @@ func (l *Logger) Error(v ...interface{}) {
 	l.Writef(0, ERROR, "", v)
 }
 
+// Trace log
+func (l *Logger) Trace(msg string) {
+	buf := bytes.NewBuffer(nil)
+	if l.writer.NeedPrefix() {
+		fmt.Fprintf(buf, "%s|", time.Now().Format("2006-01-02 15:04:05"))
+	}
+	fmt.Fprint(buf, msg)
+	if l.writer.NeedPrefix() {
+		buf.WriteByte('\n')
+	}
+	logQueue <- &logValue{value: buf.Bytes(), writer: l.writer}
+}
+
 // Debugf logs interface in debug loglevel with formating string
 func (l *Logger) Debugf(format string, v ...interface{}) {
 	l.Writef(0, DEBUG, format, v)
