@@ -60,17 +60,17 @@ func newTraceContext() *TraceContext {
 // key 分两种情况，1.rpc调用； 2.异步回调
 // eg: f.2-ee824ad0eb4dacf56b29d230a229c584|030019ac000010796162bc5900000021|030019ac000010796162bc5900000021
 func (c *TraceContext) Init(traceKey string) bool {
-	strs := strings.Split(traceKey, "|")
-	if len(strs) == 2 {
-		c.traceID = strs[0]
-		c.parentSpanID = strs[1]
+	traceKeys := strings.Split(traceKey, "|")
+	if len(traceKeys) == 2 {
+		c.traceID = traceKeys[0]
+		c.parentSpanID = traceKeys[1]
 		c.spanID = ""
 		c.traceType, c.paramMaxLen = TraceContextInitType(c.traceID)
 		return true
-	} else if len(strs) == 3 {
-		c.traceID = strs[0]
-		c.parentSpanID = strs[1]
-		c.spanID = strs[2]
+	} else if len(traceKeys) == 3 {
+		c.traceID = traceKeys[0]
+		c.parentSpanID = traceKeys[1]
+		c.spanID = traceKeys[2]
 		c.traceType, c.paramMaxLen = TraceContextInitType(c.traceID)
 		return true
 	} else {
@@ -146,7 +146,7 @@ func (c *TraceContext) getKeyFull(full bool) string {
 	return c.traceID + "|" + c.spanID
 }
 
-// TraceContextNeedParam static
+// TraceContextNeedParam
 // return: 0 不需要参数， 1：正常打印参数， 2：参数太长返回默认串
 func TraceContextNeedParam(es ESpanType, tType int, len uint, maxLen uint) ENeedParam {
 	if es == EstTS {
@@ -162,32 +162,32 @@ func TraceContextNeedParam(es ESpanType, tType int, len uint, maxLen uint) ENeed
 	return EnpNormal
 }
 
-// GetTraceKey ThreadData
+// GetTraceKey 获取 traceKey
 func (t *TraceData) GetTraceKey(es ESpanType) string {
 	return t.TraceContext.getKey(es)
 }
 
-// GetTraceKeyFull ThreadData
+// GetTraceKeyFull 获取 traceKey
 func (t *TraceData) GetTraceKeyFull(full bool) string {
 	return t.TraceContext.getKeyFull(full)
 }
 
-// NewSpan ThreadData
+// NewSpan 获取 traceKey
 func (t *TraceData) NewSpan() {
 	t.TraceContext.newSpan()
 }
 
-// InitTrace ThreadData
+// InitTrace 获取 traceKey
 func (t *TraceData) InitTrace(traceKey string) bool {
 	return t.TraceContext.Init(traceKey)
 }
 
-// ThreadData
+// 获取 trace type
 func (t *TraceData) getTraceType() int {
 	return t.TraceContext.traceType
 }
 
-// NeedTraceParam ThreadData
+// NeedTraceParam 控制参数打印
 func (t *TraceData) NeedTraceParam(es ESpanType, len uint) ENeedParam {
 	return TraceContextNeedParam(es, t.TraceContext.traceType, len, t.TraceContext.paramMaxLen)
 }
@@ -206,13 +206,13 @@ func (t *TraceData) OpenTrace(traceFlag int, maxLen uint) bool {
 	return t.TraceCall
 }
 
-// NeedTraceParam ThreadData
+// NeedTraceParam 控制参数打印
 func NeedTraceParam(es ESpanType, traceID string, len uint) ENeedParam {
 	tType, maxLen := TraceContextInitType(traceID)
 	return TraceContextNeedParam(es, tType, len, maxLen)
 }
 
-// SetTraceParamMaxLen ThreadData
+// SetTraceParamMaxLen 设置控制参数长度
 func SetTraceParamMaxLen(len uint) {
 	// 最最大保护，不超过10M
 	if len < 1024*10 {
@@ -220,7 +220,7 @@ func SetTraceParamMaxLen(len uint) {
 	}
 }
 
-// GetTraceParamMaxLen ThreadData
+// GetTraceParamMaxLen 获取控制参数长度
 func GetTraceParamMaxLen() uint {
 	return traceParamMaxLen
 }

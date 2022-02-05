@@ -261,7 +261,7 @@ func SetDyeingUser(ctx context.Context, user string) bool {
 
 const STATUS_TRACE_KEY = "STATUS_TRACE_KEY"
 
-// TarsOpenTrace gets trace key from the context.
+// TarsOpenTrace 开启trace
 func TarsOpenTrace(ctx context.Context, traceParams bool) bool {
 	tc, ok := currentFromContext(ctx)
 	if ok {
@@ -276,7 +276,7 @@ func TarsOpenTrace(ctx context.Context, traceParams bool) bool {
 	return ok
 }
 
-// InitTrace gets trace key from the context.
+// InitTrace init trace data from the trace key.
 func InitTrace(ctx context.Context, traceKey string) bool {
 	tc, ok := currentFromContext(ctx)
 	if ok {
@@ -290,7 +290,7 @@ func InitTrace(ctx context.Context, traceKey string) bool {
 	return ok
 }
 
-// GetTraceData gets trace key from the context.
+// GetTraceData get trace data from the context.
 func GetTraceData(ctx context.Context) (*tarstrace.TraceData, bool) {
 	tc, ok := currentFromContext(ctx)
 	if ok {
@@ -301,7 +301,7 @@ func GetTraceData(ctx context.Context) (*tarstrace.TraceData, bool) {
 	return nil, false
 }
 
-// SetTraceData set trace key to the tars current.
+// SetTraceData set trace data to the tars current.
 func SetTraceData(ctx context.Context, traceData *tarstrace.TraceData) bool {
 	tc, ok := currentFromContext(ctx)
 	if ok {
