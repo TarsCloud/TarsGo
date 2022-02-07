@@ -221,7 +221,7 @@ func (gen *GenGo) saveToSourceFile(filename string) {
 	if !*gE {
 		beauty, err = format.Source(gen.code.Bytes())
 		if err != nil {
-			gen.genErr(string(gen.code.Bytes()) + "go fmt fail. " + filename + " " + err.Error())
+			gen.genErr("go fmt fail. " + filename + " " + err.Error())
 		}
 	} else {
 		beauty = gen.code.Bytes()
