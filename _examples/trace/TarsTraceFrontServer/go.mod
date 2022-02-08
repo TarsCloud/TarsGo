@@ -9,6 +9,5 @@ require (
 
 replace (
 	github.com/TarsCloud/TarsGo v1.2.0 => ../../../
-	github.com/google/uuid v1.3.0 => github.com/lbbniu/uuid v1.3.2
 	trace/backend => ../TarsTraceBackServer
 )

@@ -10,5 +10,3 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.0
 	github.com/stretchr/testify v1.7.0
 )
-
-replace github.com/google/uuid v1.3.0 => github.com/lbbniu/uuid v1.3.2
