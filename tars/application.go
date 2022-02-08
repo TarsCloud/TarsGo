@@ -37,6 +37,9 @@ var shutdown chan bool
 var serList []string
 var objRunList []string
 var isShudowning int32
+var clientObjInfo map[string]map[string]string
+var clientTlsConfig *tls.Config
+var clientObjTlsConfig map[string]*tls.Config
 
 // TLOG is the logger for tars framework.
 var TLOG = rogger.GetLogger("TLOG")
@@ -58,6 +61,8 @@ func init() {
 	httpSvrs = make(map[string]*http.Server)
 	shutdown = make(chan bool, 1)
 	adminMethods = make(map[string]adminFn)
+	clientObjInfo = make(map[string]map[string]string)
+	clientObjTlsConfig = make(map[string]*tls.Config)
 	rogger.SetLevel(rogger.ERROR)
 }
 
@@ -196,6 +201,16 @@ func initConfig() {
 	cltCfg.ObjQueueMax = c.GetInt32WithDef("/tars/application/client<objqueuemax>", ObjQueueMax)
 	cltCfg.AdapterProxyTicker = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/client<adapterproxyticker>", AdapterProxyTicker))
 	cltCfg.AdapterProxyResetCount = c.GetIntWithDef("/tars/application/client<adapterproxyresetcount>", AdapterProxyResetCount)
+	ca := c.GetString("/tars/application/client<ca>")
+	if ca != "" {
+		cert := c.GetString("/tars/application/client<cert>")
+		key := c.GetString("/tars/application/client<key>")
+		ciphers := c.GetString("/tars/application/client<ciphers>")
+		clientTlsConfig, err = ssl.NewClientTlsConfig(ca, cert, key, ciphers)
+		if err != nil {
+			panic(err)
+		}
+	}
 
 	serList = c.GetDomain("/tars/application/server")
 	for _, adapter := range serList {
@@ -263,6 +278,27 @@ func initConfig() {
 		tarsConfig["AdminObj"] = adminCfg
 		svrCfg.Adapters["AdminAdapter"] = adapterConfig{localpoint, "tcp", "AdminObj", 1}
 		RegisterAdmin(rogger.Admin, rogger.HandleDyeingAdmin)
+	}
+
+	auths := c.GetDomain("/tars/application/client")
+	for _, objName := range auths {
+		authInfo := make(map[string]string)
+		//authInfo["accesskey"] = c.GetString("/tars/application/client/" + objName + "<accesskey>")
+		//authInfo["secretkey"] = c.GetString("/tars/application/client/" + objName + "<secretkey>")
+		authInfo["ca"] = c.GetString("/tars/application/client/" + objName + "<ca>")
+		authInfo["cert"] = c.GetString("/tars/application/client/" + objName + "<cert>")
+		authInfo["key"] = c.GetString("/tars/application/client/" + objName + "<key>")
+		authInfo["ciphers"] = c.GetString("/tars/application/client/" + objName + "<ciphers>")
+		clientObjInfo[objName] = authInfo
+
+		if authInfo["ca"] != "" {
+			var objTlsConfig *tls.Config
+			objTlsConfig, err = ssl.NewClientTlsConfig(authInfo["ca"], authInfo["cert"], authInfo["key"], authInfo["ciphers"])
+			if err != nil {
+				panic(err)
+			}
+			clientObjTlsConfig[objName] = objTlsConfig
+		}
 	}
 }
 

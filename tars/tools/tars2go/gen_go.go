@@ -1126,7 +1126,7 @@ func (_obj *` + itf.Name + `) AddServant(imp _imp` + itf.Name + `, obj string) {
   tars.AddServant(_obj, imp, obj)
 }
 `)
-		c.WriteString(`//AddServant adds servant  for the service with context.
+		c.WriteString(`//AddServantWithContext adds servant  for the service with context.
 func (_obj *` + itf.Name + `) AddServantWithContext(imp _imp` + itf.Name + `WithContext, obj string) {
   tars.AddServantWithContext(_obj, imp, obj)
 }

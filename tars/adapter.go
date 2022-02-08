@@ -11,6 +11,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	"github.com/TarsCloud/TarsGo/tars/transport"
+	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
 )
 
@@ -39,13 +40,15 @@ type AdapterProxy struct {
 }
 
 // NewAdapterProxy : Construct an adapter proxy
-func NewAdapterProxy(point *endpointf.EndpointF, comm *Communicator) *AdapterProxy {
+func NewAdapterProxy(objName string, point *endpointf.EndpointF, comm *Communicator) *AdapterProxy {
 	c := &AdapterProxy{}
 	c.comm = comm
 	c.point = point
 	proto := "tcp"
-	if point.Istcp == 0 {
+	if point.Istcp == endpoint.UDP {
 		proto = "udp"
+	} else if point.Istcp == endpoint.SSL {
+		proto = "ssl"
 	}
 	conf := &transport.TarsClientConf{
 		Proto: proto,
@@ -55,6 +58,13 @@ func NewAdapterProxy(point *endpointf.EndpointF, comm *Communicator) *AdapterPro
 		ReadTimeout:  comm.Client.ClientReadTimeout,
 		WriteTimeout: comm.Client.ClientWriteTimeout,
 		DialTimeout:  comm.Client.ClientDialTimeout,
+	}
+	if point.Istcp == endpoint.SSL {
+		if tlsConfig, ok := clientObjTlsConfig[objName]; ok {
+			conf.TlsConfig = tlsConfig
+		} else {
+			conf.TlsConfig = clientTlsConfig
+		}
 	}
 	c.conf = conf
 	c.tarsClient = transport.NewTarsClient(fmt.Sprintf("%s:%d", point.Host, point.Port), c, conf)
