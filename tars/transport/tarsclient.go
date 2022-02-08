@@ -193,12 +193,12 @@ func (c *connection) recv(conn net.Conn, connDone chan bool) {
 func (c *connection) ReConnect() (err error) {
 	c.connLock.Lock()
 	if c.isClosed {
-		TLOG.Debug("Connect:", c.tc.address)
-		if c.tc.conf.Proto != "ssl" {
-			c.conn, err = net.DialTimeout(c.tc.conf.Proto, c.tc.address, c.dialTimeout)
+		TLOG.Debug("Connect:", c.tc.address, "Proto:", c.tc.conf.Proto)
+		if c.tc.conf.Proto == "ssl" {
+			dialer := &net.Dialer{Timeout: c.dialTimeout}
+			c.conn, err = tls.DialWithDialer(dialer, "tcp", c.tc.address, c.tc.conf.TlsConfig)
 		} else {
-			d := net.Dialer{Timeout: c.dialTimeout}
-			c.conn, err = tls.DialWithDialer(&d, "tcp", c.tc.address, c.tc.conf.TlsConfig)
+			c.conn, err = net.DialTimeout(c.tc.conf.Proto, c.tc.address, c.dialTimeout)
 		}
 
 		if err != nil {

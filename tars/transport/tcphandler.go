@@ -124,8 +124,7 @@ func (h *tcpHandler) Handle() error {
 			if !isNoDataError(err) {
 				TLOG.Errorf("Accept error: %v", err)
 			} else if conn != nil {
-				switch c := conn.(type) {
-				case *net.TCPConn:
+				if c, ok := conn.(*net.TCPConn); ok {
 					c.SetKeepAlive(true)
 				}
 			}
