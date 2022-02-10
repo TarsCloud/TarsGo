@@ -59,8 +59,7 @@ func main() {
 	count := 500
 	for i := 0; i < count; i++ {
 		msg := getMsg(name + strconv.Itoa(i))
-		err := client.Send(msg)
-		if err != nil {
+		if err := client.Send(msg); err != nil {
 			fmt.Println("send err: " + err.Error())
 		}
 	}

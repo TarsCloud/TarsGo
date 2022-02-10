@@ -66,8 +66,10 @@ func main() {
 	}
 	s := MyServer{}
 	svr := transport.NewTarsServer(&s, conf)
-	err := svr.Serve()
-	if err != nil {
+	if err := svr.Listen(); err != nil {
+		panic(err)
+	}
+	if err := svr.Serve(); err != nil {
 		fmt.Println(err)
 	}
 }
