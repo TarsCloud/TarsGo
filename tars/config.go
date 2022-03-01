@@ -130,7 +130,7 @@ func newServerConfig() *serverConfig {
 		WriteTimeout:            tools.ParseTimeOut(ReadTimeout),
 		HandleTimeout:           tools.ParseTimeOut(HandleTimeout),
 		IdleTimeout:             tools.ParseTimeOut(IdleTimeout),
-		ZombileTimeout:          tools.ParseTimeOut(ZombileTimeout),
+		ZombieTimeout:           tools.ParseTimeOut(ZombieTimeout),
 		QueueCap:                QueueCap,
 		TCPReadBuffer:           TCPReadBuffer,
 		TCPWriteBuffer:          TCPWriteBuffer,
