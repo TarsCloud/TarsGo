@@ -5,5 +5,5 @@ import (
 )
 
 func TestDumpStack(t *testing.T) {
-	DumpStack(true, "testdump")
+	DumpStack(true, "testdump", "testdump")
 }

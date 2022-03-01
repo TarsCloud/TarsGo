@@ -496,7 +496,6 @@ func TestBuffer_getTypeStr(t *testing.T) {
 	}
 }
 
-
 func TestReader_Reset(t *testing.T) {
 	writer := NewBuffer()
 	err := writer.Write_bytes([]byte("test"))
@@ -623,7 +622,7 @@ func TestReader_SkipToNoCheck(t *testing.T) {
 
 	reader := r(prepareWrite())
 	err, exists, _ := reader.SkipToNoCheck(3, true)
-	if err == nil || exists{
+	if err == nil || exists {
 		t.Error("SkipToNoCheck failed.expecting error, but got nil\n")
 	}
 	if err != nil && err.Error() != "Can not find Tag 3. But require. tagCur: 5, tyCur: 0" {

@@ -52,13 +52,13 @@ type serverConfig struct {
 	Enableset   bool
 	Setdivision string
 	//add server timeout
-	AcceptTimeout  time.Duration
-	ReadTimeout    time.Duration
-	WriteTimeout   time.Duration
-	HandleTimeout  time.Duration
-	IdleTimeout    time.Duration
-	ZombileTimeout time.Duration
-	QueueCap       int
+	AcceptTimeout time.Duration
+	ReadTimeout   time.Duration
+	WriteTimeout  time.Duration
+	HandleTimeout time.Duration
+	IdleTimeout   time.Duration
+	ZombieTimeout time.Duration
+	QueueCap      int
 	//add tcp config
 	TCPReadBuffer  int
 	TCPWriteBuffer int

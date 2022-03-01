@@ -87,7 +87,6 @@ func (h *udpHandler) Handle() error {
 			atomic.AddInt32(&h.ts.numInvoke, -1)
 		}()
 	}
-	return nil
 }
 
 func (h *udpHandler) OnShutdown() {

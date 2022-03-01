@@ -24,7 +24,7 @@ func main() {
 	app := new(_APP_._SERVANT_)
 	// Register Servant
 	app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+"._SERVANT_Obj")
-	
+
 	// Run application
 	tars.Run()
 }
