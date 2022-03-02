@@ -706,7 +706,7 @@ func (gen *GenGo) genReadSimpleList(mb *StructMember, prefix string, hasRet bool
 	errStr := errString(hasRet)
 
 	c.WriteString(`
-err, _ = _is.SkipTo(codec.BYTE, 0, true)
+_, err = _is.SkipTo(codec.BYTE, 0, true)
 ` + errStr + `
 err = _is.Read_int32(&length, 0, true)
 ` + errStr + `
@@ -727,12 +727,16 @@ func (gen *GenGo) genReadVector(mb *StructMember, prefix string, hasRet bool) {
 	if mb.Require {
 		require = "true"
 	}
-	c.WriteString(`
-err, have, ty = _is.SkipToNoCheck(` + tag + `,` + require + `)
+	if require == "false" {
+		c.WriteString(`
+have, ty, err = _is.SkipToNoCheck(` + tag + `,` + require + `)
+` + errStr + `
+if have {`)
+	} else {
+		c.WriteString(`
+_, ty, err = _is.SkipToNoCheck(` + tag + `,` + require + `)
 ` + errStr + `
 `)
-	if require == "false" {
-		c.WriteString("if have {")
 	}
 
 	c.WriteString(`
@@ -781,12 +785,17 @@ func (gen *GenGo) genReadArray(mb *StructMember, prefix string, hasRet bool) {
 	if mb.Require {
 		require = "true"
 	}
-	c.WriteString(`
-err, have, ty = _is.SkipToNoCheck(` + tag + `,` + require + `)
+
+	if require == "false" {
+		c.WriteString(`
+have, ty, err = _is.SkipToNoCheck(` + tag + `,` + require + `)
+` + errStr + `
+if have {`)
+	} else {
+		c.WriteString(`
+_, ty, err = _is.SkipToNoCheck(` + tag + `,` + require + `)
 ` + errStr + `
 `)
-	if require == "false" {
-		c.WriteString("if have {")
 	}
 
 	c.WriteString(`
@@ -845,13 +854,19 @@ func (gen *GenGo) genReadMap(mb *StructMember, prefix string, hasRet bool) {
 	if mb.Require {
 		require = "true"
 	}
-	c.WriteString(`
-err, have = _is.SkipTo(codec.MAP, ` + tag + `, ` + require + `)
+
+	if require == "false" {
+		c.WriteString(`
+have, err = _is.SkipTo(codec.MAP, ` + tag + `, ` + require + `)
+` + errStr + `
+if have {`)
+	} else {
+		c.WriteString(`
+_, err = _is.SkipTo(codec.MAP, ` + tag + `, ` + require + `)
 ` + errStr + `
 `)
-	if require == "false" {
-		c.WriteString("if have {")
 	}
+
 	c.WriteString(`
 err = _is.Read_int32(&length, 0, true)
 ` + errStr + `
@@ -954,7 +969,7 @@ func (st *` + st.Name + `) ReadBlock(_is *codec.Reader, tag byte, require bool) 
 	var have bool
 	st.ResetDefault()
 
-	err, have = _is.SkipTo(codec.STRUCT_BEGIN, tag, require)
+	have, err = _is.SkipTo(codec.STRUCT_BEGIN, tag, require)
 	if err != nil {
 		return err
 	}
@@ -1475,7 +1490,7 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 		_decoder_.UseNumber()
 		err = _decoder_.Decode(&_jsonDat_)
 		if err != nil {
-			return fmt.Errorf("Decode reqpacket failed, error: %+v", err)
+			return fmt.Errorf("decode reqpacket failed, error: %+v", err)
 		}
 		`)
 
@@ -1497,7 +1512,7 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 
 		c.WriteString(`
 		} else {
-			err = fmt.Errorf("Decode reqpacket fail, error version: %d", tarsReq.IVersion)
+			err = fmt.Errorf("decode reqpacket fail, error version: %d", tarsReq.IVersion)
 			return err
 		}`)
 
@@ -1507,7 +1522,7 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 	if fun.HasRet {
 		c.WriteString("var _funRet_ " + gen.genType(fun.RetType) + "\n")
 
-		c.WriteString(`if _withContext == false {
+		c.WriteString(`if !_withContext {
 		_imp := _val.(_imp` + tname + `)
 		_funRet_, err = _imp.` + fun.Name + `(`)
 		for _, v := range fun.Args {
@@ -1533,7 +1548,7 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 		c.WriteString(")" + "\n } \n")
 
 	} else {
-		c.WriteString(`if _withContext == false {
+		c.WriteString(`if !_withContext {
 		_imp := _val.(_imp` + tname + `)
 		err = _imp.` + fun.Name + `(`)
 		for _, v := range fun.Args {

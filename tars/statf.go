@@ -138,7 +138,7 @@ var statInitOnce sync.Once
 
 func initReport() error {
 	cfg := GetClientConfig()
-	if cfg.Stat == "" || (cfg.Locator == "" && strings.Index(cfg.Stat, "@") < 0) {
+	if cfg.Stat == "" || (cfg.Locator == "" && !strings.Contains(cfg.Stat, "@")) {
 		statInited <- struct{}{}
 		return fmt.Errorf("stat init error")
 	}

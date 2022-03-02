@@ -153,7 +153,7 @@ func newClientConfig() *clientConfig {
 		RefreshEndpointInterval: refreshEndpointInterval,
 		ReportInterval:          reportInterval,
 		CheckStatusInterval:     checkStatusInterval,
-		KeepAliveInterval:       keepAliveInverval,
+		KeepAliveInterval:       keepAliveInterval,
 		AsyncInvokeTimeout:      AsyncInvokeTimeout,
 		ClientQueueLen:          ClientQueueLen,
 		ClientIdleTimeout:       tools.ParseTimeOut(ClientIdleTimeout),

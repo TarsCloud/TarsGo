@@ -219,7 +219,7 @@ func TestSkipStruct(t *testing.T) {
 
 	rd := r(b)
 
-	err, have := rd.SkipTo(STRUCT_BEGIN, 1, true)
+	have, err := rd.SkipTo(STRUCT_BEGIN, 1, true)
 	if err != nil || have == false {
 		t.Error(err)
 	}
@@ -257,7 +257,7 @@ func TestSkipStruct2(t *testing.T) {
 
 	rb := r(b)
 
-	err, have := rb.SkipTo(STRUCT_BEGIN, 1, true)
+	have, err := rb.SkipTo(STRUCT_BEGIN, 1, true)
 	if err != nil || !have {
 		t.Error(err)
 	}
@@ -545,15 +545,15 @@ func TestReader_unreadHead(t *testing.T) {
 	writer := NewBuffer()
 	err := writer.Write_string("hello", 0)
 	if err != nil {
-		t.Errorf("Write buffer failed.err:%v\n", err)
+		t.Errorf("write buffer failed.err:%v\n", err)
 	}
 	err = writer.Write_uint8(1, 1)
 	if err != nil {
-		t.Errorf("Write buffer failed.err:%v\n", err)
+		t.Errorf("write buffer failed.err:%v\n", err)
 	}
 	err = writer.Write_float32(1.2, 2)
 	if err != nil {
-		t.Errorf("Write buffer failed.err:%v\n", err)
+		t.Errorf("write buffer failed.err:%v\n", err)
 	}
 
 	// string type read head
@@ -561,20 +561,23 @@ func TestReader_unreadHead(t *testing.T) {
 	wantType, wantTag := STRING1, byte(0)
 	gotType, gotTag, err := reader.readHead()
 	if err != nil {
-		t.Errorf("Read buffer failed.err:%v\n", err)
+		t.Errorf("read buffer failed.err:%v\n", err)
 	}
 	if gotType != wantType || gotTag != wantTag {
-		t.Errorf("Failed to readHead. wantType:%v, wantTag:%v, gotType:%v, gotTag:%v\n",
+		t.Errorf("failed to readHead. wantType:%v, wantTag:%v, gotType:%v, gotTag:%v\n",
 			wantType, wantTag, gotType, gotTag)
 	}
 
 	// string type unread head
 	reader.unreadHead(gotTag)
 	gotType, gotTag, err = reader.readHead()
+	if err != nil {
+		t.Errorf("read head failed.err:%v\n", err)
+	}
 	// skip next 6 byte. 1 byte for string length, 5 byte for string itself.
 	reader.Skip(6)
 	if gotType != wantType || gotTag != wantTag {
-		t.Errorf("Failed to readHead. wantType:%v, wantTag:%v, gotType:%v, gotTag:%v\n",
+		t.Errorf("failed to readHead. wantType:%v, wantTag:%v, gotType:%v, gotTag:%v\n",
 			wantType, wantTag, gotType, gotTag)
 	}
 
@@ -582,18 +585,21 @@ func TestReader_unreadHead(t *testing.T) {
 	wantType, wantTag = BYTE, byte(1)
 	gotType, gotTag, err = reader.readHead()
 	if err != nil {
-		t.Errorf("Read buffer failed.err:%v\n", err)
+		t.Errorf("read buffer failed.err:%v\n", err)
 	}
 	if gotType != wantType || gotTag != wantTag {
-		t.Errorf("Failed to readHead. wantType:%v, wantTag:%v, gotType:%v, gotTag:%v\n",
+		t.Errorf("failed to readHead. wantType:%v, wantTag:%v, gotType:%v, gotTag:%v\n",
 			wantType, wantTag, gotType, gotTag)
 	}
 
 	// uint8 unread head
 	reader.unreadHead(gotTag)
 	gotType, gotTag, err = reader.readHead()
+	if err != nil {
+		t.Errorf("read head failed.err:%v\n", err)
+	}
 	if gotType != wantType || gotTag != wantTag {
-		t.Errorf("Failed to readHead. wantType:%v, wantTag:%v, gotType:%v, gotType:%v\n",
+		t.Errorf("failed to readHead. wantType:%v, wantTag:%v, gotType:%v, gotType:%v\n",
 			wantType, wantTag, gotType, gotTag)
 	}
 }
@@ -621,7 +627,7 @@ func TestReader_SkipToNoCheck(t *testing.T) {
 	}
 
 	reader := r(prepareWrite())
-	err, exists, _ := reader.SkipToNoCheck(3, true)
+	exists, _, err := reader.SkipToNoCheck(3, true)
 	if err == nil || exists {
 		t.Error("SkipToNoCheck failed.expecting error, but got nil\n")
 	}
@@ -631,7 +637,7 @@ func TestReader_SkipToNoCheck(t *testing.T) {
 	}
 
 	reader = r(prepareWrite())
-	err, exists, gotType := reader.SkipToNoCheck(2, true)
+	exists, gotType, err := reader.SkipToNoCheck(2, true)
 	if err != nil || !exists {
 		t.Errorf("SkipToNoCheck failed.expecting nil error, but got:%v\n", err)
 	}

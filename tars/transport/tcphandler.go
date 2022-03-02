@@ -27,9 +27,9 @@ type tcpHandler struct {
 	listener    net.Listener
 	ts          *TarsServer
 
-	readBuffer  int
-	writeBuffer int
-	tcpNoDelay  bool
+	//readBuffer  int
+	//writeBuffer int
+	//tcpNoDelay  bool
 	gpool       *gpool.Pool
 
 	conns sync.Map

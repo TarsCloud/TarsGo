@@ -434,7 +434,7 @@ func (p *PropertyReportHelper) Init(comm *Communicator, node string) {
 
 func initProReport() error {
 	cfg := GetClientConfig()
-	if cfg.Property == "" || (cfg.Locator == "" && strings.Index(cfg.Stat, "@") < 0) {
+	if cfg.Property == "" || (cfg.Locator == "" && !strings.Contains(cfg.Stat, "@")) {
 		return fmt.Errorf("property emptry")
 	}
 	comm := NewCommunicator()

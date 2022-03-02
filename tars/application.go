@@ -32,7 +32,8 @@ import (
 var tarsConfig map[string]*transport.TarsServerConf
 var goSvrs map[string]*transport.TarsServer
 var httpSvrs map[string]*http.Server
-var listenFds []*os.File
+
+//var listenFds []*os.File
 var shutdown chan bool
 var serList []string
 var objRunList []string
@@ -189,7 +190,7 @@ func initConfig() {
 	cltCfg.RefreshEndpointInterval = c.GetIntWithDef("/tars/application/client<refresh-endpoint-interval>", refreshEndpointInterval)
 	cltCfg.ReportInterval = c.GetIntWithDef("/tars/application/client<report-interval>", reportInterval)
 	cltCfg.CheckStatusInterval = c.GetIntWithDef("/tars/application/client<check-status-interval>", checkStatusInterval)
-	cltCfg.KeepAliveInterval = c.GetIntWithDef("/tars/application/client<keep-alive-interval>", keepAliveInverval)
+	cltCfg.KeepAliveInterval = c.GetIntWithDef("/tars/application/client<keep-alive-interval>", keepAliveInterval)
 
 	// add client timeout
 	cltCfg.ClientQueueLen = c.GetIntWithDef("/tars/application/client<clientqueuelen>", ClientQueueLen)
@@ -360,10 +361,10 @@ func Run() {
 
 		s := goSvrs[obj]
 		if s == nil {
-			teerDown(fmt.Errorf("Obj not found %s", obj))
+			teerDown(fmt.Errorf("obj not found %s", obj))
 			break
 		}
-		TLOG.Debugf("Run %s  %+v", obj, s.GetConfig())
+		TLOG.Debugf("run %s  %+v", obj, s.GetConfig())
 		lisDone.Add(1)
 		go func(obj string) {
 			if err := s.Listen(); err != nil {
