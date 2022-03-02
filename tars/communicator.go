@@ -4,10 +4,10 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"github.com/TarsCloud/TarsGo/tars/util/tarstrace"
 	"sync"
 
 	s "github.com/TarsCloud/TarsGo/tars/model"
+	"github.com/TarsCloud/TarsGo/tars/util/trace"
 )
 
 // ProxyPrx interface
@@ -94,9 +94,9 @@ func (c *Communicator) SetTraceParam(name string) {
 	if name != "trace_param_max_len" && len(name) == 0 {
 		return
 	}
-	defaultValue, ok  := c.GetPropertyInt("trace_param_max_len")
+	defaultValue, ok := c.GetPropertyInt("trace_param_max_len")
 	if ok {
-		tarstrace.SetTraceParamMaxLen(uint(defaultValue))
+		trace.SetTraceParamMaxLen(uint(defaultValue))
 	}
 }
 

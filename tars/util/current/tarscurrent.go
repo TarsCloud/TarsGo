@@ -2,7 +2,7 @@ package current
 
 import (
 	"context"
-	"github.com/TarsCloud/TarsGo/tars/util/tarstrace"
+	"github.com/TarsCloud/TarsGo/tars/util/trace"
 )
 
 type tarsCurrentKey int64
@@ -22,7 +22,7 @@ type Current struct {
 	resContext  map[string]string
 	needDyeing  bool
 	dyeingUser  string
-	traceData   *tarstrace.TraceData
+	traceData   *trace.TraceData
 }
 
 // NewCurrent return a Current point.
@@ -265,7 +265,7 @@ const STATUS_TRACE_KEY = "STATUS_TRACE_KEY"
 func TarsOpenTrace(ctx context.Context, traceParams bool) bool {
 	tc, ok := currentFromContext(ctx)
 	if ok {
-		traceData := tarstrace.NewTraceData()
+		traceData := trace.NewTraceData()
 		if traceParams {
 			traceData.OpenTrace(15, 0)
 		} else {
@@ -280,7 +280,7 @@ func TarsOpenTrace(ctx context.Context, traceParams bool) bool {
 func InitTrace(ctx context.Context, traceKey string) bool {
 	tc, ok := currentFromContext(ctx)
 	if ok {
-		traceData := tarstrace.NewTraceData()
+		traceData := trace.NewTraceData()
 		if !traceData.InitTrace(traceKey) {
 			return false
 		}
@@ -291,7 +291,7 @@ func InitTrace(ctx context.Context, traceKey string) bool {
 }
 
 // GetTraceData get trace data from the context.
-func GetTraceData(ctx context.Context) (*tarstrace.TraceData, bool) {
+func GetTraceData(ctx context.Context) (*trace.TraceData, bool) {
 	tc, ok := currentFromContext(ctx)
 	if ok {
 		if tc.traceData != nil {
@@ -302,7 +302,7 @@ func GetTraceData(ctx context.Context) (*tarstrace.TraceData, bool) {
 }
 
 // SetTraceData set trace data to the tars current.
-func SetTraceData(ctx context.Context, traceData *tarstrace.TraceData) bool {
+func SetTraceData(ctx context.Context, traceData *trace.TraceData) bool {
 	tc, ok := currentFromContext(ctx)
 	if ok {
 		tc.traceData = traceData

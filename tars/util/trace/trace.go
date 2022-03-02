@@ -1,4 +1,4 @@
-package tarstrace
+package trace
 
 import (
 	"github.com/google/uuid"
