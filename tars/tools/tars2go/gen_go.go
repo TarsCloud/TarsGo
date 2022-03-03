@@ -938,10 +938,12 @@ func (gen *GenGo) genFunReadFrom(st *StructInfo) {
 
 	c.WriteString(`//ReadFrom reads  from _is and put into struct.
 func (st *` + st.Name + `) ReadFrom(_is *codec.Reader) error {
-	var err error
-	var length int32
-	var have bool
-	var ty byte
+	var (
+		err error
+		length int32
+		have bool
+		ty byte
+	)
 	st.ResetDefault()
 
 `)
@@ -965,8 +967,10 @@ func (gen *GenGo) genFunReadBlock(st *StructInfo) {
 
 	c.WriteString(`//ReadBlock reads struct from the given tag , require or optional.
 func (st *` + st.Name + `) ReadBlock(_is *codec.Reader, tag byte, require bool) error {
-	var err error
-	var have bool
+	var (
+		err error
+		have bool
+	)
 	st.ResetDefault()
 
 	have, err = _is.SkipTo(codec.STRUCT_BEGIN, tag, require)
@@ -1174,10 +1178,11 @@ func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo, withContext boo
 		c.WriteString("(err error)" + "{" + "\n")
 	}
 
-	c.WriteString(`
-	var length int32
-	var have bool
-	var ty byte
+	c.WriteString(`	var (
+		length int32
+		have bool
+		ty byte
+	)
   `)
 	c.WriteString("_os := codec.NewBuffer()")
 	var isOut bool
@@ -1356,11 +1361,13 @@ func (gen *GenGo) genIFServerFunWithContext(fun *FunInfo) {
 
 func (gen *GenGo) genIFDispatch(itf *InterfaceInfo) {
 	c := &gen.code
-	c.WriteString("// Dispatch is used to call the server side implemnet for the method defined in the tars file. _withContext shows using context or not.  \n")
+	c.WriteString("// Dispatch is used to call the server side implement for the method defined in the tars file. _withContext shows using context or not.  \n")
 	c.WriteString("func(_obj *" + itf.Name + `) Dispatch(tarsCtx context.Context, _val interface{}, tarsReq *requestf.RequestPacket, tarsResp *requestf.ResponsePacket, _withContext bool) (err error) {
-	var length int32
-	var have bool
-	var ty byte
+	var (
+		length int32
+		have bool
+		ty byte
+	)
   `)
 
 	var param bool

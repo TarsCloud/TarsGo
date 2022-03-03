@@ -33,7 +33,7 @@ func (u *UniAttribute) GetBuffer(k string, buf *[]byte) error {
 		ok  = false
 	)
 	if *buf, ok = u._data[k]; !ok {
-		err = fmt.Errorf("tup get error: donot find key: %s! ", k)
+		err = fmt.Errorf("tup get error: donot find key: %s", k)
 	}
 
 	return err
@@ -165,7 +165,7 @@ func (u *UniAttribute) putBase(data interface{}, os *codec.Buffer) error {
 	case TarsStructIF:
 		err = data.(TarsStructIF).WriteBlock(os, 0)
 	default:
-		err = fmt.Errorf("tup put error: not support type! ")
+		err = fmt.Errorf("tup put error: not support type")
 	}
 
 	return err
@@ -291,7 +291,7 @@ func (u *UniAttribute) getBase(data interface{}, is *codec.Reader) error {
 	case TarsStructIF:
 		err = data.(TarsStructIF).ReadBlock(is, 0, true)
 	default:
-		err = fmt.Errorf("tup get error: not support type! ")
+		err = fmt.Errorf("tup get error: not support type")
 	}
 	// } else {
 	// 	err = fmt.Errorf("Tup Get Error: donot find key: %s!", k)
@@ -354,7 +354,7 @@ func (u *UniAttribute) Get(k string, data interface{}) error {
 		err = fmt.Errorf("tup not support! Please use GetBuffer()")
 		_ = v
 	} else {
-		err = fmt.Errorf("tup get error: donot find key: %s! ", k)
+		err = fmt.Errorf("tup get error: donot find key: %s", k)
 	}
 
 	return err

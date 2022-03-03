@@ -11,9 +11,6 @@ import (
 )
 
 func TestSetMaxPackageLength(t *testing.T) {
-	//type args struct {
-	//	len int
-	//}
 	tests := []int{1, 2, 3, 4, 5, 10, 100, 1000, 10230, 100042, 1000523}
 	for _, tt := range tests {
 		t.Run("normal", func(t *testing.T) {
