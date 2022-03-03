@@ -182,8 +182,8 @@ func (t *TraceData) InitTrace(traceKey string) bool {
 	return t.TraceContext.Init(traceKey)
 }
 
-// 获取 trace type
-func (t *TraceData) getTraceType() int {
+// GetTraceType 获取 trace type
+func (t *TraceData) GetTraceType() int {
 	return t.TraceContext.traceType
 }
 
