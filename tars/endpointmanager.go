@@ -165,7 +165,6 @@ type tarsEndpointManager struct {
 	pos         int32
 	activeEpf   []endpointf.EndpointF
 	inactiveEpf []endpointf.EndpointF
-	aliveCheck  chan endpointf.EndpointF
 
 	checkAdapterList *sync.Map
 	checkAdapter     chan *AdapterProxy

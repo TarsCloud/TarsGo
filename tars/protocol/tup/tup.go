@@ -28,10 +28,12 @@ func (u *UniAttribute) PutBuffer(k string, buf []byte) {
 }
 
 func (u *UniAttribute) GetBuffer(k string, buf *[]byte) error {
-	var err error
-	var ok bool = false
+	var (
+		err error
+		ok  = false
+	)
 	if *buf, ok = u._data[k]; !ok {
-		err = fmt.Errorf("Tup Get Error: donot find key: %s!", k)
+		err = fmt.Errorf("tup get error: donot find key: %s", k)
 	}
 
 	return err
@@ -74,7 +76,12 @@ func (u *UniAttribute) Encode(os *codec.Buffer) error {
 }
 
 func (u *UniAttribute) Decode(is *codec.Reader) error {
-	err, have := is.SkipTo(codec.MAP, 0, false)
+	var (
+		have bool
+		ty   byte
+		err  error
+	)
+	_, err = is.SkipTo(codec.MAP, 0, false)
 	if err != nil {
 		return err
 	}
@@ -85,7 +92,6 @@ func (u *UniAttribute) Decode(is *codec.Reader) error {
 		return err
 	}
 
-	var ty byte
 	for i, e := int32(0), length; i < e; i++ {
 		var k string
 		var v []byte
@@ -95,14 +101,14 @@ func (u *UniAttribute) Decode(is *codec.Reader) error {
 			return err
 		}
 
-		err, have, ty = is.SkipToNoCheck(1, false)
+		have, ty, err = is.SkipToNoCheck(1, false)
 		if err != nil {
 			return err
 		}
 		if have {
 			if ty == codec.SIMPLE_LIST {
 
-				err, _ = is.SkipTo(codec.BYTE, 0, true)
+				_, err = is.SkipTo(codec.BYTE, 0, true)
 				if err != nil {
 					return err
 				}
@@ -133,33 +139,33 @@ func (u *UniAttribute) Decode(is *codec.Reader) error {
 func (u *UniAttribute) putBase(data interface{}, os *codec.Buffer) error {
 	var err error
 	//os := codec.NewBuffer()
-	switch data.(type) {
+	switch d := data.(type) {
 	case int64:
-		err = os.Write_int64(data.(int64), 0)
+		err = os.Write_int64(d, 0)
 	case int32:
-		err = os.Write_int32(data.(int32), 0)
+		err = os.Write_int32(d, 0)
 	case int16:
-		err = os.Write_int16(data.(int16), 0)
+		err = os.Write_int16(d, 0)
 	case int8:
-		err = os.Write_int8(data.(int8), 0)
+		err = os.Write_int8(d, 0)
 	case uint32:
-		err = os.Write_uint32(data.(uint32), 0)
+		err = os.Write_uint32(d, 0)
 	case uint16:
-		err = os.Write_uint16(data.(uint16), 0)
+		err = os.Write_uint16(d, 0)
 	case uint8:
-		err = os.Write_uint8(data.(uint8), 0)
+		err = os.Write_uint8(d, 0)
 	case bool:
-		err = os.Write_bool(data.(bool), 0)
+		err = os.Write_bool(d, 0)
 	case float64:
-		err = os.Write_float64(data.(float64), 0)
+		err = os.Write_float64(d, 0)
 	case float32:
-		err = os.Write_float32(data.(float32), 0)
+		err = os.Write_float32(d, 0)
 	case string:
-		err = os.Write_string(data.(string), 0)
+		err = os.Write_string(d, 0)
 	case TarsStructIF:
 		err = data.(TarsStructIF).WriteBlock(os, 0)
 	default:
-		err = fmt.Errorf("Tup Put Error: not support type!")
+		err = fmt.Errorf("tup put error: not support type")
 	}
 
 	return err
@@ -259,33 +265,33 @@ func (u *UniAttribute) getBase(data interface{}, is *codec.Reader) error {
 	var err error
 	// if v, ok := u._data[k]; ok {
 	// 	is := codec.NewReader(v)
-	switch (data).(type) {
+	switch d := data.(type) {
 	case *int64:
-		err = is.Read_int64(data.(*int64), 0, true)
+		err = is.Read_int64(d, 0, true)
 	case *int32:
-		err = is.Read_int32(data.(*int32), 0, true)
+		err = is.Read_int32(d, 0, true)
 	case *int16:
-		err = is.Read_int16(data.(*int16), 0, true)
+		err = is.Read_int16(d, 0, true)
 	case *int8:
-		err = is.Read_int8(data.(*int8), 0, true)
+		err = is.Read_int8(d, 0, true)
 	case *uint32:
-		err = is.Read_uint32(data.(*uint32), 0, true)
+		err = is.Read_uint32(d, 0, true)
 	case *uint16:
-		err = is.Read_uint16(data.(*uint16), 0, true)
+		err = is.Read_uint16(d, 0, true)
 	case *uint8:
-		err = is.Read_uint8(data.(*uint8), 0, true)
+		err = is.Read_uint8(d, 0, true)
 	case *bool:
-		err = is.Read_bool(data.(*bool), 0, true)
+		err = is.Read_bool(d, 0, true)
 	case *float64:
-		err = is.Read_float64(data.(*float64), 0, true)
+		err = is.Read_float64(d, 0, true)
 	case *float32:
-		err = is.Read_float32(data.(*float32), 0, true)
+		err = is.Read_float32(d, 0, true)
 	case *string:
-		err = is.Read_string((data).(*string), 0, true)
+		err = is.Read_string(d, 0, true)
 	case TarsStructIF:
 		err = data.(TarsStructIF).ReadBlock(is, 0, true)
 	default:
-		err = fmt.Errorf("Tup get error: not support type!")
+		err = fmt.Errorf("tup get error: not support type")
 	}
 	// } else {
 	// 	err = fmt.Errorf("Tup Get Error: donot find key: %s!", k)
@@ -294,14 +300,14 @@ func (u *UniAttribute) getBase(data interface{}, is *codec.Reader) error {
 	return err
 }
 
-func (u *UniAttribute) doGet(data interface{}, is *codec.Reader) error {
+func (u *UniAttribute) DoGet(data interface{}, is *codec.Reader) error {
 	var err error
 	//vOF := reflect.ValueOf(data).Elem()
 	switch reflect.TypeOf(data).Kind() {
 	case reflect.Slice:
 		fmt.Println("get slice ...")
 
-		err, have, ty := is.SkipToNoCheck(0, false)
+		have, ty, err := is.SkipToNoCheck(0, false)
 		if err != nil {
 			return err
 		}
@@ -345,10 +351,10 @@ func (u *UniAttribute) Get(k string, data interface{}) error {
 	if v, ok := u._data[k]; ok {
 		//is := codec.NewReader(v)
 		//err = u.doGet(data, is)
-		err = fmt.Errorf("Tup not support! Please use GetBuffer()")
+		err = fmt.Errorf("tup not support! Please use GetBuffer()")
 		_ = v
 	} else {
-		err = fmt.Errorf("Tup Get Error: donot find key: %s!", k)
+		err = fmt.Errorf("tup get error: donot find key: %s", k)
 	}
 
 	return err

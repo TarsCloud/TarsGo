@@ -41,7 +41,7 @@ func NewRemoteTimeWriter() *RemoteTimeWriter {
 // Sync2remote syncs the log buffer to remote.
 func (rw *RemoteTimeWriter) Sync2remote() {
 	maxLen := remoteLogMaxNumOneTime
-	interval := time.Second
+	interval := remoteLogInterval
 	v := make([]string, 0, maxLen)
 	for {
 		select {

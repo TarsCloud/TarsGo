@@ -32,7 +32,7 @@ type dyeingLogValue struct {
 	ExtInfo   interface{}
 }
 
-// GetDyeingLogQue get dyeingLogQueue, which will contain dyeing log if dyeing switch is on(by call DyeingSwitch).
+// GetDyeingLogQueue get dyeingLogQueue, which will contain dyeing log if dyeing switch is on(by call DyeingSwitch).
 // If dyeing switch is on, user must guarantee the dyeingLogQueue can be continuous consumed in case of goroutine blocked.
 func GetDyeingLogQueue() *chan *dyeingLogValue {
 	return &dyeingLogQueue
@@ -161,7 +161,7 @@ func GetAllDyeingUser() []string {
 	defer mutex.RUnlock()
 
 	var arr []string
-	for k, _ := range dyeingUserMap {
+	for k := range dyeingUserMap {
 		arr = append(arr, k)
 	}
 

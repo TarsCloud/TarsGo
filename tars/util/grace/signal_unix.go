@@ -13,13 +13,14 @@ type handlerFunc func()
 // GraceHandler set the signle handler for grace restart
 func GraceHandler(userFunc, stopFunc handlerFunc) {
 	ch := make(chan os.Signal, 10)
-	signal.Notify(ch, syscall.SIGUSR1, syscall.SIGUSR2, syscall.SIGKILL, syscall.SIGTERM)
+	// remove syscall.SIGKILL
+	signal.Notify(ch, syscall.SIGUSR1, syscall.SIGUSR2, syscall.SIGTERM)
 	for {
 		sig := <-ch
 		switch sig {
 		case syscall.SIGUSR1:
 			userFunc()
-		case syscall.SIGUSR2, syscall.SIGKILL, syscall.SIGTERM:
+		case syscall.SIGUSR2, syscall.SIGTERM: // remove syscall.SIGKILL
 			signal.Stop(ch)
 			stopFunc()
 		}

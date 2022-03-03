@@ -64,7 +64,7 @@ const (
 	//remoteLogMaxNumOneTime is the max logs for reporting in one time.
 	remoteLogMaxNumOneTime int = 2000
 	//remoteLogInterval log report interval, defaultvalue is 1000 milliseconds
-	remoteLogInterval time.Duration = 1000 * time.Millisecond
+	remoteLogInterval = time.Second
 
 	//report
 
@@ -97,7 +97,7 @@ const (
 	checkStatusInterval int = 1000
 
 	// adapter proxy keepAvlie with server ,defaultvalue is 0 means close keepAlive. milliseconds
-	keepAliveInverval int = 0
+	keepAliveInterval int = 0
 
 	//try interval after every 30s
 	tryTimeInterval int64 = 30

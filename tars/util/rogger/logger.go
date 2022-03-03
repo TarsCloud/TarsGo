@@ -29,9 +29,9 @@ var (
 	logQueue    = make(chan *logValue, 10000)
 	loggerMutex sync.Mutex
 	loggerMap   = make(map[string]*Logger)
-	writeDone   = make(chan bool)
-	callerSkip  = 2
-	callerFlag  = true
+	//writeDone   = make(chan bool)
+	callerSkip = 2
+	callerFlag = true
 
 	waitFlushTimeout       = time.Second
 	syncDone, syncCancel   = context.WithCancel(context.Background())
@@ -48,9 +48,9 @@ type Logger struct {
 type LogLevel uint8
 
 type logValue struct {
-	level  LogLevel
+	//level  LogLevel
+	//fileNo string
 	value  []byte
-	fileNo string
 	writer LogWriter
 }
 
@@ -169,10 +169,7 @@ func (l *Logger) SetFileRoller(logpath string, num int, sizeMB int) error {
 
 // IsConsoleWriter returns whether is consoleWriter or not.
 func (l *Logger) IsConsoleWriter() bool {
-	if reflect.TypeOf(l.writer) == reflect.TypeOf(&ConsoleWriter{}) {
-		return true
-	}
-	return false
+	return reflect.TypeOf(l.writer) == reflect.TypeOf(&ConsoleWriter{})
 }
 
 // SetWriter sets the writer to the logger.
