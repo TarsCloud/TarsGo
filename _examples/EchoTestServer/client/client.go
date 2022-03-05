@@ -5,12 +5,12 @@ import (
 
 	"github.com/TarsCloud/TarsGo/tars"
 
-	"StressTest"
+	"EchoTestServer/tars-protocol/StressTest"
 )
 
 func main() {
 	comm := tars.NewCommunicator()
-	obj := fmt.Sprintf("StressTest.EchoTestServer.EchoTestObj@tcp -h 127.0.0.1 -p 10015 -t 60000")
+	obj := fmt.Sprintf("StressTest.EchoTestServer.EchoTestObj@tcp -h 127.0.0.1 -p 12015 -t 60000")
 	app := new(StressTest.EchoTest)
 	comm.StringToProxy(obj, app)
 	var out, i []int8

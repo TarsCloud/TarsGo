@@ -47,7 +47,7 @@ func main() {
 		ReadTimeout:  time.Millisecond * 100,
 		WriteTimeout: time.Millisecond * 1000,
 	}
-	client := transport.NewTarsClient("localhost:10015", cp, conf)
+	client := transport.NewTarsClient("localhost:11028", cp, conf)
 
 	name := "Bob"
 	count := 100

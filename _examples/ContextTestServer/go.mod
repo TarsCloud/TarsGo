@@ -1,4 +1,4 @@
-module CustomProtoServer
+module ContextTestServer
 
 go 1.14
 

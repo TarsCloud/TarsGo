@@ -14,6 +14,13 @@ import (
 type CustomProtocolImp struct {
 }
 
+func (s *CustomProtocolImp) GetCloseMsg() []byte {
+	return nil
+}
+
+func (s *CustomProtocolImp) DoClose(ctx context.Context) {
+}
+
 // ParsePackage parse request package
 func (s *CustomProtocolImp) ParsePackage(buff []byte) (int, int) {
 	if len(buff) < 4 {
@@ -30,7 +37,7 @@ func (s *CustomProtocolImp) ParsePackage(buff []byte) (int, int) {
 	return 0, transport.PACKAGE_LESS
 }
 
-// Invoke process request and send response 
+// Invoke process request and send response
 func (s *CustomProtocolImp) Invoke(ctx context.Context, req []byte) []byte {
 	fmt.Println("req:", req)
 	reqMap, err := url.ParseQuery(strings.TrimSpace(string(req)))

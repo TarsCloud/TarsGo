@@ -1,7 +1,7 @@
 module TlsTestServer
 
-go 1.16
+go 1.14
 
-require github.com/TarsCloud/TarsGo v1.1.6
+require github.com/TarsCloud/TarsGo v0.0.0
 
 replace github.com/TarsCloud/TarsGo => ../../

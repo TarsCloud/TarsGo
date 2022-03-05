@@ -1,5 +1,7 @@
 module CmakeServer
 
-go 1.13
+go 1.14
 
-require github.com/TarsCloud/TarsGo v1.1.2
+require github.com/TarsCloud/TarsGo v0.0.0
+
+replace github.com/TarsCloud/TarsGo => ../../
