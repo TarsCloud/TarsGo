@@ -1,7 +1,7 @@
 package main
 
 import (
-	"StressTest"
+	"EchoClientServer/tars-protocol/StressTest"
 
 	_ "net/http/pprof"
 

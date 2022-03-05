@@ -6,7 +6,7 @@ import (
 
 	"github.com/TarsCloud/TarsGo/tars"
 
-	"StressTest"
+	"ContextTestServer/tars-protocol/StressTest"
 )
 
 func main() {

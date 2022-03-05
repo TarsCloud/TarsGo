@@ -1,4 +1,4 @@
-module CustomProtoServer
+module EchoClientServer
 
 go 1.14
 

@@ -5,12 +5,12 @@ import (
 
 	"github.com/TarsCloud/TarsGo/tars"
 
-	"ZipkinTraceApp"
+	"ZipkinTraceClient/tars-protocol/ZipkinTraceApp"
 )
 
 func main() {
 	comm := tars.NewCommunicator()
-	obj := fmt.Sprintf("ZipkinTraceApp.ZipkinTraceClient.ZipkinClientObj@tcp -h 127.0.0.1 -p 10014 -t 60000")
+	obj := fmt.Sprintf("ZipkinTraceApp.ZipkinTraceClient.ZipkinClientObj@tcp -h 127.0.0.1 -p 14015 -t 60000")
 	app := new(ZipkinTraceApp.ZipkinClient)
 	comm.StringToProxy(obj, app)
 	var out, i int32

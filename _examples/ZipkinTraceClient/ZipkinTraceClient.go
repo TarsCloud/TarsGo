@@ -7,7 +7,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars"
 	"github.com/TarsCloud/TarsGo/tars/plugin/zipkintracing"
 
-	"ZipkinTraceApp"
+	"ZipkinTraceClient/tars-protocol/ZipkinTraceApp"
 	"net/http"
 	_ "net/http/pprof"
 )
@@ -22,7 +22,7 @@ func main() { //Init servant
 	}()
 	imp := new(ZipkinClientImp)             //New Imp
 	app := new(ZipkinTraceApp.ZipkinClient) //New init the A Tars
-	comm.StringToProxy("ZipkinTraceApp.ZipkinTraceServer.ZipkinTraceObj", sapp)
+	comm.StringToProxy("ZipkinTraceApp.ZipkinTraceServer.ZipkinTraceObj@tcp -h 127.0.0.1 -p 15015 -t 60000", sapp)
 	cf := zipkintracing.ZipkinClientFilter()
 	sf := zipkintracing.ZipkinServerFilter()
 	tars.RegisterClientFilter(cf)

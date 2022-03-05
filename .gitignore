@@ -1,3 +1,5 @@
 .vscode
 .idea
-go.sum
+*.tar.gz
+*.tgz
+tars-protocol

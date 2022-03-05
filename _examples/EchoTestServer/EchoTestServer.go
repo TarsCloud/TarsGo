@@ -6,7 +6,7 @@ import (
 
 	"github.com/TarsCloud/TarsGo/tars"
 
-	"StressTest"
+	"EchoTestServer/tars-protocol/StressTest"
 	"runtime/pprof"
 )
 

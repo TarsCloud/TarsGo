@@ -1,4 +1,4 @@
-module CustomProtoServer
+module ZipkinTraceClient
 
 go 1.14
 
