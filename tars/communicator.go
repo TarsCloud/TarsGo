@@ -91,7 +91,7 @@ func (c *Communicator) GetProperty(key string) (string, bool) {
 }
 
 func (c *Communicator) SetTraceParam(name string) {
-	if name != "trace_param_max_len" && len(name) == 0 {
+	if len(name) != 0 && name != "trace_param_max_len" {
 		return
 	}
 	defaultValue, ok := c.GetPropertyInt("trace_param_max_len")
