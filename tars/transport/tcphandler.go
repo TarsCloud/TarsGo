@@ -3,7 +3,6 @@ package transport
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"io"
 	"net"
 	"os"
@@ -17,7 +16,6 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/gpool"
 	"github.com/TarsCloud/TarsGo/tars/util/grace"
-	"github.com/TarsCloud/TarsGo/tars/util/ssl"
 )
 
 type tcpHandler struct {
@@ -30,7 +28,7 @@ type tcpHandler struct {
 	//readBuffer  int
 	//writeBuffer int
 	//tcpNoDelay  bool
-	gpool       *gpool.Pool
+	gpool *gpool.Pool
 
 	conns sync.Map
 
@@ -132,19 +130,15 @@ func (h *tcpHandler) Handle() error {
 		}
 		atomic.AddInt32(&h.ts.numConn, 1)
 		go func(conn net.Conn) {
-			var key string
+			key := conn.RemoteAddr().String()
 			switch c := conn.(type) {
 			case *net.TCPConn:
-				fd, _ := c.File()
-				defer fd.Close()
-				key = fmt.Sprintf("%v", fd.Fd())
-				TLOG.Debugf("TCP accept: %s, %d, fd: %s", conn.RemoteAddr(), os.Getpid(), key)
+				TLOG.Debugf("TCP accept: %s, %d", conn.RemoteAddr(), os.Getpid())
 				c.SetReadBuffer(cfg.TCPReadBuffer)
 				c.SetWriteBuffer(cfg.TCPWriteBuffer)
 				c.SetNoDelay(cfg.TCPNoDelay)
 			case *tls.Conn:
-				key = fmt.Sprintf("%v", ssl.FDFromTLSConn(c))
-				TLOG.Debugf("TLS accept: %s, %d, fd: %s", conn.RemoteAddr(), os.Getpid(), key)
+				TLOG.Debugf("TLS accept: %s, %d", conn.RemoteAddr(), os.Getpid())
 			}
 			cf := &connInfo{conn: conn}
 			h.conns.Store(key, cf)
