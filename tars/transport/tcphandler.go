@@ -12,10 +12,10 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/pkg/current"
+	"github.com/TarsCloud/TarsGo/tars/pkg/gpool"
+	"github.com/TarsCloud/TarsGo/tars/pkg/grace"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
-	"github.com/TarsCloud/TarsGo/tars/util/current"
-	"github.com/TarsCloud/TarsGo/tars/util/gpool"
-	"github.com/TarsCloud/TarsGo/tars/util/grace"
 )
 
 type tcpHandler struct {
@@ -25,9 +25,6 @@ type tcpHandler struct {
 	listener    net.Listener
 	ts          *TarsServer
 
-	//readBuffer  int
-	//writeBuffer int
-	//tcpNoDelay  bool
 	gpool *gpool.Pool
 
 	conns sync.Map
@@ -176,7 +173,7 @@ func (h *tcpHandler) sendCloseMsg() {
 	})
 }
 
-//CloseIdles close all idle connections(no active package within n secnods)
+// CloseIdles close all idle connections(no active package within n secnods)
 func (h *tcpHandler) CloseIdles(n int64) bool {
 	if atomic.LoadInt32(&h.isListenClosed) == 0 {
 		// hack: create new connection to avoid acceptTCP hanging
@@ -259,10 +256,10 @@ func (h *tcpHandler) recv(connSt *connInfo) {
 		currBuffer = append(currBuffer, buffer[:n]...)
 		for {
 			pkgLen, status := h.ts.svr.ParsePackage(currBuffer)
-			if status == PACKAGE_LESS {
+			if status == PackageLess {
 				break
 			}
-			if status == PACKAGE_FULL {
+			if status == PackageFull {
 				atomic.AddInt32(&connSt.numInvoke, 1)
 				pkg := make([]byte, pkgLen)
 				copy(pkg, currBuffer[:pkgLen])

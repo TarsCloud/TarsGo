@@ -8,12 +8,12 @@ import (
 
 // RemoteTimeWriter writer for writing remote log.
 type RemoteTimeWriter struct {
-	logInfo       *logf.LogInfo
-	logs          chan string
-	logPtr        *logf.Log
-	reportSuccPtr *PropertyReport
-	reportFailPtr *PropertyReport
-	hasPrefix     bool
+	logInfo          *logf.LogInfo
+	logs             chan string
+	logPtr           *logf.Log
+	reportSuccessPtr *PropertyReport
+	reportFailPtr    *PropertyReport
+	hasPrefix        bool
 }
 
 // NewRemoteTimeWriter new and init RemoteTimeWriter
@@ -28,7 +28,7 @@ func NewRemoteTimeWriter() *RemoteTimeWriter {
 	rw.logPtr = new(logf.Log)
 	comm := NewCommunicator()
 	node := GetServerConfig().Log
-	rw.EnableSufix(true)
+	rw.EnableSuffix(true)
 	rw.EnablePrefix(true)
 	rw.SetSeparator("|")
 	rw.SetPrefix(true)
@@ -53,7 +53,7 @@ func (rw *RemoteTimeWriter) Sync2remote() {
 					TLOG.Error("sync to remote error")
 					rw.reportFailPtr.Report(len(v))
 				}
-				rw.reportSuccPtr.Report(len(v))
+				rw.reportSuccessPtr.Report(len(v))
 				v = make([]string, 0, maxLen) //reset the slice after syncing log to remote
 			}
 		case <-time.After(interval):
@@ -63,7 +63,7 @@ func (rw *RemoteTimeWriter) Sync2remote() {
 					TLOG.Error("sync to remote error")
 					rw.reportFailPtr.Report(len(v))
 				}
-				rw.reportSuccPtr.Report(len(v))
+				rw.reportSuccessPtr.Report(len(v))
 				v = make([]string, 0, maxLen) //reset the slice after syncing log to remote
 			}
 		}
@@ -86,14 +86,14 @@ func (rw *RemoteTimeWriter) InitServerInfo(app string, server string, filename s
 	failServerInfo := serverInfo + "_log_send_fail"
 	failSum := NewSum()
 	rw.reportFailPtr = CreatePropertyReport(failServerInfo, failSum)
-	succServerInfo := serverInfo + "_log_send_succ"
-	succSum := NewSum()
-	rw.reportSuccPtr = CreatePropertyReport(succServerInfo, succSum)
+	successServerInfo := serverInfo + "_log_send_succ"
+	successSum := NewSum()
+	rw.reportSuccessPtr = CreatePropertyReport(successServerInfo, successSum)
 
 }
 
-// EnableSufix puts sufix after logs.
-func (rw *RemoteTimeWriter) EnableSufix(hasSufix bool) {
+// EnableSuffix puts suffix after logs.
+func (rw *RemoteTimeWriter) EnableSuffix(hasSufix bool) {
 	rw.logInfo.BHasSufix = hasSufix
 }
 
@@ -113,8 +113,8 @@ func (rw *RemoteTimeWriter) SetSeparator(s string) {
 	rw.logInfo.SSepar = s
 }
 
-// EnableSqarewrapper enables SquareBracket wrapper for the logs.
-func (rw *RemoteTimeWriter) EnableSqarewrapper(hasSquareBracket bool) {
+// EnableSquareWrapper enables SquareBracket wrapper for the logs.
+func (rw *RemoteTimeWriter) EnableSquareWrapper(hasSquareBracket bool) {
 	rw.logInfo.BHasSquareBracket = hasSquareBracket
 }
 
@@ -146,6 +146,5 @@ func (rw *RemoteTimeWriter) Write(b []byte) {
 	case rw.logs <- s:
 	default:
 		TLOG.Error("remote log chan is full")
-
 	}
 }

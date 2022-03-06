@@ -13,14 +13,14 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/pkg/consistenthash"
+	"github.com/TarsCloud/TarsGo/tars/pkg/endpoint"
+	"github.com/TarsCloud/TarsGo/tars/pkg/gtime"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/queryf"
-	"github.com/TarsCloud/TarsGo/tars/util/consistenthash"
-	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
-	"github.com/TarsCloud/TarsGo/tars/util/gtime"
 )
 
-//EndpointManager interface of naming system
+// EndpointManager interface of naming system
 type EndpointManager interface {
 	SelectAdapterProxy(msg *Message) (*AdapterProxy, bool)
 	GetAllEndpoint() []*endpoint.Endpoint
@@ -113,6 +113,7 @@ func (g *globalManager) checkEpStatus() {
 		}
 	}
 }
+
 func (g *globalManager) updateEndpoints() {
 	loop := time.NewTicker(time.Duration(g.refreshInterval) * time.Millisecond)
 	for range loop.C {
@@ -133,7 +134,7 @@ func (g *globalManager) updateEndpoints() {
 
 		}
 
-		//cache to file
+		// cache to file
 		cfg := GetServerConfig()
 		if cfg != nil && cfg.DataPath != "" {
 			cachePath := filepath.Join(cfg.DataPath, cfg.Server) + ".tarsdat"
@@ -187,7 +188,7 @@ func newTarsEndpointManager(objName string, comm *Communicator) *tarsEndpointMan
 	e.checkAdapterList = &sync.Map{}
 	pos := strings.Index(objName, "@")
 	if pos > 0 {
-		//[direct]
+		// [direct]
 		e.objName = objName[0:pos]
 		endpoints := objName[pos+1:]
 		e.directProxy = true
@@ -331,7 +332,7 @@ func (e *tarsEndpointManager) SelectAdapterProxy(msg *Message) (*AdapterProxy, b
 		}
 	}
 	if adp == nil && !e.directProxy {
-		//No any node is alive ,just select a random one.
+		// No any node is alive ,just select a random one.
 		randomIndex := rand.Intn(len(e.activeEpf))
 		randomEpf := e.activeEpf[randomIndex]
 		randomEp := endpoint.Tars2endpoint(randomEpf)
@@ -409,7 +410,7 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 		newEps[i] = endpoint.Tars2endpoint(ep)
 	}
 
-	//delete useless cache
+	// delete useless cache
 	e.epList.Range(func(key, value interface{}) bool {
 		flagActive := false
 		flagInactive := false
@@ -435,7 +436,7 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 		return true
 	})
 
-	//delete active endpoint which status is false
+	// delete active endpoint which status is false
 	sortedEps := make([]endpoint.Endpoint, 0)
 	for _, ep := range newEps {
 		if v, ok := e.epList.Load(ep.Key); ok {
@@ -448,7 +449,7 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 		}
 	}
 
-	//make endpoint slice sorted
+	// make endpoint slice sorted
 	sort.Slice(sortedEps, func(i int, j int) bool {
 		return crc32.ChecksumIEEE([]byte(sortedEps[i].Key)) < crc32.ChecksumIEEE([]byte(sortedEps[j].Key))
 	})

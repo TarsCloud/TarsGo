@@ -7,12 +7,12 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/pkg/endpoint"
+	"github.com/TarsCloud/TarsGo/tars/pkg/rtimer"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	"github.com/TarsCloud/TarsGo/tars/transport"
-	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
-	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
 )
 
 var reconnectMsg = "_reconnect_"
@@ -35,7 +35,6 @@ type AdapterProxy struct {
 	lastCheckTime     int64
 	lastKeepAliveTime int64
 
-	//count  int
 	closed bool
 }
 
@@ -52,7 +51,7 @@ func NewAdapterProxy(objName string, point *endpointf.EndpointF, comm *Communica
 	}
 	conf := &transport.TarsClientConf{
 		Proto: proto,
-		//NumConnect:   netthread,
+		// NumConnect:   netthread,
 		QueueLen:     comm.Client.ClientQueueLen,
 		IdleTimeout:  comm.Client.ClientIdleTimeout,
 		ReadTimeout:  comm.Client.ClientReadTimeout,
@@ -103,7 +102,7 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 		ch := chIF.(chan *requestf.ResponsePacket)
 		select {
 		case ch <- packet:
-		//after conf.ReadTimeout, release this goroutine to make sure response package is received by Tars_Invoke().
+		// after conf.ReadTimeout, release this goroutine to make sure response package is received by Tars_Invoke().
 		case <-rtimer.After(c.conf.ReadTimeout):
 			TLOG.Errorf("response timeout, write channel error, now time :%v, RequestId:%v",
 				time.Now().UnixNano()/1e6, packet.IRequestId)

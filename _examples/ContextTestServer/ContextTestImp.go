@@ -5,7 +5,7 @@ import (
 
 	"github.com/TarsCloud/TarsGo/tars"
 
-	"github.com/TarsCloud/TarsGo/tars/util/current"
+	"github.com/TarsCloud/TarsGo/tars/pkg/current"
 )
 
 type ContextTestImp struct {

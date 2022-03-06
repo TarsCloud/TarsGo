@@ -6,19 +6,19 @@ import (
 	"encoding/binary"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/pkg/current"
 	"github.com/TarsCloud/TarsGo/tars/protocol"
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
-	"github.com/TarsCloud/TarsGo/tars/util/current"
 )
 
 type dispatch interface {
 	Dispatch(context.Context, interface{}, *requestf.RequestPacket, *requestf.ResponsePacket, bool) error
 }
 
-// TarsProtocol is struct for dispatch with tars protocol.
-type TarsProtocol struct {
+// Protocol is struct for dispatch with tars protocol.
+type Protocol struct {
 	dispatcher  dispatch
 	serverImp   interface{}
 	withContext bool
@@ -26,13 +26,13 @@ type TarsProtocol struct {
 
 // NewTarsProtocol return a TarsProtocol with dipatcher and implement interface.
 // withContext explain using context or not.
-func NewTarsProtocol(dispatcher dispatch, imp interface{}, withContext bool) *TarsProtocol {
-	s := &TarsProtocol{dispatcher: dispatcher, serverImp: imp, withContext: withContext}
+func NewTarsProtocol(dispatcher dispatch, imp interface{}, withContext bool) *Protocol {
+	s := &Protocol{dispatcher: dispatcher, serverImp: imp, withContext: withContext}
 	return s
 }
 
 // Invoke puts the request as []byte and call the dispather, and then return the response as []byte.
-func (s *TarsProtocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
+func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 	defer CheckPanic()
 	reqPackage := requestf.RequestPacket{}
 	rspPackage := requestf.ResponsePacket{}
@@ -40,7 +40,7 @@ func (s *TarsProtocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 	reqPackage.ReadFrom(is)
 
 	if reqPackage.HasMessageType(basef.TARSMESSAGETYPEDYED) {
-		if dyeingKey, ok := reqPackage.Status[current.STATUS_DYED_KEY]; ok {
+		if dyeingKey, ok := reqPackage.Status[current.StatusDyedKey]; ok {
 			if ok := current.SetDyeingKey(ctx, dyeingKey); !ok {
 				TLOG.Error("dyeing-debug: set dyeing key in current status error, dyeing key:", dyeingKey)
 			}
@@ -129,7 +129,7 @@ func (s *TarsProtocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 	return s.rsp2Byte(&rspPackage)
 }
 
-func (s *TarsProtocol) req2Byte(rsp *requestf.ResponsePacket) []byte {
+func (s *Protocol) req2Byte(rsp *requestf.ResponsePacket) []byte {
 	req := requestf.RequestPacket{}
 	req.IVersion = rsp.IVersion
 	req.IRequestId = rsp.IRequestId
@@ -150,7 +150,7 @@ func (s *TarsProtocol) req2Byte(rsp *requestf.ResponsePacket) []byte {
 	return sbuf.Bytes()
 }
 
-func (s *TarsProtocol) rsp2Byte(rsp *requestf.ResponsePacket) []byte {
+func (s *Protocol) rsp2Byte(rsp *requestf.ResponsePacket) []byte {
 	if rsp.IVersion == basef.TUPVERSION {
 		return s.req2Byte(rsp)
 	}
@@ -160,21 +160,21 @@ func (s *TarsProtocol) rsp2Byte(rsp *requestf.ResponsePacket) []byte {
 	sbuf := bytes.NewBuffer(nil)
 	sbuf.Write(make([]byte, 4))
 	sbuf.Write(bs)
-	len := sbuf.Len()
-	binary.BigEndian.PutUint32(sbuf.Bytes(), uint32(len))
+	length := sbuf.Len()
+	binary.BigEndian.PutUint32(sbuf.Bytes(), uint32(length))
 	return sbuf.Bytes()
 }
 
 // ParsePackage parse the []byte according to the tars protocol.
 // returns header length and package integrity condition (PACKAGE_LESS | PACKAGE_FULL | PACKAGE_ERROR)
-func (s *TarsProtocol) ParsePackage(buff []byte) (int, int) {
+func (s *Protocol) ParsePackage(buff []byte) (int, int) {
 	return protocol.TarsRequest(buff)
 }
 
 // InvokeTimeout indicates how to deal with timeout.
-func (s *TarsProtocol) InvokeTimeout(pkg []byte) []byte {
+func (s *Protocol) InvokeTimeout(pkg []byte) []byte {
 	rspPackage := requestf.ResponsePacket{}
-	//  invokeTimeout need to return IRequestId
+	//  invoke timeout need to return IRequestId
 	reqPackage := requestf.RequestPacket{}
 	is := codec.NewReader(pkg[4:])
 	reqPackage.ReadFrom(is)
@@ -185,7 +185,7 @@ func (s *TarsProtocol) InvokeTimeout(pkg []byte) []byte {
 }
 
 // GetCloseMsg return a package to close connection
-func (s *TarsProtocol) GetCloseMsg() []byte {
+func (s *Protocol) GetCloseMsg() []byte {
 	rspPackage := requestf.ResponsePacket{}
 	rspPackage.IRequestId = 0
 	rspPackage.SResultDesc = reconnectMsg
@@ -193,6 +193,6 @@ func (s *TarsProtocol) GetCloseMsg() []byte {
 }
 
 // DoClose be called when close connection
-func (s *TarsProtocol) DoClose(ctx context.Context) {
+func (s *Protocol) DoClose(ctx context.Context) {
 	TLOG.Debug("DoClose!")
 }

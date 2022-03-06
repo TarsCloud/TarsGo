@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/util/gtime"
+	"github.com/TarsCloud/TarsGo/tars/pkg/gtime"
 )
 
 // DAY for rotate log by day
@@ -77,7 +77,7 @@ func (w *ConsoleWriter) NeedPrefix() bool {
 	return true
 }
 
-// Write for writing []byte to the writter.
+// Write for writing []byte to the writer.
 func (w *RollFileWriter) Write(v []byte) {
 	if w.currFile == nil || w.openTime+10 < gtime.CurrUnixTime {
 		fullPath := filepath.Join(w.logpath, w.name+".log")

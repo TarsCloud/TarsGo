@@ -31,17 +31,17 @@ func (s *MyServer) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 // ParsePackage parse full tars package.
 func (s *MyServer) ParsePackage(buff []byte) (pkgLen, status int) {
 	if len(buff) < 4 {
-		return 0, transport.PACKAGE_LESS
+		return 0, transport.PackageLess
 	}
 	length := binary.BigEndian.Uint32(buff[:4])
 
 	if length > 1048576000 || len(buff) > 1048576000 { // 1000MB
-		return 0, transport.PACKAGE_ERROR
+		return 0, transport.PackageError
 	}
 	if len(buff) < int(length) {
-		return 0, transport.PACKAGE_LESS
+		return 0, transport.PackageLess
 	}
-	return int(length), transport.PACKAGE_FULL
+	return int(length), transport.PackageFull
 }
 
 // InvokeTimeout show how to deal with timeout response.

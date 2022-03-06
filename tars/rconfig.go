@@ -24,7 +24,7 @@ type RConf struct {
 	path   string
 }
 
-// NewRConf init a Rconf, path should be getting from GetServerConfig().BasePath
+// NewRConf init a RConf, path should be getting from GetServerConfig().BasePath
 func NewRConf(app string, server string, path string) *RConf {
 	comm := NewCommunicator()
 	tc := new(configf.Config)

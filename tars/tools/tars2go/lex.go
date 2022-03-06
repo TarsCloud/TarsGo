@@ -13,19 +13,19 @@ const EOS = 0
 type TK byte
 
 const (
-	tkEos     TK = iota
-	tkBracel     // ({)
-	tkBracer     // }
-	tkSemi       //;
-	tkEq         //=
-	tkShl        //<
-	tkShr        //>
-	tkComma      //,
-	tkPtl        //(
-	tkPtr        //)
-	tkSquarel    //[
-	tkSquarer    //]
-	tkInclude    //#include
+	tkEos          TK = iota
+	tkBraceLeft       //({)
+	tkBraceRight      //}
+	tkSemi            //;
+	tkEq              //=
+	tkShl             //<
+	tkShr             //>
+	tkComma           //,
+	tkPtl             //(
+	tkPtr             //)
+	tkSquareLeft      //[
+	tkSquarerRight    //]
+	tkInclude         //#include
 
 	tkDummyKeywordBegin
 	// keyword
@@ -70,18 +70,18 @@ const (
 var TokenMap = [...]string{
 	tkEos: "<eos>",
 
-	tkBracel:  "{",
-	tkBracer:  "}",
-	tkSemi:    ";",
-	tkEq:      "=",
-	tkShl:     "<",
-	tkShr:     ">",
-	tkComma:   ",",
-	tkPtl:     "(",
-	tkPtr:     ")",
-	tkSquarel: "[",
-	tkSquarer: "]",
-	tkInclude: "#include",
+	tkBraceLeft:    "{",
+	tkBraceRight:   "}",
+	tkSemi:         ";",
+	tkEq:           "=",
+	tkShl:          "<",
+	tkShr:          ">",
+	tkComma:        ",",
+	tkPtl:          "(",
+	tkPtr:          ")",
+	tkSquareLeft:   "[",
+	tkSquarerRight: "]",
+	tkInclude:      "#include",
 
 	// keyword
 	tkModule:    "module",
@@ -358,10 +358,10 @@ func (ls *LexState) llex() (TK, *SemInfo) {
 			}
 		case '{':
 			ls.next()
-			return tkBracel, nil
+			return tkBraceLeft, nil
 		case '}':
 			ls.next()
-			return tkBracer, nil
+			return tkBraceRight, nil
 		case ';':
 			ls.next()
 			return tkSemi, nil
@@ -385,10 +385,10 @@ func (ls *LexState) llex() (TK, *SemInfo) {
 			return tkPtr, nil
 		case '[':
 			ls.next()
-			return tkSquarel, nil
+			return tkSquareLeft, nil
 		case ']':
 			ls.next()
-			return tkSquarer, nil
+			return tkSquarerRight, nil
 		case '"':
 			return ls.readString()
 		case '#':

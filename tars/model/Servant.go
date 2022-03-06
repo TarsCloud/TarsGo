@@ -8,12 +8,12 @@ import (
 
 // Servant is interface for call the remote server.
 type Servant interface {
-	Tars_invoke(ctx context.Context, ctype byte,
+	TarsInvoke(ctx context.Context, cType byte,
 		sFuncName string,
 		buf []byte,
 		status map[string]string,
 		context map[string]string,
-		Resp *requestf.ResponsePacket) error
+		resp *requestf.ResponsePacket) error
 	TarsSetTimeout(t int)
 	TarsSetProtocol(Protocol)
 	Name() string

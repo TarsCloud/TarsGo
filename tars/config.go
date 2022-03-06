@@ -1,10 +1,10 @@
 package tars
 
 import (
-	"github.com/TarsCloud/TarsGo/tars/util/tools"
+	"github.com/TarsCloud/TarsGo/tars/pkg/tools"
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
+	"github.com/TarsCloud/TarsGo/tars/pkg/endpoint"
 )
 
 var svrCfg *serverConfig
@@ -112,7 +112,7 @@ func newServerConfig() *serverConfig {
 		LogSize:                 defaultRotateSizeMB,
 		LogNum:                  defaultRotateN,
 		LogLevel:                "INFO",
-		Version:                 TarsVersion,
+		Version:                 Version,
 		LocalIP:                 tools.GetLocalIP(),
 		Local:                   "",
 		BasePath:                "",

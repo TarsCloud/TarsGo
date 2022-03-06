@@ -7,9 +7,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/pkg/current"
+	"github.com/TarsCloud/TarsGo/tars/pkg/grace"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
-	"github.com/TarsCloud/TarsGo/tars/util/current"
-	"github.com/TarsCloud/TarsGo/tars/util/grace"
 )
 
 type udpHandler struct {
@@ -17,7 +17,6 @@ type udpHandler struct {
 	ts   *TarsServer
 
 	conn *net.UDPConn
-	//numInvoke int32
 }
 
 func (h *udpHandler) Listen() (err error) {

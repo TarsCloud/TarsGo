@@ -2,8 +2,8 @@ package tars
 
 import (
 	"fmt"
-	"github.com/TarsCloud/TarsGo/tars/util/sync"
-	"github.com/TarsCloud/TarsGo/tars/util/tools"
+	"github.com/TarsCloud/TarsGo/tars/pkg/sync"
+	"github.com/TarsCloud/TarsGo/tars/pkg/tools"
 	"strings"
 	"time"
 
@@ -126,7 +126,7 @@ func (s *StatFHelper) pushBackMsg(stStatInfo StatInfo, fromServer bool) {
 	}
 }
 
-// ReportMicMsg report the Statinfo ,from server shows whether it comes from server.
+// ReportMicMsg report the StatInfo ,from server shows whether it comes from server.
 func (s *StatFHelper) ReportMicMsg(stStatInfo StatInfo, fromServer bool) {
 	s.pushBackMsg(stStatInfo, fromServer)
 }
@@ -150,10 +150,10 @@ func initReport() error {
 	return nil
 }
 
-// ReportStatBase is base method for report statitics.
+// ReportStatBase is base method for report statistics.
 func ReportStatBase(head *statf.StatMicMsgHead, body *statf.StatMicMsgBody, FromServer bool) {
 	statInfo := StatInfo{Head: *head, Body: *body}
-	statInfo.Head.TarsVersion = TarsVersion
+	statInfo.Head.TarsVersion = Version
 	//statInfo.Head.IStatVer = 2
 	if StatReport != nil {
 		StatReport.ReportMicMsg(statInfo, FromServer)

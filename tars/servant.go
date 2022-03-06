@@ -9,13 +9,13 @@ import (
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/model"
+	"github.com/TarsCloud/TarsGo/tars/pkg/current"
+	"github.com/TarsCloud/TarsGo/tars/pkg/endpoint"
+	"github.com/TarsCloud/TarsGo/tars/pkg/rtimer"
+	"github.com/TarsCloud/TarsGo/tars/pkg/tools"
 	"github.com/TarsCloud/TarsGo/tars/protocol"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
-	"github.com/TarsCloud/TarsGo/tars/util/current"
-	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
-	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
-	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
 var (
@@ -24,8 +24,8 @@ var (
 )
 
 const (
-	STAT_SUCCESS = iota
-	STAT_FAILED
+	StatSuccess = iota
+	StatFailed
 )
 
 // ServantProxy tars servant proxy instance
@@ -99,8 +99,8 @@ func (s *ServantProxy) genRequestID() int32 {
 	}
 }
 
-// Tars_invoke is used for client inoking server.
-func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
+// TarsInvoke is used for client inoking server.
+func (s *ServantProxy) TarsInvoke(ctx context.Context, cType byte,
 	sFuncName string,
 	buf []byte,
 	status map[string]string,
@@ -116,7 +116,7 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 		if status == nil {
 			status = make(map[string]string)
 		}
-		status[current.STATUS_DYED_KEY] = dyeingKey
+		status[current.StatusDyedKey] = dyeingKey
 		msgType |= basef.TARSMESSAGETYPEDYED
 	}
 
@@ -125,16 +125,13 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 	if ok && traceData.TraceCall {
 		traceKey := traceData.GetTraceKeyFull(false)
 		TLOG.Debug("trace debug: find trace key:", traceKey)
-		if status == nil {
-			status = make(map[string]string)
-		}
 		status[current.STATUS_TRACE_KEY] = traceKey
 		msgType |= basef.TARSMESSAGETYPETRACE
 	}
 
 	req := requestf.RequestPacket{
 		IVersion:     s.version,
-		CPacketType:  int8(ctype),
+		CPacketType:  int8(cType),
 		IRequestId:   s.genRequestID(),
 		SServantName: s.name,
 		SFuncName:    sFuncName,
@@ -190,17 +187,17 @@ func (s *ServantProxy) Tars_invoke(ctx context.Context, ctype byte,
 		msg.End()
 		TLOG.Errorf("Invoke error: %s, %s, %v, cost:%d", s.name, sFuncName, err.Error(), msg.Cost())
 		if msg.Resp == nil {
-			ReportStat(msg, STAT_SUCCESS, STAT_SUCCESS, STAT_FAILED)
+			ReportStat(msg, StatSuccess, StatSuccess, StatFailed)
 		} else if msg.Status == basef.TARSINVOKETIMEOUT {
-			ReportStat(msg, STAT_SUCCESS, STAT_FAILED, STAT_SUCCESS)
+			ReportStat(msg, StatSuccess, StatFailed, StatSuccess)
 		} else {
-			ReportStat(msg, STAT_SUCCESS, STAT_SUCCESS, STAT_FAILED)
+			ReportStat(msg, StatSuccess, StatSuccess, StatFailed)
 		}
 		return err
 	}
 	msg.End()
 	*resp = *msg.Resp
-	ReportStat(msg, STAT_FAILED, STAT_SUCCESS, STAT_SUCCESS)
+	ReportStat(msg, StatFailed, StatSuccess, StatSuccess)
 	return err
 }
 
@@ -262,7 +259,7 @@ func (s *ServantProxy) doInvoke(ctx context.Context, msg *Message, timeout time.
 		} else {
 			TLOG.Debug("recv nil Resp, close of the readCh?")
 		}
-		TLOG.Debug("recv msg succ ", msg.Req.IRequestId)
+		TLOG.Debug("recv msg success ", msg.Req.IRequestId)
 	}
 	return nil
 }

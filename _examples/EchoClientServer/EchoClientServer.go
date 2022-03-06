@@ -6,7 +6,7 @@ import (
 	_ "net/http/pprof"
 
 	"github.com/TarsCloud/TarsGo/tars"
-	"github.com/TarsCloud/TarsGo/tars/util/rogger"
+	"github.com/TarsCloud/TarsGo/tars/pkg/rogger"
 )
 
 var app *StressTest.EchoTest

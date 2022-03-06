@@ -19,7 +19,7 @@ import (
 
 var logger = tars.GetLogger("tracing")
 
-//Init is use to init opentracing and zipkin
+// Init is used to init opentracing and zipkin
 func Init(zipkinHTTPEndpoint string, sameSpan bool, traceID128Bit bool, debug bool,
 	hostPort, serviceName string) {
 
@@ -46,7 +46,7 @@ func Init(zipkinHTTPEndpoint string, sameSpan bool, traceID128Bit bool, debug bo
 	opentracing.SetGlobalTracer(tracer)
 }
 
-//ZipkinClientFilter gets tars client filter for zipkin opentracing.
+// ZipkinClientFilter gets tars client filter for zipkin opentracing.
 func ZipkinClientFilter() tars.ClientFilter {
 	return func(ctx context.Context, msg *tars.Message, invoke tars.Invoke, timeout time.Duration) (err error) {
 		var pCtx opentracing.SpanContext
@@ -66,7 +66,7 @@ func ZipkinClientFilter() tars.ClientFilter {
 		cSpan.SetTag("tars.interface", req.SServantName)
 		cSpan.SetTag("tars.method", req.SFuncName)
 		cSpan.SetTag("tars.protocol", "tars")
-		cSpan.SetTag("tars.client.version", tars.TarsVersion)
+		cSpan.SetTag("tars.client.version", tars.Version)
 		if req.Status != nil {
 			err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(req.Status))
 			if err != nil {
@@ -119,6 +119,5 @@ func ZipkinServerFilter() tars.ServerFilter {
 			serverSpan.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
 		}
 		return err
-
 	}
 }

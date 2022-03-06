@@ -21,7 +21,7 @@ func NewSet(opt ...interface{}) *Set {
 	return s
 }
 
-// Add add an element to Set
+// Add : add an element to Set
 func (s *Set) Add(e interface{}) bool {
 	_, ok := s.el.LoadOrStore(e, s.length)
 	if !ok {
@@ -37,7 +37,7 @@ func (s *Set) Remove(e interface{}) {
 	s.el.Delete(e)
 }
 
-// Clear clear the set.
+// Clear : clear the set.
 func (s *Set) Clear() {
 	atomic.SwapInt32(&s.length, 0)
 	s.el = sync.Map{}

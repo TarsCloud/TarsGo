@@ -79,8 +79,8 @@ func CreateUDPConn(addr string) (*net.UDPConn, error) {
 	return conn, err
 }
 
-// GetAllLisenFiles returns all listen files
-func GetAllLisenFiles() map[string]*os.File {
+// GetAllListenFiles returns all listen files
+func GetAllListenFiles() map[string]*os.File {
 	files := make(map[string]*os.File)
 	allListenFds.Range(func(k, v interface{}) bool {
 		key := k.(string)

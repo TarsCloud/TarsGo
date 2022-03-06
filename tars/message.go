@@ -32,12 +32,12 @@ type Message struct {
 	isHash   bool
 }
 
-// Init define the begintime
+// Init define the beginTime
 func (m *Message) Init() {
 	m.BeginTime = time.Now().UnixNano() / 1e6
 }
 
-// End define the endtime
+// End define the endTime
 func (m *Message) End() {
 	m.EndTime = time.Now().UnixNano() / 1e6
 }

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/TarsCloud/TarsGo/tars/util/debug"
-	"github.com/TarsCloud/TarsGo/tars/util/rogger"
+	"github.com/TarsCloud/TarsGo/tars/pkg/debug"
+	"github.com/TarsCloud/TarsGo/tars/pkg/rogger"
 )
 
 // CheckPanic used to dump stack info to file when catch panic

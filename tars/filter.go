@@ -105,7 +105,7 @@ func RegisterPostServerFilter(f ServerFilter) {
 	allFilters.postSfs = append(allFilters.postSfs, f)
 }
 
-//UserServerFilterMiddleware uses the server filter middleware.
+// UseServerFilterMiddleware uses the server filter middleware.
 func UseServerFilterMiddleware(sfm ...ServerFilterMiddleware) {
 	allFilters.sfms = append(allFilters.sfms, sfm...)
 }

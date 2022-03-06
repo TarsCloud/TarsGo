@@ -27,7 +27,7 @@ func GraceHandler(userFunc, stopFunc handlerFunc) {
 	}
 }
 
-// GraceHandler send signal USR2 to pid
+// SignalUSR2 send signal USR2 to pid
 func SignalUSR2(pid int) {
 	syscall.Kill(pid, syscall.SIGUSR2)
 }

@@ -2,7 +2,7 @@ package tars
 
 import (
 	"fmt"
-	sync2 "github.com/TarsCloud/TarsGo/tars/util/sync"
+	sync2 "github.com/TarsCloud/TarsGo/tars/pkg/sync"
 	"reflect"
 	"sort"
 	"strconv"
@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/pkg/tools"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/propertyf"
-	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
 // ReportPolicy is report policy
@@ -252,7 +252,7 @@ func (d *Distr) Set(in int) {
 	d.result[index]++
 }
 
-// Get get the distribution of the reporting values.
+// Get the distribution of the reporting values.
 func (d *Distr) Get() string {
 	d.mlock.Lock()
 	defer d.mlock.Unlock()
@@ -473,10 +473,10 @@ func (p *PropertyReport) Report(in int) {
 	}
 }
 
-// CreatePropertyReport creats the property report instance with the key.
-func CreatePropertyReport(key string, argvs ...ReportMethod) *PropertyReport {
+// CreatePropertyReport creates the property report instance with the key.
+func CreatePropertyReport(key string, argv ...ReportMethod) *PropertyReport {
 	ptr := GetPropertyReport(key)
-	for _, v := range argvs {
+	for _, v := range argv {
 		ptr.reportMethods[v.Enum()] = v
 	}
 

@@ -9,12 +9,12 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/transport"
 )
 
-//AddServant add dispatch and interface for object.
+// AddServant add dispatch and interface for object.
 func AddServant(v dispatch, f interface{}, obj string) {
 	addServantCommon(v, f, obj, false)
 }
 
-//AddServantWithContext add dispatch and interface for object, which have ctx,context
+// AddServantWithContext add dispatch and interface for object, which have ctx,context
 func AddServantWithContext(v dispatch, f interface{}, obj string) {
 	addServantCommon(v, f, obj, true)
 }
@@ -23,7 +23,7 @@ func addServantCommon(v dispatch, f interface{}, obj string, withContext bool) {
 	objRunList = append(objRunList, obj)
 	cfg, ok := tarsConfig[obj]
 	if !ok {
-		ReportNotifyInfo(NOTIFY_ERROR, "servant obj name not found:"+obj)
+		ReportNotifyInfo(NotifyError, "servant obj name not found:"+obj)
 		TLOG.Debug("servant obj name not found:", obj)
 		panic(ok)
 	}
@@ -39,15 +39,15 @@ func addServantCommon(v dispatch, f interface{}, obj string, withContext bool) {
 }
 
 // AddHttpServant add http servant handler with default exceptionStatusChecker for obj.
-func AddHttpServant(mux *TarsHttpMux, obj string) {
+func AddHttpServant(mux *HttpMux, obj string) {
 	AddHttpServantWithExceptionStatusChecker(mux, obj, DefaultExceptionStatusChecker)
 }
 
 // AddHttpServantWithExceptionStatusChecker add http servant handler with exceptionStatusChecker for obj.
-func AddHttpServantWithExceptionStatusChecker(mux *TarsHttpMux, obj string, exceptionStatusChecker func(int) bool) {
+func AddHttpServantWithExceptionStatusChecker(mux *HttpMux, obj string, exceptionStatusChecker func(int) bool) {
 	cfg, ok := tarsConfig[obj]
 	if !ok {
-		ReportNotifyInfo(NOTIFY_ERROR, "servant obj name not found:"+obj)
+		ReportNotifyInfo(NotifyError, "servant obj name not found:"+obj)
 		TLOG.Debug("servant obj name not found:", obj)
 		panic(ok)
 	}
@@ -59,7 +59,7 @@ func AddHttpServantWithExceptionStatusChecker(mux *TarsHttpMux, obj string, exce
 	if len(addrInfo) == 2 {
 		port, _ = strconv.Atoi(addrInfo[1])
 	}
-	httpConf := &TarsHttpConf{
+	httpConf := &HttpConf{
 		Container:              appConf.Container,
 		AppName:                fmt.Sprintf("%s.%s", appConf.App, appConf.Server),
 		Version:                appConf.Version,
@@ -78,7 +78,7 @@ func AddServantWithProtocol(proto transport.ServerProtocol, obj string) {
 	objRunList = append(objRunList, obj)
 	cfg, ok := tarsConfig[obj]
 	if !ok {
-		ReportNotifyInfo(NOTIFY_ERROR, "servant obj name not found:"+obj)
+		ReportNotifyInfo(NotifyError, "servant obj name not found:"+obj)
 		TLOG.Debug("servant obj name not found ", obj)
 		panic(ok)
 	}

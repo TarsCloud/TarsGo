@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
+	"github.com/TarsCloud/TarsGo/tars/pkg/rtimer"
 )
 
 // TarsClientConf is tars client side config
@@ -86,12 +86,30 @@ func (tc *TarsClient) Send(req []byte) error {
 	return nil
 }
 
-// Close close the client connection with the server.
+// Close the client connection with the server.
 func (tc *TarsClient) Close() {
 	w := tc.conn
 	if !w.isClosed && w.conn != nil {
 		w.isClosed = true
 		w.conn.Close()
+	}
+}
+
+// GraceClose close client gracefully
+func (tc *TarsClient) GraceClose(ctx context.Context) {
+	tk := time.NewTicker(time.Millisecond * 500)
+	defer tk.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-tk.C:
+			TLOG.Debugf("wait grace invoke %d", tc.conn.invokeNum)
+			if atomic.LoadInt32(&tc.conn.invokeNum) < 0 {
+				tc.Close()
+				return
+			}
+		}
 	}
 }
 
@@ -168,10 +186,10 @@ func (c *connection) recv(conn net.Conn, connDone chan bool) {
 		currBuffer = append(currBuffer, buffer[:n]...)
 		for {
 			pkgLen, status := c.tc.cp.ParsePackage(currBuffer)
-			if status == PACKAGE_LESS {
+			if status == PackageLess {
 				break
 			}
-			if status == PACKAGE_FULL {
+			if status == PackageFull {
 				atomic.AddInt32(&c.invokeNum, -1)
 				pkg := make([]byte, pkgLen)
 				copy(pkg, currBuffer[0:pkgLen])
@@ -227,22 +245,4 @@ func (c *connection) close(conn net.Conn) {
 		conn.Close()
 	}
 	c.connLock.Unlock()
-}
-
-// GraceClose close client gracefully
-func (c *TarsClient) GraceClose(ctx context.Context) {
-	tk := time.NewTicker(time.Millisecond * 500)
-	defer tk.Stop()
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-tk.C:
-			TLOG.Debugf("wait grace invoke %d", c.conn.invokeNum)
-			if atomic.LoadInt32(&c.conn.invokeNum) < 0 {
-				c.Close()
-				return
-			}
-		}
-	}
 }
