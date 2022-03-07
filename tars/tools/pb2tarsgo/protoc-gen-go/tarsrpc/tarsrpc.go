@@ -48,8 +48,8 @@ const (
 	modelPkgPath   = "github.com/TarsCloud/TarsGo/tars/model"
 	requestPkgPath = "github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	tarsPkgPath    = "github.com/TarsCloud/TarsGo/tars"
-	toolsPath      = "github.com/TarsCloud/TarsGo/tars/pkg/tools"
-	currentPath    = "github.com/TarsCloud/TarsGo/tars/pkg/current"
+	toolsPath      = "github.com/TarsCloud/TarsGo/tars/util/tools"
+	currentPath    = "github.com/TarsCloud/TarsGo/tars/util/current"
 )
 
 func init() {

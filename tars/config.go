@@ -1,10 +1,10 @@
 package tars
 
 import (
-	"github.com/TarsCloud/TarsGo/tars/pkg/tools"
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/pkg/endpoint"
+	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
+	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
 var svrCfg *serverConfig

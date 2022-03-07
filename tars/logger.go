@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/pkg/rogger"
-	"github.com/TarsCloud/TarsGo/tars/pkg/sync"
+	"github.com/TarsCloud/TarsGo/tars/util/rogger"
+	"github.com/TarsCloud/TarsGo/tars/util/sync"
 )
 
 var (

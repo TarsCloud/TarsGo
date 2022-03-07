@@ -351,9 +351,9 @@ import (
 	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/codec\"\n")
 	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/tup\"\n")
 	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/res/basef\"\n")
-	gen.code.WriteString("\"" + gen.tarsPath + "/pkg/tools\"\n")
-	gen.code.WriteString("\"" + gen.tarsPath + "/pkg/trace\"\n")
-	gen.code.WriteString("\"" + gen.tarsPath + "/pkg/current\"\n")
+	gen.code.WriteString("\"" + gen.tarsPath + "/util/tools\"\n")
+	gen.code.WriteString("\"" + gen.tarsPath + "/util/trace\"\n")
+	gen.code.WriteString("\"" + gen.tarsPath + "/util/current\"\n")
 
 	if *gModuleCycle == true {
 		for k, v := range itf.DependModuleWithJce {

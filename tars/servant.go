@@ -9,13 +9,13 @@ import (
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/model"
-	"github.com/TarsCloud/TarsGo/tars/pkg/current"
-	"github.com/TarsCloud/TarsGo/tars/pkg/endpoint"
-	"github.com/TarsCloud/TarsGo/tars/pkg/rtimer"
-	"github.com/TarsCloud/TarsGo/tars/pkg/tools"
 	"github.com/TarsCloud/TarsGo/tars/protocol"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
+	"github.com/TarsCloud/TarsGo/tars/util/current"
+	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
+	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
+	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
 var (

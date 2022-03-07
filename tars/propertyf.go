@@ -2,7 +2,6 @@ package tars
 
 import (
 	"fmt"
-	sync2 "github.com/TarsCloud/TarsGo/tars/pkg/sync"
 	"reflect"
 	"sort"
 	"strconv"
@@ -10,8 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/pkg/tools"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/propertyf"
+	sync2 "github.com/TarsCloud/TarsGo/tars/util/sync"
+	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
 // ReportPolicy is report policy

@@ -864,7 +864,7 @@ type ContextTestImp struct {
 //only need to add  ctx context.Context parameter
 func (imp *ContextTestImp) Add(ctx context.Context, a int32, b int32, c *int32) (int32, error) {
 	//We can use context to get some usefull infomation we need, such Client, ip, port and tracing infomation
-	//read more detail under tars/pkg/current
+	//read more detail under tars/util/current
 	ip, ok := current.GetClientIPFromContext(ctx)
     if !ok {
         logger.Error("Error getting ip from context")

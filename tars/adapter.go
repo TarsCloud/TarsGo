@@ -7,12 +7,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/pkg/endpoint"
-	"github.com/TarsCloud/TarsGo/tars/pkg/rtimer"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	"github.com/TarsCloud/TarsGo/tars/transport"
+	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
+	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
 )
 
 var reconnectMsg = "_reconnect_"
@@ -82,7 +82,7 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 		// TODO readCh has a certain probability to be closed after the load, and we need to recover
 		// Maybe there is a better way
 		if err := recover(); err != nil {
-			TLOG.Error("recv pkg painc:", err)
+			TLOG.Error("recv pkg panic:", err)
 		}
 	}()
 	packet, err := c.obj.proto.ResponseUnpack(pkg)

@@ -2,8 +2,8 @@ package tars
 
 import (
 	"fmt"
-	"github.com/TarsCloud/TarsGo/tars/pkg/sync"
-	"github.com/TarsCloud/TarsGo/tars/pkg/tools"
+	"github.com/TarsCloud/TarsGo/tars/util/sync"
+	"github.com/TarsCloud/TarsGo/tars/util/tools"
 	"strings"
 	"time"
 

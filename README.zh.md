@@ -846,7 +846,7 @@ type ContextTestImp struct {
 }
 //只需在接口上添加 ctx context.Context参数
 func (imp *ContextTestImp) Add(ctx context.Context, a int32, b int32, c *int32) (int32, error) {
-	//我们可以通过context 获取框架传递的信息，比如下面的获取ip， 甚至返回一些信息给框架，详见tars/pkg/current下面的接口
+	//我们可以通过context 获取框架传递的信息，比如下面的获取ip， 甚至返回一些信息给框架，详见tars/util/current下面的接口
 	ip, ok := current.GetClientIPFromContext(ctx)
     if !ok {
         logger.Error("Error getting ip from context")

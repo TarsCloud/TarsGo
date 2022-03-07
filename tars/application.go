@@ -18,15 +18,15 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/pkg/conf"
-	"github.com/TarsCloud/TarsGo/tars/pkg/endpoint"
-	"github.com/TarsCloud/TarsGo/tars/pkg/grace"
-	"github.com/TarsCloud/TarsGo/tars/pkg/rogger"
-	"github.com/TarsCloud/TarsGo/tars/pkg/ssl"
-	"github.com/TarsCloud/TarsGo/tars/pkg/tools"
 	"github.com/TarsCloud/TarsGo/tars/protocol"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/adminf"
 	"github.com/TarsCloud/TarsGo/tars/transport"
+	"github.com/TarsCloud/TarsGo/tars/util/conf"
+	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
+	"github.com/TarsCloud/TarsGo/tars/util/grace"
+	"github.com/TarsCloud/TarsGo/tars/util/rogger"
+	"github.com/TarsCloud/TarsGo/tars/util/ssl"
+	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
 // var listenFds []*os.File

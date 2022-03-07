@@ -7,15 +7,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"fmt"
 	m "github.com/TarsCloud/TarsGo/tars/model"
-	"github.com/TarsCloud/TarsGo/tars/pkg/current"
-	"github.com/TarsCloud/TarsGo/tars/pkg/tools"
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/tup"
+	"github.com/TarsCloud/TarsGo/tars/util/current"
+	"github.com/TarsCloud/TarsGo/tars/util/tools"
 	"unsafe"
 )
 
