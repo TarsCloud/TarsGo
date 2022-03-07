@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.2.0 (2022/03/07)
+- Support tars-trace @lbbniu #326
+- support rpc keepalive @BeyondWUXF #3
+
+## 1.1.9 (2022/01/24)
+- 避免tarsgo每次创建项目都安装tars2go协议生成程序 by @lbbniu in #322
+- 配置文件client objQueueMax不生效 by @BeyondWUXF in #323
+
+## 1.1.8(2022/01/13)
+- TarsGo客户端独立运行时支持stat和property自动上报 by @lbbniu in #314
+- update tars version in setting.go by @lbbniu in #321
+
+## 1.1.7 (2022/01/12)
+- fix: JSON number loss of precision by @chenhengqi in #270
+- Feature remotelog by @lanhy in #269
+- fix: close fd when close connection by @chenhengqi in #274
+- Support dispatch reporter by @defool in #282
+- Set GOOS in make upload by @defool in #281
+- Support setting the stater by @defool in #287
+- Set default for json req value by @defool in #288
+- 修正map没有初始化而直接使用时报assignment to entry in nil map错误的问题 by @tzwsoho in #286
+- fix index by @BaBahsq in #293
+- fix handletimeout ineffective by @Isites in #295
+- Improve performance of codec by @defool in #301
+- support call by set by @wgfxcu in #303
+- correcting error output 'endoint' -> 'endpoint' by @Benjamin142857 in #308
+- tars2go支持include参数 和 单文件定义多个模块 by @lbbniu in #296
+- 优化单个tars文件中定义多个module处理 by @lbbniu in #316
+- go 1.16+ 版本 创建项目使用脚手架tarsgo命令 by @lbbniu in #311
+- 支持ssl拆分PR：对标c++支持https by @lbbniu in #319
+- 一致性hash优化 by @lbbniu in #320
 
 ## 1.1.6 (2021/02/09)
 - support rpc error code
