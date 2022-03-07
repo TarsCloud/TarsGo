@@ -2,7 +2,7 @@ package current
 
 import "context"
 
-// ctckey is key for tars client current.
+// ctcKey is key for tars client current.
 var ctcKey = tarsCurrentKey(0x484901)
 
 // ClientCurrent for passing client side info for tars framework.
@@ -17,7 +17,7 @@ type ClientCurrent struct {
 	serverPort string
 }
 
-func newCientCurrent() *ClientCurrent {
+func newClientCurrent() *ClientCurrent {
 	return &ClientCurrent{
 		isHash:    false,
 		isTimeout: false,
@@ -32,7 +32,7 @@ func clientCurrentFromContext(ctx context.Context) (*ClientCurrent, bool) {
 
 // ContextWithClientCurrent set ClientCurrent to the context.
 func ContextWithClientCurrent(ctx context.Context) context.Context {
-	cc := newCientCurrent()
+	cc := newClientCurrent()
 	ctx = context.WithValue(ctx, ctcKey, cc)
 	return ctx
 }
