@@ -1231,7 +1231,7 @@ if ok && traceData.TraceCall {
 `)
 			for _, v := range fun.Args {
 				if !v.IsOut {
-					c.WriteString("value[\"" + v.Name + "\"] = " + v.Name + "\n")
+					c.WriteString(`value["` + v.Name + `"] = ` + v.Name + "\n")
 				}
 			}
 			c.WriteString(`p, _ := json.Marshal(value)
@@ -1298,9 +1298,12 @@ if ok && traceData.TraceCall {
 	if traceParamFlag == trace.EnpNormal {
 		value := map[string]interface{}{}
 `)
+			if fun.HasRet {
+				c.WriteString(`value[""] = ret` + "\n")
+			}
 			for _, v := range fun.Args {
 				if v.IsOut {
-					c.WriteString("value[\"" + v.Name + "\"] = *" + v.Name + "\n")
+					c.WriteString(`value["` + v.Name + `"] = *` + v.Name + "\n")
 				}
 			}
 			c.WriteString(`p, _ := json.Marshal(value)
@@ -1584,7 +1587,7 @@ if ok && traceData.TraceCall {
 `)
 		for _, v := range fun.Args {
 			if !v.IsOut {
-				c.WriteString("value[\"" + v.Name + "\"] = " + v.Name + "\n")
+				c.WriteString(`value["` + v.Name + `"] = ` + v.Name + "\n")
 			}
 		}
 		c.WriteString(`p, _ := json.Marshal(value)
@@ -1803,9 +1806,12 @@ if ok && traceData.TraceCall {
 	if traceParamFlag == trace.EnpNormal {
 		value := map[string]interface{}{}
 `)
+		if fun.HasRet {
+			c.WriteString(`value[""] = _funRet_` + "\n")
+		}
 		for _, v := range fun.Args {
 			if v.IsOut {
-				c.WriteString("value[\"" + v.Name + "\"] = " + v.Name + "\n")
+				c.WriteString(`value["` + v.Name + `"] = ` + v.Name + "\n")
 			}
 		}
 		c.WriteString(`p, _ := json.Marshal(value)
