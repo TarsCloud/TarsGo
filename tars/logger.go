@@ -31,7 +31,6 @@ func Trace(traceKey, annotation, client, server, funcName string, ret int, data,
 		return
 	}
 	msg := traceKey + "|" + annotation + "|" + client + "|" + server + "|" + funcName + "|" + strconv.FormatInt(time.Now().UnixNano()/1e6, 10) + "|" + strconv.Itoa(ret) + "|" + base64.StdEncoding.EncodeToString([]byte(data)) + "|" + ex
-	fmt.Println(msg)
 	traceLogger.Trace(msg)
 }
 
