@@ -2,7 +2,7 @@ package current
 
 import (
 	"context"
-	"github.com/TarsCloud/TarsGo/tars/pkg/trace"
+	"github.com/TarsCloud/TarsGo/tars/util/trace"
 )
 
 type tarsCurrentKey int64
