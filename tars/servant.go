@@ -125,6 +125,9 @@ func (s *ServantProxy) TarsInvoke(ctx context.Context, cType byte,
 	if ok && traceData.TraceCall {
 		traceKey := traceData.GetTraceKeyFull(false)
 		TLOG.Debug("trace debug: find trace key:", traceKey)
+		if status == nil {
+			status = make(map[string]string)
+		}
 		status[current.STATUS_TRACE_KEY] = traceKey
 		msgType |= basef.TARSMESSAGETYPETRACE
 	}
