@@ -94,8 +94,7 @@ func (st *ServerInfo) ReadBlock(readBuf *codec.Reader, tag byte, require bool) e
 }
 
 // WriteTo encode struct to buffer
-func (st *ServerInfo) WriteTo(buf *codec.Buffer) error {
-	var err error
+func (st *ServerInfo) WriteTo(buf *codec.Buffer) (err error) {
 
 	err = buf.WriteString(st.Application, 0)
 	if err != nil {
@@ -117,9 +116,7 @@ func (st *ServerInfo) WriteTo(buf *codec.Buffer) error {
 		return err
 	}
 
-	_ = err
-
-	return nil
+	return err
 }
 
 // WriteBlock encode struct

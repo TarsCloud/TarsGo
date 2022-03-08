@@ -142,8 +142,7 @@ func (st *LogInfo) ReadBlock(readBuf *codec.Reader, tag byte, require bool) erro
 }
 
 // WriteTo encode struct to buffer
-func (st *LogInfo) WriteTo(buf *codec.Buffer) error {
-	var err error
+func (st *LogInfo) WriteTo(buf *codec.Buffer) (err error) {
 
 	err = buf.WriteString(st.Appname, 0)
 	if err != nil {
@@ -200,9 +199,7 @@ func (st *LogInfo) WriteTo(buf *codec.Buffer) error {
 		return err
 	}
 
-	_ = err
-
-	return nil
+	return err
 }
 
 // WriteBlock encode struct

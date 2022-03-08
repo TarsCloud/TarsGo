@@ -119,8 +119,7 @@ func (st *StatPropMsgHead) ReadBlock(readBuf *codec.Reader, tag byte, require bo
 }
 
 // WriteTo encode struct to buffer
-func (st *StatPropMsgHead) WriteTo(buf *codec.Buffer) error {
-	var err error
+func (st *StatPropMsgHead) WriteTo(buf *codec.Buffer) (err error) {
 
 	err = buf.WriteString(st.ModuleName, 0)
 	if err != nil {
@@ -162,9 +161,7 @@ func (st *StatPropMsgHead) WriteTo(buf *codec.Buffer) error {
 		return err
 	}
 
-	_ = err
-
-	return nil
+	return err
 }
 
 // WriteBlock encode struct
@@ -256,8 +253,7 @@ func (st *StatPropInfo) ReadBlock(readBuf *codec.Reader, tag byte, require bool)
 }
 
 // WriteTo encode struct to buffer
-func (st *StatPropInfo) WriteTo(buf *codec.Buffer) error {
-	var err error
+func (st *StatPropInfo) WriteTo(buf *codec.Buffer) (err error) {
 
 	err = buf.WriteString(st.Policy, 0)
 	if err != nil {
@@ -269,9 +265,7 @@ func (st *StatPropInfo) WriteTo(buf *codec.Buffer) error {
 		return err
 	}
 
-	_ = err
-
-	return nil
+	return err
 }
 
 // WriteBlock encode struct
@@ -386,8 +380,7 @@ func (st *StatPropMsgBody) ReadBlock(readBuf *codec.Reader, tag byte, require bo
 }
 
 // WriteTo encode struct to buffer
-func (st *StatPropMsgBody) WriteTo(buf *codec.Buffer) error {
-	var err error
+func (st *StatPropMsgBody) WriteTo(buf *codec.Buffer) (err error) {
 
 	err = buf.WriteHead(codec.LIST, 0)
 	if err != nil {
@@ -408,9 +401,7 @@ func (st *StatPropMsgBody) WriteTo(buf *codec.Buffer) error {
 
 	}
 
-	_ = err
-
-	return nil
+	return err
 }
 
 // WriteBlock encode struct

@@ -103,8 +103,7 @@ func (st *NotifyKey) ReadBlock(readBuf *codec.Reader, tag byte, require bool) er
 }
 
 // WriteTo encode struct to buffer
-func (st *NotifyKey) WriteTo(buf *codec.Buffer) error {
-	var err error
+func (st *NotifyKey) WriteTo(buf *codec.Buffer) (err error) {
 
 	err = buf.WriteString(st.Name, 1)
 	if err != nil {
@@ -121,9 +120,7 @@ func (st *NotifyKey) WriteTo(buf *codec.Buffer) error {
 		return err
 	}
 
-	_ = err
-
-	return nil
+	return err
 }
 
 // WriteBlock encode struct
@@ -227,8 +224,7 @@ func (st *NotifyItem) ReadBlock(readBuf *codec.Reader, tag byte, require bool) e
 }
 
 // WriteTo encode struct to buffer
-func (st *NotifyItem) WriteTo(buf *codec.Buffer) error {
-	var err error
+func (st *NotifyItem) WriteTo(buf *codec.Buffer) (err error) {
 
 	err = buf.WriteString(st.STimeStamp, 1)
 	if err != nil {
@@ -250,9 +246,7 @@ func (st *NotifyItem) WriteTo(buf *codec.Buffer) error {
 		return err
 	}
 
-	_ = err
-
-	return nil
+	return err
 }
 
 // WriteBlock encode struct
@@ -373,8 +367,7 @@ func (st *NotifyInfo) ReadBlock(readBuf *codec.Reader, tag byte, require bool) e
 }
 
 // WriteTo encode struct to buffer
-func (st *NotifyInfo) WriteTo(buf *codec.Buffer) error {
-	var err error
+func (st *NotifyInfo) WriteTo(buf *codec.Buffer) (err error) {
 
 	err = buf.WriteInt32(st.Nextpage, 1)
 	if err != nil {
@@ -400,9 +393,7 @@ func (st *NotifyInfo) WriteTo(buf *codec.Buffer) error {
 
 	}
 
-	_ = err
-
-	return nil
+	return err
 }
 
 // WriteBlock encode struct
@@ -530,8 +521,7 @@ func (st *ReportInfo) ReadBlock(readBuf *codec.Reader, tag byte, require bool) e
 }
 
 // WriteTo encode struct to buffer
-func (st *ReportInfo) WriteTo(buf *codec.Buffer) error {
-	var err error
+func (st *ReportInfo) WriteTo(buf *codec.Buffer) (err error) {
 
 	err = buf.WriteInt32(int32(st.EType), 1)
 	if err != nil {
@@ -573,9 +563,7 @@ func (st *ReportInfo) WriteTo(buf *codec.Buffer) error {
 		return err
 	}
 
-	_ = err
-
-	return nil
+	return err
 }
 
 // WriteBlock encode struct

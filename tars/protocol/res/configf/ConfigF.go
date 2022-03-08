@@ -107,8 +107,7 @@ func (st *ConfigInfo) ReadBlock(readBuf *codec.Reader, tag byte, require bool) e
 }
 
 // WriteTo encode struct to buffer
-func (st *ConfigInfo) WriteTo(buf *codec.Buffer) error {
-	var err error
+func (st *ConfigInfo) WriteTo(buf *codec.Buffer) (err error) {
 
 	err = buf.WriteString(st.Appname, 0)
 	if err != nil {
@@ -140,9 +139,7 @@ func (st *ConfigInfo) WriteTo(buf *codec.Buffer) error {
 		return err
 	}
 
-	_ = err
-
-	return nil
+	return err
 }
 
 // WriteBlock encode struct
@@ -262,8 +259,7 @@ func (st *GetConfigListInfo) ReadBlock(readBuf *codec.Reader, tag byte, require 
 }
 
 // WriteTo encode struct to buffer
-func (st *GetConfigListInfo) WriteTo(buf *codec.Buffer) error {
-	var err error
+func (st *GetConfigListInfo) WriteTo(buf *codec.Buffer) (err error) {
 
 	err = buf.WriteString(st.Appname, 0)
 	if err != nil {
@@ -295,9 +291,7 @@ func (st *GetConfigListInfo) WriteTo(buf *codec.Buffer) error {
 		return err
 	}
 
-	_ = err
-
-	return nil
+	return err
 }
 
 // WriteBlock encode struct

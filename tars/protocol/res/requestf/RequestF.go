@@ -221,8 +221,7 @@ func (st *RequestPacket) ReadBlock(readBuf *codec.Reader, tag byte, require bool
 }
 
 // WriteTo encode struct to buffer
-func (st *RequestPacket) WriteTo(buf *codec.Buffer) error {
-	var err error
+func (st *RequestPacket) WriteTo(buf *codec.Buffer) (err error) {
 
 	err = buf.WriteInt16(st.IVersion, 1)
 	if err != nil {
@@ -327,9 +326,7 @@ func (st *RequestPacket) WriteTo(buf *codec.Buffer) error {
 
 	}
 
-	_ = err
-
-	return nil
+	return err
 }
 
 // WriteBlock encode struct
@@ -554,8 +551,7 @@ func (st *ResponsePacket) ReadBlock(readBuf *codec.Reader, tag byte, require boo
 }
 
 // WriteTo encode struct to buffer
-func (st *ResponsePacket) WriteTo(buf *codec.Buffer) error {
-	var err error
+func (st *ResponsePacket) WriteTo(buf *codec.Buffer) (err error) {
 
 	err = buf.WriteInt16(st.IVersion, 1)
 	if err != nil {
@@ -655,9 +651,7 @@ func (st *ResponsePacket) WriteTo(buf *codec.Buffer) error {
 
 	}
 
-	_ = err
-
-	return nil
+	return err
 }
 
 // WriteBlock encode struct

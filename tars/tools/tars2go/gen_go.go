@@ -687,17 +687,14 @@ func (gen *GenGo) genFunWriteTo(st *StructInfo) {
 	c := &gen.code
 
 	c.WriteString(`// WriteTo encode struct to buffer
-func (st *` + st.Name + `) WriteTo(buf *codec.Buffer) error {
-	var err error
+func (st *` + st.Name + `) WriteTo(buf *codec.Buffer) (err error) {
 `)
 	for _, v := range st.Mb {
 		gen.genWriteVar(&v, "st.", false)
 	}
 
 	c.WriteString(`
-	_ = err
-
-	return nil
+	return err
 }
 `)
 }

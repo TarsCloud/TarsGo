@@ -136,8 +136,7 @@ func (st *StatMicMsgHead) ReadBlock(readBuf *codec.Reader, tag byte, require boo
 }
 
 // WriteTo encode struct to buffer
-func (st *StatMicMsgHead) WriteTo(buf *codec.Buffer) error {
-	var err error
+func (st *StatMicMsgHead) WriteTo(buf *codec.Buffer) (err error) {
 
 	err = buf.WriteString(st.MasterName, 0)
 	if err != nil {
@@ -194,9 +193,7 @@ func (st *StatMicMsgHead) WriteTo(buf *codec.Buffer) error {
 		return err
 	}
 
-	_ = err
-
-	return nil
+	return err
 }
 
 // WriteBlock encode struct
@@ -341,8 +338,7 @@ func (st *StatMicMsgBody) ReadBlock(readBuf *codec.Reader, tag byte, require boo
 }
 
 // WriteTo encode struct to buffer
-func (st *StatMicMsgBody) WriteTo(buf *codec.Buffer) error {
-	var err error
+func (st *StatMicMsgBody) WriteTo(buf *codec.Buffer) (err error) {
 
 	err = buf.WriteInt32(st.Count, 0)
 	if err != nil {
@@ -398,9 +394,7 @@ func (st *StatMicMsgBody) WriteTo(buf *codec.Buffer) error {
 		return err
 	}
 
-	_ = err
-
-	return nil
+	return err
 }
 
 // WriteBlock encode struct
@@ -534,8 +528,7 @@ func (st *StatSampleMsg) ReadBlock(readBuf *codec.Reader, tag byte, require bool
 }
 
 // WriteTo encode struct to buffer
-func (st *StatSampleMsg) WriteTo(buf *codec.Buffer) error {
-	var err error
+func (st *StatSampleMsg) WriteTo(buf *codec.Buffer) (err error) {
 
 	err = buf.WriteString(st.Unid, 0)
 	if err != nil {
@@ -582,9 +575,7 @@ func (st *StatSampleMsg) WriteTo(buf *codec.Buffer) error {
 		return err
 	}
 
-	_ = err
-
-	return nil
+	return err
 }
 
 // WriteBlock encode struct
@@ -670,17 +661,14 @@ func (st *ProxyInfo) ReadBlock(readBuf *codec.Reader, tag byte, require bool) er
 }
 
 // WriteTo encode struct to buffer
-func (st *ProxyInfo) WriteTo(buf *codec.Buffer) error {
-	var err error
+func (st *ProxyInfo) WriteTo(buf *codec.Buffer) (err error) {
 
 	err = buf.WriteBool(st.BFromClient, 0)
 	if err != nil {
 		return err
 	}
 
-	_ = err
-
-	return nil
+	return err
 }
 
 // WriteBlock encode struct
