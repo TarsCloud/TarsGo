@@ -49,7 +49,7 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 
 	// 处理TARS下的调用链追踪
 	if reqPackage.HasMessageType(basef.TARSMESSAGETYPETRACE) {
-		if traceKey, ok := reqPackage.Status[current.STATUS_TRACE_KEY]; ok {
+		if traceKey, ok := reqPackage.Status[current.StatusTraceKey]; ok {
 			TLOG.Info("[TARS] servant got a trace request, trace key:", traceKey)
 			if ok := current.InitTrace(ctx, traceKey); !ok {
 				TLOG.Error("trace-debug: set trace key in current status error, trace key:", traceKey)

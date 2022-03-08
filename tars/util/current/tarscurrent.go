@@ -259,7 +259,7 @@ func SetDyeingUser(ctx context.Context, user string) bool {
 	return ok
 }
 
-const STATUS_TRACE_KEY = "STATUS_TRACE_KEY"
+const StatusTraceKey = "STATUS_TRACE_KEY"
 
 // TarsOpenTrace 开启trace
 func TarsOpenTrace(ctx context.Context, traceParams bool) bool {

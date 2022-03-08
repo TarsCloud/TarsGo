@@ -128,7 +128,7 @@ func (s *ServantProxy) TarsInvoke(ctx context.Context, cType byte,
 		if status == nil {
 			status = make(map[string]string)
 		}
-		status[current.STATUS_TRACE_KEY] = traceKey
+		status[current.StatusTraceKey] = traceKey
 		msgType |= basef.TARSMESSAGETYPETRACE
 	}
 

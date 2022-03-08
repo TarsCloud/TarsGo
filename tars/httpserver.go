@@ -22,8 +22,8 @@ func init() {
 	}
 }
 
-// HttpConf is configuration for tars http server.
-type HttpConf struct {
+// TarsHttpConf is configuration for tars http server.
+type TarsHttpConf struct {
 	Container              string
 	AppName                string
 	IP                     string
@@ -33,10 +33,10 @@ type HttpConf struct {
 	ExceptionStatusChecker func(int) bool
 }
 
-// HttpMux is http.ServeMux for tars http server.
-type HttpMux struct {
+// TarsHttpMux is http.ServeMux for tars http server.
+type TarsHttpMux struct {
 	http.ServeMux
-	cfg *HttpConf
+	cfg *TarsHttpConf
 }
 
 type httpStatInfo struct {
@@ -47,7 +47,7 @@ type httpStatInfo struct {
 }
 
 // ServeHTTP is the server for the TarsHttpMux.
-func (mux *HttpMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (mux *TarsHttpMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.RequestURI == "*" {
 		if r.ProtoAtLeast(1, 1) {
 			w.Header().Set("Connection", "close")
@@ -56,7 +56,7 @@ func (mux *HttpMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h, pattern := mux.Handler(r)
-	tw := &ResponseWriter{w, 0}
+	tw := &TarsResponseWriter{w, 0}
 	startTime := time.Now().UnixNano() / 1e6
 	h.ServeHTTP(tw, r)
 	costTime := int64(time.Now().UnixNano()/1e6 - startTime)
@@ -82,7 +82,7 @@ func (mux *HttpMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	go mux.reportHttpStat(st)
 }
 
-func (mux *HttpMux) reportHttpStat(st *httpStatInfo) {
+func (mux *TarsHttpMux) reportHttpStat(st *httpStatInfo) {
 	if mux.cfg == nil || StatReport == nil {
 		return
 	}
@@ -128,7 +128,7 @@ func (mux *HttpMux) reportHttpStat(st *httpStatInfo) {
 }
 
 // SetConfig sets the cfg tho the TarsHttpMux.
-func (mux *HttpMux) SetConfig(cfg *HttpConf) {
+func (mux *TarsHttpMux) SetConfig(cfg *TarsHttpConf) {
 	mux.cfg = cfg
 }
 
@@ -137,20 +137,20 @@ func DefaultExceptionStatusChecker(statusCode int) bool {
 	return statusCode >= 400
 }
 
-// ResponseWriter is http.ResponseWriter for tars.
-type ResponseWriter struct {
+// TarsResponseWriter is http.ResponseWriter for tars.
+type TarsResponseWriter struct {
 	http.ResponseWriter
 	StatusCode int
 }
 
 // WriteHeader is used for write the http header with the http code.
-func (w *ResponseWriter) WriteHeader(code int) {
+func (w *TarsResponseWriter) WriteHeader(code int) {
 	w.StatusCode = code
 	w.ResponseWriter.WriteHeader(code)
 }
 
 // Hijack add Hijack method for TarsResponseWriter
-func (w *ResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+func (w *TarsResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	if hj, ok := w.ResponseWriter.(http.Hijacker); ok {
 		return hj.Hijack()
 	}

@@ -39,12 +39,12 @@ func addServantCommon(v dispatch, f interface{}, obj string, withContext bool) {
 }
 
 // AddHttpServant add http servant handler with default exceptionStatusChecker for obj.
-func AddHttpServant(mux *HttpMux, obj string) {
+func AddHttpServant(mux *TarsHttpMux, obj string) {
 	AddHttpServantWithExceptionStatusChecker(mux, obj, DefaultExceptionStatusChecker)
 }
 
 // AddHttpServantWithExceptionStatusChecker add http servant handler with exceptionStatusChecker for obj.
-func AddHttpServantWithExceptionStatusChecker(mux *HttpMux, obj string, exceptionStatusChecker func(int) bool) {
+func AddHttpServantWithExceptionStatusChecker(mux *TarsHttpMux, obj string, exceptionStatusChecker func(int) bool) {
 	cfg, ok := tarsConfig[obj]
 	if !ok {
 		ReportNotifyInfo(NotifyError, "servant obj name not found:"+obj)
@@ -59,7 +59,7 @@ func AddHttpServantWithExceptionStatusChecker(mux *HttpMux, obj string, exceptio
 	if len(addrInfo) == 2 {
 		port, _ = strconv.Atoi(addrInfo[1])
 	}
-	httpConf := &HttpConf{
+	httpConf := &TarsHttpConf{
 		Container:              appConf.Container,
 		AppName:                fmt.Sprintf("%s.%s", appConf.App, appConf.Server),
 		Version:                appConf.Version,

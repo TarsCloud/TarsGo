@@ -26,7 +26,7 @@ func main() {
 	app := new(App.Tls)
 	// Register Servant
 	app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+".TlsObj")
-	mux := &tars.HttpMux{}
+	mux := &tars.TarsHttpMux{}
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("%d", time.Now().UnixNano()/1e6)))
 	})
