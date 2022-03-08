@@ -24,21 +24,22 @@ func init() {
 func CreateListener(proto string, addr string) (net.Listener, error) {
 	key := fmt.Sprintf("%s_%s_%s", InheritFdPrefix, proto, addr)
 	val := os.Getenv(key)
-	for val != "" {
+	if val != "" {
 		fd, err := strconv.Atoi(val)
 		if err != nil {
-			break
+			goto CreateTcp
 		}
 		file := os.NewFile(uintptr(fd), "listener")
 		ln, err := net.FileListener(file)
 		if err != nil {
 			file.Close()
-			break
+			goto CreateTcp
 		}
 		allListenFds.Store(key, ln)
 		return ln, nil
 	}
 	// not inherit, create new
+CreateTcp:
 	ln, err := net.Listen(proto, addr)
 	if err == nil {
 		allListenFds.Store(key, ln)
@@ -52,15 +53,15 @@ func CreateUDPConn(addr string) (*net.UDPConn, error) {
 	proto := "udp"
 	key := fmt.Sprintf("%s_%s_%s", InheritFdPrefix, proto, addr)
 	val := os.Getenv(key)
-	for val != "" {
+	if val != "" {
 		fd, err := strconv.Atoi(val)
 		if err != nil {
-			break
+			goto CreateUdp
 		}
 		file := os.NewFile(uintptr(fd), "listener")
 		conn, err := net.FileConn(file)
 		if err != nil {
-			break
+			goto CreateUdp
 		}
 		file.Close()
 		udpConn := conn.(*net.UDPConn)
@@ -68,6 +69,7 @@ func CreateUDPConn(addr string) (*net.UDPConn, error) {
 		return udpConn, nil
 	}
 	// not inherit, create new
+CreateUdp:
 	uaddr, err := net.ResolveUDPAddr("udp4", addr)
 	if err != nil {
 		return nil, err
