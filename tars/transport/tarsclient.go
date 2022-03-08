@@ -28,7 +28,7 @@ type TarsClientConf struct {
 // TarsClient is struct for tars client.
 type TarsClient struct {
 	address string
-	//TODO remove it
+	// TODO remove it
 	conn *connection
 
 	cp        ClientProtocol
@@ -143,7 +143,7 @@ func (c *connection) send(conn net.Conn, connDone chan bool) {
 		c.idleTime = time.Now()
 		_, err := conn.Write(req)
 		if err != nil {
-			//TODO add retry time
+			// TODO add retry time
 			c.tc.sendQueue <- req
 			TLOG.Error("send request error:", err)
 			c.close(conn)

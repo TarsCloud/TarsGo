@@ -205,7 +205,7 @@ func newTarsEndpointManager(objName string, comm *Communicator) *tarsEndpointMan
 		}
 		e.activeEpHashMap = chmap
 	} else {
-		//[proxy] TODO singleton
+		// [proxy] TODO singleton
 		TLOG.Debug("proxy mode:", objName)
 		e.objName = objName
 		e.directProxy = false

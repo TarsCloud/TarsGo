@@ -20,7 +20,6 @@ func (n *NotifyHelper) SetNotifyInfo(comm *Communicator, notify string, app stri
 	n.comm = comm
 	n.tn = new(notifyf.Notify)
 	comm.StringToProxy(notify, n.tn)
-	//TODO:params
 	var set string
 	if v, ok := comm.GetProperty("setdivision"); ok {
 		set = v

@@ -211,7 +211,7 @@ func (c *AdapterProxy) onPush(pkg *requestf.ResponsePacket) {
 		defer cancel()
 		oldClient.GraceClose(ctx) // grace shutdown
 	}
-	//TODO: support push msg
+	// TODO: support push msg
 }
 
 func (c *AdapterProxy) doKeepAlive() {

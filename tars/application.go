@@ -555,7 +555,7 @@ func mainloop() {
 			}
 			for name, adapter := range svrCfg.Adapters {
 				if adapter.Protocol == "not_tars" {
-					//TODO not_tars support
+					// TODO not_tars support
 					ha.KeepAlive(name)
 					continue
 				}

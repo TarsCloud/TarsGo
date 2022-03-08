@@ -62,7 +62,7 @@ func ZipkinClientFilter() tars.ClientFilter {
 		defer cSpan.Finish()
 		cfg := tars.GetServerConfig()
 		cSpan.SetTag("client.ipv4", cfg.LocalIP)
-		//TODO: SetTag client.port
+		// TODO: SetTag client.port
 		cSpan.SetTag("tars.interface", req.SServantName)
 		cSpan.SetTag("tars.method", req.SFuncName)
 		cSpan.SetTag("tars.protocol", "tars")

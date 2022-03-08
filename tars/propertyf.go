@@ -360,7 +360,7 @@ func (p *PropertyReportHelper) ReportToServer() {
 			desc := m.Enum().String()
 			result := m.Get()
 
-			//todo: use interface method IsDefault() bool
+			// todo: use interface method IsDefault() bool
 			switch desc {
 			case "Sum":
 				if result != "0" {
@@ -451,7 +451,7 @@ func (p *PropertyReportHelper) AddToReport(pr *PropertyReport) {
 
 // Run start the properting report goroutine.
 func (p *PropertyReportHelper) Run() {
-	//todo , get report interval from config
+	// todo , get report interval from config
 	loop := time.NewTicker(GetServerConfig().PropertyReportInterval)
 	for range loop.C {
 		p.ReportToServer()

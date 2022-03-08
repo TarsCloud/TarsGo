@@ -3,6 +3,7 @@ package transport
 import (
 	"context"
 	"crypto/tls"
+	"github.com/TarsCloud/TarsGo/tars/util/gtime"
 	"io"
 	"net"
 	"os"
@@ -222,8 +223,7 @@ func (h *tcpHandler) recv(connSt *connInfo) {
 	cfg := h.conf
 	buffer := make([]byte, 1024*4)
 	var currBuffer []byte // need a deep copy of buffer
-	//TODO: change to gtime
-	connSt.idleTime = time.Now().Unix()
+	connSt.idleTime = gtime.CurrUnixTime
 	var n int
 	var err error
 	for {
