@@ -352,7 +352,9 @@ import (
 	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/tup\"\n")
 	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/res/basef\"\n")
 	gen.code.WriteString("\"" + gen.tarsPath + "/util/tools\"\n")
-	gen.code.WriteString("\"" + gen.tarsPath + "/util/trace\"\n")
+	if !withoutTrace {
+		gen.code.WriteString("\"" + gen.tarsPath + "/util/trace\"\n")
+	}
 	gen.code.WriteString("\"" + gen.tarsPath + "/util/current\"\n")
 
 	if *gModuleCycle == true {
@@ -1241,7 +1243,7 @@ if ok && traceData.TraceCall {
 	} else if traceParamFlag == trace.EnpOverMaxLen {
 		traceParam = "{\"trace_param_over_max_len\":true}"
 	}
-	tars.Trace(traceData.GetTraceKey(trace.EstCS), trace.TraceAnnotationCS, tars.GetClientConfig().ModuleName, _obj.s.Name(), "` + fun.Name + `", 0, traceParam, "")
+	tars.Trace(traceData.GetTraceKey(trace.EstCS), trace.TraceAnnotationCS, tars.GetClientConfig().ModuleName, obj.servant.Name(), "` + fun.Name + `", 0, traceParam, "")
 }`)
 			c.WriteString("\n\n")
 		}
@@ -1317,7 +1319,7 @@ if ok && traceData.TraceCall {
 	} else if traceParamFlag == trace.EnpOverMaxLen {
 		traceParam = "{\"trace_param_over_max_len\":true}"
 	}
-	tars.Trace(traceData.GetTraceKey(trace.EstCR), trace.TraceAnnotationCR, tars.GetClientConfig().ModuleName, _obj.s.Name(), "` + fun.Name + `", int(_resp.IRet), traceParam, "")
+	tars.Trace(traceData.GetTraceKey(trace.EstCR), trace.TraceAnnotationCR, tars.GetClientConfig().ModuleName, obj.servant.Name(), "` + fun.Name + `", int(resp.IRet), traceParam, "")
 }`)
 			c.WriteString("\n\n")
 		}
