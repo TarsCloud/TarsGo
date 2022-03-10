@@ -11,7 +11,7 @@ const (
 	// for now ,some option should update from remote config
 
 	// Version is tars version
-	Version string = "1.2.1"
+	Version string = "1.3.0"
 
 	// server
 
