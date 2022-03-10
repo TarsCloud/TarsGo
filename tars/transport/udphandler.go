@@ -65,6 +65,7 @@ func (h *udpHandler) Handle() error {
 			current.SetClientIPWithContext(ctx, udpAddr.IP.String())
 			current.SetClientPortWithContext(ctx, strconv.Itoa(udpAddr.Port))
 			current.SetRecvPkgTsFromContext(ctx, time.Now().UnixNano()/1e6)
+			current.SetRawConnWithContext(ctx, h.conn, udpAddr)
 
 			atomic.AddInt32(&h.ts.numInvoke, 1)
 			rsp := h.ts.invoke(ctx, pkg) // no need to check package

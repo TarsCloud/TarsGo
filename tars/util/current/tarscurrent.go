@@ -1,6 +1,9 @@
 package current
 
-import "context"
+import (
+	"context"
+	"net"
+)
 
 type tarsCurrentKey int64
 
@@ -19,6 +22,9 @@ type Current struct {
 	resContext  map[string]string
 	needDyeing  bool
 	dyeingUser  string
+
+	rawConn net.Conn
+	udpAddr *net.UDPAddr
 }
 
 // NewCurrent return a Current point.
@@ -251,6 +257,25 @@ func SetDyeingUser(ctx context.Context, user string) bool {
 	tc, ok := currentFromContext(ctx)
 	if ok {
 		tc.dyeingUser = user
+	}
+	return ok
+}
+
+// GetRawConn get the raw tcp/udp connection from the context.
+func GetRawConn(ctx context.Context) (net.Conn, *net.UDPAddr, bool) {
+	tc, ok := currentFromContext(ctx)
+	if ok {
+		return tc.rawConn, tc.udpAddr, true
+	}
+	return nil, nil, false
+}
+
+// SetUDPConnWithContext set tcp/udp connection to the tars current.
+func SetRawConnWithContext(ctx context.Context, conn net.Conn, udpAddr *net.UDPAddr) bool {
+	tc, ok := currentFromContext(ctx)
+	if ok {
+		tc.rawConn = conn
+		tc.udpAddr = udpAddr
 	}
 	return ok
 }

@@ -71,7 +71,7 @@ func (h *tcpHandler) getConnContext(connSt *connInfo) context.Context {
 	current.SetClientIPWithContext(ctx, ipPort[0])
 	current.SetClientPortWithContext(ctx, ipPort[1])
 	current.SetRecvPkgTsFromContext(ctx, time.Now().UnixNano()/1e6)
-
+	current.SetRawConnWithContext(ctx, connSt.conn, nil)
 	return ctx
 }
 

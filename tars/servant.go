@@ -37,6 +37,8 @@ type ServantProxy struct {
 	version  int16
 	proto    model.Protocol
 	queueLen int32
+
+	pushCallback func([]byte)
 }
 
 // NewServantProxy creates and initializes a servant proxy
@@ -92,6 +94,11 @@ func (s *ServantProxy) genRequestID() int32 {
 			return v
 		}
 	}
+}
+
+// SetPushCallback set callback function for pushing
+func (s *ServantProxy) SetPushCallback(callback func([]byte)) {
+	s.pushCallback = callback
 }
 
 // Tars_invoke is used for client inoking server.
@@ -200,6 +207,13 @@ func (s *ServantProxy) doInvoke(ctx context.Context, msg *Message, timeout time.
 	current.SetServerPortWithContext(ctx, fmt.Sprintf("%v", ep.Port))
 	msg.Adp = adp
 	adp.obj = s
+
+	if s.pushCallback != nil {
+		// auto keep alive for push client
+		go adp.onceKeepAlive.Do(adp.autoKeepAlive)
+		adp.pushCallback = s.pushCallback
+	}
+
 	atomic.AddInt32(&s.queueLen, 1)
 	readCh := make(chan *requestf.ResponsePacket)
 	adp.resp.Store(msg.Req.IRequestId, readCh)

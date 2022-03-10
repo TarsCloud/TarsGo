@@ -13,6 +13,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/transport"
 	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
+	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
 var reconnectMsg = "_reconnect_"
@@ -34,6 +35,8 @@ type AdapterProxy struct {
 	lastBlockTime     int64
 	lastCheckTime     int64
 	lastKeepAliveTime int64
+	pushCallback      func([]byte)
+	onceKeepAlive     sync.Once
 
 	//count  int
 	closed bool
@@ -92,7 +95,7 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 		return
 	}
 	if packet.IRequestId == 0 {
-		go c.onPush(packet)
+		c.onPush(packet)
 		return
 	}
 	if packet.CPacketType == basef.TARSONEWAY {
@@ -211,8 +214,27 @@ func (c *AdapterProxy) onPush(pkg *requestf.ResponsePacket) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*ClientIdleTimeout)
 		defer cancel()
 		oldClient.GraceClose(ctx) // grace shutdown
+		return
 	}
-	//TODO: support push msg
+	// Support push msg
+	if c.pushCallback == nil {
+		return
+	}
+	data := tools.Int8ToByte(pkg.SBuffer)
+	c.pushCallback(data)
+}
+
+func (c *AdapterProxy) autoKeepAlive() {
+	interval := c.comm.Client.ClientIdleTimeout / 2
+	if interval == 0 {
+		interval = time.Minute
+	}
+	for range time.NewTicker(interval).C {
+		if c.closed {
+			return
+		}
+		c.doKeepAlive()
+	}
 }
 
 func (c *AdapterProxy) doKeepAlive() {
@@ -230,10 +252,11 @@ func (c *AdapterProxy) doKeepAlive() {
 	}
 	c.lastKeepAliveTime = now
 
+	reqId := c.obj.genRequestID()
 	req := requestf.RequestPacket{
 		IVersion:     c.obj.version,
 		CPacketType:  int8(basef.TARSONEWAY),
-		IRequestId:   c.obj.genRequestID(),
+		IRequestId:   reqId,
 		SServantName: c.obj.name,
 		SFuncName:    "tars_ping",
 		ITimeout:     int32(c.obj.timeout),
