@@ -1291,10 +1291,14 @@ _resp := new(requestf.ResponsePacket)
 			}
 		}
 		if withContext && !withoutTrace {
+			traceParamFlag := "traceParamFlag := traceData.NeedTraceParam(trace.EstCR, uint(0))"
+			if isOut || fun.HasRet {
+				traceParamFlag = "traceParamFlag := traceData.NeedTraceParam(trace.EstCR, uint(_is.Len()))"
+			}
 			c.WriteString(`
 if ok && traceData.TraceCall {
 	var traceParam string
-	traceParamFlag := traceData.NeedTraceParam(trace.EstCR, uint(_is.Len()))
+	` + traceParamFlag + `
 	if traceParamFlag == trace.EnpNormal {
 		value := map[string]interface{}{}
 `)
