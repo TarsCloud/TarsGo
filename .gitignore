@@ -3,3 +3,4 @@
 *.tar.gz
 *.tgz
 tars-protocol
+*go.sum
