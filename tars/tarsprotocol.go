@@ -24,14 +24,14 @@ type Protocol struct {
 	withContext bool
 }
 
-// NewTarsProtocol return a TarsProtocol with dipatcher and implement interface.
+// NewTarsProtocol return a TarsProtocol with dispatcher and implement interface.
 // withContext explain using context or not.
 func NewTarsProtocol(dispatcher dispatch, imp interface{}, withContext bool) *Protocol {
 	s := &Protocol{dispatcher: dispatcher, serverImp: imp, withContext: withContext}
 	return s
 }
 
-// Invoke puts the request as []byte and call the dispather, and then return the response as []byte.
+// Invoke puts the request as []byte and call the dispatcher, and then return the response as []byte.
 func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 	defer CheckPanic()
 	reqPackage := requestf.RequestPacket{}
@@ -69,7 +69,7 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 
 	if reqPackage.SFuncName == "tars_ping" {
 		rspPackage.IVersion = reqPackage.IVersion
-		//rspPackage.CPacketType = basef.TARSNORMAL
+		// rspPackage.CPacketType = basef.TARSNORMAL
 		rspPackage.IRequestId = reqPackage.IRequestId
 		rspPackage.IRet = 0
 	} else {
@@ -107,7 +107,6 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 		}
 		if err != nil {
 			TLOG.Errorf("RequestID:%d, Found err: %v", reqPackage.IRequestId, err)
-			//rspPackage.IVersion = basef.TARSVERSION
 			rspPackage.IVersion = reqPackage.IVersion
 			rspPackage.CPacketType = basef.TARSNORMAL
 			rspPackage.IRequestId = reqPackage.IRequestId
@@ -119,7 +118,7 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 		}
 	}
 
-	//return ctype
+	// return ctype
 	rspPackage.CPacketType = reqPackage.CPacketType
 	ok := current.SetPacketTypeFromContext(ctx, rspPackage.CPacketType)
 	if !ok {
@@ -145,8 +144,8 @@ func (s *Protocol) req2Byte(rsp *requestf.ResponsePacket) []byte {
 	sbuf := bytes.NewBuffer(nil)
 	sbuf.Write(make([]byte, 4))
 	sbuf.Write(bs)
-	len := sbuf.Len()
-	binary.BigEndian.PutUint32(sbuf.Bytes(), uint32(len))
+	length := sbuf.Len()
+	binary.BigEndian.PutUint32(sbuf.Bytes(), uint32(length))
 	return sbuf.Bytes()
 }
 
@@ -166,7 +165,7 @@ func (s *Protocol) rsp2Byte(rsp *requestf.ResponsePacket) []byte {
 }
 
 // ParsePackage parse the []byte according to the tars protocol.
-// returns header length and package integrity condition (PACKAGE_LESS | PACKAGE_FULL | PACKAGE_ERROR)
+// returns header length and package integrity condition (PackageLess | PackageFull | PackageError)
 func (s *Protocol) ParsePackage(buff []byte) (int, int) {
 	return protocol.TarsRequest(buff)
 }

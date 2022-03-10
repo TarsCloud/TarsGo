@@ -13,7 +13,7 @@ import (
 	"unsafe"
 )
 
-//jce type
+// jce type
 const (
 	BYTE byte = iota
 	SHORT
@@ -351,7 +351,7 @@ func (b *Buffer) Grow(size int) {
 	b.buf.Grow(size)
 }
 
-//Reset clean the Reader.
+// Reset clean the Reader.
 func (b *Reader) Reset(data []byte) {
 	b.buf.Reset(data)
 	b.ref = data
@@ -396,7 +396,7 @@ func (b *Reader) Next(n int) []byte {
 	return b.ref[beg:end]
 }
 
-// Skip Skip the next n byte.
+// Skip the next n byte.
 //go:nosplit
 func (b *Reader) Skip(n int) {
 	if n <= 0 {
@@ -599,7 +599,7 @@ func (b *Reader) ReadSliceUint8(data *[]uint8, len int32, require bool) error {
 	return err
 }
 
-//ReadBytes reads []byte for the given length and the require or optional sign.
+// ReadBytes reads []byte for the given length and the require or optional sign.
 func (b *Reader) ReadBytes(data *[]byte, len int32, require bool) error {
 	*data = make([]byte, len)
 	_, err := b.buf.Read(*data)

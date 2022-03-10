@@ -61,9 +61,9 @@ func CreateUDPConn(addr string) (*net.UDPConn, error) {
 		file := os.NewFile(uintptr(fd), "listener")
 		conn, err := net.FileConn(file)
 		if err != nil {
+			file.Close()
 			goto CreateUdp
 		}
-		file.Close()
 		udpConn := conn.(*net.UDPConn)
 		allListenFds.Store(key, udpConn)
 		return udpConn, nil

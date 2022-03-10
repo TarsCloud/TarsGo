@@ -38,7 +38,7 @@ func (a StructMemberSorter) Len() int           { return len(a) }
 func (a StructMemberSorter) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a StructMemberSorter) Less(i, j int) bool { return a[i].Tag < a[j].Tag }
 
-//StructInfo record struct information.
+// StructInfo record struct information.
 type StructInfo struct {
 	Name                string
 	OriginName          string //original name
@@ -47,7 +47,7 @@ type StructInfo struct {
 	DependModuleWithJce map[string]string
 }
 
-//ArgInfo record argument information.
+// ArgInfo record argument information.
 type ArgInfo struct {
 	Name       string
 	OriginName string //original name
@@ -64,7 +64,7 @@ type FunInfo struct {
 	Args       []ArgInfo
 }
 
-//InterfaceInfo record interface information.
+// InterfaceInfo record interface information.
 type InterfaceInfo struct {
 	Name                string
 	OriginName          string // original name
@@ -73,7 +73,7 @@ type InterfaceInfo struct {
 	DependModuleWithJce map[string]string
 }
 
-//EnumMember record member information.
+// EnumMember record member information.
 type EnumMember struct {
 	Key   string
 	Type  int
@@ -81,7 +81,7 @@ type EnumMember struct {
 	Name  string //type 1
 }
 
-//EnumInfo record EnumMember information include name.
+// EnumInfo record EnumMember information include name.
 type EnumInfo struct {
 	Module     string
 	Name       string
@@ -89,7 +89,7 @@ type EnumInfo struct {
 	Mb         []EnumMember
 }
 
-//ConstInfo record const information.
+// ConstInfo record const information.
 type ConstInfo struct {
 	Type       *VarType
 	Name       string
@@ -97,13 +97,13 @@ type ConstInfo struct {
 	Value      string
 }
 
-//HashKeyInfo record hash key information.
+// HashKeyInfo record hash key information.
 type HashKeyInfo struct {
 	Name   string
 	Member []string
 }
 
-//Parse record information of parse file.
+// Parse record information of parse file.
 type Parse struct {
 	Source string
 
@@ -837,7 +837,7 @@ func newParse(s string, b []byte, incChain []string) *Parse {
 	return p
 }
 
-//ParseFile parse a file,return grammer tree.
+// ParseFile parse a file,return grammar tree.
 func ParseFile(path string, incChain []string) *Parse {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		// 查找tars文件路径

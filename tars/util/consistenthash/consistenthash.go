@@ -87,7 +87,7 @@ func (c *ChMap) Add(node KV) error {
 	return nil
 }
 
-// Remove : remove the node and all the vatual nodes from the key
+// Remove : remove the node and all the virtual nodes from the key
 func (c *ChMap) Remove(node KV) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()

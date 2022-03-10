@@ -29,7 +29,6 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
-// var listenFds []*os.File
 var tarsConfig map[string]*transport.TarsServerConf
 var goSvrs map[string]*transport.TarsServer
 var httpSvrs map[string]*http.Server
@@ -389,7 +388,7 @@ func Run() {
 			grace.SignalUSR2(ppid)
 		}
 	}
-	mainloop()
+	mainLoop()
 }
 
 func graceRestart() {
@@ -422,7 +421,7 @@ func graceRestart() {
 	for key, file := range grace.GetAllListenFiles() {
 		fd := fmt.Sprint(file.Fd())
 		newFd := len(files)
-		TLOG.Debugf("tranlate %s=%s to %s=%d", key, fd, key, newFd)
+		TLOG.Debugf("translate %s=%s to %s=%d", key, fd, key, newFd)
 		newEnvs = append(newEnvs, fmt.Sprintf("%s=%d", key, newFd))
 		files = append(files, file)
 	}
@@ -438,7 +437,7 @@ func graceRestart() {
 		Files: files,
 	})
 	if err != nil {
-		TLOG.Errorf("start supprocess failed %v", err)
+		TLOG.Errorf("start subprocess failed %v", err)
 		return
 	}
 	TLOG.Infof("subprocess start %d", process.Pid)
@@ -530,7 +529,7 @@ func handleSignal() {
 	grace.GraceHandler(usrFun, killFunc)
 }
 
-func mainloop() {
+func mainLoop() {
 	ha := new(NodeFHelper)
 	comm := NewCommunicator()
 	node := GetServerConfig().Node

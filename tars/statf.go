@@ -154,7 +154,7 @@ func initReport() error {
 func ReportStatBase(head *statf.StatMicMsgHead, body *statf.StatMicMsgBody, FromServer bool) {
 	statInfo := StatInfo{Head: *head, Body: *body}
 	statInfo.Head.TarsVersion = Version
-	//statInfo.Head.IStatVer = 2
+	// statInfo.Head.IStatVer = 2
 	if StatReport != nil {
 		StatReport.ReportMicMsg(statInfo, FromServer)
 	}

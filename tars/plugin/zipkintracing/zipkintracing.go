@@ -91,7 +91,7 @@ func ZipkinClientFilter() tars.ClientFilter {
 	}
 }
 
-//ZipkinServerFilter gets tars server filter for zipkin opentraicng.
+// ZipkinServerFilter gets tars server filter for zipkin opentracing.
 func ZipkinServerFilter() tars.ServerFilter {
 	return func(ctx context.Context, d tars.Dispatch, f interface{},
 		req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error) {

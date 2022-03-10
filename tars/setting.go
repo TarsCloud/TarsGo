@@ -15,7 +15,7 @@ const (
 
 	// server
 
-	// AcceptTimeout accept timeout,defaultvalue is 500 milliseconds
+	// AcceptTimeout accept timeout,default value is 500 milliseconds
 	AcceptTimeout = 500
 	// ReadTimeout zero millisecond for not set read deadline for Conn (better  performance)
 	ReadTimeout = 0
@@ -23,11 +23,11 @@ const (
 	WriteTimeout = 0
 	// HandleTimeout zero millisecond for not set deadline for invoke user interface (better performance)
 	HandleTimeout = 0
-	// IdleTimeout idle timeout,defaultvalue is 600000 milliseconds
+	// IdleTimeout idle timeout,default value is 600000 milliseconds
 	IdleTimeout = 600000
-	// ZombieTimeout zombie timeout,defaultvalue is 10000 milliseconds
+	// ZombieTimeout zombie timeout,default value is 10000 milliseconds
 	ZombieTimeout = 10000
-	//QueueCap queue gap
+	// QueueCap queue gap
 	QueueCap int = 10000000
 
 	// client
@@ -96,7 +96,7 @@ const (
 	// check endpoint status every 1000 ms
 	checkStatusInterval int = 1000
 
-	// adapter proxy keepAvlie with server ,defaultvalue is 0 means close keepAlive. milliseconds
+	// adapter proxy keepAlive with server ,default value is 0 means close keepAlive. milliseconds
 	keepAliveInterval int = 0
 
 	// try interval after every 30s

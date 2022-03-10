@@ -34,7 +34,7 @@ type TarsClient struct {
 	cp        ClientProtocol
 	conf      *TarsClientConf
 	sendQueue chan []byte
-	//recvQueue chan []byte
+	// recvQueue chan []byte
 }
 
 type connection struct {

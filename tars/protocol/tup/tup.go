@@ -186,7 +186,7 @@ func (u *UniAttribute) doPut(data interface{}, os *codec.Buffer) error {
 			// if err != nil {
 			// 	return err
 			// }
-			//err = fmt.Errorf("Error Array Len:0")
+			// err = fmt.Errorf("Error Array Len:0")
 			return err
 		}
 
@@ -302,7 +302,7 @@ func (u *UniAttribute) getBase(data interface{}, is *codec.Reader) error {
 
 func (u *UniAttribute) DoGet(data interface{}, is *codec.Reader) error {
 	var err error
-	//vOF := reflect.ValueOf(data).Elem()
+	// vOF := reflect.ValueOf(data).Elem()
 	switch reflect.TypeOf(data).Kind() {
 	case reflect.Slice:
 		fmt.Println("get slice ...")
@@ -319,14 +319,14 @@ func (u *UniAttribute) DoGet(data interface{}, is *codec.Reader) error {
 					return err
 				}
 
-				//st.Vf = make([]float32, length, length)
-				//for i0, e0 := int32(0), length; i0 < e0; i0++ {
+				// st.Vf = make([]float32, length, length)
+				// for i0, e0 := int32(0), length; i0 < e0; i0++ {
 				//
-				//	err = _is.Read_float32(&st.Vf[i0], 0, false)
-				//	if err != nil {
+				// 	 err = _is.Read_float32(&st.Vf[i0], 0, false)
+				//	 if err != nil {
 				//		return err
-				//	}
-				//}
+				//	 }
+				// }
 			} else if ty == codec.SimpleList {
 				err = fmt.Errorf("not support simple_list type")
 				if err != nil {

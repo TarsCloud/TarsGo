@@ -342,7 +342,7 @@ func (p *PropertyReportHelper) ReportToServer() {
 			head.SetID = setList[2]
 		}
 	}
-	//head.SContainer = cfg.Container
+	// head.SContainer = cfg.Container
 
 	p.reportPtrs.Range(func(key, val interface{}) bool {
 		v := val.(*PropertyReport)

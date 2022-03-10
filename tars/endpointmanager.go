@@ -53,7 +53,7 @@ func initOnceGManager(refreshInterval int, checkStatusInterval int) {
 
 // GetManager return a endpoint manager from global endpoint manager
 func GetManager(comm *Communicator, objName string) EndpointManager {
-	//taf
+	// tars
 	initOnceGManager(comm.Client.RefreshEndpointInterval, comm.Client.CheckStatusInterval)
 	g := gManager
 	g.mlock.Lock()
@@ -230,7 +230,7 @@ func (e *tarsEndpointManager) GetAllEndpoint() []*endpoint.Endpoint {
 }
 
 func (e *tarsEndpointManager) checkStatus() {
-	//only in active epf need to check.
+	// only in active epf need to check.
 	for _, ef := range e.activeEpf {
 		ep := endpoint.Tars2endpoint(ef)
 		if v, ok := e.epList.Load(ep.Key); ok {

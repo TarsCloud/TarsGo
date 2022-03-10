@@ -59,7 +59,7 @@ func (mux *TarsHttpMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	tw := &TarsResponseWriter{w, 0}
 	startTime := time.Now().UnixNano() / 1e6
 	h.ServeHTTP(tw, r)
-	costTime := int64(time.Now().UnixNano()/1e6 - startTime)
+	costTime := time.Now().UnixNano()/1e6 - startTime
 	var reqAddr string
 	for _, h := range realIPHeader {
 		reqAddr = r.Header.Get(h)
@@ -87,43 +87,43 @@ func (mux *TarsHttpMux) reportHttpStat(st *httpStatInfo) {
 		return
 	}
 	cfg := mux.cfg
-	var _statInfo = statf.StatMicMsgHead{}
-	_statInfo.MasterName = "http_client"
-	_statInfo.MasterIp = st.reqAddr
+	var statInfo = statf.StatMicMsgHead{}
+	statInfo.MasterName = "http_client"
+	statInfo.MasterIp = st.reqAddr
 
-	_statInfo.TarsVersion = cfg.Version
-	_statInfo.SlaveName = cfg.AppName
-	_statInfo.SlaveIp = cfg.IP // from server
-	_statInfo.SlavePort = cfg.Port
-	//_statInfo.SSlaveContainer = cfg.Container
-	_statInfo.InterfaceName = st.pattern
+	statInfo.TarsVersion = cfg.Version
+	statInfo.SlaveName = cfg.AppName
+	statInfo.SlaveIp = cfg.IP // from server
+	statInfo.SlavePort = cfg.Port
+	// statInfo.SSlaveContainer = cfg.Container
+	statInfo.InterfaceName = st.pattern
 	if cfg.SetId != "" {
 		setList := strings.Split(cfg.SetId, ".")
-		_statInfo.SlaveSetName = setList[0]
-		_statInfo.SlaveSetArea = setList[1]
-		_statInfo.SlaveSetID = setList[2]
+		statInfo.SlaveSetName = setList[0]
+		statInfo.SlaveSetArea = setList[1]
+		statInfo.SlaveSetID = setList[2]
 		//被调也要加上set信息
-		_statInfo.SlaveName = fmt.Sprintf("%s.%s%s%s", _statInfo.SlaveName, setList[0], setList[1], setList[2])
+		statInfo.SlaveName = fmt.Sprintf("%s.%s%s%s", statInfo.SlaveName, setList[0], setList[1], setList[2])
 	}
 
-	var _statBody = statf.StatMicMsgBody{}
+	var statBody = statf.StatMicMsgBody{}
 	exceptionChecker := mux.cfg.ExceptionStatusChecker
 	if exceptionChecker == nil {
 		// if nil, use default
 		exceptionChecker = DefaultExceptionStatusChecker
 	}
 	if exceptionChecker(st.statusCode) {
-		_statBody.ExecCount = 1 // 异常
+		statBody.ExecCount = 1 // 异常
 	} else {
-		_statBody.Count = 1
-		_statBody.TotalRspTime = st.costTime
-		_statBody.MaxRspTime = int32(st.costTime)
-		_statBody.MinRspTime = int32(st.costTime)
+		statBody.Count = 1
+		statBody.TotalRspTime = st.costTime
+		statBody.MaxRspTime = int32(st.costTime)
+		statBody.MinRspTime = int32(st.costTime)
 	}
 
 	info := StatInfo{}
-	info.Head = _statInfo
-	info.Body = _statBody
+	info.Head = statInfo
+	info.Body = statBody
 	StatReport.pushBackMsg(info, true)
 }
 

@@ -99,7 +99,7 @@ func (s *ServantProxy) genRequestID() int32 {
 	}
 }
 
-// TarsInvoke is used for client inoking server.
+// TarsInvoke is used for client invoking server.
 func (s *ServantProxy) TarsInvoke(ctx context.Context, cType byte,
 	sFuncName string,
 	buf []byte,
@@ -139,7 +139,7 @@ func (s *ServantProxy) TarsInvoke(ctx context.Context, cType byte,
 		SServantName: s.name,
 		SFuncName:    sFuncName,
 		SBuffer:      tools.ByteToInt8(buf),
-		//ITimeout:     s.comm.Client.ReqDefaultTimeout,
+		// ITimeout:     s.comm.Client.ReqDefaultTimeout,
 		ITimeout:     int32(s.timeout),
 		Context:      reqContext,
 		Status:       status,

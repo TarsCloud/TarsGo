@@ -55,16 +55,16 @@ type Dispatch func(context.Context, interface{}, *requestf.RequestPacket, *reque
 type ServerFilter func(ctx context.Context, d Dispatch, f interface{},
 	req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error)
 
-//ClientFilter is used for filter request & response for client, for implementing plugins like opentracing
+// ClientFilter is used for filter request & response for client, for implementing plugins like opentracing
 type ClientFilter func(ctx context.Context, msg *Message, invoke Invoke, timeout time.Duration) (err error)
 
-//ServerFilterMiddleware is used for add multiple filter middlewares for dispatcher, for using multiple filter such as breaker, rate limit and trace.
+// ServerFilterMiddleware is used for add multiple filter middlewares for dispatcher, for using multiple filter such as breaker, rate limit and trace.
 type ServerFilterMiddleware func(next ServerFilter) ServerFilter
 
-//ClientFilterMiddleware is used for add multiple filter middleware for client, for using multiple filter such as breaker, rate limit and trace.
+// ClientFilterMiddleware is used for add multiple filter middleware for client, for using multiple filter such as breaker, rate limit and trace.
 type ClientFilterMiddleware func(next ClientFilter) ClientFilter
 
-//UseClientFilterMiddleware uses the client filter middleware.
+// UseClientFilterMiddleware uses the client filter middleware.
 func UseClientFilterMiddleware(cfm ...ClientFilterMiddleware) {
 	allFilters.cfms = append(allFilters.cfms, cfm...)
 }
