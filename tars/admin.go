@@ -19,12 +19,12 @@ type Admin struct {
 }
 
 var (
-	isShutdownbyadmin int32 = 0
+	isShutdownByAdmin int32 = 0
 )
 
-// Shutdown shutdown all servant by admin
+// Shutdown all servant by admin
 func (a *Admin) Shutdown() error {
-	atomic.StoreInt32(&isShutdownbyadmin, 1)
+	atomic.StoreInt32(&isShutdownByAdmin, 1)
 	go graceShutdown()
 	return nil
 }
@@ -33,7 +33,7 @@ func (a *Admin) Shutdown() error {
 func (a *Admin) Notify(command string) (string, error) {
 	cmd := strings.Split(command, " ")
 	// report command to notify
-	go ReportNotifyInfo(NOTIFY_NORMAL, "AdminServant::notify:"+command)
+	go ReportNotifyInfo(NotifyNormal, "AdminServant::notify:"+command)
 	switch cmd[0] {
 	case "tars.viewversion":
 		return GetServerConfig().Version, nil

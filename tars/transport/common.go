@@ -6,12 +6,12 @@ import (
 )
 
 const (
-	// PACKAGE_LESS shows is not a completed package.
-	PACKAGE_LESS = iota
-	// PACKAGE_FULL shows is a completed package.
-	PACKAGE_FULL
-	// PACKAGE_ERROR shows is a error package.
-	PACKAGE_ERROR
+	// PackageLess shows is not a completed package.
+	PackageLess = iota
+	// PackageFull shows is a completed package.
+	PackageFull
+	// PackageError shows is a error package.
+	PackageError
 )
 
 // ServerProtocol is interface for handling the server side tars package.

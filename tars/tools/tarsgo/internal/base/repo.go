@@ -100,7 +100,7 @@ func (r *Repo) CopyTo(ctx context.Context, p *Project, to string, demoDir string
 		"_SERVANT_", p.Servant,
 		"_MODULE_", p.GoModuleName,
 		// makefile
-		"$(foreach path,$(libpath),$(eval -include $(path)/src/github.com/TarsCloud/TarsGo/tars/makefile.tars.gomod))", "$(eval -include scripts/makefile.tars.gomod)",
+		"$(foreach path,$(libpath),$(eval -include $(path)/src/github.com/TarsCloud/TarsGo/tars/makefile.tars.gomod))", "-include scripts/makefile.tars.gomod",
 		// CMakeLists.txt
 		"${GOPATH}/src/github.com/TarsCloud/TarsGo/", "${CMAKE_CURRENT_SOURCE_DIR}/",
 	}

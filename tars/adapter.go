@@ -35,7 +35,6 @@ type AdapterProxy struct {
 	lastCheckTime     int64
 	lastKeepAliveTime int64
 
-	//count  int
 	closed bool
 }
 
@@ -52,7 +51,7 @@ func NewAdapterProxy(objName string, point *endpointf.EndpointF, comm *Communica
 	}
 	conf := &transport.TarsClientConf{
 		Proto: proto,
-		//NumConnect:   netthread,
+		// NumConnect:   netthread,
 		QueueLen:     comm.Client.ClientQueueLen,
 		IdleTimeout:  comm.Client.ClientIdleTimeout,
 		ReadTimeout:  comm.Client.ClientReadTimeout,
@@ -83,7 +82,7 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 		// TODO readCh has a certain probability to be closed after the load, and we need to recover
 		// Maybe there is a better way
 		if err := recover(); err != nil {
-			TLOG.Error("recv pkg painc:", err)
+			TLOG.Error("recv pkg panic:", err)
 		}
 	}()
 	packet, err := c.obj.proto.ResponseUnpack(pkg)
@@ -103,7 +102,7 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 		ch := chIF.(chan *requestf.ResponsePacket)
 		select {
 		case ch <- packet:
-		//after conf.ReadTimeout, release this goroutine to make sure response package is received by Tars_Invoke().
+		// after conf.ReadTimeout, release this goroutine to make sure response package is received by Tars_Invoke().
 		case <-rtimer.After(c.conf.ReadTimeout):
 			TLOG.Errorf("response timeout, write channel error, now time :%v, RequestId:%v",
 				time.Now().UnixNano()/1e6, packet.IRequestId)
@@ -212,7 +211,7 @@ func (c *AdapterProxy) onPush(pkg *requestf.ResponsePacket) {
 		defer cancel()
 		oldClient.GraceClose(ctx) // grace shutdown
 	}
-	//TODO: support push msg
+	// TODO: support push msg
 }
 
 func (c *AdapterProxy) doKeepAlive() {

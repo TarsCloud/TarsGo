@@ -10,11 +10,11 @@ import (
 
 type handlerFunc func()
 
-// GraceHandler set the signle handler for grace restart
+// GraceHandler set the signal handler for grace restart
 func GraceHandler(userFunc, stopFunc handlerFunc) {
 	ch := make(chan os.Signal, 10)
 	// remove syscall.SIGKILL
-	signal.Notify(ch, syscall.SIGUSR1, syscall.SIGUSR2, syscall.SIGTERM)
+	signal.Notify(ch, syscall.SIGUSR1, syscall.SIGUSR2, syscall.SIGTERM, os.Interrupt)
 	for {
 		sig := <-ch
 		switch sig {
@@ -27,7 +27,7 @@ func GraceHandler(userFunc, stopFunc handlerFunc) {
 	}
 }
 
-// GraceHandler send signal USR2 to pid
+// SignalUSR2 send signal USR2 to pid
 func SignalUSR2(pid int) {
 	syscall.Kill(pid, syscall.SIGUSR2)
 }

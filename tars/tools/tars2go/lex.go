@@ -6,26 +6,26 @@ import (
 	"strings"
 )
 
-//EOS is byte stream terminator
+// EOS is byte stream terminator
 const EOS = 0
 
-//TK is a byte type.
+// TK is a byte type.
 type TK byte
 
 const (
-	tkEos     TK = iota
-	tkBracel     // ({)
-	tkBracer     // }
-	tkSemi       //;
-	tkEq         //=
-	tkShl        //<
-	tkShr        //>
-	tkComma      //,
-	tkPtl        //(
-	tkPtr        //)
-	tkSquarel    //[
-	tkSquarer    //]
-	tkInclude    //#include
+	tkEos          TK = iota
+	tkBraceLeft       //({)
+	tkBraceRight      //}
+	tkSemi            //;
+	tkEq              //=
+	tkShl             //<
+	tkShr             //>
+	tkComma           //,
+	tkPtl             //(
+	tkPtr             //)
+	tkSquareLeft      //[
+	tkSquarerRight    //]
+	tkInclude         //#include
 
 	tkDummyKeywordBegin
 	// keyword
@@ -66,22 +66,22 @@ const (
 	tkFloat
 )
 
-//TokenMap record token  value.
+// TokenMap record token  value.
 var TokenMap = [...]string{
 	tkEos: "<eos>",
 
-	tkBracel:  "{",
-	tkBracer:  "}",
-	tkSemi:    ";",
-	tkEq:      "=",
-	tkShl:     "<",
-	tkShr:     ">",
-	tkComma:   ",",
-	tkPtl:     "(",
-	tkPtr:     ")",
-	tkSquarel: "[",
-	tkSquarer: "]",
-	tkInclude: "#include",
+	tkBraceLeft:    "{",
+	tkBraceRight:   "}",
+	tkSemi:         ";",
+	tkEq:           "=",
+	tkShl:          "<",
+	tkShr:          ">",
+	tkComma:        ",",
+	tkPtl:          "(",
+	tkPtr:          ")",
+	tkSquareLeft:   "[",
+	tkSquarerRight: "]",
+	tkInclude:      "#include",
 
 	// keyword
 	tkModule:    "module",
@@ -118,24 +118,24 @@ var TokenMap = [...]string{
 	tkFloat:   "<FLOAT>",
 }
 
-//SemInfo is struct.
+// SemInfo is struct.
 type SemInfo struct {
 	I int64
 	F float64
 	S string
 }
 
-//Token record token information.
+// Token record token information.
 type Token struct {
 	T    TK
 	S    *SemInfo
 	Line int
 }
 
-//LexState record lexical state.
+// LexState record lexical state.
 type LexState struct {
 	current    byte
-	linenumber int
+	lineNumber int
 
 	//t         Token
 	//lookahead Token
@@ -176,7 +176,7 @@ func isNumberType(t TK) bool {
 }
 
 func (ls *LexState) lexErr(err string) {
-	line := strconv.Itoa(ls.linenumber)
+	line := strconv.Itoa(ls.lineNumber)
 	panic(ls.source + ": " + line + ".    " + err)
 }
 
@@ -186,7 +186,7 @@ func (ls *LexState) incLine() {
 	if isNewLine(ls.current) && ls.current != old {
 		ls.next() /* skip '\n\r' or '\r\n' */
 	}
-	ls.linenumber++
+	ls.lineNumber++
 }
 
 func (ls *LexState) readNumber() (TK, *SemInfo) {
@@ -358,10 +358,10 @@ func (ls *LexState) llex() (TK, *SemInfo) {
 			}
 		case '{':
 			ls.next()
-			return tkBracel, nil
+			return tkBraceLeft, nil
 		case '}':
 			ls.next()
-			return tkBracer, nil
+			return tkBraceRight, nil
 		case ';':
 			ls.next()
 			return tkSemi, nil
@@ -385,10 +385,10 @@ func (ls *LexState) llex() (TK, *SemInfo) {
 			return tkPtr, nil
 		case '[':
 			ls.next()
-			return tkSquarel, nil
+			return tkSquareLeft, nil
 		case ']':
 			ls.next()
-			return tkSquarer, nil
+			return tkSquarerRight, nil
 		case '"':
 			return ls.readString()
 		case '#':
@@ -400,19 +400,19 @@ func (ls *LexState) llex() (TK, *SemInfo) {
 	}
 }
 
-//NextToken return token after lexical analysis.
+// NextToken return token after lexical analysis.
 func (ls *LexState) NextToken() *Token {
 	tk := &Token{}
 	tk.T, tk.S = ls.llex()
-	tk.Line = ls.linenumber
+	tk.Line = ls.lineNumber
 	return tk
 }
 
-//NewLexState to update LexState struct.
+// NewLexState to update LexState struct.
 func NewLexState(source string, buff []byte) *LexState {
 	return &LexState{
 		current:    ' ',
-		linenumber: 1,
+		lineNumber: 1,
 		source:     source,
 		buff:       bytes.NewBuffer(buff),
 	}

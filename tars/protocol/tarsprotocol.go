@@ -15,23 +15,23 @@ func SetMaxPackageLength(len int) {
 
 func TarsRequest(rev []byte) (int, int) {
 	if len(rev) < 4 {
-		return 0, PACKAGE_LESS
+		return 0, PackageLess
 	}
 	iHeaderLen := int(binary.BigEndian.Uint32(rev[0:4]))
 	if iHeaderLen < 4 || iHeaderLen > maxPackageLength {
-		return 0, PACKAGE_ERROR
+		return 0, PackageError
 	}
 	if len(rev) < iHeaderLen {
-		return 0, PACKAGE_LESS
+		return 0, PackageLess
 	}
-	return iHeaderLen, PACKAGE_FULL
+	return iHeaderLen, PackageFull
 }
 
 type TarsProtocol struct{}
 
 func (p *TarsProtocol) RequestPack(req *requestf.RequestPacket) ([]byte, error) {
 	os := codec.NewBuffer()
-	err := os.Write_slice_int8(make([]int8, 4))
+	err := os.WriteSliceInt8(make([]int8, 4))
 	if err != nil {
 		return nil, err
 	}

@@ -3,6 +3,7 @@ package transport
 import (
 	"context"
 	"crypto/tls"
+	"github.com/TarsCloud/TarsGo/tars/util/gtime"
 	"io"
 	"net"
 	"os"
@@ -25,9 +26,6 @@ type tcpHandler struct {
 	listener    net.Listener
 	ts          *TarsServer
 
-	//readBuffer  int
-	//writeBuffer int
-	//tcpNoDelay  bool
 	gpool *gpool.Pool
 
 	conns sync.Map
@@ -176,7 +174,7 @@ func (h *tcpHandler) sendCloseMsg() {
 	})
 }
 
-//CloseIdles close all idle connections(no active package within n secnods)
+// CloseIdles close all idle connections(no active package within n secnods)
 func (h *tcpHandler) CloseIdles(n int64) bool {
 	if atomic.LoadInt32(&h.isListenClosed) == 0 {
 		// hack: create new connection to avoid acceptTCP hanging
@@ -225,8 +223,7 @@ func (h *tcpHandler) recv(connSt *connInfo) {
 	cfg := h.conf
 	buffer := make([]byte, 1024*4)
 	var currBuffer []byte // need a deep copy of buffer
-	//TODO: change to gtime
-	connSt.idleTime = time.Now().Unix()
+	connSt.idleTime = gtime.CurrUnixTime
 	var n int
 	var err error
 	for {
@@ -259,10 +256,10 @@ func (h *tcpHandler) recv(connSt *connInfo) {
 		currBuffer = append(currBuffer, buffer[:n]...)
 		for {
 			pkgLen, status := h.ts.svr.ParsePackage(currBuffer)
-			if status == PACKAGE_LESS {
+			if status == PackageLess {
 				break
 			}
-			if status == PACKAGE_FULL {
+			if status == PackageFull {
 				atomic.AddInt32(&connSt.numInvoke, 1)
 				pkg := make([]byte, pkgLen)
 				copy(pkg, currBuffer[:pkgLen])

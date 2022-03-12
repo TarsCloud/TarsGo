@@ -2,7 +2,6 @@ package tars
 
 import (
 	"fmt"
-	sync2 "github.com/TarsCloud/TarsGo/tars/util/sync"
 	"reflect"
 	"sort"
 	"strconv"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/propertyf"
+	sync2 "github.com/TarsCloud/TarsGo/tars/util/sync"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
@@ -252,7 +252,7 @@ func (d *Distr) Set(in int) {
 	d.result[index]++
 }
 
-// Get get the distribution of the reporting values.
+// Get the distribution of the reporting values.
 func (d *Distr) Get() string {
 	d.mlock.Lock()
 	defer d.mlock.Unlock()
@@ -342,7 +342,7 @@ func (p *PropertyReportHelper) ReportToServer() {
 			head.SetID = setList[2]
 		}
 	}
-	//head.SContainer = cfg.Container
+	// head.SContainer = cfg.Container
 
 	p.reportPtrs.Range(func(key, val interface{}) bool {
 		v := val.(*PropertyReport)
@@ -360,7 +360,7 @@ func (p *PropertyReportHelper) ReportToServer() {
 			desc := m.Enum().String()
 			result := m.Get()
 
-			//todo: use interface method IsDefault() bool
+			// todo: use interface method IsDefault() bool
 			switch desc {
 			case "Sum":
 				if result != "0" {
@@ -451,7 +451,7 @@ func (p *PropertyReportHelper) AddToReport(pr *PropertyReport) {
 
 // Run start the properting report goroutine.
 func (p *PropertyReportHelper) Run() {
-	//todo , get report interval from config
+	// todo , get report interval from config
 	loop := time.NewTicker(GetServerConfig().PropertyReportInterval)
 	for range loop.C {
 		p.ReportToServer()
@@ -473,10 +473,10 @@ func (p *PropertyReport) Report(in int) {
 	}
 }
 
-// CreatePropertyReport creats the property report instance with the key.
-func CreatePropertyReport(key string, argvs ...ReportMethod) *PropertyReport {
+// CreatePropertyReport creates the property report instance with the key.
+func CreatePropertyReport(key string, argv ...ReportMethod) *PropertyReport {
 	ptr := GetPropertyReport(key)
-	for _, v := range argvs {
+	for _, v := range argv {
 		ptr.reportMethods[v.Enum()] = v
 	}
 

@@ -17,7 +17,6 @@ type udpHandler struct {
 	ts   *TarsServer
 
 	conn *net.UDPConn
-	//numInvoke int32
 }
 
 func (h *udpHandler) Listen() (err error) {
@@ -32,7 +31,7 @@ func (h *udpHandler) Listen() (err error) {
 
 func (h *udpHandler) Handle() error {
 	atomic.AddInt32(&h.ts.numConn, 1)
-	///wait invoke done
+	// wait invoke done
 	defer func() {
 		tick := time.NewTicker(time.Second)
 		defer tick.Stop()

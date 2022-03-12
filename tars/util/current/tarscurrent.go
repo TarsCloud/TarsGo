@@ -212,14 +212,14 @@ func SetReqStatusValue(ctx context.Context, key string, value string) bool {
 	return ok
 }
 
-const STATUS_DYED_KEY = "STATUS_DYED_KEY"
+const StatusDyedKey = "STATUS_DYED_KEY"
 
 // GetDyeingKey gets dyeing key from the context.
 func GetDyeingKey(ctx context.Context) (string, bool) {
 	tc, ok := currentFromContext(ctx)
 	if ok {
 		if tc.reqStatus != nil {
-			if dyeingKey, exists := tc.reqStatus[STATUS_DYED_KEY]; exists {
+			if dyeingKey, exists := tc.reqStatus[StatusDyedKey]; exists {
 				return dyeingKey, true
 			}
 		}
@@ -235,7 +235,7 @@ func SetDyeingKey(ctx context.Context, dyeingKey string) bool {
 		if tc.reqStatus == nil {
 			tc.reqStatus = make(map[string]string)
 		}
-		tc.reqStatus[STATUS_DYED_KEY] = dyeingKey
+		tc.reqStatus[StatusDyedKey] = dyeingKey
 		tc.needDyeing = true
 	}
 	return ok
@@ -259,7 +259,7 @@ func SetDyeingUser(ctx context.Context, user string) bool {
 	return ok
 }
 
-const STATUS_TRACE_KEY = "STATUS_TRACE_KEY"
+const StatusTraceKey = "STATUS_TRACE_KEY"
 
 // TarsOpenTrace 开启trace
 func TarsOpenTrace(ctx context.Context, traceParams bool) bool {

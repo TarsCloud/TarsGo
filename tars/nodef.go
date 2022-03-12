@@ -29,7 +29,7 @@ func (n *NodeFHelper) SetNodeInfo(comm *Communicator, node string, app string, s
 	}
 }
 
-// KeepAlive sends the keepalive pacakage to the node.
+// KeepAlive sends the keepalive package to the node.
 func (n *NodeFHelper) KeepAlive(adapter string) {
 	if n.sf == nil {
 		return

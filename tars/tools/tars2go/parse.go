@@ -17,7 +17,7 @@ type VarType struct {
 	CType    TK       // make sure which type of custom type is,tkEnum, tkStruct
 	TypeK    *VarType // vector's member variable,the key of map
 	TypeV    *VarType // the value of map
-	TypeL    int64    // lenth of array
+	TypeL    int64    // length of array
 }
 
 // StructMember member struct.
@@ -38,7 +38,7 @@ func (a StructMemberSorter) Len() int           { return len(a) }
 func (a StructMemberSorter) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a StructMemberSorter) Less(i, j int) bool { return a[i].Tag < a[j].Tag }
 
-//StructInfo record struct information.
+// StructInfo record struct information.
 type StructInfo struct {
 	Name                string
 	OriginName          string //original name
@@ -47,7 +47,7 @@ type StructInfo struct {
 	DependModuleWithJce map[string]string
 }
 
-//ArgInfo record argument information.
+// ArgInfo record argument information.
 type ArgInfo struct {
 	Name       string
 	OriginName string //original name
@@ -64,7 +64,7 @@ type FunInfo struct {
 	Args       []ArgInfo
 }
 
-//InterfaceInfo record interface information.
+// InterfaceInfo record interface information.
 type InterfaceInfo struct {
 	Name                string
 	OriginName          string // original name
@@ -73,7 +73,7 @@ type InterfaceInfo struct {
 	DependModuleWithJce map[string]string
 }
 
-//EnumMember record member information.
+// EnumMember record member information.
 type EnumMember struct {
 	Key   string
 	Type  int
@@ -81,7 +81,7 @@ type EnumMember struct {
 	Name  string //type 1
 }
 
-//EnumInfo record EnumMember information include name.
+// EnumInfo record EnumMember information include name.
 type EnumInfo struct {
 	Module     string
 	Name       string
@@ -89,7 +89,7 @@ type EnumInfo struct {
 	Mb         []EnumMember
 }
 
-//ConstInfo record const information.
+// ConstInfo record const information.
 type ConstInfo struct {
 	Type       *VarType
 	Name       string
@@ -97,13 +97,13 @@ type ConstInfo struct {
 	Value      string
 }
 
-//HashKeyInfo record hashkey information.
+// HashKeyInfo record hash key information.
 type HashKeyInfo struct {
 	Name   string
 	Member []string
 }
 
-//Parse record information of parse file.
+// Parse record information of parse file.
 type Parse struct {
 	Source string
 
@@ -205,13 +205,13 @@ func (p *Parse) parseEnum() {
 			p.parseErr(enum.Name + " Redefine.")
 		}
 	}
-	p.expect(tkBracel)
+	p.expect(tkBraceLeft)
 
 LFOR:
 	for {
 		p.next()
 		switch p.t.T {
-		case tkBracer:
+		case tkBraceRight:
 			break LFOR
 		case tkName:
 			k := p.t.S.S
@@ -220,7 +220,7 @@ LFOR:
 			case tkComma:
 				m := EnumMember{Key: k, Type: 2}
 				enum.Mb = append(enum.Mb, m)
-			case tkBracer:
+			case tkBraceRight:
 				m := EnumMember{Key: k, Type: 2}
 				enum.Mb = append(enum.Mb, m)
 				break LFOR
@@ -237,7 +237,7 @@ LFOR:
 					p.parseErr("not expect " + TokenMap[p.t.T])
 				}
 				p.next()
-				if p.t.T == tkBracer {
+				if p.t.T == tkBraceRight {
 					break LFOR
 				} else if p.t.T == tkComma {
 				} else {
@@ -289,7 +289,7 @@ func (p *Parse) parseStructMemberDefault(m *StructMember) {
 func (p *Parse) parseStructMember() *StructMember {
 	// tag or end
 	p.next()
-	if p.t.T == tkBracer {
+	if p.t.T == tkBraceRight {
 		return nil
 	}
 	if p.t.T != tkInteger {
@@ -324,10 +324,10 @@ func (p *Parse) parseStructMember() *StructMember {
 	if p.t.T == tkSemi {
 		return m
 	}
-	if p.t.T == tkSquarel {
+	if p.t.T == tkSquareLeft {
 		p.expect(tkInteger)
 		m.Type = &VarType{Type: tkTArray, TypeK: m.Type, TypeL: p.t.S.I}
-		p.expect(tkSquarer)
+		p.expect(tkSquarerRight)
 		p.expect(tkSemi)
 		return m
 	}
@@ -369,7 +369,7 @@ func (p *Parse) parseStruct() {
 			p.parseErr(st.Name + " Redefine.")
 		}
 	}
-	p.expect(tkBracel)
+	p.expect(tkBraceLeft)
 
 	for {
 		m := p.parseStructMember()
@@ -389,7 +389,7 @@ func (p *Parse) parseStruct() {
 func (p *Parse) parseInterfaceFun() *FunInfo {
 	fun := &FunInfo{}
 	p.next()
-	if p.t.T == tkBracer {
+	if p.t.T == tkBraceRight {
 		return nil
 	}
 	if p.t.T == tkVoid {
@@ -454,7 +454,7 @@ func (p *Parse) parseInterface() {
 			p.parseErr(itf.Name + " Redefine.")
 		}
 	}
-	p.expect(tkBracel)
+	p.expect(tkBraceLeft)
 
 	for {
 		fun := p.parseInterfaceFun()
@@ -521,7 +521,7 @@ func (p *Parse) parseConst() {
 
 func (p *Parse) parseHashKey() {
 	hashKey := HashKeyInfo{}
-	p.expect(tkSquarel)
+	p.expect(tkSquareLeft)
 	p.expect(tkName)
 	hashKey.Name = p.t.S.S
 	p.expect(tkComma)
@@ -531,7 +531,7 @@ func (p *Parse) parseHashKey() {
 		p.next()
 		t := p.t
 		switch t.T {
-		case tkSquarer:
+		case tkSquarerRight:
 			p.expect(tkSemi)
 			p.HashKey = append(p.HashKey, hashKey)
 			return
@@ -543,13 +543,13 @@ func (p *Parse) parseHashKey() {
 }
 
 func (p *Parse) parseModuleSegment() {
-	p.expect(tkBracel)
+	p.expect(tkBraceLeft)
 
 	for {
 		p.next()
 		t := p.t
 		switch t.T {
-		case tkBracer:
+		case tkBraceRight:
 			p.expect(tkSemi)
 			return
 		case tkConst:
@@ -837,7 +837,7 @@ func newParse(s string, b []byte, incChain []string) *Parse {
 	return p
 }
 
-//ParseFile parse a file,return grammer tree.
+// ParseFile parse a file,return grammar tree.
 func ParseFile(path string, incChain []string) *Parse {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		// 查找tars文件路径

@@ -67,7 +67,7 @@ func (c *ChMap) FindUint32(key uint32) (KV, bool) {
 	return c.hashRing[c.sortedKeys[index]], true
 }
 
-// Add add the node to the hash ring
+// Add : add the node to the hash ring
 func (c *ChMap) Add(node KV) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -87,7 +87,7 @@ func (c *ChMap) Add(node KV) error {
 	return nil
 }
 
-// Remove remove the node and all the vatual nodes from the key
+// Remove : remove the node and all the virtual nodes from the key
 func (c *ChMap) Remove(node KV) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()

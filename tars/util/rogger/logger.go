@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-//DEBUG loglevel
+// DEBUG loglevel
 const (
 	DEBUG LogLevel = iota
 	INFO
@@ -38,7 +38,7 @@ var (
 	asyncDone, asyncCancel = context.WithCancel(context.Background())
 )
 
-// Logger is the struct with name and wirter.
+// Logger is the struct with name and writer.
 type Logger struct {
 	name   string
 	writer LogWriter
@@ -48,8 +48,8 @@ type Logger struct {
 type LogLevel uint8
 
 type logValue struct {
-	//level  LogLevel
-	//fileNo string
+	// level  LogLevel
+	// fileNo string
 	value  []byte
 	writer LogWriter
 }
@@ -78,7 +78,7 @@ func (lv *LogLevel) String() string {
 func (lv *LogLevel) coloredString() string {
 	switch *lv {
 	case DEBUG:
-		return "\x1b[34mDEBUG\x1b[0m" //blue
+		return "\x1b[34mDEBUG\x1b[0m" // blue
 	case INFO:
 		return "\x1b[32mINFO\x1b[0m" //green
 	case WARN:
@@ -310,7 +310,7 @@ func (l *Logger) WriteLog(msg []byte) {
 	logQueue <- &logValue{value: msg, writer: l.writer}
 }
 
-// FlushLogger flushs all log to disk.
+// FlushLogger flush all log to disk.
 func FlushLogger() {
 	syncCancel()
 	select {

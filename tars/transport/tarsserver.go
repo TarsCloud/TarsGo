@@ -43,10 +43,9 @@ type TarsServer struct {
 	conf       *TarsServerConf
 	handle     ServerHandler
 	lastInvoke time.Time
-	//idleTime   time.Time
-	isClosed  int32
-	numInvoke int32
-	numConn   int32
+	isClosed   int32
+	numInvoke  int32
+	numConn    int32
 }
 
 // NewTarsServer new TarsServer and init with conf.

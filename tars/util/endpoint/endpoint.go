@@ -8,7 +8,7 @@ const (
 	SSL int32 = 2
 )
 
-//Endpoint struct is used record a remote server instance.
+// Endpoint struct is used record a remote server instance.
 type Endpoint struct {
 	Host      string
 	Port      int32

@@ -7,7 +7,7 @@ type Worker struct {
 	Stop        chan struct{}
 }
 
-// Start start gotoutine pool.
+// Start : start goroutine pool.
 func (w *Worker) Start() {
 	go func() {
 		var job Job
@@ -42,7 +42,7 @@ type Pool struct {
 	stop        chan struct{}
 }
 
-// NewPool news gotouine pool
+// NewPool news goroutine pool
 func NewPool(numWorkers int, jobQueueLen int) *Pool {
 	jobQueue := make(chan Job, jobQueueLen)
 	workerQueue := make(chan *Worker, numWorkers)
@@ -86,7 +86,7 @@ func (p *Pool) dispatch() {
 	}
 }
 
-// Release release all workers
+// Release : release all workers
 func (p *Pool) Release() {
 	p.stop <- struct{}{}
 	<-p.stop

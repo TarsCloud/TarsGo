@@ -28,13 +28,13 @@ type TarsClientConf struct {
 // TarsClient is struct for tars client.
 type TarsClient struct {
 	address string
-	//TODO remove it
+	// TODO remove it
 	conn *connection
 
 	cp        ClientProtocol
 	conf      *TarsClientConf
 	sendQueue chan []byte
-	//recvQueue chan []byte
+	// recvQueue chan []byte
 }
 
 type connection struct {
@@ -86,12 +86,30 @@ func (tc *TarsClient) Send(req []byte) error {
 	return nil
 }
 
-// Close close the client connection with the server.
+// Close the client connection with the server.
 func (tc *TarsClient) Close() {
 	w := tc.conn
 	if !w.isClosed && w.conn != nil {
 		w.isClosed = true
 		w.conn.Close()
+	}
+}
+
+// GraceClose close client gracefully
+func (tc *TarsClient) GraceClose(ctx context.Context) {
+	tk := time.NewTicker(time.Millisecond * 500)
+	defer tk.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-tk.C:
+			TLOG.Debugf("wait grace invoke %d", tc.conn.invokeNum)
+			if atomic.LoadInt32(&tc.conn.invokeNum) < 0 {
+				tc.Close()
+				return
+			}
+		}
 	}
 }
 
@@ -125,7 +143,7 @@ func (c *connection) send(conn net.Conn, connDone chan bool) {
 		c.idleTime = time.Now()
 		_, err := conn.Write(req)
 		if err != nil {
-			//TODO add retry time
+			// TODO add retry time
 			c.tc.sendQueue <- req
 			TLOG.Error("send request error:", err)
 			c.close(conn)
@@ -168,10 +186,10 @@ func (c *connection) recv(conn net.Conn, connDone chan bool) {
 		currBuffer = append(currBuffer, buffer[:n]...)
 		for {
 			pkgLen, status := c.tc.cp.ParsePackage(currBuffer)
-			if status == PACKAGE_LESS {
+			if status == PackageLess {
 				break
 			}
-			if status == PACKAGE_FULL {
+			if status == PackageFull {
 				atomic.AddInt32(&c.invokeNum, -1)
 				pkg := make([]byte, pkgLen)
 				copy(pkg, currBuffer[0:pkgLen])
@@ -227,22 +245,4 @@ func (c *connection) close(conn net.Conn) {
 		conn.Close()
 	}
 	c.connLock.Unlock()
-}
-
-// GraceClose close client gracefully
-func (c *TarsClient) GraceClose(ctx context.Context) {
-	tk := time.NewTicker(time.Millisecond * 500)
-	defer tk.Stop()
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-tk.C:
-			TLOG.Debugf("wait grace invoke %d", c.conn.invokeNum)
-			if atomic.LoadInt32(&c.conn.invokeNum) < 0 {
-				c.Close()
-				return
-			}
-		}
-	}
 }

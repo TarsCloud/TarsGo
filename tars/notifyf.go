@@ -3,9 +3,9 @@ package tars
 import "github.com/TarsCloud/TarsGo/tars/protocol/res/notifyf"
 
 const (
-	NOTIFY_NORMAL = 0
-	NOTIFY_WARN   = 1
-	NOTIFY_ERROR  = 2
+	NotifyNormal = 0
+	NotifyWarn   = 1
+	NotifyError  = 2
 )
 
 // NotifyHelper is the helper struct for the Notify service.
@@ -20,7 +20,6 @@ func (n *NotifyHelper) SetNotifyInfo(comm *Communicator, notify string, app stri
 	n.comm = comm
 	n.tn = new(notifyf.Notify)
 	comm.StringToProxy(notify, n.tn)
-	//TODO:params
 	var set string
 	if v, ok := comm.GetProperty("setdivision"); ok {
 		set = v

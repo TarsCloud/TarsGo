@@ -9,12 +9,12 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/transport"
 )
 
-//AddServant add dispatch and interface for object.
+// AddServant add dispatch and interface for object.
 func AddServant(v dispatch, f interface{}, obj string) {
 	addServantCommon(v, f, obj, false)
 }
 
-//AddServantWithContext add dispatch and interface for object, which have ctx,context
+// AddServantWithContext add dispatch and interface for object, which have ctx,context
 func AddServantWithContext(v dispatch, f interface{}, obj string) {
 	addServantCommon(v, f, obj, true)
 }
@@ -23,7 +23,7 @@ func addServantCommon(v dispatch, f interface{}, obj string, withContext bool) {
 	objRunList = append(objRunList, obj)
 	cfg, ok := tarsConfig[obj]
 	if !ok {
-		ReportNotifyInfo(NOTIFY_ERROR, "servant obj name not found:"+obj)
+		ReportNotifyInfo(NotifyError, "servant obj name not found:"+obj)
 		TLOG.Debug("servant obj name not found:", obj)
 		panic(ok)
 	}
@@ -47,7 +47,7 @@ func AddHttpServant(mux *TarsHttpMux, obj string) {
 func AddHttpServantWithExceptionStatusChecker(mux *TarsHttpMux, obj string, exceptionStatusChecker func(int) bool) {
 	cfg, ok := tarsConfig[obj]
 	if !ok {
-		ReportNotifyInfo(NOTIFY_ERROR, "servant obj name not found:"+obj)
+		ReportNotifyInfo(NotifyError, "servant obj name not found:"+obj)
 		TLOG.Debug("servant obj name not found:", obj)
 		panic(ok)
 	}
@@ -78,7 +78,7 @@ func AddServantWithProtocol(proto transport.ServerProtocol, obj string) {
 	objRunList = append(objRunList, obj)
 	cfg, ok := tarsConfig[obj]
 	if !ok {
-		ReportNotifyInfo(NOTIFY_ERROR, "servant obj name not found:"+obj)
+		ReportNotifyInfo(NotifyError, "servant obj name not found:"+obj)
 		TLOG.Debug("servant obj name not found ", obj)
 		panic(ok)
 	}
