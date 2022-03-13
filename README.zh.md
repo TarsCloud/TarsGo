@@ -67,13 +67,11 @@ go install github.com/TarsCloud/TarsGo/tars/tools/tars2go@latest
 ```
 module TestApp
 {
-
     interface Hello
     {
         int test();
         int testHello(string sReq, out string sRsp);
     };
-
 }; 
 ```
 
@@ -102,13 +100,12 @@ import (
 type HelloImp struct {
 }
 
-//implete the Test interface
+// Test the Test interface
 func (imp *HelloImp) Test() (int32, error) {
     return 0, nil 
 }
 
-//implete the testHello interface
-
+// TestHello the testHello interface
 func (imp *HelloImp) TestHello(in string, out *string) (int32, error) {
     *out = in
     return 0, nil 
@@ -141,29 +138,27 @@ tars.GetServerConfig()返回服务端配置，其定义如下:
 
 ```go
 type serverConfig struct {
-	Node      string
-	App       string
-	Server    string
-	LogPath   string
-	LogSize   string
-	LogLevel  string
-	Version   string
-	LocalIP   string
-	BasePath  string
-	DataPath  string
-	config    string
-	notify    string
-	log       string
-	netThread int
-	Adapters  map[string]adapterConfig
-
-	Container   string
-	Isdocker    bool
-	Enableset   bool
-	Setdivision string
+    Node      string
+    App       string
+    Server    string
+    LogPath   string
+    LogSize   string
+    LogLevel  string
+    Version   string
+    LocalIP   string
+    BasePath  string
+    DataPath  string
+    config    string
+    notify    string
+    log       string
+    netThread int
+    Adapters  map[string]adapterConfig
+    
+    Container   string
+    Isdocker    bool
+    Enableset   bool
+    Setdivision string
 }
-
-
 ```
 
 - Node: 本地tarsnode地址，只有你使用tars平台部署才会使用这个参数.
@@ -190,8 +185,8 @@ type serverConfig struct {
 ```xml
 <tars>
   <application>
-      enableset=Y
-      setdivision=gray.sz.*
+    enableset=Y
+    setdivision=gray.sz.*
     <server>
        node=tars.tarsnode.ServerObj@tcp -h 10.120.129.226 -p 19386 -t 60000
        app=TestApp
@@ -211,7 +206,6 @@ type serverConfig struct {
     </server>
   </application>
 </tars>
-
 ```
 
 #### 1.5 适配器
@@ -328,7 +322,7 @@ func main() {
     obj := "TestApp.TestServer.HelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
     app := new(TestApp.Hello)
     comm.StringToProxy(obj, app)
-	var req string="Hello Wold"
+    var req string = "Hello Wold"
     var res string
     ret, err := app.TestHello(req, &res)
     if err != nil {
@@ -470,7 +464,7 @@ func main() {
     obj := "TestApp.TestServer.HelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
     app := new(TestApp.Hello)
     comm.StringToProxy(obj, app)
-	var req string="Hello Wold"
+    var req string = "Hello Wold"
     var res string
     ret, err := app.TestHello(req, &out)
     if err != nil {
@@ -500,16 +494,16 @@ func main() {
     obj := "TestApp.TestServer.HelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
     app := new(TestApp.Hello)
     comm.StringToProxy(obj, app)
-	go func(){
-		var req string="Hello Wold"
-    	var res string
-    	ret, err := app.TestHello(req, &res)
-    	if err != nil {
-        	fmt.Println(err)
-        	return
-    	} 
-		fmt.Println(ret, res)
-	}()
+    go func(){
+        var req string = "Hello Wold"
+        var res string
+        ret, err := app.TestHello(req, &res)
+        if err != nil {
+            fmt.Println(err)
+            return
+        } 
+        fmt.Println(ret, res)
+    }()
     time.Sleep(1)  
 }
 
@@ -536,7 +530,7 @@ func main() {
     comm.SetProperty("enableset", true)
     comm.SetProperty("setdivision", "gray.sz.*")
     
-    var req string="Hello Wold"
+    var req string = "Hello Wold"
     var res string
     ret, err := app.TestHello(req, &out)
     if err != nil {
@@ -569,22 +563,22 @@ func main() {
     obj := "TestApp.TestServer.HelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
     app := new(TestApp.Hello)
     comm.StringToProxy(obj, app)
-	go func(){
-        var req string="Hello Wold"
-    	var res string
+    go func(){
+        var req string = "Hello Wold"
+        var res string
         ctx := context.Background()
         ctx = current.ContextWithClientCurrent(ctx)
         // the request parameter hashtype, ModHash is 0, ConsistentHash is 1
         hashType := 0
         hashCode := uint32(123)
         current.SetClientHash(ctx, hashType, hashCode)
-    	ret, err := app.TestHelloWithContext(ctx, req, &res)
-    	if err != nil {
-        	fmt.Println(err)
-        	return
-    	} 
-		fmt.Println(ret, res)
-	}()
+        ret, err := app.TestHelloWithContext(ctx, req, &res)
+        if err != nil {
+            fmt.Println(err)
+            return
+        } 
+        fmt.Println(ret, res)
+    }()
     time.Sleep(1)  
 }
 
@@ -645,10 +639,9 @@ tarsgo目前有tars.viewversion / tars.setloglevel管理命令。 用户可以�
 如果你想定义你自己的管理命令，请看下面的例子：
 ```go
 func helloAdmin(who string ) (string, error) {
-	return who, nil
+    return who, nil
 }
 tars.RegisterAdmin("tars.helloAdmin",  helloAdmin)
-
 ```
 
 然后你可以发送自定义的管理命令“tars.helloAdmin tarsgo”，tarsgo将在浏览器中显示。
@@ -658,8 +651,7 @@ tars.RegisterAdmin("tars.helloAdmin",  helloAdmin)
 // A function  should be in this format
 type adminFn func(string) (string, error)
 
-//then u should registry this function using
-
+// then u should registry this function using
 func RegisterAdmin(name string, fn adminFn)
 ```
 
@@ -675,7 +667,6 @@ ReportStat(msg, 0, 1, 0)
 
 //for success
 ReportStat(msg, 1, 0, 0)
-
 
 //func ReportStat(msg *Message, succ int32, timeout int32, exec int32)
 //see more detail in tars/statf.go
@@ -721,7 +712,6 @@ p := tars.CreatePropertyReport("testproperty", sum, count, max, min, distr)
 for i := 0; i < 5; i++ {
     v := rand.Intn(100)
     p.Report(v)
-
 }   
 
 ```
@@ -741,7 +731,6 @@ import "github.com/TarsCloud/TarsGo/tars"
 cfg := tars.GetServerConfig()
 remoteConf := tars.NewRConf(cfg.App, cfg.Server, cfg.BasePath)
 config, _ := remoteConf.GetConfig("test.conf")
-
 ...
 
 ```
@@ -756,55 +745,53 @@ tars包中的setting.go用于控制tarsgo性能和特性。有些选项应该从
 var MaxInvoke int = 0
 
 const (
-	//for now ,some option should update from remote config
-
-	//version
-	TarsVsersion string = "1.0.0"
-
-	//server
-
-	AcceptTimeout time.Duration = 500 * time.Millisecond
-	//zero for not set read deadline for Conn (better  performance)
-	ReadTimeout time.Duration = 0 * time.Millisecond
-	//zero for not set write deadline for Conn (better performance)
-	WriteTimeout time.Duration = 0 * time.Millisecond
-	//zero for not set deadline for invoke user interface (better performance)
-	HandleTimeout  time.Duration = 0 * time.Millisecond
-	IdleTimeout    time.Duration = 600000 * time.Millisecond
-	ZombileTimeout time.Duration = time.Second * 10
-	QueueCap       int           = 10000000
-
-	//client
-	ClientQueueLen     int           = 10000
-	ClientIdleTimeout  time.Duration = time.Second * 600
-	ClientReadTimeout  time.Duration = time.Millisecond * 100
-	ClientWriteTimeout time.Duration = time.Millisecond * 3000
-	ReqDefaultTimeout  int32         = 3000
-	ObjQueueMax        int32         = 10000
-
-	//report
-	PropertyReportInterval time.Duration = 10 * time.Second
-	StatReportInterval     time.Duration = 10 * time.Second
-
-	//mainloop
-	MainLoopTicker time.Duration = 10 * time.Second
-
-	//adapter
-	AdapterProxyTicker     time.Duration = 10 * time.Second
-	AdapterProxyResetCount int           = 5
-
-	//communicator default ,update from remote config
-	refreshEndpointInterval int = 60000
-	reportInterval          int = 10000
-	AsyncInvokeTimeout      int = 3000
-
-	//tcp network config
-	TCPReadBuffer  = 128 * 1024 * 1024
-	TCPWriteBuffer = 128 * 1024 * 1024
-	TCPNoDelay     = false
+    //for now ,some option should update from remote config
+    
+    //version
+    TarsVsersion string = "1.0.0"
+    
+    //server
+    
+    AcceptTimeout time.Duration = 500 * time.Millisecond
+    //zero for not set read deadline for Conn (better  performance)
+    ReadTimeout time.Duration = 0 * time.Millisecond
+    //zero for not set write deadline for Conn (better performance)
+    WriteTimeout time.Duration = 0 * time.Millisecond
+    //zero for not set deadline for invoke user interface (better performance)
+    HandleTimeout  time.Duration = 0 * time.Millisecond
+    IdleTimeout    time.Duration = 600000 * time.Millisecond
+    ZombileTimeout time.Duration = time.Second * 10
+    QueueCap       int           = 10000000
+    
+    //client
+    ClientQueueLen     int           = 10000
+    ClientIdleTimeout  time.Duration = time.Second * 600
+    ClientReadTimeout  time.Duration = time.Millisecond * 100
+    ClientWriteTimeout time.Duration = time.Millisecond * 3000
+    ReqDefaultTimeout  int32         = 3000
+    ObjQueueMax        int32         = 10000
+    
+    //report
+    PropertyReportInterval time.Duration = 10 * time.Second
+    StatReportInterval     time.Duration = 10 * time.Second
+    
+    //mainloop
+    MainLoopTicker time.Duration = 10 * time.Second
+    
+    //adapter
+    AdapterProxyTicker     time.Duration = 10 * time.Second
+    AdapterProxyResetCount int           = 5
+    
+    //communicator default ,update from remote config
+    refreshEndpointInterval int = 60000
+    reportInterval          int = 10000
+    AsyncInvokeTimeout      int = 3000
+    
+    //tcp network config
+    TCPReadBuffer  = 128 * 1024 * 1024
+    TCPWriteBuffer = 128 * 1024 * 1024
+    TCPNoDelay     = false
 )
-
-
 ```
 
 
@@ -818,19 +805,19 @@ const (
 package main
 
 import (
-	"net/http"
-	"github.com/TarsCloud/TarsGo/tars"
+    "net/http"
+    "github.com/TarsCloud/TarsGo/tars"
 )
 
 func main() {
-	mux := &tars.TarsHttpMux{}
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello tafgo"))
-	})
-
+    mux := &tars.TarsHttpMux{}
+    mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        w.Write([]byte("Hello tafgo"))
+    })
+    
     cfg := tars.GetServerConfig()
-	tars.AddHttpServant(mux, cfg.App+"."+cfg.Server+".HttpObj") //Register http server
-	tars.Run()
+    tars.AddHttpServant(mux, cfg.App+"."+cfg.Server+".HttpObj") //Register http server
+    tars.Run()
 }
 
 
@@ -844,14 +831,14 @@ TarsGo 之前在生成的客户端代码，或者用户传入的实现代码里�
 ```go
 type ContextTestImp struct {
 }
-//只需在接口上添加 ctx context.Context参数
+// 只需在接口上添加 ctx context.Context参数
 func (imp *ContextTestImp) Add(ctx context.Context, a int32, b int32, c *int32) (int32, error) {
-	//我们可以通过context 获取框架传递的信息，比如下面的获取ip， 甚至返回一些信息给框架，详见tars/util/current下面的接口
-	ip, ok := current.GetClientIPFromContext(ctx)
+    // 我们可以通过context 获取框架传递的信息，比如下面的获取ip， 甚至返回一些信息给框架，详见tars/util/current下面的接口
+    ip, ok := current.GetClientIPFromContext(ctx)
     if !ok {
         logger.Error("Error getting ip from context")
     }  
-	return 0, nil
+    return 0, nil
 }
 //以前使用AddServant ，现在只需改成AddServantWithContext
 app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+".ContextTestObj")
@@ -860,14 +847,12 @@ app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+".ContextTestObj")
 客户端使用context
 
 ```golang
-
-    ctx := context.Background()
-    c := make(map[string]string)
-    c["a"] = "b" 
+ctx := context.Background()
+c := make(map[string]string)
+c["a"] = "b" 
 //以前使用app.Add 进行客户端调用，这里只要变成app.AddWithContext ，就可以传递context给框架，如果要设置给tars请求的context
 //可以多传入参数，比如c，参数c是可选的，格式是 ...[string]string
-    ret, err := app.AddWithContext(ctx, i, i*2, &out, c)
-
+ret, err := app.AddWithContext(ctx, i, i*2, &out, c)
 ```
 服务端和客户端的完整例子，详见 TarGo/_examples
 
@@ -876,70 +861,71 @@ app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+".ContextTestObj")
 为了支持用户编写插件，我们支持了filter机制，分为服务端的过滤器和客户端过滤器
 
 ```go
-//服务端过滤器， 传入dispatch，和f， 用于调用用户代码， req， 和resp为传入的用户请求和服务端相应包体
+// 服务端过滤器， 传入dispatch，和f， 用于调用用户代码， req， 和resp为传入的用户请求和服务端相应包体
 type ServerFilter func(ctx context.Context, d Dispatch, f interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error)
-//客户端过滤器， 传入msg（包含obj信息，adapter信息，req和resp包体）， 还有用户设定的调用超时
+// 客户端过滤器， 传入msg（包含obj信息，adapter信息，req和resp包体）， 还有用户设定的调用超时
 type ClientFilter func(ctx context.Context, msg *Message, invoke Invoke, timeout time.Duration) (err error)
-//注册服务端过滤器
-//func RegisterServerFilter(f ServerFilter)
-//注册客户端过滤器
-//func RegisterClientFilter(f ClientFilter)
+// 注册服务端过滤器
+// func RegisterServerFilter(f ServerFilter)
+// 注册客户端过滤器
+// func RegisterClientFilter(f ClientFilter)
 
 ```
 
 有了过滤器，我们就能对服务端和客户端的请求做一些过滤，比如使用 hook用于分布式追踪的opentracing 的span。 
 我们来看下客户端filter的例子：
 ```go
-//生成客户端tars filter，通过注册这个filter来实现span的注入
+// 生成客户端tars filter，通过注册这个filter来实现span的注入
 func ZipkinClientFilter() tars.ClientFilter {
-	return func(ctx context.Context, msg *tars.Message, invoke tars.Invoke, timeout time.Duration) (err error) {
-		var pCtx opentracing.SpanContext
-		req := msg.Req
-		//先从客户端调用的context 里面看下有没有传递来调用链的信息，
-		//如果有，则以这个做为父span，如果没有，则起一个新的span，span名字是RPC请求的函数名
-		if parent := opentracing.SpanFromContext(ctx); parent != nil {
-			pCtx = parent.Context()
-		}
-		cSpan := opentracing.GlobalTracer().StartSpan(
-			req.SFuncName,
-			opentracing.ChildOf(pCtx),
-			ext.SpanKindRPCClient,
-		)
-		defer cSpan.Finish()
-		cfg := tars.GetServerConfig()
-
-		//设置span的信息，比如我们调用的客户端的ip地址，请求的接口，方法，协议，客户端版本等信息
-		cSpan.SetTag("client.ipv4", cfg.LocalIP)
-		cSpan.SetTag("tars.interface", req.SServantName)
-		cSpan.SetTag("tars.method", req.SFuncName)
-		cSpan.SetTag("tars.protocol", "tars")
-		cSpan.SetTag("tars.client.version", tars.TarsVersion)
-
-		//将span注入到 请求包体的  Status里面，status 是一个map[strint]string 的结构体
-		if req.Status != nil {
-			err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(req.Status))
-			if err != nil {
-				logger.Error("inject span to status error:", err)
-			}
-		} else {
-			s := make(map[string]string)
-			err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(s))
-			if err != nil {
-				logger.Error("inject span to status error:", err)
-			} else {
-				req.Status = s
-			}
-		}
-		//没什么其他需要修改的，就进行客户端调用
-		err = invoke(ctx, msg, timeout)
-		if err != nil {
-			//调用错误，则记录span的错误信息
-			ext.Error.Set(cSpan, true)
-			cSpan.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
-		}
-
-		return err
-	}
+    return func (ctx context.Context, msg *tars.Message, invoke tars.Invoke, timeout time.Duration) (err error) {
+        var pCtx opentracing.SpanContext
+        req := msg.Req
+        // 先从客户端调用的context 里面看下有没有传递来调用链的信息，
+        // 如果有，则以这个做为父span，如果没有，则起一个新的span，span名字是RPC请求的函数名
+        if parent := opentracing.SpanFromContext(ctx); parent != nil {
+            pCtx = parent.Context()
+        }
+        cSpan := opentracing.GlobalTracer().StartSpan(
+            req.SFuncName,
+            opentracing.ChildOf(pCtx),
+            ext.SpanKindRPCClient,
+        )
+        defer cSpan.Finish()
+        cfg := tars.GetServerConfig()
+        
+        // 设置span的信息，比如我们调用的客户端的ip地址，请求的接口，方法，协议，客户端版本等信息
+        cSpan.SetTag("client.ipv4", cfg.LocalIP)
+        cSpan.SetTag("tars.interface", req.SServantName)
+        cSpan.SetTag("tars.method", req.SFuncName)
+        cSpan.SetTag("tars.protocol", "tars")
+        cSpan.SetTag("tars.client.version", tars.TarsVersion)
+        
+        // 将span注入到 请求包体的  Status里面，status 是一个map[strint]string 的结构体
+        if req.Status != nil {
+            err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(req.Status))
+            if err != nil {
+            logger.Error("inject span to status error:", err)
+            }
+        } else {
+            s := make(map[string]string)
+            err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(s))
+            if err != nil {
+                logger.Error("inject span to status error:", err)
+            } else {
+                req.Status = s
+            }
+        }
+        // 没什么其他需要修改的，就进行客户端调用
+        err = invoke(ctx, msg, timeout)
+        if err != nil {
+            // 调用错误，则记录span的错误信息
+            ext.Error.Set(cSpan, true)
+            cSpan.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
+        }
+        
+        return err
+    }
+}
 ```
 
 

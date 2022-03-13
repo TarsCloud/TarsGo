@@ -72,13 +72,11 @@ Tars protocol is a binary, IDL-based protocol similar to protocol buffers.
 ```go
 module TestApp
 {
-	
-	interface Hello
-	{
-	    int test();
-	    int testHello(string sReq, out string sRsp);
-	};
-	
+    interface Hello
+    {
+        int test();
+        int testHello(string sReq, out string sRsp);
+    };
 };	
 ```
 
@@ -115,20 +113,19 @@ import (
 type HelloImp struct {
 }
 
-//implete the Test interface
+// Test the Test interface
 func (imp *HelloImp) Test() (int32, error) {
     return 0, nil 
 }
 
-//implete the testHello interface
-
+// TestHello the testHello interface
 func (imp *HelloImp) TestHello(in string, out *string) (int32, error) {
     *out = in
     return 0, nil 
 }
 
-
-func main() { //Init servant
+func main() { 
+	//Init servant
     imp := new(HelloImp)                                    //New Imp
     app := new(TestApp.Hello)                               //New init the A Tars
     cfg := tars.GetServerConfig()                           //Get Config File Object
@@ -336,7 +333,7 @@ func main() {
     obj := "TestApp.TestServer.HelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
     app := new(TestApp.Hello)
     comm.StringToProxy(obj, app)
-	var req string="Hello World"
+    var req string = "Hello World"
     var out string
     ret, err := app.TestHello(req, &out)
     if err != nil {
@@ -490,7 +487,7 @@ func main() {
     obj := "TestApp.TestServer.HelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
     app := new(TestApp.Hello)
     comm.StringToProxy(obj, app)
-	var req string="Hello World"
+    var req string="Hello World"
     var out string
     ret, err := app.TestHello(req, &out)
     if err != nil {
@@ -519,16 +516,16 @@ func main() {
     obj := "TestApp.TestServer.HelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
     app := new(TestApp.Hello)
     comm.StringToProxy(obj, app)
-	go func(){
-		var req string="Hello World"
-    	var out string
-    	ret, err := app.TestHello(req, &out)
-    	if err != nil {
-        	fmt.Println(err)
-        	return
-    	} 
-		fmt.Println(ret, out)
-	}()
+    go func(){
+        var req string = "Hello World"
+        var out string
+        ret, err := app.TestHello(req, &out)
+        if err != nil {
+            fmt.Println(err)
+            return
+        } 
+        fmt.Println(ret, out)
+    }()
     time.Sleep(1)  
 }
 ```
@@ -586,22 +583,22 @@ func main() {
     obj := "TestApp.TestServer.HelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
     app := new(TestApp.Hello)
     comm.StringToProxy(obj, app)
-	go func(){
-        var req string="Hello Wold"
-    	var res string
+    go func(){
+        var req string = "Hello Wold"
+        var res string
         ctx := context.Background()
         ctx = current.ContextWithClientCurrent(ctx)
         // the request parameter hashtype, ModHash is 0, ConsistentHash is 1
         hashType := 0
         hashCode := uint32(123)
         current.SetClientHash(ctx, hashType, hashCode)
-    	ret, err := app.TestHelloWithContext(ctx, req, &res)
-    	if err != nil {
-        	fmt.Println(err)
-        	return
-    	} 
-		fmt.Println(ret, res)
-	}()
+        ret, err := app.TestHelloWithContext(ctx, req, &res)
+        if err != nil {
+            fmt.Println(err)
+            return
+        } 
+        fmt.Println(ret, res)
+    }()
     time.Sleep(1)  
 }
 
@@ -678,8 +675,7 @@ Illustration:
 // A function  should be in this format
 type adminFn func(string) (string, error)
 
-//then u should registry this function using
-
+// then u should registry this function using
 func RegisterAdmin(name string, fn adminFn)
 ```
 
@@ -744,7 +740,6 @@ The sample code is the following:
     for i := 0; i < 5; i++ {
         v := rand.Intn(100)
         p.Report(v)
-
     }
 ```
 
@@ -770,58 +765,58 @@ config, _ := remoteConf.GetConfig("test.conf")
 `setting.go` in package tars is used to control tarsgo performance and characteristics. Some options should be updated from `Getserverconfig()`.
 
 ```go
-//number of worker routines to handle client request
-//zero means no control, just one goroutine for a client request.
-//runtime.NumCPU() usually best performance in the benchmark.
+// number of worker routines to handle client request
+// zero means no control, just one goroutine for a client request.
+// runtime.NumCPU() usually best performance in the benchmark.
 var MaxInvoke int = 0
 
 const (
-	//for now, some option should update from remote config
-
-	//version
-	TarsVersion string = "1.0.0"
-
-	//server
-
-	AcceptTimeout time.Duration = 500 * time.Millisecond
-	//zero for not set read deadline for Conn (better  performance)
-	ReadTimeout time.Duration = 0 * time.Millisecond
-	//zero for not set write deadline for Conn (better performance)
-	WriteTimeout time.Duration = 0 * time.Millisecond
-	//zero for not set deadline for invoke user interface (better performance)
-	HandleTimeout  time.Duration = 0 * time.Millisecond
-	IdleTimeout    time.Duration = 600000 * time.Millisecond
-	ZombileTimeout time.Duration = time.Second * 10
-	QueueCap       int           = 10000000
-
-	//client
-	ClientQueueLen     int           = 10000
-	ClientIdleTimeout  time.Duration = time.Second * 600
-	ClientReadTimeout  time.Duration = time.Millisecond * 100
-	ClientWriteTimeout time.Duration = time.Millisecond * 3000
-	ReqDefaultTimeout  int32         = 3000
-	ObjQueueMax        int32         = 10000
-
-	//report
-	PropertyReportInterval time.Duration = 10 * time.Second
-	StatReportInterval     time.Duration = 10 * time.Second
-
-	//mainloop
-	MainLoopTicker time.Duration = 10 * time.Second
-
-	//adapter
-	AdapterProxyTicker     time.Duration = 10 * time.Second
-	AdapterProxyResetCount int           = 5
-
-	//communicator default, update from remote config
-	refreshEndpointInterval int = 60000
-	reportInterval          int = 10000
-	AsyncInvokeTimeout      int = 3000
-
-	//tcp network config
-	TCPReadBuffer  = 128 * 1024 * 1024
-	TCPWriteBuffer = 128 * 1024 * 1024
-	TCPNoDelay     = false
+    // for now, some option should update from remote config
+    
+    // version
+    TarsVersion string = "1.0.0"
+    
+    // server
+    
+    AcceptTimeout time.Duration = 500 * time.Millisecond
+    // zero for not set read deadline for Conn (better  performance)
+    ReadTimeout time.Duration = 0 * time.Millisecond
+    // zero for not set write deadline for Conn (better performance)
+    WriteTimeout time.Duration = 0 * time.Millisecond
+    // zero for not set deadline for invoke user interface (better performance)
+    HandleTimeout  time.Duration = 0 * time.Millisecond
+    IdleTimeout    time.Duration = 600000 * time.Millisecond
+    ZombileTimeout time.Duration = time.Second * 10
+    QueueCap       int           = 10000000
+    
+    // client
+    ClientQueueLen     int           = 10000
+    ClientIdleTimeout  time.Duration = time.Second * 600
+    ClientReadTimeout  time.Duration = time.Millisecond * 100
+    ClientWriteTimeout time.Duration = time.Millisecond * 3000
+    ReqDefaultTimeout  int32         = 3000
+    ObjQueueMax        int32         = 10000
+    
+    // report
+    PropertyReportInterval time.Duration = 10 * time.Second
+    StatReportInterval     time.Duration = 10 * time.Second
+    
+    // mainloop
+    MainLoopTicker time.Duration = 10 * time.Second
+    
+    //adapter
+    AdapterProxyTicker     time.Duration = 10 * time.Second
+    AdapterProxyResetCount int           = 5
+    
+    // communicator default, update from remote config
+    refreshEndpointInterval int = 60000
+    reportInterval          int = 10000
+    AsyncInvokeTimeout      int = 3000
+    
+    // tcp network config
+    TCPReadBuffer  = 128 * 1024 * 1024
+    TCPWriteBuffer = 128 * 1024 * 1024
+    TCPNoDelay     = false
 )
 ```
 
@@ -835,19 +830,19 @@ Here is a sample of HTTP server:
 package main
 
 import (
-	"net/http"
-	"github.com/TarsCloud/TarsGo/tars"
+    "net/http"
+    "github.com/TarsCloud/TarsGo/tars"
 )
 
 func main() {
-	mux := &tars.TarsHttpMux{}
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello tafgo"))
-	})
+    mux := &tars.TarsHttpMux{}
+    mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        w.Write([]byte("Hello tafgo"))
+    })
 
-    cfg := tars.GetServerConfig()
-	tars.AddHttpServant(mux, cfg.App+"."+cfg.Server+".HttpObj") //Register http server
-	tars.Run()
+   cfg := tars.GetServerConfig()
+    tars.AddHttpServant(mux, cfg.App+"."+cfg.Server+".HttpObj") //Register http server
+    tars.Run()
 }
 ```
 
@@ -861,15 +856,15 @@ Server-Side Context:
 ```go
 type ContextTestImp struct {
 }
-//only need to add  ctx context.Context parameter
+// only need to add  ctx context.Context parameter
 func (imp *ContextTestImp) Add(ctx context.Context, a int32, b int32, c *int32) (int32, error) {
-	//We can use context to get some usefull infomation we need, such Client, ip, port and tracing infomation
-	//read more detail under tars/util/current
-	ip, ok := current.GetClientIPFromContext(ctx)
+    // We can use context to get some usefull infomation we need, such Client, ip, port and tracing infomation
+    // read more detail under tars/util/current
+    ip, ok := current.GetClientIPFromContext(ctx)
     if !ok {
         logger.Error("Error getting ip from context")
     }  
-	return 0, nil
+    return 0, nil
 }
 //just change AddServant into AddServantWithContext
 app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+".ContextTestObj")
@@ -878,12 +873,11 @@ app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+".ContextTestObj")
 Client-Side Context:
 
 ```go
-
     ctx := context.Background()
     c := make(map[string]string)
     c["a"] = "b" 
-//juse change app.Add into app.AddWithContext, now you can pass context to framework, 
-//if you want to setting request package's context, you can pass a optional parameter, just like c, which is ...[string]string
+    //juse change app.Add into app.AddWithContext, now you can pass context to framework, 
+    //if you want to setting request package's context, you can pass a optional parameter, just like c, which is ...[string]string
     ret, err := app.AddWithContext(ctx, i, i*2, &out, c)
 ```
 
@@ -894,71 +888,72 @@ Read full demo client and server under `_examples/ContextTestServer`
 For supporting the writing plugin, we provide the filter concept to the framework. We have the client-side filter and the server-side filter. 
 
 ```go
-//ServerFilter, dispatch and f is passed as parameter,  for dispatching user's implement. 
-//req and resp is  
+// ServerFilter, dispatch and f is passed as parameter,  for dispatching user's implement. 
+// req and resp is  
 type ServerFilter func(ctx context.Context, d Dispatch, f interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error)
 //
 type ClientFilter func(ctx context.Context, msg *Message, invoke Invoke, timeout time.Duration) (err error)
-//RegisterServerFilter registers the server side filter
-//func RegisterServerFilter(f ServerFilter)
-//RegisterClientFilter registers the client side filter
-//func RegisterClientFilter(f ClientFilter)
+// RegisterServerFilter registers the server side filter
+// func RegisterServerFilter(f ServerFilter)
+// RegisterClientFilter registers the client side filter
+// func RegisterClientFilter(f ClientFilter)
 ```
 
 Having these filters, now we can add OpenTracing for every request.
 Let's take a look at the client-side filter for OpenTracing.
 
 ```go
-//ZipkinClientFilter returns a client side tars filter, for hooking zipking opentracing.
+// ZipkinClientFilter returns a client side tars filter, for hooking zipking opentracing.
 func ZipkinClientFilter() tars.ClientFilter {
-	return func(ctx context.Context, msg *tars.Message, invoke tars.Invoke, timeout time.Duration) (err error) {
-		var pCtx opentracing.SpanContext
-		req := msg.Req
-		//If span context is passed in the context, we use this context as parent span, else start a new span.
-		//The method name of the rpc request,  is used as span's name.
-		if parent := opentracing.SpanFromContext(ctx); parent != nil {
-			pCtx = parent.Context()
-		}
-		cSpan := opentracing.GlobalTracer().StartSpan(
-			req.SFuncName,
-			opentracing.ChildOf(pCtx),
-			ext.SpanKindRPCClient,
-		)
-		defer cSpan.Finish()
-		cfg := tars.GetServerConfig()
-
-		//set additional information for the span, like method, interface, protocol, vesion, ip and port etc.
-		cSpan.SetTag("client.ipv4", cfg.LocalIP)
-		cSpan.SetTag("tars.interface", req.SServantName)
-		cSpan.SetTag("tars.method", req.SFuncName)
-		cSpan.SetTag("tars.protocol", "tars")
-		cSpan.SetTag("tars.client.version", tars.TarsVersion)
-
-		//inject the span context into the request package's status, which is map[string]string
-		if req.Status != nil {
-			err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(req.Status))
-			if err != nil {
-				logger.Error("inject span to status error:", err)
-			}
-		} else {
-			s := make(map[string]string)
-			err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(s))
-			if err != nil {
-				logger.Error("inject span to status error:", err)
-			} else {
-				req.Status = s
-			}
-		}
-		//Nothing tho change,  just invoke the request.
-		err = invoke(ctx, msg, timeout)
-		if err != nil {
-			//invoke error, logging the error information to the span.
-			ext.Error.Set(cSpan, true)
-			cSpan.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
-		}
-
-		return err
-	}
+    return func (ctx context.Context, msg *tars.Message, invoke tars.Invoke, timeout time.Duration) (err error) {
+        var pCtx opentracing.SpanContext
+        req := msg.Req
+        // If span context is passed in the context, we use this context as parent span, else start a new span.
+        // The method name of the rpc request,  is used as span's name.
+        if parent := opentracing.SpanFromContext(ctx); parent != nil {
+            pCtx = parent.Context()
+        }
+        cSpan := opentracing.GlobalTracer().StartSpan(
+            req.SFuncName,
+            opentracing.ChildOf(pCtx),
+            ext.SpanKindRPCClient,
+        )
+        defer cSpan.Finish()
+        cfg := tars.GetServerConfig()
+        
+        // set additional information for the span, like method, interface, protocol, vesion, ip and port etc.
+        cSpan.SetTag("client.ipv4", cfg.LocalIP)
+        cSpan.SetTag("tars.interface", req.SServantName)
+        cSpan.SetTag("tars.method", req.SFuncName)
+        cSpan.SetTag("tars.protocol", "tars")
+        cSpan.SetTag("tars.client.version", tars.TarsVersion)
+        
+        // inject the span context into the request package's status, which is map[string]string
+        if req.Status != nil {
+            err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(req.Status))
+            if err != nil {
+                logger.Error("inject span to status error:", err)
+            }
+        } else {
+            s := make(map[string]string)
+            err = opentracing.GlobalTracer().Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(s))
+            if err != nil {
+                logger.Error("inject span to status error:", err)
+            } else {
+                req.Status = s
+            }
+        }
+        // Nothing tho change,  just invoke the request.
+        err = invoke(ctx, msg, timeout)
+        if err != nil {
+            // invoke error, logging the error information to the span.
+            ext.Error.Set(cSpan, true)
+            cSpan.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
+        }
+        
+        return err
+    }
+}
 ```
 
 The server will add filters, which exact the span context from the request package's status and start a new span.
