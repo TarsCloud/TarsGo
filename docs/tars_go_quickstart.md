@@ -259,8 +259,8 @@ func main() {
 编译测试
 
 ```shell
-# go build ./client/client.go
-# ./client/client
+go build -o client/client client/client.go
+./client/client
 ret:  0 resp:  hello tars 
 ```
 
