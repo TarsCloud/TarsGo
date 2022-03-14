@@ -20,7 +20,7 @@ func GraceHandler(userFunc, stopFunc handlerFunc) {
 		switch sig {
 		case syscall.SIGUSR1:
 			userFunc()
-		case syscall.SIGUSR2, syscall.SIGTERM: // remove syscall.SIGKILL
+		case syscall.SIGUSR2, syscall.SIGTERM, os.Interrupt: // remove syscall.SIGKILL
 			signal.Stop(ch)
 			stopFunc()
 		}

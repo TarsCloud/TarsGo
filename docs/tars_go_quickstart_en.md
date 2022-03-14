@@ -4,16 +4,23 @@
 
 Tars base component installation reference [Deploy](https://github.com/TarsCloud/Tars/tree/master/deploy)
 
-Golang environment ready, tarsgo requires the golang version to be 1.9.x and above.。
+Golang environment ready, tarsgo requires the golang version to be 1.14.x and above.。
 
-Install tars:  `go get github.com/TarsCloud/TarsGo/tars `
+Install tarsgo project and create scaffolding:
+```shell
+# < go 1.17
+go get -u github.com/TarsCloud/TarsGo/tars/tools/tarsgo
+# >= go 1.17
+go install github.com/TarsCloud/TarsGo/tars/tools/tarsgo@latest
+```
 
 Compile the tars protocol to Golang tool:
 
 ```shell
-cd $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/tars2go && go build . 
-
-cp tars2go $GOPATH/bin
+# < go 1.17 
+go get -u github.com/TarsCloud/TarsGo/tars/tools/tars2go
+# >= go 1.17
+go install github.com/TarsCloud/TarsGo/tars/tools/tars2go@latest
 ```
 
 Check whether the tars in the GOPATH path are successfully installed.
@@ -79,33 +86,42 @@ Click "Submit", after successful, the TestApp application under the menu number 
 
 ### Create service
 
-Run the create_tars_server.sh script to automatically create the files necessary for the service, If there is a syntax error during execution, try to use `dos2unix create_tars_server.sh` to transcode.
+Run the tarsgo scaffolding to automatically create the files necessary for the service.
 
 ```shell
-chmod +x $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/create_tars_server.sh
-$GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/create_tars_server.sh [App] [Server] [Servant]
-E.g:  
-$GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/create_tars_server.sh TestApp HelloGo SayHello
+tarsgo make [App] [Server] [Servant] [GoModuleName]
+E.g:   
+tarsgo make TestApp HelloGo SayHello github.com/Tars/test
 ```
 
 After the command is executed, the code will be generated into GOPATH, and the directory will be named in `APP/Server`. The generated code also prompts the specific path.
 
 ```shell
-[root@1-1-1-1 ~]# sh $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/create_tars_server.sh TestApp HelloGo SayHello
-[create server: TestApp.HelloGo ...]
-[mkdir: $GOPATH/src/TestApp/HelloGo/]
->>>Now doing:./start.sh >>>>
->>>Now doing:./Server.go >>>>
->>>Now doing:./Server.conf >>>>
->>>Now doing:./ServantImp.go >>>>
->>>Now doing:./makefile >>>>
->>>Now doing:./Servant.tars >>>>
->>>Now doing:client/client.go >>>>
->>>Now doing:vendor/vendor.json >>>>
-# runtime/internal/sys
->>> Great！Done! You can jump in $GOPATH/src/TestApp/HelloGo
->>> Tip: After editing the JCE file, use the following to automatically generate the go file.
->>>       $GOPATH/bin/tars2go *.tars
+[root@1-1-1-1 ~]# tarsgo make TestApp HelloGo SayHello github.com/Tars/test
+🚀 Creating server TestApp.HelloGo, layout repo is https://github.com/TarsCloud/TarsGo.git, please wait a moment.
+
+go: creating new go.mod: module github.com/Tars/test
+go: to add module requirements and sums:
+	go mod tidy
+
+CREATED HelloGo/SayHello.tars (171 bytes)
+CREATED HelloGo/SayHello_imp.go (620 bytes)
+CREATED HelloGo/client/client.go (444 bytes)
+CREATED HelloGo/config.conf (967 bytes)
+CREATED HelloGo/debugtool/dumpstack.go (412 bytes)
+CREATED HelloGo/go.mod (37 bytes)
+CREATED HelloGo/main.go (517 bytes)
+CREATED HelloGo/makefile (193 bytes)
+CREATED HelloGo/scripts/makefile.tars.gomod (4181 bytes)
+CREATED HelloGo/start.sh (56 bytes)
+
+>>> Great！Done! You can jump in HelloGo
+>>> Tips: After editing the Tars file, execute the following cmd to automatically generate golang files.
+>>>       /root/gocode/bin/tars2go *.tars
+$ cd HelloGo
+$ ./start.sh
+🤝 Thanks for using TarsGo
+📚 Tutorial: https://tarscloud.github.io/TarsDocs/
 ```
 
 ### Defining interface files
@@ -115,11 +131,11 @@ The interface file defines the request method and the parameter field and type. 
 Just for test， we define an echoHello interface , the client request parameter is some short strings such as "tars", and the service will responds to client "hello tars".
 
 ```shell
-# cat $GOPATH/src/TestApp/HelloGo/SayHello.tars 
+# cat HelloGo/SayHello.tars 
 module TestApp{
-interface SayHello{
-     int echoHello(string name, out string greeting); 
-   };
+    interface SayHello{
+        int echoHello(string name, out string greeting); 
+    };
 };
 ```
 
@@ -130,24 +146,24 @@ interface SayHello{
 First convert the tars protocol file to the Golang language form
 
 ```shell
-$GOPATH/bin/tars2go SayHello.tars
+tars2go  -outdir=tars-protocol -module=github.com/Tars/test SayHello.tars
 ```
 
 Now let's implement the logic of the server: the client sends a "name", and the server responds with the "hello name".
 
 ```shell
-cat $GOPATH/src/TestApp/HelloGo/SayHelloImp.go
+cat HelloGo/SayHello_imp.go
 ```
 
 ```go
 package main
-
+import "context"
 type SayHelloImp struct {
 }
 
-func (imp *SayHelloImp) EchoHello(name string, greeting *string) (int32, error) {
-     *greeting = "hello " + name
-     return 0, nil
+func (imp *SayHelloImp) EchoHello(ctx context.Context, name string, greeting *string) (int32, error) {
+    *greeting = "hello " + name
+    return 0, nil
 }
 ```
 
@@ -155,23 +171,30 @@ func (imp *SayHelloImp) EchoHello(name string, greeting *string) (int32, error) 
 
 Compile the main function, the initial code are generated by the tars framework.
 
-cat  $GOPATH/src/TestApp/HelloGo/HelloGo.go
+cat HelloGo/main.go
 
 ```go
 package main
 
 import (
-	"github.com/TarsCloud/TarsGo/tars"
-
-	"TestApp"
+    "github.com/TarsCloud/TarsGo/tars"
+  
+    "github.com/Tars/test/tars-protocol/TestApp"
 )
 
-func main() { //Init servant
-	imp := new(SayHelloImp)                                      //New Imp
-	app := new(TestApp.SayHello)                                 //New init the A JCE
-	cfg := tars.GetServerConfig()                               //Get Config File Object
-	app.AddServant(imp, cfg.App+"."+cfg.Server+".SayHelloObj") //Register Servant
-	tars.Run()
+func main() {
+    // Get server config
+    cfg := tars.GetServerConfig()
+  
+    // New servant imp
+    imp := new(SayHelloImp)
+    // New servant
+    app := new(TestApp.SayHello)
+    // Register Servant
+    app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+".SayHelloObj")
+  
+    // Run application
+    tars.Run()
 }
 ```
 
@@ -189,34 +212,34 @@ Will generate executable file HelloGo and release package HelloGo.tgz
 package main
 
 import (
-        "fmt"
-        "github.com/TarsCloud/TarsGo/tars"
-
-        "TestApp"
+    "fmt"
+  
+    "github.com/TarsCloud/TarsGo/tars"
+  
+    "github.com/Tars/test/tars-protocol/TestApp"
 )
 
 var comm *tars.Communicator
 func main() {
-        comm = tars.NewCommunicator()
-        obj := "TestApp.HelloGo.SayHelloObj@tcp -h 127.0.0.1 -p 3002 -t 60000"
-        app := new(TestApp.SayHello)
-        /*
-         // if your service has been registered at tars registry
-         comm = tars.NewCommunicator()
-         obj := "TestApp.HelloGo.SayHelloObj"
-         // tarsregistry service at 192.168.1.1:17890 
-         comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h 192.168.1.1 -p 17890")
-        */
-    
-        comm.StringToProxy(obj, app)
-        reqStr := "tars"
-        var resp string
-        ret, err := app.EchoHello(reqStr, &resp)
-        if err != nil {
-                fmt.Println(err)
-                return
-        }
-        fmt.Println("ret: ", ret, "resp: ", resp)
+    comm = tars.NewCommunicator()
+    obj := "TestApp.HelloGo.SayHelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
+    app := new(TestApp.SayHello)
+    /*
+       // if your service has been registered at tars registry
+       obj := "TestApp.HelloGo.SayHelloObj"
+       // tarsregistry service at 192.168.1.1:17890
+       comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h 192.168.1.1 -p 17890")
+    */
+  
+    comm.StringToProxy(obj, app)
+    reqStr := "tars"
+    var resp string
+    ret, err := app.EchoHello(reqStr, &resp)
+    if err != nil {
+      fmt.Println(err)
+      return
+    }
+    fmt.Println("ret: ", ret, "resp: ", resp)
 }
 ```
 
@@ -231,8 +254,8 @@ func main() {
 Build and test
 
 ```shell
-# go build client.go
-# ./client
+# go build ./client/client.go
+# ./client/client
 ret:  0 resp:  hello tars 
 ```
 
@@ -246,18 +269,18 @@ Tarsgo supports http service, follow the steps above to create a service, tarsgo
 package main
 
 import (
-	"net/http"
-	"github.com/TarsCloud/TarsGo/tars"
+    "net/http"
+    "github.com/TarsCloud/TarsGo/tars"
 )
 
 func main() {
-	mux := &tars.TarsHttpMux{}
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello tars"))
-	})
-        cfg := tars.GetServerConfig()
-	tars.AddHttpServant(mux, cfg.App+"."+cfg.Server+".HttpSayHelloObj") //Register http server
-	tars.Run()
+    mux := &tars.TarsHttpMux{}
+    mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+      w.Write([]byte("Hello tars"))
+    })
+    cfg := tars.GetServerConfig()
+    tars.AddHttpServant(mux, cfg.App+"."+cfg.Server+".HttpSayHelloObj") //Register http server
+    tars.Run()
 }
 ```
 
