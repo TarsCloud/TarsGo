@@ -1,6 +1,6 @@
 # Usage
 - Install protoc
-```
+```shell
 git clone https://github.com/protocolbuffers/protobuf
 cd protobuf
 git checkout v3.6.1.3
@@ -11,11 +11,12 @@ make install
 ```
 
 - Add tarsrpc plugin for protoc-gen-go
-```
+```shell
 go get github.com/golang/protobuf/{proto,protoc-gen-go}
 go get github.com/TarsCloud/TarsGo/tars
 
-cd $GOPATH/src/github.com/golang/protobuf/protoc-gen-go &&  cp -r $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/pb2tarsgo/protoc-gen-go/{link_tarsrpc.go, tarsrpc} .
+cd $GOPATH/src/github.com/golang/protobuf/protoc-gen-go && cp -r $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/pb2tarsgo/protoc-gen-go/{link_tarsrpc.go,tarsrpc} .
+git checkout v1.3.5
 go install
 export PATH=$PATH:$GOPATH/bin
 ```
@@ -23,7 +24,7 @@ export PATH=$PATH:$GOPATH/bin
 # example
 
 - proto file
-```golang
+```proto
 syntax = "proto3";
 package helloworld;
 
@@ -66,16 +67,14 @@ func (imp *GreeterImp) SayHello(input helloworld.HelloRequest)(output helloworld
     return output, nil 
 }
 
-func main() { //Init servant
-
+func main() {
+    // Init servant
     imp := new(GreeterImp)                                    //New Imp
     app := new(helloworld.Greeter)                            //New init the A JCE
     cfg := tars.GetServerConfig()                              //Get Config File Object
     app.AddServant(imp, cfg.App+"."+cfg.Server+".GreeterTestObj") //Register Servant
     tars.Run()
 }
-	
-
 ```
 
 - client
@@ -100,5 +99,4 @@ func main() {
     }   
     fmt.Println("result is:", output.Message)
 }
-
 ```
