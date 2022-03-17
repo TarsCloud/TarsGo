@@ -28,7 +28,7 @@ func NewClient(callback func(data []byte)) *Client {
 // Connect starts to connect to pushing server
 func (c *Client) Connect(req []byte) ([]byte, error) {
 	rsp := &requestf.ResponsePacket{}
-	if err := c.servant.Tars_invoke(context.Background(), 0, "push", req, nil, nil, rsp); err != nil {
+	if err := c.servant.TarsInvoke(context.Background(), 0, "push", req, nil, nil, rsp); err != nil {
 		return nil, err
 	}
 	return tools.Int8ToByte(rsp.SBuffer), nil

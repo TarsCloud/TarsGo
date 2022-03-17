@@ -21,7 +21,7 @@ type PushServer interface {
 }
 
 type serverProtocol struct {
-	tars.TarsProtocol
+	tars.Protocol
 	s PushServer
 }
 
@@ -47,7 +47,7 @@ func Send(ctx context.Context, data []byte) error {
 
 // NewServer return a server for pushing message
 func NewServer(s PushServer) transport.ServerProtocol {
-	return &serverProtocol{TarsProtocol: tars.TarsProtocol{}, s: s}
+	return &serverProtocol{Protocol: tars.Protocol{}, s: s}
 }
 
 // Invoke process request and send response
