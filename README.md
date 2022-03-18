@@ -125,7 +125,7 @@ func (imp *HelloImp) TestHello(in string, out *string) (int32, error) {
 }
 
 func main() { 
-	//Init servant
+    //Init servant
     imp := new(HelloImp)                                    //New Imp
     app := new(TestApp.Hello)                               //New init the A Tars
     cfg := tars.GetServerConfig()                           //Get Config File Object
@@ -148,26 +148,26 @@ Illustration:
 
 ```go
 type serverConfig struct {
-	Node      string
-	App       string
-	Server    string
-	LogPath   string
-	LogSize   string
-	LogLevel  string
-	Version   string
-	LocalIP   string
-	BasePath  string
-	DataPath  string
-	config    string
-	notify    string
-	log       string
-	netThread int
-	Adapters  map[string]adapterConfig
-
-	Container   string
-	Isdocker    bool
-	Enableset   bool
-	Setdivision string
+    Node      string
+    App       string
+    Server    string
+    LogPath   string
+    LogSize   string
+    LogLevel  string
+    Version   string
+    LocalIP   string
+    BasePath  string
+    DataPath  string
+    config    string
+    notify    string
+    log       string
+    netThread int
+    Adapters  map[string]adapterConfig
+    
+    Container   string
+    Isdocker    bool
+    Enableset   bool
+    Setdivision string
 }
 ```
 
@@ -195,27 +195,27 @@ A server-side configuration looks like:
 
 ```xml
 <tars>
-  <application>
-      enableset=Y
-      setdivision=gray.sz.*
-    <server>
-       node=tars.tarsnode.ServerObj@tcp -h 10.120.129.226 -p 19386 -t 60000
-       app=TestApp
-       server=HelloServer
-       localip=10.120.129.226
-       local=tcp -h 127.0.0.1 -p 20001 -t 3000
-       basepath=/usr/local/app/tars/tarsnode/data/TestApp.HelloServer/bin/
-       datapath=/usr/local/app/tars/tarsnode/data/TestApp.HelloServer/data/
-       logpath=/usr/local/app/tars/app_log/
-       logsize=10M
-       config=tars.tarsconfig.ConfigObj
-       notify=tars.tarsnotify.NotifyObj
-       log=tars.tarslog.LogObj
-       #timeout for deactiving,  ms.
-       deactivating-timeout=2000
-       logLevel=DEBUG
-    </server>
-  </application>
+    <application>
+        enableset=Y
+        setdivision=gray.sz.*
+        <server>
+            node=tars.tarsnode.ServerObj@tcp -h 10.120.129.226 -p 19386 -t 60000
+            app=TestApp
+            server=HelloServer
+            localip=10.120.129.226
+            local=tcp -h 127.0.0.1 -p 20001 -t 3000
+            basepath=/usr/local/app/tars/tarsnode/data/TestApp.HelloServer/bin/
+            datapath=/usr/local/app/tars/tarsnode/data/TestApp.HelloServer/data/
+            logpath=/usr/local/app/tars/app_log/
+            logsize=10M
+            config=tars.tarsconfig.ConfigObj
+            notify=tars.tarsnotify.NotifyObj
+            log=tars.tarslog.LogObj
+            #timeout for deactiving,  ms.
+            deactivating-timeout=2000
+            logLevel=DEBUG
+        </server>
+    </application>
 </tars>
 ```
 
@@ -227,31 +227,31 @@ A full example for an adapter, see below:
 
 ```xml
 <tars>
-  <application>
-    <server>
-       #each adapter configuration 
-       <TestApp.HelloServer.HelloObjAdapter>
-            #allow Ip for white list.
-            allow
-            # ip and port to listen on  
-            endpoint=tcp -h 10.120.129.226 -p 20001 -t 60000
-            #handlegroup
-            handlegroup=TestApp.HelloServer.HelloObjAdapter
-            #max connection 
-            maxconns=200000
-            #portocol, only tars for now.
-            protocol=tars
-            #max capbility in handle queue.
-            queuecap=10000
-            #timeout in ms for the request in the queue.
-            queuetimeout=60000
-            #servant 
-            servant=TestApp.HelloServer.HelloObj
-            #threads in handle server side implement code. goroutine for golang.
-            threads=5
-       </TestApp.HelloServer.HelloObjAdapter>
-    </server>
-  </application>
+    <application>
+        <server>
+            #each adapter configuration 
+            <TestApp.HelloServer.HelloObjAdapter>
+                #allow Ip for white list.
+                allow
+                # ip and port to listen on  
+                endpoint=tcp -h 10.120.129.226 -p 20001 -t 60000
+                #handlegroup
+                handlegroup=TestApp.HelloServer.HelloObjAdapter
+                #max connection 
+                maxconns=200000
+                #portocol, only tars for now.
+                protocol=tars
+                #max capbility in handle queue.
+                queuecap=10000
+                #timeout in ms for the request in the queue.
+                queuetimeout=60000
+                #servant 
+                servant=TestApp.HelloServer.HelloObj
+                #threads in handle server side implement code. goroutine for golang.
+                threads=5
+            </TestApp.HelloServer.HelloObjAdapter>
+        </server>
+    </application>
 </tars>
 ```
 
@@ -267,48 +267,48 @@ See below for a full example of `config.conf`, we will explain the client-side c
 
 ```xml
 <tars>
-  <application>
-    enableset=n
-    setdivision=NULL
-    <server>
-       node=tars.tarsnode.ServerObj@tcp -h 10.120.129.226 -p 19386 -t 60000
-       app=TestApp
-       server=HelloServer
-       localip=10.120.129.226
-       local=tcp -h 127.0.0.1 -p 20001 -t 3000
-       basepath=/usr/local/app/tars/tarsnode/data/TestApp.HelloServer/bin/
-       datapath=/usr/local/app/tars/tarsnode/data/TestApp.HelloServer/data/
-       logpath=/usr/local/app/tars/app_log/
-       logsize=10M
-       config=tars.tarsconfig.ConfigObj
-       notify=tars.tarsnotify.NotifyObj
-       log=tars.tarslog.LogObj
-       deactivating-timeout=2000
-       logLevel=DEBUG
-       <TestApp.HelloServer.HelloObjAdapter>
-            allow
-            endpoint=tcp -h 10.120.129.226 -p 20001 -t 60000
-            handlegroup=TestApp.HelloServer.HelloObjAdapter
-            maxconns=200000
-            protocol=tars
-            queuecap=10000
-            queuetimeout=60000
-            servant=TestApp.HelloServer.HelloObj
-            threads=5
-       </TestApp.HelloServer.HelloObjAdapter>
-    </server>
-    <client>
-       locator=tars.tarsregistry.QueryObj@tcp -h 10.120.129.226 -p 17890
-       sync-invoke-timeout=3000
-       async-invoke-timeout=5000
-       refresh-endpoint-interval=60000
-       report-interval=60000
-       sample-rate=100000
-       max-sample-count=50
-       asyncthread=3
-       modulename=TestApp.HelloServer
-    </client>
-  </application>
+    <application>
+        enableset=n
+        setdivision=NULL
+        <server>
+            node=tars.tarsnode.ServerObj@tcp -h 10.120.129.226 -p 19386 -t 60000
+            app=TestApp
+            server=HelloServer
+            localip=10.120.129.226
+            local=tcp -h 127.0.0.1 -p 20001 -t 3000
+            basepath=/usr/local/app/tars/tarsnode/data/TestApp.HelloServer/bin/
+            datapath=/usr/local/app/tars/tarsnode/data/TestApp.HelloServer/data/
+            logpath=/usr/local/app/tars/app_log/
+            logsize=10M
+            config=tars.tarsconfig.ConfigObj
+            notify=tars.tarsnotify.NotifyObj
+            log=tars.tarslog.LogObj
+            deactivating-timeout=2000
+            logLevel=DEBUG
+            <TestApp.HelloServer.HelloObjAdapter>
+                allow
+                endpoint=tcp -h 10.120.129.226 -p 20001 -t 60000
+                handlegroup=TestApp.HelloServer.HelloObjAdapter
+                maxconns=200000
+                protocol=tars
+                queuecap=10000
+                queuetimeout=60000
+                servant=TestApp.HelloServer.HelloObj
+                threads=5
+            </TestApp.HelloServer.HelloObjAdapter>
+        </server>
+        <client>
+            locator=tars.tarsregistry.QueryObj@tcp -h 10.120.129.226 -p 17890
+            sync-invoke-timeout=3000
+            async-invoke-timeout=5000
+            refresh-endpoint-interval=60000
+            report-interval=60000
+            sample-rate=100000
+            max-sample-count=50
+            asyncthread=3
+            modulename=TestApp.HelloServer
+        </client>
+    </application>
 </tars>
 ```
 
@@ -386,29 +386,29 @@ The format of the communicator's configuration file is as follows:
 
 ```xml
 <tars>
-  <application>
-    #The configuration required by the proxy
-    <client>
-        #address
-        locator                     = tars.tarsregistry.QueryObj@tcp -h 127.0.0.1 -p 17890
-        #The maximum timeout (in milliseconds) for synchronous calls.
-        sync-invoke-timeout         = 3000
-        #The maximum timeout (in milliseconds) for asynchronous calls.
-        async-invoke-timeout        = 5000
-        #The maximum timeout (in milliseconds) for synchronous calls.
-        refresh-endpoint-interval   = 60000
-        #Used for inter-module calls
-        stat                        = tars.tarsstat.StatObj
-        #Address used for attribute reporting
-        property                    = tars.tarsproperty.PropertyObj
-        #report time interval
-        report-interval             = 60000
-        #The number of threads that process asynchronous responses
-        asyncthread                 = 3
-        #The module name
-        modulename                  = Test.HelloServer
-    </client>
-  </application>
+    <application>
+        #The configuration required by the proxy
+        <client>
+            #address
+            locator                     = tars.tarsregistry.QueryObj@tcp -h 127.0.0.1 -p 17890
+            #The maximum timeout (in milliseconds) for synchronous calls.
+            sync-invoke-timeout         = 3000
+            #The maximum timeout (in milliseconds) for asynchronous calls.
+            async-invoke-timeout        = 5000
+            #The maximum timeout (in milliseconds) for synchronous calls.
+            refresh-endpoint-interval   = 60000
+            #Used for inter-module calls
+            stat                        = tars.tarsstat.StatObj
+            #Address used for attribute reporting
+            property                    = tars.tarsproperty.PropertyObj
+            #report time interval
+            report-interval             = 60000
+            #The number of threads that process asynchronous responses
+            asyncthread                 = 3
+            #The module name
+            modulename                  = Test.HelloServer
+        </client>
+    </application>
 </tars>
 ```
 
@@ -481,7 +481,7 @@ import (
     "TestApp"
 )
 
-var *tars.Communicator
+var comm *tars.Communicator
 func main() {
     comm = tars.NewCommunicator()
     obj := "TestApp.TestServer.HelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
@@ -510,7 +510,7 @@ import (
     "time"
     "TestApp"
 )
-var *tars.Communicator
+var comm *tars.Communicator
 func main() {
     comm = tars.NewCommunicator()
     obj := "TestApp.TestServer.HelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
@@ -542,7 +542,7 @@ import (
     "TestApp"
 )
 
-var *tars.Communicator
+var comm *tars.Communicator
 func main() {
     comm = tars.NewCommunicator()
     app := new(TestApp.Hello)
@@ -663,7 +663,7 @@ If you want to defined ur own admin commands, see this example:
 
 ```go
 func helloAdmin(who string ) (string, error) {
-	return who, nil
+    return who, nil
 }
 tars.RegisterAdmin("tars.helloAdmin", helloAdmin)
 ```
@@ -730,17 +730,17 @@ The types of statistics currently supported include the following:
 The sample code is the following:
 
 ```go
-    sum := tars.NewSum()
-    count := tars.NewCount()
-    max := tars.NewMax()
-    min := tars.NewMin()
-    d := []int{10, 20, 30, 50} 
-    distr := tars.NewDistr(d)
-    p := tars.CreatePropertyReport("testproperty", sum, count, max, min, distr)
-    for i := 0; i < 5; i++ {
-        v := rand.Intn(100)
-        p.Report(v)
-    }
+sum := tars.NewSum()
+count := tars.NewCount()
+max := tars.NewMax()
+min := tars.NewMin()
+d := []int{10, 20, 30, 50} 
+distr := tars.NewDistr(d)
+p := tars.CreatePropertyReport("testproperty", sum, count, max, min, distr)
+for i := 0; i < 5; i++ {
+    v := rand.Intn(100)
+    p.Report(v)
+}
 ```
 
 Description:
@@ -749,7 +749,7 @@ Description:
 > * Note that when you call `createPropertyReport`, you must create and save the created object after the service is enabled, and then just take the object to report, do not create it each time you use.
 
 ### 9 Remote Configuration
-Users can set up remote configuration from OSS. See more detail in [tars-config](https://tarscloud.github.io/TarsDocs_en/dev/tarsphp/Framework/tars-config.html)
+Users can set up remote configuration from OSS. See more detail in [tars-config](https://tarscloud.github.io/TarsDocs_en/dev/tars-config.html)
 That is an example to illustrate how to use this API to get a configuration file from remote.
 
 ```go
@@ -774,7 +774,7 @@ const (
     // for now, some option should update from remote config
     
     // version
-    TarsVersion string = "1.0.0"
+    Version string = "1.3.1"
     
     // server
     
@@ -840,7 +840,7 @@ func main() {
         w.Write([]byte("Hello tafgo"))
     })
 
-   cfg := tars.GetServerConfig()
+    cfg := tars.GetServerConfig()
     tars.AddHttpServant(mux, cfg.App+"."+cfg.Server+".HttpObj") //Register http server
     tars.Run()
 }
@@ -873,12 +873,12 @@ app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+".ContextTestObj")
 Client-Side Context:
 
 ```go
-    ctx := context.Background()
-    c := make(map[string]string)
-    c["a"] = "b" 
-    //juse change app.Add into app.AddWithContext, now you can pass context to framework, 
-    //if you want to setting request package's context, you can pass a optional parameter, just like c, which is ...[string]string
-    ret, err := app.AddWithContext(ctx, i, i*2, &out, c)
+ctx := context.Background()
+c := make(map[string]string)
+c["a"] = "b" 
+// juse change app.Add into app.AddWithContext, now you can pass context to framework, 
+// if you want to setting request package's context, you can pass a optional parameter, just like c, which is ...[string]string
+ret, err := app.AddWithContext(ctx, i, i*2, &out, c)
 ```
 
 Read full demo client and server under `_examples/ContextTestServer`

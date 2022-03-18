@@ -19,7 +19,7 @@ Tars整体介绍文档请阅读: https://tarscloud.gitbook.io/
 ## 安装
 - 对于安装OSS和其他基本服务, 请[安装文档](https://tarscloud.github.io/TarsDocs/installation/)，
 
-- 要求Go 1.9.x 或以上版本(推荐1.13一样的版本),请查看https://golang.org/doc/install
+- 要求Go 1.9.x 或以上版本(推荐1.14以上的版本),请查看 https://go.dev/doc/install
 
 下面以Go 1.13.x为例:
 
@@ -62,7 +62,7 @@ go install github.com/TarsCloud/TarsGo/tars/tools/tars2go@latest
 #### 1.1 接口定义
 
 在 $GOPATH/src下编写一个tars文件，如hello.tars , 比如 $GOPATH/src/TestApp/TestServer/hello.tars.
-有关tars协议的更多详细信息, 请查看 https://github.com/TarsCloud/TarsTup/blob/master/docs-en/tars_tup.md
+有关tars协议的更多详细信息, 请查看 https://github.com/TarsCloud/TarsTup/blob/master/docs/tars_tup.md
 
 ```
 module TestApp
@@ -112,15 +112,14 @@ func (imp *HelloImp) TestHello(in string, out *string) (int32, error) {
 }
 
 
-func main() { //Init servant
+func main() {
+    // Init servant
     imp := new(HelloImp)                                    //New Imp
     app := new(TestApp.Hello)                               //New init the A Tars
     cfg := tars.GetServerConfig()                           //Get Config File Object
     app.AddServant(imp, cfg.App+"."+cfg.Server+".HelloObj") //Register Servant
     tars.Run()
 }
-
-
 ```
 
 说明:
@@ -184,27 +183,27 @@ type serverConfig struct {
 如下是一个服务端配置的例子:
 ```xml
 <tars>
-  <application>
-    enableset=Y
-    setdivision=gray.sz.*
-    <server>
-       node=tars.tarsnode.ServerObj@tcp -h 10.120.129.226 -p 19386 -t 60000
-       app=TestApp
-       server=HelloServer
-       localip=10.120.129.226
-       local=tcp -h 127.0.0.1 -p 20001 -t 3000
-       basepath=/usr/local/app/tars/tarsnode/data/TestApp.HelloServer/bin/
-       datapath=/usr/local/app/tars/tarsnode/data/TestApp.HelloServer/data/
-       logpath=/usr/local/app/tars/app_log/
-       logsize=10M
-       config=tars.tarsconfig.ConfigObj
-       notify=tars.tarsnotify.NotifyObj
-       log=tars.tarslog.LogObj
-       #timeout for deactiving , ms.
-       deactivating-timeout=2000
-       logLevel=DEBUG
-    </server>
-  </application>
+    <application>
+        enableset=Y
+        setdivision=gray.sz.*
+        <server>
+            node=tars.tarsnode.ServerObj@tcp -h 10.120.129.226 -p 19386 -t 60000
+            app=TestApp
+            server=HelloServer
+            localip=10.120.129.226
+            local=tcp -h 127.0.0.1 -p 20001 -t 3000
+            basepath=/usr/local/app/tars/tarsnode/data/TestApp.HelloServer/bin/
+            datapath=/usr/local/app/tars/tarsnode/data/TestApp.HelloServer/data/
+            logpath=/usr/local/app/tars/app_log/
+            logsize=10M
+            config=tars.tarsconfig.ConfigObj
+            notify=tars.tarsnotify.NotifyObj
+            log=tars.tarslog.LogObj
+            #timeout for deactiving , ms.
+            deactivating-timeout=2000
+            logLevel=DEBUG
+        </server>
+    </application>
 </tars>
 ```
 
@@ -214,31 +213,31 @@ app.AddServant(imp, cfg.App+"."+cfg.Server+".HelloObj")完成HelloObj的适配�
 
 ```xml
 <tars>
-  <application>
-    <server>
-       #each adapter configuration 
-       <TestApp.HelloServer.HelloObjAdapter>
-            #allow Ip for white list.
-            allow
-            # ip and port to listen on  
-            endpoint=tcp -h 10.120.129.226 -p 20001 -t 60000
-            #handlegroup
-            handlegroup=TestApp.HelloServer.HelloObjAdapter
-            #max connection 
-            maxconns=200000
-            #portocol, only tars for now.
-            protocol=tars
-            #max capbility in handle queue.
-            queuecap=10000
-            #timeout in ms for the request in the queue.
-            queuetimeout=60000
-            #servant 
-            servant=TestApp.HelloServer.HelloObj
-            #threads in handle server side implement code. goroutine for golang.
-            threads=5
-       </TestApp.HelloServer.HelloObjAdapter>
-    </server>
-  </application>
+    <application>
+        <server>
+            #each adapter configuration 
+            <TestApp.HelloServer.HelloObjAdapter>
+                #allow Ip for white list.
+                allow
+                # ip and port to listen on  
+                endpoint=tcp -h 10.120.129.226 -p 20001 -t 60000
+                #handlegroup
+                handlegroup=TestApp.HelloServer.HelloObjAdapter
+                #max connection 
+                maxconns=200000
+                #portocol, only tars for now.
+                protocol=tars
+                #max capbility in handle queue.
+                queuecap=10000
+                #timeout in ms for the request in the queue.
+                queuetimeout=60000
+                #servant 
+                servant=TestApp.HelloServer.HelloObj
+                #threads in handle server side implement code. goroutine for golang.
+                threads=5
+            </TestApp.HelloServer.HelloObjAdapter>
+        </server>
+    </application>
 </tars>
 ```
 
@@ -254,48 +253,48 @@ app.AddServant(imp, cfg.App+"."+cfg.Server+".HelloObj")完成HelloObj的适配�
 
 ```xml
 <tars>
-  <application>
-    enableset=n
-    setdivision=NULL
-    <server>
-       node=tars.tarsnode.ServerObj@tcp -h 10.120.129.226 -p 19386 -t 60000
-       app=TestApp
-       server=HelloServer
-       localip=10.120.129.226
-       local=tcp -h 127.0.0.1 -p 20001 -t 3000
-       basepath=/usr/local/app/tars/tarsnode/data/TestApp.HelloServer/bin/
-       datapath=/usr/local/app/tars/tarsnode/data/TestApp.HelloServer/data/
-       logpath=/usr/local/app/tars/app_log/
-       logsize=10M
-       config=tars.tarsconfig.ConfigObj
-       notify=tars.tarsnotify.NotifyObj
-       log=tars.tarslog.LogObj
-       deactivating-timeout=2000
-       logLevel=DEBUG
-       <TestApp.HelloServer.HelloObjAdapter>
-            allow
-            endpoint=tcp -h 10.120.129.226 -p 20001 -t 60000
-            handlegroup=TestApp.HelloServer.HelloObjAdapter
-            maxconns=200000
-            protocol=tars
-            queuecap=10000
-            queuetimeout=60000
-            servant=TestApp.HelloServer.HelloObj
-            threads=5
-       </TestApp.HelloServer.HelloObjAdapter>
-    </server>
-    <client>
-       locator=tars.tarsregistry.QueryObj@tcp -h 10.120.129.226 -p 17890
-       sync-invoke-timeout=3000
-       async-invoke-timeout=5000
-       refresh-endpoint-interval=60000
-       report-interval=60000
-       sample-rate=100000
-       max-sample-count=50
-       asyncthread=3
-       modulename=TestApp.HelloServer
-    </client>
-  </application>
+    <application>
+        enableset=n
+        setdivision=NULL
+        <server>
+            node=tars.tarsnode.ServerObj@tcp -h 10.120.129.226 -p 19386 -t 60000
+            app=TestApp
+            server=HelloServer
+            localip=10.120.129.226
+            local=tcp -h 127.0.0.1 -p 20001 -t 3000
+            basepath=/usr/local/app/tars/tarsnode/data/TestApp.HelloServer/bin/
+            datapath=/usr/local/app/tars/tarsnode/data/TestApp.HelloServer/data/
+            logpath=/usr/local/app/tars/app_log/
+            logsize=10M
+            config=tars.tarsconfig.ConfigObj
+            notify=tars.tarsnotify.NotifyObj
+            log=tars.tarslog.LogObj
+            deactivating-timeout=2000
+            logLevel=DEBUG
+            <TestApp.HelloServer.HelloObjAdapter>
+                allow
+                endpoint=tcp -h 10.120.129.226 -p 20001 -t 60000
+                handlegroup=TestApp.HelloServer.HelloObjAdapter
+                maxconns=200000
+                protocol=tars
+                queuecap=10000
+                queuetimeout=60000
+                servant=TestApp.HelloServer.HelloObj
+                threads=5
+            </TestApp.HelloServer.HelloObjAdapter>
+        </server>
+        <client>
+            locator=tars.tarsregistry.QueryObj@tcp -h 10.120.129.226 -p 17890
+            sync-invoke-timeout=3000
+            async-invoke-timeout=5000
+            refresh-endpoint-interval=60000
+            report-interval=60000
+            sample-rate=100000
+            max-sample-count=50
+            asyncthread=3
+            modulename=TestApp.HelloServer
+        </client>
+    </application>
 </tars>
 ```
 
@@ -373,29 +372,29 @@ comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h ... -p ...")
 通信器配置文件的格式如下：
 ```xml
 <tars>
-  <application>
-    #The configuration required by the proxy
-    <client>
-        #address
-        locator                     = tars.tarsregistry.QueryObj@tcp -h 127.0.0.1 -p 17890
-        #The maximum timeout (in milliseconds) for synchronous calls.
-        sync-invoke-timeout         = 3000
-        #The maximum timeout (in milliseconds) for asynchronous calls.
-        async-invoke-timeout        = 5000
-        #The maximum timeout (in milliseconds) for synchronous calls.
-        refresh-endpoint-interval   = 60000
-        #Used for inter-module calls
-        stat                        = tars.tarsstat.StatObj
-        #Address used for attribute reporting
-        property                    = tars.tarsproperty.PropertyObj
-        #report time interval
-        report-interval             = 60000
-        #The number of threads that process asynchronous responses
-        asyncthread                 = 3
-        #The module name
-        modulename                  = Test.HelloServer
-    </client>
-  </application>
+    <application>
+        #The configuration required by the proxy
+        <client>
+            #address
+            locator                     = tars.tarsregistry.QueryObj@tcp -h 127.0.0.1 -p 17890
+            #The maximum timeout (in milliseconds) for synchronous calls.
+            sync-invoke-timeout         = 3000
+            #The maximum timeout (in milliseconds) for asynchronous calls.
+            async-invoke-timeout        = 5000
+            #The maximum timeout (in milliseconds) for synchronous calls.
+            refresh-endpoint-interval   = 60000
+            #Used for inter-module calls
+            stat                        = tars.tarsstat.StatObj
+            #Address used for attribute reporting
+            property                    = tars.tarsproperty.PropertyObj
+            #report time interval
+            report-interval             = 60000
+            #The number of threads that process asynchronous responses
+            asyncthread                 = 3
+            #The module name
+            modulename                  = Test.HelloServer
+        </client>
+    </application>
 </tars>
 ```
 #### 2.3 超时控制
@@ -440,7 +439,7 @@ HelloObj的地址设置为两个服务器的地址。 此时，请求将被分�
 
 以下通过设置通信器的参数显示主控的地址：
 ```
-var *tars.Communicator
+var comm *tars.Communicator
 comm = tars.NewCommunicator()
 comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h ... -p ...")
 ```
@@ -458,7 +457,7 @@ import (
     "TestApp"
 )
 
-var *tars.Communicator
+var comm *tars.Communicator
 func main() {
     comm = tars.NewCommunicator()
     obj := "TestApp.TestServer.HelloObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
@@ -510,7 +509,7 @@ func main() {
 ```
 
 ##### 2.4.5 通过set调用
-客户端可以通过set来调用服务端，只需要配置上文提到的配置文件，其中enableset置为y，setdivision比如设置为gray.sz. *。 有关更多详细信息，请参阅https://github.com/TarsCloud/Tars/blob/master/docs-en/tars_idc_set.md。
+客户端可以通过set来调用服务端，只需要配置上文提到的配置文件，其中enableset置为y，setdivision比如设置为gray.sz. *。 有关更多详细信息，请参阅https://github.com/TarsCloud/TarsDocs/blob/master/dev/tars-idc-set.md。
 
 ```go
 package main
@@ -521,7 +520,7 @@ import (
     "TestApp"
 )
 
-var *tars.Communicator
+var comm *tars.Communicator
 func main() {
     comm = tars.NewCommunicator()
     app := new(TestApp.Hello)
@@ -581,7 +580,6 @@ func main() {
     }()
     time.Sleep(1)  
 }
-
 ```
 
 
@@ -626,7 +624,6 @@ TLOG.Debug("Debug logging")
 ```go
 TLOG := GetRemoteLogger("TLOG")
 TLOG.Debug("Debug logging")
-
 ```
 如果你想设置日志等级，你可以在Tencent/Tars/web下的tars项目提供的OSS平台上设置它。
 如果你想自定义你的日志，请在tars/util/logger，tars/logger.go 和tars/remotelogger.go中的查看更多细节。
@@ -662,14 +659,14 @@ func RegisterAdmin(name string, fn adminFn)
 客户端调用上报接口后，会暂时将信息存储在内存中，当到达某个时间点时，会向tarsstat服务上报（默认为1分钟上报一次）。 我们将两个上报时间点之间的时间间隔称为统计间隔，在统计间隔中会执行诸如聚合和比较相同key的一些操作。
 示例代码如下：
 ```go
-//for error
+// for error
 ReportStat(msg, 0, 1, 0)
 
-//for success
+// for success
 ReportStat(msg, 1, 0, 0)
 
-//func ReportStat(msg *Message, succ int32, timeout int32, exec int32)
-//see more detail in tars/statf.go
+// func ReportStat(msg *Message, succ int32, timeout int32, exec int32)
+// see more detail in tars/statf.go
 ```
 
 描述:
@@ -712,8 +709,7 @@ p := tars.CreatePropertyReport("testproperty", sum, count, max, min, distr)
 for i := 0; i < 5; i++ {
     v := rand.Intn(100)
     p.Report(v)
-}   
-
+}
 ```
 
 描述:
@@ -722,7 +718,7 @@ for i := 0; i < 5; i++ {
 > * 注意，当你在调用createPropertyReport时，必须在启用服务后创建并保存所创建的对象，然后只需将对象上报，不要在你每次使用时都创建它。
 
 ### 9 远程配置
-用户可以从OSS设置远程配置。详情请查看https://github.com/TarsCloud/TarsFramework/blob/master/docs-en/tars_config.md . 
+用户可以从OSS设置远程配置。详情请查看https://github.com/TarsCloud/TarsDocs/blob/master/dev/tars-config.md . 
 如下示例用于说明如何使用此api从远程获取配置文件。
 
 ```go
@@ -747,8 +743,8 @@ var MaxInvoke int = 0
 const (
     //for now ,some option should update from remote config
     
-    //version
-    TarsVsersion string = "1.0.0"
+    // version
+    Vsersion string = "1.3.1"
     
     //server
     
@@ -806,6 +802,7 @@ package main
 
 import (
     "net/http"
+
     "github.com/TarsCloud/TarsGo/tars"
 )
 
@@ -819,8 +816,6 @@ func main() {
     tars.AddHttpServant(mux, cfg.App+"."+cfg.Server+".HttpObj") //Register http server
     tars.Run()
 }
-
-
 ```
 
 ### 12 Context 支持
