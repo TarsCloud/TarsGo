@@ -18,6 +18,7 @@ import (
 // PushServer defines the pushing server
 type PushServer interface {
 	OnConnect(ctx context.Context, req []byte) []byte
+	OnClose(ctx context.Context)
 }
 
 type serverProtocol struct {
@@ -48,6 +49,10 @@ func Send(ctx context.Context, data []byte) error {
 // NewServer return a server for pushing message
 func NewServer(s PushServer) transport.ServerProtocol {
 	return &serverProtocol{Protocol: tars.Protocol{}, s: s}
+}
+
+func (s *serverProtocol) DoClose(ctx context.Context) {
+	s.s.OnClose(ctx)
 }
 
 // Invoke process request and send response

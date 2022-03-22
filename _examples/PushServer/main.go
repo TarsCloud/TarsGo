@@ -28,6 +28,13 @@ func (p *pushImp) OnConnect(ctx context.Context, req []byte) []byte {
 	return req
 }
 
+// OnClose ...
+func (p *pushImp) OnClose(ctx context.Context) {
+	ip, _ := current.GetClientIPFromContext(ctx)
+	port, _ := current.GetClientPortFromContext(ctx)
+	fmt.Println("on close:", ip, port)
+}
+
 func main() {
 	cfg := tars.GetServerConfig()
 	proto := push.NewServer(&pushImp{})
