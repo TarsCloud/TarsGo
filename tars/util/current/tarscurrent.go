@@ -2,6 +2,8 @@ package current
 
 import (
 	"context"
+	"net"
+
 	"github.com/TarsCloud/TarsGo/tars/util/trace"
 )
 
@@ -23,6 +25,9 @@ type Current struct {
 	needDyeing  bool
 	dyeingUser  string
 	traceData   *trace.TraceData
+
+	rawConn net.Conn
+	udpAddr *net.UDPAddr
 }
 
 // NewCurrent return a Current point.
@@ -306,6 +311,25 @@ func SetTraceData(ctx context.Context, traceData *trace.TraceData) bool {
 	tc, ok := currentFromContext(ctx)
 	if ok {
 		tc.traceData = traceData
+	}
+	return ok
+}
+
+// GetRawConn get the raw tcp/udp connection from the context.
+func GetRawConn(ctx context.Context) (net.Conn, *net.UDPAddr, bool) {
+	tc, ok := currentFromContext(ctx)
+	if ok {
+		return tc.rawConn, tc.udpAddr, true
+	}
+	return nil, nil, false
+}
+
+// SetUDPConnWithContext set tcp/udp connection to the tars current.
+func SetRawConnWithContext(ctx context.Context, conn net.Conn, udpAddr *net.UDPAddr) bool {
+	tc, ok := currentFromContext(ctx)
+	if ok {
+		tc.rawConn = conn
+		tc.udpAddr = udpAddr
 	}
 	return ok
 }

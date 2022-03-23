@@ -17,6 +17,7 @@ type Servant interface {
 	TarsSetTimeout(t int)
 	TarsSetProtocol(Protocol)
 	Name() string
+	SetPushCallback(callback func([]byte))
 }
 
 type Protocol interface {
