@@ -37,6 +37,7 @@ func Trace(traceKey, annotation, client, server, funcName string, ret int, data,
 // GetLogger Get a logger
 func GetLogger(name string) *rogger.Logger {
 	logPath, cfg, lg := getLogger(name)
+	// if the default writer is not ConsoleWriter, the writer has already been configured
 	if !lg.IsConsoleWriter() {
 		return lg
 	}
@@ -65,6 +66,7 @@ func getLogger(name string) (logPath string, cfg *serverConfig, lg *rogger.Logge
 // GetDayLogger Get a logger roll by day
 func GetDayLogger(name string, numDay int) *rogger.Logger {
 	logPath, _, lg := getLogger(name)
+	// if the default writer is not ConsoleWriter, the writer has already been configured
 	if !lg.IsConsoleWriter() {
 		return lg
 	}
@@ -75,6 +77,7 @@ func GetDayLogger(name string, numDay int) *rogger.Logger {
 // GetHourLogger Get a logger roll by hour
 func GetHourLogger(name string, numHour int) *rogger.Logger {
 	logPath, _, lg := getLogger(name)
+	// if the default writer is not ConsoleWriter, the writer has already been configured
 	if !lg.IsConsoleWriter() {
 		return lg
 	}
