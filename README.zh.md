@@ -1,6 +1,6 @@
 # TarsGo
 
-- 文档主页：[https://tarscloud.gitbook.io/](https://tarscloud.gitbook.io/tarsgo/)
+- 文档主页：[https://doc.tarsyun.com/](https://doc.tarsyun.com/#/dev/tarsgo/README.md)
 - Twitter: [@TarsCloud](https://twitter.com/TarsCloud)
 - [Mailing List](https://groups.google.com/g/tars-foundation-information)
 - [官网](http://tarscloud.org/)
