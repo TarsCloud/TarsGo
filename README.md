@@ -18,4 +18,4 @@
 
 ## How to Contribute
 
-[Contribution Guide]](CONTRIBUTING.md).
+[Contribution Guide](CONTRIBUTING.md).
