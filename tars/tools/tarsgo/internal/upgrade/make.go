@@ -23,7 +23,9 @@ tarsgo upgrade make`,
 		}
 		makefile := path.Join(wd, "makefile")
 		err = base.CopyFile(makefile, makefile, []string{
-			"libpath=${subst :, ,$(GOPATH)}", "\b",
+			`
+libpath=${subst :, ,$(GOPATH)}`, "",
+			"$(foreach path,$(libpath),$(eval -include $(path)/src/github.com/TarsCloud/TarsGo/tars/makefile.tars))", "-include scripts/makefile.tars.gomod",
 			"$(foreach path,$(libpath),$(eval -include $(path)/src/github.com/TarsCloud/TarsGo/tars/makefile.tars.gomod))", "-include scripts/makefile.tars.gomod",
 		})
 		if err != nil {
