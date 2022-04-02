@@ -19,6 +19,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/cmake"
 	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/consts"
 	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/make"
+	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/upgrade"
 	"github.com/spf13/cobra"
 	"log"
 )
@@ -33,6 +34,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(make.CmdNew)
 	rootCmd.AddCommand(cmake.CmdNew)
+	rootCmd.AddCommand(upgrade.CmdNew)
 }
 
 func main() {
