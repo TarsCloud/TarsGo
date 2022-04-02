@@ -36,7 +36,7 @@ func TarsGoHomeWithDir(dir string) string {
 	return home
 }
 
-func copyFile(src, dst string, replaces []string) error {
+func CopyFile(src, dst string, replaces []string) error {
 	var err error
 	srcinfo, err := os.Stat(src)
 	if err != nil {
@@ -60,7 +60,7 @@ func copyFile(src, dst string, replaces []string) error {
 	return os.WriteFile(dst, buf, srcinfo.Mode())
 }
 
-func copyDir(src, dst string, replaces, ignores []string) error {
+func CopyDir(src, dst string, replaces, ignores []string) error {
 	var err error
 	var fds []os.DirEntry
 	var srcinfo os.FileInfo
@@ -83,11 +83,11 @@ func copyDir(src, dst string, replaces, ignores []string) error {
 		srcfp := path.Join(src, fd.Name())
 		dstfp := path.Join(dst, fd.Name())
 		if fd.IsDir() {
-			if err = copyDir(srcfp, dstfp, replaces, ignores); err != nil {
+			if err = CopyDir(srcfp, dstfp, replaces, ignores); err != nil {
 				return err
 			}
 		} else {
-			if err = copyFile(srcfp, dstfp, replaces); err != nil {
+			if err = CopyFile(srcfp, dstfp, replaces); err != nil {
 				return err
 			}
 		}

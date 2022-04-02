@@ -104,20 +104,20 @@ func (r *Repo) CopyTo(ctx context.Context, p *Project, to string, demoDir string
 		// CMakeLists.txt
 		"${GOPATH}/src/github.com/TarsCloud/TarsGo/", "${CMAKE_CURRENT_SOURCE_DIR}/",
 	}
-	err := copyDir(path.Join(r.Path(), "tars", "tools", r.demoDir), to, replaces, ignores)
+	err := CopyDir(path.Join(r.Path(), "tars", "tools", r.demoDir), to, replaces, ignores)
 	if err != nil {
 		return err
 	}
-	err = copyDir(path.Join(r.Path(), "tars", "tools", "debugtool"), path.Join(to, "debugtool"), replaces, ignores)
+	err = CopyDir(path.Join(r.Path(), "tars", "tools", "debugtool"), path.Join(to, "debugtool"), replaces, ignores)
 	if demoDir == consts.MakeDemoDir {
 		_ = os.MkdirAll(path.Join(to, "scripts"), 0755)
-		_ = copyFile(path.Join(r.Path(), "tars", "makefile.tars.gomod"), path.Join(to, "scripts", "makefile.tars.gomod"), replaces)
+		_ = CopyFile(path.Join(r.Path(), "tars", "makefile.tars.gomod"), path.Join(to, "scripts", "makefile.tars.gomod"), replaces)
 	} else {
 		replaces = []string{
 			// cmake
 			"${GOPATH}/src/github.com/TarsCloud/TarsGo/", "${CMAKE_CURRENT_SOURCE_DIR}/",
 		}
-		_ = copyDir(path.Join(r.Path(), "cmake"), path.Join(to, "cmake"), replaces, ignores)
+		_ = CopyDir(path.Join(r.Path(), "cmake"), path.Join(to, "cmake"), replaces, ignores)
 	}
 	return err
 }

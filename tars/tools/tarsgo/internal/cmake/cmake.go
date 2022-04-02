@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +18,7 @@ var CmdNew = &cobra.Command{
 	Use:   "cmake App Server Servant GoModuleName",
 	Short: "Create a service cmake template",
 	Long: `Create a service cmake project using the repository template. Example:
-tarsgo cmake TeleSafe PhonenumSogouServer SogouInfo github.com/TeleSafe/PhonenumSogouServer`,
+tarsgo cmake Hello HelloServer HelloWorld github.com/Hello/HelloServer`,
 	Run: run,
 }
 
@@ -52,18 +53,18 @@ func run(cmd *cobra.Command, args []string) {
 	defer cancel()
 	done := make(chan error, 1)
 	go func() {
-		done <- p.Create(ctx, wd, repoUrl, branch, consts.CMakeDemoDir)
+		done <- p.Create(ctx, wd, consts.CMake)
 	}()
 	select {
 	case <-ctx.Done():
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			fmt.Fprint(os.Stderr, "\033[31mERROR: project creation timed out\033[m\n")
+			fmt.Fprint(os.Stderr, color.RedString("ERROR: project creation timed out\n"))
 		} else {
-			fmt.Fprintf(os.Stderr, "\033[31mERROR: failed to create project(%+v)\033[m\n", ctx.Err().Error())
+			fmt.Fprintf(os.Stderr, color.RedString("ERROR: failed to create project(%+v)\n", ctx.Err().Error()))
 		}
 	case err = <-done:
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "\033[31mERROR: Failed to create project(%+v)\033[m\n", err.Error())
+			fmt.Fprintf(os.Stderr, color.RedString("ERROR: Failed to create project(%+v)\n", err.Error()))
 		}
 	}
 }

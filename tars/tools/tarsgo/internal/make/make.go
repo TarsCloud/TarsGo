@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/base"
 	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/consts"
+	"github.com/fatih/color"
 	"os"
 	"time"
 
@@ -17,7 +18,7 @@ var CmdNew = &cobra.Command{
 	Use:   "make App Server Servant GoModuleName",
 	Short: "Create a server make template",
 	Long: `Create a server make project using the repository template. Example: 
-tarsgo make TeleSafe PhonenumSogouServer SogouInfo github.com/TeleSafe/PhonenumSogouServer`,
+tarsgo make TestApp HelloGo Hello github.com/TestApp/HelloGo`,
 	Run: run,
 }
 
@@ -52,18 +53,18 @@ func run(cmd *cobra.Command, args []string) {
 	ctx, cancel := context.WithTimeout(context.Background(), t)
 	defer cancel()
 	go func() {
-		done <- p.Create(ctx, wd, repoUrl, branch, consts.MakeDemoDir)
+		done <- p.Create(ctx, wd, consts.Make)
 	}()
 	select {
 	case <-ctx.Done():
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			fmt.Fprint(os.Stderr, "\033[31mERROR: project creation timed out\033[m\n")
+			fmt.Fprint(os.Stderr, color.RedString("ERROR: project creation timed out\n"))
 		} else {
-			fmt.Fprintf(os.Stderr, "\033[31mERROR: failed to create project(%+v)\033[m\n", ctx.Err().Error())
+			fmt.Fprintf(os.Stderr, color.RedString("ERROR: failed to create project(%+v)\n", ctx.Err().Error()))
 		}
 	case err = <-done:
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "\033[31mERROR: Failed to create project(%+v)\033[m\n", err.Error())
+			fmt.Fprintf(os.Stderr, color.RedString("ERROR: Failed to create project(%+v)\n", err.Error()))
 		}
 	}
 }
