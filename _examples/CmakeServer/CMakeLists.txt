@@ -2,7 +2,7 @@
 execute_process(COMMAND go env GOPATH OUTPUT_VARIABLE GOPATH)
 string(REGEX REPLACE "\n$" "" GOPATH "${GOPATH}")
 
-include(../../cmake/tars-tools.cmake)
+include(cmake/tars-tools.cmake)
 
 cmake_minimum_required(VERSION 2.8)
 

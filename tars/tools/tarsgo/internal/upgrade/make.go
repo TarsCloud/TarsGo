@@ -2,8 +2,8 @@ package upgrade
 
 import (
 	"fmt"
-	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/asset"
 	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/base"
+	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/bindata"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"os"
@@ -31,7 +31,7 @@ libpath=${subst :, ,$(GOPATH)}`, "",
 		if err != nil {
 			panic(err)
 		}
-		err = asset.RestoreAsset(wd, "scripts/makefile.tars.gomod")
+		err = bindata.RestoreAsset(wd, "scripts/makefile.tars.gomod")
 		if err != nil {
 			panic(err)
 		}

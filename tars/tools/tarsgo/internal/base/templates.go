@@ -2,7 +2,7 @@ package base
 
 import (
 	"bytes"
-	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/asset"
+	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/bindata"
 	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/consts"
 	"os"
 	"path"
@@ -280,7 +280,7 @@ func DoGenProject(p *Project, to string, mgrType string) error {
 		}
 	}
 	if mgrType == consts.CMake {
-		return asset.RestoreAssets(to, "cmake")
+		return bindata.RestoreAssets(to, "cmake")
 	}
-	return asset.RestoreAsset(to, "scripts/makefile.tars.gomod")
+	return bindata.RestoreAsset(to, "scripts/makefile.tars.gomod")
 }
