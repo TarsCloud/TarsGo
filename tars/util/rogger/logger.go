@@ -3,6 +3,7 @@ package rogger
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -22,9 +23,16 @@ const (
 	OFF
 )
 
+// Format LogFormat
+const (
+	Text LogFormat = iota
+	Json
+)
+
 var (
-	logLevel = DEBUG
-	colored  = false
+	logLevel  = DEBUG
+	logFormat = Text
+	colored   = false
 
 	logQueue    = make(chan *logValue, 10000)
 	loggerMutex sync.Mutex
@@ -44,8 +52,19 @@ type Logger struct {
 	writer LogWriter
 }
 
+type JsonLog struct {
+	Time  string `json:"time"`
+	Func  string `json:"func"`
+	File  string `json:"file"`
+	Level string `json:"level"`
+	Msg   string `json:"msg"`
+}
+
 // LogLevel is uint8 type
 type LogLevel uint8
+
+// LogFormat is uint8 format
+type LogFormat uint8
 
 type logValue struct {
 	// level  LogLevel
@@ -58,7 +77,7 @@ func init() {
 	go flushLog()
 }
 
-// String turns the LogLevel to string.
+// String returns the LogLevel to string.
 func (lv *LogLevel) String() string {
 	switch *lv {
 	case DEBUG:
@@ -90,6 +109,18 @@ func (lv *LogLevel) coloredString() string {
 	}
 }
 
+// String returns the LogFormat to string.
+func (lv *LogFormat) String() string {
+	switch *lv {
+	case Text:
+		return "LINE"
+	case Json:
+		return "JSON"
+	default:
+		return "UNKNOWN"
+	}
+}
+
 // GetLogger return an logger instance
 func GetLogger(name string) *Logger {
 	loggerMutex.Lock()
@@ -118,6 +149,21 @@ func GetLogLevel() LogLevel {
 
 // GetLevel get global log level and return string
 func GetLevel() string {
+	return logLevel.String()
+}
+
+// SetFormat sets the log format
+func SetFormat(format LogFormat) {
+	logFormat = format
+}
+
+// GetLogFormat get global log format
+func GetLogFormat() LogFormat {
+	return logFormat
+}
+
+// GetFormat get global log format and return string
+func GetFormat() string {
 	return logLevel.String()
 }
 
@@ -260,6 +306,14 @@ func (l *Logger) Writef(depth int, level LogLevel, format string, v []interface{
 		return
 	}
 
+	if logFormat == Json {
+		logQueue <- l.WriteJsonF(depth, level, format, v)
+	} else {
+		logQueue <- l.WriteLineF(depth, level, format, v)
+	}
+}
+
+func (l *Logger) WriteLineF(depth int, level LogLevel, format string, v []interface{}) *logValue {
 	buf := bytes.NewBuffer(nil)
 	if l.writer.NeedPrefix() {
 		fmt.Fprintf(buf, "%s|", time.Now().Format("2006-01-02 15:04:05.000"))
@@ -290,7 +344,36 @@ func (l *Logger) Writef(depth int, level LogLevel, format string, v []interface{
 	if l.writer.NeedPrefix() {
 		buf.WriteByte('\n')
 	}
-	logQueue <- &logValue{value: buf.Bytes(), writer: l.writer}
+	return &logValue{value: buf.Bytes(), writer: l.writer}
+}
+
+func (l *Logger) WriteJsonF(depth int, level LogLevel, format string, v []interface{}) *logValue {
+	log := JsonLog{}
+	log.Time = time.Now().Format("2006-01-02 15:04:05.000")
+
+	if callerFlag {
+		pc, file, line, ok := runtime.Caller(depth + callerSkip)
+		if !ok {
+			file = "???"
+			line = 0
+		} else {
+			file = filepath.Base(file)
+		}
+		log.Func = getFuncName(runtime.FuncForPC(pc).Name())
+		log.File = fmt.Sprintf("%s:%d", file, line)
+	}
+	log.Level = level.String()
+
+	if format == "" {
+		log.Msg = fmt.Sprint(v...)
+	} else {
+		log.Msg = fmt.Sprintf(format, v...)
+	}
+	buf := &bytes.Buffer{}
+	encoder := json.NewEncoder(buf)
+	encoder.SetEscapeHTML(false)
+	_ = encoder.Encode(log)
+	return &logValue{value: buf.Bytes(), writer: l.writer}
 }
 
 func getFuncName(name string) string {
