@@ -217,6 +217,7 @@ func initConfig() {
 		end := endpoint.Parse(endString)
 		svrObj := c.GetString("/tars/application/server/" + adapter + "<servant>")
 		proto := c.GetString("/tars/application/server/" + adapter + "<protocol>")
+		queuecap := c.GetIntWithDef("/tars/application/server/"+adapter+"<queuecap>", svrCfg.QueueCap)
 		threads := c.GetInt("/tars/application/server/" + adapter + "<threads>")
 		svrCfg.Adapters[adapter] = adapterConfig{end, proto, svrObj, threads}
 		host := end.Host
@@ -224,15 +225,15 @@ func initConfig() {
 			host = end.Bind
 		}
 		svrConf := &transport.TarsServerConf{
-			Proto:         end.Proto,
-			Address:       fmt.Sprintf("%s:%d", host, end.Port),
-			MaxInvoke:     svrCfg.MaxInvoke,
-			AcceptTimeout: svrCfg.AcceptTimeout,
-			ReadTimeout:   svrCfg.ReadTimeout,
-			WriteTimeout:  svrCfg.WriteTimeout,
-			HandleTimeout: svrCfg.HandleTimeout,
-			IdleTimeout:   svrCfg.IdleTimeout,
-
+			Proto:          end.Proto,
+			Address:        fmt.Sprintf("%s:%d", host, end.Port),
+			MaxInvoke:      svrCfg.MaxInvoke,
+			AcceptTimeout:  svrCfg.AcceptTimeout,
+			ReadTimeout:    svrCfg.ReadTimeout,
+			WriteTimeout:   svrCfg.WriteTimeout,
+			HandleTimeout:  svrCfg.HandleTimeout,
+			IdleTimeout:    svrCfg.IdleTimeout,
+			QueueCap:       queuecap,
 			TCPNoDelay:     svrCfg.TCPNoDelay,
 			TCPReadBuffer:  svrCfg.TCPReadBuffer,
 			TCPWriteBuffer: svrCfg.TCPWriteBuffer,
