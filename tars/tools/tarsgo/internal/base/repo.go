@@ -108,7 +108,7 @@ func (r *Repo) CopyTo(ctx context.Context, p *Project, to string, demoDir string
 	if err != nil {
 		return err
 	}
-	err = CopyDir(path.Join(r.Path(), "tars", "tools", "debugtool"), path.Join(to, "debugtool"), replaces, ignores)
+	//err = CopyDir(path.Join(r.Path(), "tars", "tools", "debugtool"), path.Join(to, "debugtool"), replaces, ignores)
 	if demoDir == consts.MakeDemoDir {
 		_ = os.MkdirAll(path.Join(to, "scripts"), 0755)
 		_ = CopyFile(path.Join(r.Path(), "tars", "makefile.tars.gomod"), path.Join(to, "scripts", "makefile.tars.gomod"), replaces)

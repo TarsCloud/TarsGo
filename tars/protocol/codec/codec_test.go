@@ -631,9 +631,9 @@ func TestReader_SkipToNoCheck(t *testing.T) {
 	if err == nil || exists {
 		t.Error("SkipToNoCheck failed.expecting error, but got nil\n")
 	}
-	if err != nil && err.Error() != "Can not find Tag 3. But require. tagCur: 5, tyCur: 0" {
+	if err != nil && err.Error() != "can not find Tag 3. But require. tagCur: 5, tyCur: 0" {
 		t.Errorf("SkipToNoCheck failed.expecting:%q, but got:%q\n",
-			"Can not find Tag 3. But require. tagCur: 5, tyCur: 0", err)
+			"can not find Tag 3. But require. tagCur: 5, tyCur: 0", err)
 	}
 
 	reader = r(prepareWrite())
