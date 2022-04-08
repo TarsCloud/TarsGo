@@ -6,4 +6,6 @@ const (
 	Release      = "v1.2.0"
 	MakeDemoDir  = "Demo4GoMod"
 	CMakeDemoDir = "Demo4Cmake"
+	Make         = "make"
+	CMake        = "cmake"
 )

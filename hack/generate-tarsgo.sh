@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+set -e
+go-bindata --prefix=hack -o=tars/tools/tarsgo/internal/bindata/bindata.go -pkg=bindata hack/cmake/... hack/scripts/...

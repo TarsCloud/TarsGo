@@ -29,7 +29,7 @@ func NewProject(app, server, servant, goModuleName string) *Project {
 }
 
 // Create a project from remote repo.
-func (p *Project) Create(ctx context.Context, dir string, layout string, branch string, demoDir string) error {
+func (p *Project) Create(ctx context.Context, dir string, mgrType string) error {
 	to := path.Join(dir, p.Server)
 	if _, err := os.Stat(to); !os.IsNotExist(err) {
 		fmt.Printf("🚫 %s already exists\n", p.Server)
@@ -54,9 +54,9 @@ func (p *Project) Create(ctx context.Context, dir string, layout string, branch 
 		}
 	}
 
-	fmt.Printf("🚀 Creating server %s.%s, layout repo is %s, please wait a moment.\n\n", p.App, p.Server, layout)
-	repo := NewRepo(layout, branch, demoDir)
-	if err := repo.CopyTo(ctx, p, to, demoDir, []string{".git"}); err != nil {
+	fmt.Printf("🚀 Creating server %s.%s, please wait a moment.\n\n", p.App, p.Server)
+
+	if err := DoGenProject(p, to, mgrType); err != nil {
 		return err
 	}
 
@@ -84,7 +84,7 @@ func (p *Project) Create(ctx context.Context, dir string, layout string, branch 
 	fmt.Println(color.WhiteString("$ cd %s", p.Server))
 	fmt.Println(color.WhiteString("$ ./start.sh"))
 	fmt.Println("🤝 Thanks for using TarsGo")
-	fmt.Println("📚 Tutorial: https://tarscloud.github.io/TarsDocs/")
+	fmt.Println("📚 Tutorial: https://doc.tarsyun.com/")
 	return nil
 }
 
