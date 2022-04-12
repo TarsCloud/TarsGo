@@ -18,6 +18,7 @@ var gModuleCycle = flag.Bool("module-cycle", false, "support jce module cycle in
 var gModuleUpper = flag.Bool("module-upper", false, "native module names are supported, otherwise the system will upper the first letter of the module name")
 var gJsonOmitEmpty = flag.Bool("json-omitempty", false, "Generate json omitempty support")
 var dispatchReporter = flag.Bool("dispatch-reporter", false, "Dispatch reporter support")
+var debug = flag.Bool("debug", false, "enable debug mode")
 
 var gFileMap map[string]bool
 
@@ -221,6 +222,11 @@ func (gen *GenGo) saveToSourceFile(filename string) {
 	if !*gE {
 		beauty, err = format.Source(gen.code.Bytes())
 		if err != nil {
+			if *debug {
+				fmt.Println("------------------")
+				fmt.Println(string(gen.code.Bytes()))
+				fmt.Println("------------------")
+			}
 			gen.genErr("go fmt fail. " + filename + " " + err.Error())
 		}
 	} else {
