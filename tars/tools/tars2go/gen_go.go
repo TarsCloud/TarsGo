@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -331,6 +332,9 @@ func (gen *GenGo) genStructImport(module string, protoName string, mImports map[
 	var modulePath string
 	if gen.module != "" {
 		mf := filepath.Clean(filepath.Join(gen.module, gen.prefix))
+		if runtime.GOOS == "windows" {
+			mf = strings.ReplaceAll(mf, string(os.PathSeparator), string('/'))
+		}
 		modulePath = fmt.Sprintf("%s/%s%s", mf, jcePath, moduleStr)
 	} else {
 		modulePath = fmt.Sprintf("%s%s", jcePath, moduleStr)
@@ -418,6 +422,9 @@ func (gen *GenGo) genIFImport(module string, protoName string) {
 	var modulePath string
 	if gen.module != "" {
 		mf := filepath.Clean(filepath.Join(gen.module, gen.prefix))
+		if runtime.GOOS == "windows" {
+			mf = strings.ReplaceAll(mf, string(os.PathSeparator), string('/'))
+		}
 		modulePath = fmt.Sprintf("%s/%s%s", mf, jcePath, moduleStr)
 	} else {
 		modulePath = fmt.Sprintf("%s%s", jcePath, moduleStr)
