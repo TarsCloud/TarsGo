@@ -1,4 +1,4 @@
 package main
 
 // VERSION of the tars2go tools.
-const VERSION = "1.1.6"
+const VERSION = "1.1.7"
