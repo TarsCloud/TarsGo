@@ -1228,7 +1228,7 @@ if len(opts) == 1{
 	contextMap = opts[0]
 	statusMap = opts[1]
 }
-resp := new(requestf.ResponsePacket)
+tarsResp := new(requestf.ResponsePacket)
 tarsCtx := context.Background()
 `)
 	} else {
@@ -1266,23 +1266,23 @@ if len(opts) == 1{
 	statusMap = opts[1]
 }
 
-resp := new(requestf.ResponsePacket)`)
+tarsResp := new(requestf.ResponsePacket)`)
 	}
 
 	if isOneWay {
 		c.WriteString(`
-		err = obj.servant.TarsInvoke(tarsCtx, 1, "` + fun.OriginName + `", buf.ToBytes(), statusMap, contextMap, resp)
+		err = obj.servant.TarsInvoke(tarsCtx, 1, "` + fun.OriginName + `", buf.ToBytes(), statusMap, contextMap, tarsResp)
 		` + errStr + `
 		`)
 	} else {
 		c.WriteString(`
-		err = obj.servant.TarsInvoke(tarsCtx, 0, "` + fun.OriginName + `", buf.ToBytes(), statusMap, contextMap, resp)
+		err = obj.servant.TarsInvoke(tarsCtx, 0, "` + fun.OriginName + `", buf.ToBytes(), statusMap, contextMap, tarsResp)
 		` + errStr + `
 		`)
 	}
 
 	if (isOut || fun.HasRet) && !isOneWay {
-		c.WriteString("readBuf := codec.NewReader(tools.Int8ToByte(resp.SBuffer))")
+		c.WriteString("readBuf := codec.NewReader(tools.Int8ToByte(tarsResp.SBuffer))")
 	}
 	if fun.HasRet && !isOneWay {
 		dummy := &StructMember{}
@@ -1329,7 +1329,7 @@ if ok && traceData.TraceCall {
 	} else if traceParamFlag == trace.EnpOverMaxLen {
 		traceParam = "{\"trace_param_over_max_len\":true}"
 	}
-	tars.Trace(traceData.GetTraceKey(trace.EstCR), trace.TraceAnnotationCR, tars.GetClientConfig().ModuleName, obj.servant.Name(), "` + fun.Name + `", int(resp.IRet), traceParam, "")
+	tars.Trace(traceData.GetTraceKey(trace.EstCR), trace.TraceAnnotationCR, tars.GetClientConfig().ModuleName, obj.servant.Name(), "` + fun.Name + `", int(tarsResp.IRet), traceParam, "")
 }`)
 			c.WriteString("\n\n")
 		}
@@ -1340,20 +1340,20 @@ if len(opts) == 1 {
 	for k := range(contextMap){
 		delete(contextMap, k)
 	}
-	for k, v := range(resp.Context){
+	for k, v := range(tarsResp.Context){
 		contextMap[k] = v
 	}
 } else if len(opts) == 2 {
 	for k := range(contextMap){
 		delete(contextMap, k)
 	}
-	for k, v := range(resp.Context){
+	for k, v := range(tarsResp.Context){
 		contextMap[k] = v
 	}
 	for k := range(statusMap){
 		delete(statusMap, k)
 	}
-	for k, v := range(resp.Status){
+	for k, v := range(tarsResp.Status){
 		statusMap[k] = v
 	}
 }

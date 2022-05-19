@@ -841,24 +841,24 @@ func newParse(s string, b []byte, incChain []string) *Parse {
 }
 
 // ParseFile parse a file,return grammar tree.
-func ParseFile(path string, incChain []string) *Parse {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
+func ParseFile(filePath string, incChain []string) *Parse {
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		// 查找tars文件路径
+		filename := path.Base(filePath)
 		for _, include := range includes {
 			include = strings.TrimRight(include, "/")
-			filePath := include + "/" + path
+			filePath = include + "/" + filename
 			if _, err = os.Stat(filePath); err == nil {
-				path = filePath
 				break
 			}
 		}
 	}
-	b, err := ioutil.ReadFile(path)
+	b, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		fmt.Println("file read error: " + path + ". " + err.Error())
+		fmt.Println("file read error: " + filePath + ". " + err.Error())
 	}
 
-	p := newParse(path, b, incChain)
+	p := newParse(filePath, b, incChain)
 	p.parse()
 
 	return p
