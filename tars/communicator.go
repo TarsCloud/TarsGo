@@ -64,11 +64,11 @@ func (c *Communicator) SetLocator(obj string) {
 }
 
 // StringToProxy sets the servant of ProxyPrx p with a string servant
-func (c *Communicator) StringToProxy(servant string, p ProxyPrx) {
+func (c *Communicator) StringToProxy(servant string, p ProxyPrx, opts ...EndpointManagerOption) {
 	if servant == "" {
 		panic("empty servant")
 	}
-	sp := newServantProxy(c, servant)
+	sp := newServantProxy(c, servant, opts...)
 	p.SetServant(sp)
 }
 

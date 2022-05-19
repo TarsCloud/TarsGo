@@ -52,12 +52,15 @@ func initOnceGManager(refreshInterval int, checkStatusInterval int) {
 }
 
 // GetManager return a endpoint manager from global endpoint manager
-func GetManager(comm *Communicator, objName string) EndpointManager {
+func GetManager(comm *Communicator, objName string, opts ...EndpointManagerOption) EndpointManager {
 	// tars
 	initOnceGManager(comm.Client.RefreshEndpointInterval, comm.Client.CheckStatusInterval)
 	g := gManager
 	g.mlock.Lock()
-	key := objName + comm.hashKey()
+	key := objName + ":" + comm.hashKey()
+	for _, opt := range opts {
+		opt.key(&key)
+	}
 
 	if v, ok := g.eps[key]; ok {
 		g.mlock.Unlock()
@@ -66,7 +69,7 @@ func GetManager(comm *Communicator, objName string) EndpointManager {
 	g.mlock.Unlock()
 
 	TLOG.Debug("Create endpoint manager for ", objName)
-	em := newTarsEndpointManager(objName, comm) // avoid dead lock
+	em := newTarsEndpointManager(objName, comm, opts...) // avoid dead lock
 	g.mlock.Lock()
 	if v, ok := g.eps[key]; ok {
 		g.mlock.Unlock()
@@ -131,7 +134,6 @@ func (g *globalManager) updateEndpoints() {
 			if err != nil {
 				TLOG.Errorf("update endpoint error, %s.", e.objName)
 			}
-
 		}
 
 		// cache to file
@@ -156,6 +158,8 @@ func (g *globalManager) updateEndpoints() {
 // tarsEndpointManager is a struct which contains endpoint information.
 type tarsEndpointManager struct {
 	objName     string // name only, no ip list
+	enableSet   bool
+	setDivision string
 	directProxy bool
 	comm        *Communicator
 	locator     *queryf.QueryF
@@ -176,7 +180,44 @@ type tarsEndpointManager struct {
 	invokeNum       int32
 }
 
-func newTarsEndpointManager(objName string, comm *Communicator) *tarsEndpointManager {
+type EndpointManagerOption interface {
+	apply(e *tarsEndpointManager)
+	key(k *string)
+}
+
+type OptionFunc struct {
+	applyFunc func(*tarsEndpointManager)
+	keyFunc   func(*string)
+}
+
+func (f OptionFunc) apply(e *tarsEndpointManager) {
+	if f.applyFunc != nil {
+		f.applyFunc(e)
+	}
+}
+
+func (f OptionFunc) key(e *string) {
+	if f.keyFunc != nil {
+		f.keyFunc(e)
+	}
+}
+
+func newOptionFunc(applyFunc func(*tarsEndpointManager), keyFunc func(*string)) OptionFunc {
+	return OptionFunc{applyFunc: applyFunc, keyFunc: keyFunc}
+}
+
+func WithSet(setDivision string) OptionFunc {
+	return newOptionFunc(func(e *tarsEndpointManager) {
+		if setDivision != "" {
+			e.enableSet = true
+			e.setDivision = setDivision
+		}
+	}, func(s *string) {
+		*s = *s + ":" + setDivision
+	})
+}
+
+func newTarsEndpointManager(objName string, comm *Communicator, opts ...EndpointManagerOption) *tarsEndpointManager {
 	if objName == "" {
 		return nil
 	}
@@ -186,6 +227,9 @@ func newTarsEndpointManager(objName string, comm *Communicator) *tarsEndpointMan
 	e.epList = &sync.Map{}
 	e.epLock = &sync.Mutex{}
 	e.checkAdapterList = &sync.Map{}
+	for _, opt := range opts {
+		opt.apply(e)
+	}
 	pos := strings.Index(objName, "@")
 	if pos > 0 {
 		// [direct]
@@ -215,7 +259,6 @@ func newTarsEndpointManager(objName string, comm *Communicator) *tarsEndpointMan
 		e.comm.StringToProxy(obj, e.locator)
 		e.checkAdapter = make(chan *AdapterProxy, 1000)
 	}
-
 	return e
 }
 
@@ -368,15 +411,19 @@ func (e *tarsEndpointManager) postInvoke() {
 func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 	activeEp := make([]endpointf.EndpointF, 0)
 	inactiveEp := make([]endpointf.EndpointF, 0)
-	var setable, ok bool
+	var enableSet, ok bool
 	var setID string
 	var ret int32
 	var err error
-	if setable, ok = e.comm.GetPropertyBool("enableset"); ok {
+	if enableSet, ok = e.comm.GetPropertyBool("enableset"); ok {
 		setID, _ = e.comm.GetProperty("setdivision")
 	}
+	if e.enableSet && e.setDivision != "" {
+		enableSet = e.enableSet
+		setID = e.setDivision
+	}
 
-	if setable {
+	if enableSet {
 		ret, err = q.FindObjectByIdInSameSet(e.objName, setID, &activeEp, &inactiveEp)
 	} else {
 		ret, err = q.FindObjectByIdInSameGroup(e.objName, &activeEp, &inactiveEp)
@@ -386,9 +433,9 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 		return err
 	}
 	if ret != 0 {
-		e := fmt.Errorf("findAndSetObj %s fail, ret: %d", e.objName, ret)
-		TLOG.Error(e.Error())
-		return e
+		err = fmt.Errorf("findAndSetObj %s fail, ret: %d", e.objName, ret)
+		TLOG.Error(err.Error())
+		return err
 	}
 
 	// compare, assert in same order
