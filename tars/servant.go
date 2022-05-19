@@ -21,6 +21,7 @@ import (
 var (
 	maxInt32 int32 = 1<<31 - 1
 	msgID    int32
+	_        model.Servant = (*ServantProxy)(nil)
 )
 
 const (
@@ -42,11 +43,11 @@ type ServantProxy struct {
 }
 
 // NewServantProxy creates and initializes a servant proxy
-func NewServantProxy(comm *Communicator, objName string) *ServantProxy {
-	return newServantProxy(comm, objName)
+func NewServantProxy(comm *Communicator, objName string, opts ...EndpointManagerOption) *ServantProxy {
+	return newServantProxy(comm, objName, opts...)
 }
 
-func newServantProxy(comm *Communicator, objName string) *ServantProxy {
+func newServantProxy(comm *Communicator, objName string, opts ...EndpointManagerOption) *ServantProxy {
 	s := &ServantProxy{}
 	pos := strings.Index(objName, "@")
 	if pos > 0 {
@@ -60,7 +61,7 @@ func newServantProxy(comm *Communicator, objName string) *ServantProxy {
 	}
 
 	// init manager
-	s.manager = GetManager(comm, objName)
+	s.manager = GetManager(comm, objName, opts...)
 	s.comm = comm
 	s.proto = &protocol.TarsProtocol{}
 	s.timeout = s.comm.Client.AsyncInvokeTimeout
