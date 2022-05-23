@@ -15,6 +15,19 @@ type ProxyPrx interface {
 	SetServant(s.Servant)
 }
 
+var (
+	communicator     *Communicator
+	onceCommunicator sync.Once
+)
+
+// GetCommunicator returns a default communicator
+func GetCommunicator() *Communicator {
+	onceCommunicator.Do(func() {
+		communicator = NewCommunicator()
+	})
+	return communicator
+}
+
 // NewCommunicator returns a new communicator. A Communicator is used for communicating with
 // the server side which should only init once and be global!!!
 func NewCommunicator() *Communicator {

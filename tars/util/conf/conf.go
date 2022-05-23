@@ -151,7 +151,7 @@ type Conf struct {
 	root    *elem         // root is the root element
 }
 
-// New  returns an new Conf struct.
+// New  returns a new Conf struct.
 func New() *Conf {
 	return &Conf{[]byte{}, new(sync.RWMutex), newElem(Node, "root")}
 }
