@@ -30,6 +30,7 @@ var (
 	onceRConf    sync.Once
 )
 
+// GetRConf returns a default RConf
 func GetRConf() *RConf {
 	initDefaultRConf()
 	return defaultRConf
