@@ -67,6 +67,13 @@ func init() {
 
 // ServerConfigPath is the path of server config
 var ServerConfigPath string
+var cnf *conf.Conf
+
+// GetConf Get server conf.Conf config
+func GetConf() *conf.Conf {
+	Init()
+	return cnf
+}
 
 func initConfig() {
 	defer func() {
@@ -91,6 +98,7 @@ func initConfig() {
 		TLOG.Errorf("Parse server config fail %v", err)
 		return
 	}
+	cnf = c
 
 	// Config.go
 	// init server config
