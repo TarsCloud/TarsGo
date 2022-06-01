@@ -38,7 +38,7 @@ var (
 	loggerMutex sync.Mutex
 	loggerMap   = make(map[string]*Logger)
 	//writeDone   = make(chan bool)
-	callerSkip = 2
+	callerSkip = 3
 	callerFlag = true
 
 	waitFlushTimeout       = time.Second
