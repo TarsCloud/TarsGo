@@ -1,24 +1,17 @@
 # Usage
 - Install protoc
-```shell
-git clone https://github.com/protocolbuffers/protobuf
-cd protobuf
-git checkout v3.6.1.3
-./autogen.sh
-./configure
-make -j8
-make install
-```
+
+[https://github.com/protocolbuffers/protobuf/releases](https://github.com/protocolbuffers/protobuf/releases)
+
+In the downloads section of each release, you can find pre-built binaries in zip packages: protoc-$VERSION-$PLATFORM.zip. It contains the protoc binary as well as a set of standard .proto files distributed along with protobuf.
 
 - Add tarsrpc plugin for protoc-gen-go
 ```shell
-go get github.com/golang/protobuf/{proto,protoc-gen-go}
-go get github.com/TarsCloud/TarsGo/tars
-
-cd $GOPATH/src/github.com/golang/protobuf/protoc-gen-go && cp -r $GOPATH/src/github.com/TarsCloud/TarsGo/tars/tools/pb2tarsgo/protoc-gen-go/{link_tarsrpc.go,tarsrpc} .
-git checkout v1.3.5
-go install
 export PATH=$PATH:$GOPATH/bin
+# < go 1.16
+go get -u github.com/TarsCloud/TarsGo/tars/tools/pb2tarsgo/protoc-gen-go
+# >= go 1.17
+go install github.com/TarsCloud/TarsGo/tars/tools/pb2tarsgo/protoc-gen-go@latest
 ```
 
 # example
@@ -99,4 +92,31 @@ func main() {
     }   
     fmt.Println("result is:", output.Message)
 }
+```
+
+- config.conf
+```xml
+<tars>
+    <application>
+        <server>
+            app=StressTest
+            server=HelloPbServer
+            local=tcp -h 127.0.0.1 -p 10014 -t 30000
+            logpath=/tmp
+            <StressTest.HelloPbServer.GreeterTestObjAdapter>
+                allow
+                endpoint=tcp -h 127.0.0.1 -p 10014 -t 60000
+                handlegroup=StressTest.HelloPbServer.GreeterTestObjAdapter
+                maxconns=200000
+                protocol=tars
+                queuecap=10000
+                queuetimeout=60000
+                servant=StressTest.HelloPbServer.GreeterTestObj
+                shmcap=0
+                shmkey=0
+                threads=1
+            </StressTest.HelloPbServer.GreeterTestObjAdapter>
+        </server>
+    </application>
+</tars>
 ```

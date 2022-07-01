@@ -28,6 +28,7 @@ func run(cmd *cobra.Command, args []string) {
 		err := base.GoInstall(
 			"github.com/TarsCloud/TarsGo/tars/tools/tarsgo",
 			"github.com/TarsCloud/TarsGo/tars/tools/tars2go",
+			"github.com/TarsCloud/TarsGo/tars/tools/pb2tarsgo/protoc-gen-go",
 		)
 		if err != nil {
 			fmt.Println(err)
