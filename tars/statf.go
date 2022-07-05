@@ -13,6 +13,7 @@ import (
 var (
 	// ReportStat set the default stater(default is `ReportStatFromClient`).
 	ReportStat reportStatFunc = ReportStatFromClient
+	timePoint                 = []int32{5, 10, 50, 100, 200, 500, 1000, 2000, 3000}
 )
 
 type reportStatFunc func(msg *Message, succ int32, timeout int32, exec int32)
@@ -51,7 +52,7 @@ func (s *StatFHelper) Init(comm *Communicator, servant string) {
 }
 
 func (s *StatFHelper) collectMsg(statInfo StatInfo, mStatInfo map[statf.StatMicMsgHead]statf.StatMicMsgBody, mStatCount map[statf.StatMicMsgHead]int) {
-	if body, ok := s.mStatInfo[statInfo.Head]; ok {
+	if body, ok := mStatInfo[statInfo.Head]; ok {
 		body.Count += statInfo.Body.Count
 		body.TimeoutCount += statInfo.Body.TimeoutCount
 		body.ExecCount += statInfo.Body.ExecCount
@@ -62,8 +63,9 @@ func (s *StatFHelper) collectMsg(statInfo StatInfo, mStatInfo map[statf.StatMicM
 		if body.MinRspTime > statInfo.Body.MinRspTime {
 			body.MinRspTime = statInfo.Body.MinRspTime
 		}
-		s.mStatInfo[statInfo.Head] = body
-		s.mStatCount[statInfo.Head]++
+		s.getIntervCount(int32(statInfo.Body.TotalRspTime), body.IntervalCount)
+		mStatInfo[statInfo.Head] = body
+		mStatCount[statInfo.Head]++
 	} else {
 		firstBody := statf.StatMicMsgBody{}
 		firstBody.Count = statInfo.Body.Count
@@ -72,8 +74,34 @@ func (s *StatFHelper) collectMsg(statInfo StatInfo, mStatInfo map[statf.StatMicM
 		firstBody.TotalRspTime = statInfo.Body.TotalRspTime
 		firstBody.MaxRspTime = statInfo.Body.MaxRspTime
 		firstBody.MinRspTime = statInfo.Body.MinRspTime
-		s.mStatInfo[statInfo.Head] = firstBody
-		s.mStatCount[statInfo.Head] = 1
+		firstBody.IntervalCount = map[int32]int32{}
+		s.getIntervCount(int32(statInfo.Body.TotalRspTime), firstBody.IntervalCount)
+		mStatInfo[statInfo.Head] = firstBody
+		mStatCount[statInfo.Head] = 1
+	}
+}
+
+func (s *StatFHelper) getIntervCount(totalRspTime int32, intervalCount map[int32]int32) {
+	var (
+		bNeedInit, bGetIntev bool
+	)
+	// The first time you need to initialize all the plot points to 0
+	if len(intervalCount) == 0 {
+		bNeedInit = true
+	}
+	for _, point := range timePoint {
+		if !bGetIntev && totalRspTime < point {
+			bGetIntev = true
+			intervalCount[point]++
+			if !bNeedInit {
+				break
+			} else {
+				continue
+			}
+		}
+		if bNeedInit {
+			intervalCount[point] = 0
+		}
 	}
 }
 
