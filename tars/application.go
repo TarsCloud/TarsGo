@@ -1,4 +1,4 @@
-//服务端启动初始化，解析命令行参数，解析配置
+// 服务端启动初始化，解析命令行参数，解析配置
 
 package tars
 
@@ -185,6 +185,10 @@ func initConfig() {
 			panic(err)
 		}
 	}
+	svrCfg.SampleRate = c.GetFloatWithDef("/tars/application/server<samplerate>", 0)
+	svrCfg.SampleType = c.GetString("/tars/application/server<sampletype>")
+	svrCfg.SampleAddress = c.GetString("/tars/application/server<sampleaddress>")
+	svrCfg.SampleEncoding = c.GetStringWithDef("/tars/application/server<sampleencoding>", "json")
 
 	// init client config
 	cMap := c.GetMap("/tars/application/client")
