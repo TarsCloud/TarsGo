@@ -29,6 +29,15 @@ func (h *udpHandler) Listen() (err error) {
 	return nil
 }
 
+func (h *udpHandler) getConnContext(udpAddr *net.UDPAddr) context.Context {
+	ctx := current.ContextWithTarsCurrent(context.Background())
+	current.SetClientIPWithContext(ctx, udpAddr.IP.String())
+	current.SetClientPortWithContext(ctx, strconv.Itoa(udpAddr.Port))
+	current.SetRecvPkgTsFromContext(ctx, time.Now().UnixNano()/1e6)
+	current.SetRawConnWithContext(ctx, h.conn, udpAddr)
+	return ctx
+}
+
 func (h *udpHandler) Handle() error {
 	atomic.AddInt32(&h.ts.numConn, 1)
 	// wait invoke done
@@ -59,14 +68,10 @@ func (h *udpHandler) Handle() error {
 		}
 		pkg := make([]byte, n)
 		copy(pkg, buffer[0:n])
+		ctx := h.getConnContext(udpAddr)
 		go func() {
-			ctx := current.ContextWithTarsCurrent(context.Background())
-			current.SetClientIPWithContext(ctx, udpAddr.IP.String())
-			current.SetClientPortWithContext(ctx, strconv.Itoa(udpAddr.Port))
-			current.SetRecvPkgTsFromContext(ctx, time.Now().UnixNano()/1e6)
-			current.SetRawConnWithContext(ctx, h.conn, udpAddr)
-
 			atomic.AddInt32(&h.ts.numInvoke, 1)
+			defer atomic.AddInt32(&h.ts.numInvoke, -1)
 			rsp := h.ts.invoke(ctx, pkg) // no need to check package
 
 			cPacketType, ok := current.GetPacketTypeFromContext(ctx)
@@ -75,14 +80,12 @@ func (h *udpHandler) Handle() error {
 			}
 
 			if cPacketType == basef.TARSONEWAY {
-				atomic.AddInt32(&h.ts.numInvoke, -1)
 				return
 			}
 
 			if _, err := h.conn.WriteToUDP(rsp, udpAddr); err != nil {
 				TLOG.Errorf("send pkg to %v failed %v", udpAddr, err)
 			}
-			atomic.AddInt32(&h.ts.numInvoke, -1)
 		}()
 	}
 }
