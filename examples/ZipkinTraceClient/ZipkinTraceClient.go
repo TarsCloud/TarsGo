@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
-
 	"github.com/TarsCloud/TarsGo/tars"
 	"github.com/TarsCloud/TarsGo/tars/plugin/zipkintracing"
 
@@ -16,21 +14,19 @@ var sapp = new(ZipkinTraceApp.ZipkinTrace)
 var comm = tars.NewCommunicator()
 var logger = tars.GetLogger("zipkin")
 
-func main() { //Init servant
+func main() { // Init servant
 	go func() {
 		fmt.Println(http.ListenAndServe("0.0.0.0:8090", nil))
 	}()
-	imp := new(ZipkinClientImp)             //New Imp
-	app := new(ZipkinTraceApp.ZipkinClient) //New init the A Tars
+	imp := new(ZipkinClientImp)             // New Imp
+	app := new(ZipkinTraceApp.ZipkinClient) // New init the A Tars
 	comm.StringToProxy("ZipkinTraceApp.ZipkinTraceServer.ZipkinTraceObj@tcp -h 127.0.0.1 -p 15015 -t 60000", sapp)
 	cf := zipkintracing.ZipkinClientFilter()
 	sf := zipkintracing.ZipkinServerFilter()
 	tars.RegisterClientFilter(cf)
 	tars.RegisterServerFilter(sf)
-	cfg := tars.GetServerConfig() //Get Config File Object
-	port := cfg.Adapters[cfg.App+"."+cfg.Server+".ZipkinClientObjAdapter"].Endpoint.Port
-	hostPort := cfg.Adapters[cfg.App+"."+cfg.Server+".ZipkinClientObjAdapter"].Endpoint.Host + ":" + strconv.Itoa(int(port))
-	zipkintracing.Init("http://127.0.0.1:9411/api/v2/spans", true, true, true, hostPort, cfg.App+"."+cfg.Server)
-	app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+".ZipkinClientObj") //Register Servant
+	cfg := tars.GetServerConfig() // Get Config File Object
+	zipkintracing.InitV2()
+	app.AddServantWithContext(imp, cfg.App+"."+cfg.Server+".ZipkinClientObj") // Register Servant
 	tars.Run()
 }

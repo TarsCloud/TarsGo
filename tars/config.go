@@ -79,6 +79,11 @@ type serverConfig struct {
 	Key          string
 	VerifyClient bool
 	Ciphers      string
+
+	SampleRate     float64
+	SampleType     string
+	SampleAddress  string
+	SampleEncoding string
 }
 
 type clientConfig struct {

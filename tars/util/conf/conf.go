@@ -322,3 +322,18 @@ func (c *Conf) GetBoolWithDef(path string, defVal bool) bool {
 	}
 	return bValue
 }
+
+// GetFloatWithDef get float value
+func (c *Conf) GetFloatWithDef(path string, defVal float64) float64 {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	value, err := c.root.getValue(path)
+	if err != nil {
+		return defVal
+	}
+	fValue, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return defVal
+	}
+	return fValue
+}
