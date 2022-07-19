@@ -96,10 +96,15 @@ func (r *RoundRobin) Remove(ep endpoint.Endpoint) error {
 
 func (r *RoundRobin) reBuildLocked() {
 	rd := rand.New(rand.NewSource(time.Now().UnixNano()))
-	r.lastPosition = uint64(rd.Intn(len(r.endpoints)))
+	r.lastPosition, r.lastStaticWeightPosition = 0, 0
+	if n := len(r.endpoints); n > 0 {
+		r.lastPosition = uint64(rd.Intn(n))
+	}
 	r.staticWeightRouterCache = nil
 	if r.enableWeight {
 		r.staticWeightRouterCache = selector.BuildStaticWeightList(r.endpoints)
-		r.lastStaticWeightPosition = uint64(rd.Intn(len(r.staticWeightRouterCache)))
+		if n := len(r.staticWeightRouterCache); n > 0 {
+			r.lastStaticWeightPosition = uint64(rd.Intn(n))
+		}
 	}
 }
