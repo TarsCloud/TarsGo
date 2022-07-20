@@ -31,10 +31,11 @@ type elem struct {
 	name     string
 	value    string
 	children map[string]*elem
+	line     []string
 }
 
 func newElem(kind int, name string) *elem {
-	return &elem{kind, name, "", make(map[string]*elem)}
+	return &elem{kind: kind, name: name, value: "", children: make(map[string]*elem)}
 }
 
 func (e *elem) setValue(value string) *elem {
@@ -44,6 +45,11 @@ func (e *elem) setValue(value string) *elem {
 
 func (e *elem) addChild(name string, child *elem) *elem {
 	e.children[name] = child
+	return e
+}
+
+func (e *elem) addLine(line string) *elem {
+	e.line = append(e.line, line)
 	return e
 }
 
@@ -119,6 +125,34 @@ func (e *elem) getDomain(path string) ([]string, error) {
 	return domain, nil
 }
 
+// path like /A/B/C or /A/B/C/
+func (e *elem) getDomainKey(path string) ([]string, error) {
+	pathVec := e.analysisPath(path)
+	var domainKey []string
+	targetNode, err := e.getElem(pathVec)
+	if err != nil {
+		return domainKey, err
+	}
+	for _, child := range targetNode.children {
+		if child.isLeaf() {
+			domainKey = append(domainKey, child.name)
+		}
+	}
+	return domainKey, nil
+}
+
+// path like /A/B/C or /A/B/C/
+func (e *elem) getDomainLine(path string) ([]string, error) {
+	pathVec := e.analysisPath(path)
+	var domainLine []string
+	targetNode, err := e.getElem(pathVec)
+	if err != nil {
+		return domainLine, err
+	}
+	domainLine = append(domainLine, targetNode.line...)
+	return domainLine, nil
+}
+
 func (e *elem) getMap(path string) (map[string]string, error) {
 	pathVec := e.analysisPath(path)
 	kvMap := make(map[string]string)
@@ -158,7 +192,7 @@ func New() *Conf {
 
 // NewConf returns a new Conf with the fileName
 func NewConf(fileName string) (*Conf, error) {
-	c := &Conf{[]byte{}, new(sync.RWMutex), newElem(Node, "root")}
+	c := New()
 	if err := c.InitFromFile(fileName); err != nil {
 		return nil, err
 	}
@@ -199,16 +233,18 @@ func (c *Conf) InitFromBytes(content []byte) error {
 			lineDecoder.Split(bufio.ScanLines)
 			for lineDecoder.Scan() {
 				line := strings.Trim(lineDecoder.Text(), whiteSpaceChars)
-				if len(line) > 0 && line[0] == '#' {
+				if (len(line) > 0 && line[0] == '#') || line == "" {
 					continue
 				}
+				// add Line data
+				currNode.addLine(line)
 				kv := strings.SplitN(line, "=", 2)
-				if len(kv) != 2 {
-					continue
-				}
-				k, v := strings.Trim(kv[0], whiteSpaceChars), strings.Trim(kv[1], whiteSpaceChars)
+				k, v := strings.Trim(kv[0], whiteSpaceChars), ""
 				if k == "" {
 					continue
+				}
+				if len(kv) == 2 {
+					v = strings.Trim(kv[1], whiteSpaceChars)
 				}
 				leaf := newElem(Leaf, k)
 				leaf.setValue(v)
@@ -278,6 +314,28 @@ func (c *Conf) GetDomain(path string) []string {
 		return []string{}
 	}
 	return domain
+}
+
+// GetDomainKey returns the domain for pointed path
+func (c *Conf) GetDomainKey(path string) []string {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	domainKey, err := c.root.getDomainKey(path)
+	if err != nil {
+		return []string{}
+	}
+	return domainKey
+}
+
+// GetDomainLine returns the domain for pointed path
+func (c *Conf) GetDomainLine(path string) []string {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	domainLine, err := c.root.getDomainLine(path)
+	if err != nil {
+		return []string{}
+	}
+	return domainLine
 }
 
 // GetMap returns the key-value as a map for pointed path
