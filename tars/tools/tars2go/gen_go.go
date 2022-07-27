@@ -1504,6 +1504,8 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 		c.WriteString("var " + v.Name + " " + gen.genType(v.Type) + "\n")
 		if v.Type.Type == tkTMap {
 			c.WriteString(v.Name + " = make(" + gen.genType(v.Type) + ")\n")
+		} else if v.Type.Type == tkTVector {
+			c.WriteString(v.Name + " = make(" + gen.genType(v.Type) + ", 0)\n")
 		}
 		if v.IsOut {
 			outArgsCount++
