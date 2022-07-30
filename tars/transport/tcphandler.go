@@ -74,10 +74,11 @@ func (h *tcpHandler) getConnContext(connSt *connInfo) context.Context {
 }
 
 func (h *tcpHandler) handleConn(connSt *connInfo, pkg []byte) {
+	// recvPkgTs are more accurate
+	ctx := h.getConnContext(connSt)
 	handler := func() {
 		defer atomic.AddInt32(&connSt.numInvoke, -1)
 
-		ctx := h.getConnContext(connSt)
 		rsp := h.ts.invoke(ctx, pkg)
 
 		cPacketType, ok := current.GetPacketTypeFromContext(ctx)

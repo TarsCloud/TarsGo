@@ -118,8 +118,7 @@ func (s *ServantProxy) TarsInvoke(ctx context.Context, cType byte,
 
 	// 将ctx中的dyeing信息传入到request中
 	var msgType int32
-	dyeingKey, ok := current.GetDyeingKey(ctx)
-	if ok {
+	if dyeingKey, ok := current.GetDyeingKey(ctx); ok {
 		TLOG.Debug("dyeing debug: find dyeing key:", dyeingKey)
 		if status == nil {
 			status = make(map[string]string)
@@ -129,8 +128,7 @@ func (s *ServantProxy) TarsInvoke(ctx context.Context, cType byte,
 	}
 
 	// 将ctx中的trace信息传入到request中
-	traceData, ok := current.GetTraceData(ctx)
-	if ok && traceData.TraceCall {
+	if traceData, ok := current.GetTraceData(ctx); ok && traceData.TraceCall {
 		traceKey := traceData.GetTraceKeyFull(false)
 		TLOG.Debug("trace debug: find trace key:", traceKey)
 		if status == nil {
@@ -147,7 +145,6 @@ func (s *ServantProxy) TarsInvoke(ctx context.Context, cType byte,
 		SServantName: s.name,
 		SFuncName:    sFuncName,
 		SBuffer:      tools.ByteToInt8(buf),
-		// ITimeout:     s.comm.Client.ReqDefaultTimeout,
 		ITimeout:     int32(s.timeout),
 		Context:      reqContext,
 		Status:       status,
@@ -157,15 +154,15 @@ func (s *ServantProxy) TarsInvoke(ctx context.Context, cType byte,
 	msg.Init()
 
 	timeout := time.Duration(s.timeout) * time.Millisecond
-	ok, hashType, hashCode, isHash := current.GetClientHash(ctx)
-	if ok {
+	if ok, hashType, hashCode, isHash := current.GetClientHash(ctx); ok {
 		msg.isHash = isHash
 		msg.hashType = HashType(hashType)
 		msg.hashCode = hashCode
 	}
-	ok, to, isTimeout := current.GetClientTimeout(ctx)
-	if ok && isTimeout {
+
+	if ok, to, isTimeout := current.GetClientTimeout(ctx); ok && isTimeout {
 		timeout = time.Duration(to) * time.Millisecond
+		req.ITimeout = int32(to)
 	}
 
 	var err error

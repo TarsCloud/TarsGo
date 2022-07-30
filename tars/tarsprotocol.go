@@ -57,19 +57,29 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 		}
 	}
 
+	recvPkgTs, ok := current.GetRecvPkgTsFromContext(ctx)
+	if !ok {
+		recvPkgTs = time.Now().UnixNano() / 1e6
+	}
 	if reqPackage.CPacketType == basef.TARSONEWAY {
-		defer func() func() {
-			beginTime := time.Now().UnixNano() / 1e6
-			return func() {
-				endTime := time.Now().UnixNano() / 1e6
-				ReportStatFromServer(reqPackage.SFuncName, "one_way_client", rspPackage.IRet, endTime-beginTime)
-			}
-		}()()
+		defer func() {
+			endTime := time.Now().UnixNano() / 1e6
+			ReportStatFromServer(reqPackage.SFuncName, "one_way_client", rspPackage.IRet, endTime-recvPkgTs)
+		}()
 	}
 
-	if reqPackage.SFuncName == "tars_ping" {
+	// Improve server timeout handling
+	now := time.Now().UnixNano() / 1e6
+	if ok && reqPackage.ITimeout > 0 && now-recvPkgTs > int64(reqPackage.ITimeout) {
 		rspPackage.IVersion = reqPackage.IVersion
-		// rspPackage.CPacketType = basef.TARSNORMAL
+		rspPackage.IRequestId = reqPackage.IRequestId
+		rspPackage.IRet = basef.TARSSERVERQUEUETIMEOUT
+		ip, _ := current.GetClientIPFromContext(ctx)
+		port, _ := current.GetClientPortFromContext(ctx)
+		TLOG.Errorf("handle queue timeout, obj:%s, func:%s, recv time:%d, timeout:%d, cost:%d, now:%d, addr:(%s:%d), reqid:%d",
+			reqPackage.SServantName, reqPackage.SFuncName, recvPkgTs, reqPackage.ITimeout, now-recvPkgTs, time.Now().UnixNano()/1e6, ip, port, reqPackage.IRequestId)
+	} else if reqPackage.SFuncName == "tars_ping" {
+		rspPackage.IVersion = reqPackage.IVersion
 		rspPackage.IRequestId = reqPackage.IRequestId
 		rspPackage.IRet = 0
 	} else {
@@ -120,8 +130,7 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 
 	// return ctype
 	rspPackage.CPacketType = reqPackage.CPacketType
-	ok := current.SetPacketTypeFromContext(ctx, rspPackage.CPacketType)
-	if !ok {
+	if ok := current.SetPacketTypeFromContext(ctx, rspPackage.CPacketType); !ok {
 		TLOG.Error("SetPacketType in context fail!")
 	}
 
