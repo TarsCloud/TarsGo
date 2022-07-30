@@ -7,11 +7,19 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/statf"
+	"github.com/gin-gonic/gin"
 )
 
+type HttpHandler interface {
+	http.Handler
+	SetConfig(cfg *TarsHttpConf)
+}
+
+var _ HttpHandler = (*TarsHttpMux)(nil)
 var realIPHeader []string
 
 func init() {
@@ -36,7 +44,9 @@ type TarsHttpConf struct {
 // TarsHttpMux is http.ServeMux for tars http server.
 type TarsHttpMux struct {
 	http.ServeMux
-	cfg *TarsHttpConf
+	cfg     *TarsHttpConf
+	gin     *gin.Engine
+	ginOnce sync.Once
 }
 
 type httpStatInfo struct {
@@ -44,6 +54,30 @@ type httpStatInfo struct {
 	pattern    string
 	statusCode int
 	costTime   int64
+}
+
+func newHttpStatInfo(reqAddr, pattern string, statusCode int, costTime int64) *httpStatInfo {
+	return &httpStatInfo{
+		reqAddr:    reqAddr,
+		pattern:    pattern,
+		statusCode: statusCode,
+		costTime:   costTime,
+	}
+}
+
+// GetGinEngine sets the cfg tho the *gin.Engine.
+func (mux *TarsHttpMux) GetGinEngine() *gin.Engine {
+	mux.ginOnce.Do(func() {
+		mux.gin = gin.Default()
+		mux.gin.Use(func(c *gin.Context) {
+			startTime := time.Now().UnixNano() / 1e6
+			c.Next()
+			costTime := time.Now().UnixNano()/1e6 - startTime
+			st := newHttpStatInfo(mux.getClientIp(c.Request), c.FullPath(), c.Writer.Status(), costTime)
+			go mux.reportHttpStat(st)
+		})
+	})
+	return mux.gin
 }
 
 // ServeHTTP is the server for the TarsHttpMux.
@@ -55,31 +89,21 @@ func (mux *TarsHttpMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	h, pattern := mux.Handler(r)
 	tw := &TarsResponseWriter{w, 0}
-	startTime := time.Now().UnixNano() / 1e6
-	h.ServeHTTP(tw, r)
-	costTime := time.Now().UnixNano()/1e6 - startTime
-	var reqAddr string
-	for _, h := range realIPHeader {
-		reqAddr = r.Header.Get(h)
-		if reqAddr != "" {
-			break
+	if mux.gin != nil {
+		mux.gin.ServeHTTP(tw, r)
+	} else {
+		h, pattern := mux.Handler(r)
+		startTime := time.Now().UnixNano() / 1e6
+		h.ServeHTTP(tw, r)
+		costTime := time.Now().UnixNano()/1e6 - startTime
+
+		if pattern == "" {
+			pattern = "/"
 		}
+		st := newHttpStatInfo(mux.getClientIp(r), pattern, tw.StatusCode, costTime)
+		go mux.reportHttpStat(st)
 	}
-	if reqAddr == "" { // no proxy
-		reqAddr = strings.SplitN(r.RemoteAddr, ":", 2)[0]
-	}
-	if pattern == "" {
-		pattern = "/"
-	}
-	st := &httpStatInfo{
-		reqAddr:    reqAddr,
-		pattern:    pattern,
-		statusCode: tw.StatusCode,
-		costTime:   costTime,
-	}
-	go mux.reportHttpStat(st)
 }
 
 func (mux *TarsHttpMux) reportHttpStat(st *httpStatInfo) {
@@ -95,7 +119,6 @@ func (mux *TarsHttpMux) reportHttpStat(st *httpStatInfo) {
 	statInfo.SlaveName = cfg.AppName
 	statInfo.SlaveIp = cfg.IP // from server
 	statInfo.SlavePort = cfg.Port
-	// statInfo.SSlaveContainer = cfg.Container
 	statInfo.InterfaceName = st.pattern
 	if cfg.SetId != "" {
 		setList := strings.Split(cfg.SetId, ".")
@@ -130,6 +153,19 @@ func (mux *TarsHttpMux) reportHttpStat(st *httpStatInfo) {
 // SetConfig sets the cfg tho the TarsHttpMux.
 func (mux *TarsHttpMux) SetConfig(cfg *TarsHttpConf) {
 	mux.cfg = cfg
+}
+
+func (mux *TarsHttpMux) getClientIp(r *http.Request) (reqAddr string) {
+	for _, h := range realIPHeader {
+		reqAddr = r.Header.Get(h)
+		if reqAddr != "" {
+			break
+		}
+	}
+	if reqAddr == "" { // no proxy
+		reqAddr = strings.SplitN(r.RemoteAddr, ":", 2)[0]
+	}
+	return reqAddr
 }
 
 // DefaultExceptionStatusChecker Default Exception Status Checker
