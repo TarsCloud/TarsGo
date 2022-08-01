@@ -97,15 +97,13 @@ type clientConfig struct {
 	KeepAliveInterval       int
 	AsyncInvokeTimeout      int
 	// add client timeout
-	ClientQueueLen         int
-	ClientIdleTimeout      time.Duration
-	ClientReadTimeout      time.Duration
-	ClientWriteTimeout     time.Duration
-	ClientDialTimeout      time.Duration
-	ReqDefaultTimeout      int32
-	ObjQueueMax            int32
-	AdapterProxyTicker     time.Duration
-	AdapterProxyResetCount int
+	ClientQueueLen     int
+	ClientIdleTimeout  time.Duration
+	ClientReadTimeout  time.Duration
+	ClientWriteTimeout time.Duration
+	ClientDialTimeout  time.Duration
+	ReqDefaultTimeout  int32
+	ObjQueueMax        int32
 }
 
 func newServerConfig() *serverConfig {
@@ -167,8 +165,6 @@ func newClientConfig() *clientConfig {
 		ClientDialTimeout:       tools.ParseTimeOut(ClientDialTimeout),
 		ReqDefaultTimeout:       ReqDefaultTimeout,
 		ObjQueueMax:             ObjQueueMax,
-		AdapterProxyTicker:      tools.ParseTimeOut(AdapterProxyTicker),
-		AdapterProxyResetCount:  AdapterProxyResetCount,
 	}
 	return conf
 }
