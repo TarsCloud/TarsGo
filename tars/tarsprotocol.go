@@ -66,6 +66,11 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 			endTime := time.Now().UnixNano() / 1e6
 			ReportStatFromServer(reqPackage.SFuncName, "one_way_client", rspPackage.IRet, endTime-recvPkgTs)
 		}()
+	} else if reqPackage.CPacketType == basef.TARSNORMAL {
+		defer func() {
+			endTime := time.Now().UnixNano() / 1e6
+			ReportStatFromServer(reqPackage.SFuncName, "stat_from_server", rspPackage.IRet, endTime-recvPkgTs)
+		}()
 	}
 
 	// Improve server timeout handling
