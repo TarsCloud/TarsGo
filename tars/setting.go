@@ -4,7 +4,7 @@ import "time"
 
 // MaxInvoke number of worker routine to handle client request
 // zero means no control, just one goroutine for a client request.
-// runtime.NumCPU() usually best performance in the benchmark.
+// runtime.NumCPU() usually the best performance in the benchmark.
 var MaxInvoke int32
 
 const (
@@ -40,11 +40,11 @@ const (
 	ModuleName = "tup_client"
 	// ClientQueueLen client queue length
 	ClientQueueLen int = 10000
-	// ClientIdleTimeout client idle timeout,defaultvalue is 600000 milliseconds
+	// ClientIdleTimeout client idle timeout,default value is 600000 milliseconds
 	ClientIdleTimeout = 600000
-	// ClientReadTimeout client read timeout,defaultvalue is 100 milliseconds
+	// ClientReadTimeout client read timeout,default value is 100 milliseconds
 	ClientReadTimeout = 100
-	// ClientWriteTimeout client write timeout,defaultvalue is 3000 milliseconds
+	// ClientWriteTimeout client write timeout,default value is 3000 milliseconds
 	ClientWriteTimeout = 3000
 	// ReqDefaultTimeout request default timeout
 	ReqDefaultTimeout int32 = 3000
@@ -63,29 +63,24 @@ const (
 	remoteLogQueueSize int = 500000
 	// remoteLogMaxNumOneTime is the max logs for reporting in one time.
 	remoteLogMaxNumOneTime int = 2000
-	// remoteLogInterval log report interval, defaultvalue is 1000 milliseconds
+	// remoteLogInterval log report interval, default value is 1000 milliseconds
 	remoteLogInterval = time.Second
 
 	// report
 
-	// PropertyReportInterval property report interval,defaultvalue is 10000 milliseconds
+	// PropertyReportInterval property report interval,default value is 10000 milliseconds
 	PropertyReportInterval = 10000
-	// StatReportInterval stat report interval,defaultvalue is 10000 milliseconds
+	// StatReportInterval stat report interval,default value is 10000 milliseconds
 	StatReportInterval = 10000
 	// StatReportChannelBufLen stat report channel len
 	StatReportChannelBufLen = 100000
 
 	// mainloop
 
-	// MainLoopTicker main loop ticker,defaultvalue is 10000 milliseconds
+	// MainLoopTicker main loop ticker,default value is 10000 milliseconds
 	MainLoopTicker = 10000
 
 	// adapter
-
-	// AdapterProxyTicker adapter proxy ticker,defaultvalue is 10000 milliseconds
-	AdapterProxyTicker = 10000
-	// AdapterProxyResetCount adapter proxy reset count
-	AdapterProxyResetCount int = 5
 
 	// communicator default ,update from remote config
 	refreshEndpointInterval int = 60000
@@ -121,8 +116,7 @@ const (
 	TCPNoDelay = false
 
 	// GracedownTimeout set timeout (milliseconds) for grace shutdown
-	GracedownTimeout   = 60000
-	graceCheckInterval = time.Millisecond * 500
+	GracedownTimeout = 60000
 
 	// MaxPackageLength maximum length of the request
 	MaxPackageLength = 10485760
