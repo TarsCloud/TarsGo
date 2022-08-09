@@ -2,12 +2,12 @@ package tars
 
 import (
 	"fmt"
-	"github.com/TarsCloud/TarsGo/tars/util/sync"
-	"github.com/TarsCloud/TarsGo/tars/util/tools"
 	"strings"
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/statf"
+	"github.com/TarsCloud/TarsGo/tars/util/sync"
+	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
 var (

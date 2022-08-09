@@ -8,22 +8,39 @@ const (
 	SSL int32 = 2
 )
 
+type AuthType int32
+type WeightType int32
+
+const (
+	AuthTypeNone AuthType = iota
+	AuthTypeLocal
+)
+const (
+	ELoop WeightType = iota
+	EStaticWeight
+)
+
 // Endpoint struct is used record a remote server instance.
 type Endpoint struct {
-	Host      string
-	Port      int32
-	Timeout   int32
-	Istcp     int32 //need remove
-	Proto     string
-	Bind      string
-	Container string
-	SetId     string
-	Key       string
+	Host       string
+	Port       int32
+	Timeout    int32
+	Istcp      int32 //need remove
+	Grid       int32
+	Qos        int32
+	Weight     int32
+	WeightType int32
+	AuthType   int32
+	Proto      string
+	Bind       string
+	Container  string
+	SetId      string
+	Key        string
 }
 
 // String returns readable string for Endpoint
 func (e Endpoint) String() string {
-	return fmt.Sprintf("%s -h %s -p %d -t %d -d %s", e.Proto, e.Host, e.Port, e.Timeout, e.Container)
+	return fmt.Sprintf("%s -h %s -p %d -t %d", e.Proto, e.Host, e.Port, e.Timeout)
 }
 
 func (e Endpoint) HashKey() string {
