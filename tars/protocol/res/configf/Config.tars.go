@@ -54,7 +54,7 @@ func (obj *Config) ListConfig(app string, server string, vf *[]string, opts ...m
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*vf))), 0)
+	err = buf.WriteInt32(int32(len(*vf)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -101,7 +101,7 @@ func (obj *Config) ListConfig(app string, server string, vf *[]string, opts ...m
 			return ret, err
 		}
 
-		(*vf) = make([]string, length)
+		*vf = make([]string, length)
 		for i0, e0 := int32(0), length; i0 < e0; i0++ {
 
 			err = readBuf.ReadString(&(*vf)[i0], 0, false)
@@ -174,7 +174,7 @@ func (obj *Config) ListConfigWithContext(tarsCtx context.Context, app string, se
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*vf))), 0)
+	err = buf.WriteInt32(int32(len(*vf)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -220,7 +220,7 @@ func (obj *Config) ListConfigWithContext(tarsCtx context.Context, app string, se
 			return ret, err
 		}
 
-		(*vf) = make([]string, length)
+		*vf = make([]string, length)
 		for i1, e1 := int32(0), length; i1 < e1; i1++ {
 
 			err = readBuf.ReadString(&(*vf)[i1], 0, false)
@@ -293,7 +293,7 @@ func (obj *Config) ListConfigOneWayWithContext(tarsCtx context.Context, app stri
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*vf))), 0)
+	err = buf.WriteInt32(int32(len(*vf)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -372,7 +372,7 @@ func (obj *Config) LoadConfig(app string, server string, filename string, config
 		return ret, err
 	}
 
-	err = buf.WriteString((*config), 4)
+	err = buf.WriteString(*config, 4)
 	if err != nil {
 		return ret, err
 	}
@@ -454,7 +454,7 @@ func (obj *Config) LoadConfigWithContext(tarsCtx context.Context, app string, se
 		return ret, err
 	}
 
-	err = buf.WriteString((*config), 4)
+	err = buf.WriteString(*config, 4)
 	if err != nil {
 		return ret, err
 	}
@@ -535,7 +535,7 @@ func (obj *Config) LoadConfigOneWayWithContext(tarsCtx context.Context, app stri
 		return ret, err
 	}
 
-	err = buf.WriteString((*config), 4)
+	err = buf.WriteString(*config, 4)
 	if err != nil {
 		return ret, err
 	}
@@ -605,7 +605,7 @@ func (obj *Config) LoadConfigByHost(appServerName string, filename string, host 
 		return ret, err
 	}
 
-	err = buf.WriteString((*config), 4)
+	err = buf.WriteString(*config, 4)
 	if err != nil {
 		return ret, err
 	}
@@ -687,7 +687,7 @@ func (obj *Config) LoadConfigByHostWithContext(tarsCtx context.Context, appServe
 		return ret, err
 	}
 
-	err = buf.WriteString((*config), 4)
+	err = buf.WriteString(*config, 4)
 	if err != nil {
 		return ret, err
 	}
@@ -768,7 +768,7 @@ func (obj *Config) LoadConfigByHostOneWayWithContext(tarsCtx context.Context, ap
 		return ret, err
 	}
 
-	err = buf.WriteString((*config), 4)
+	err = buf.WriteString(*config, 4)
 	if err != nil {
 		return ret, err
 	}
@@ -838,7 +838,7 @@ func (obj *Config) CheckConfig(appServerName string, filename string, host strin
 		return ret, err
 	}
 
-	err = buf.WriteString((*result), 4)
+	err = buf.WriteString(*result, 4)
 	if err != nil {
 		return ret, err
 	}
@@ -920,7 +920,7 @@ func (obj *Config) CheckConfigWithContext(tarsCtx context.Context, appServerName
 		return ret, err
 	}
 
-	err = buf.WriteString((*result), 4)
+	err = buf.WriteString(*result, 4)
 	if err != nil {
 		return ret, err
 	}
@@ -1001,7 +1001,7 @@ func (obj *Config) CheckConfigOneWayWithContext(tarsCtx context.Context, appServ
 		return ret, err
 	}
 
-	err = buf.WriteString((*result), 4)
+	err = buf.WriteString(*result, 4)
 	if err != nil {
 		return ret, err
 	}
@@ -1066,7 +1066,7 @@ func (obj *Config) ListConfigByInfo(configInfo *ConfigInfo, vf *[]string, opts .
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*vf))), 0)
+	err = buf.WriteInt32(int32(len(*vf)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -1113,7 +1113,7 @@ func (obj *Config) ListConfigByInfo(configInfo *ConfigInfo, vf *[]string, opts .
 			return ret, err
 		}
 
-		(*vf) = make([]string, length)
+		*vf = make([]string, length)
 		for i2, e2 := int32(0), length; i2 < e2; i2++ {
 
 			err = readBuf.ReadString(&(*vf)[i2], 0, false)
@@ -1181,7 +1181,7 @@ func (obj *Config) ListConfigByInfoWithContext(tarsCtx context.Context, configIn
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*vf))), 0)
+	err = buf.WriteInt32(int32(len(*vf)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -1227,7 +1227,7 @@ func (obj *Config) ListConfigByInfoWithContext(tarsCtx context.Context, configIn
 			return ret, err
 		}
 
-		(*vf) = make([]string, length)
+		*vf = make([]string, length)
 		for i3, e3 := int32(0), length; i3 < e3; i3++ {
 
 			err = readBuf.ReadString(&(*vf)[i3], 0, false)
@@ -1295,7 +1295,7 @@ func (obj *Config) ListConfigByInfoOneWayWithContext(tarsCtx context.Context, co
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*vf))), 0)
+	err = buf.WriteInt32(int32(len(*vf)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -1364,7 +1364,7 @@ func (obj *Config) LoadConfigByInfo(configInfo *ConfigInfo, config *string, opts
 		return ret, err
 	}
 
-	err = buf.WriteString((*config), 2)
+	err = buf.WriteString(*config, 2)
 	if err != nil {
 		return ret, err
 	}
@@ -1436,7 +1436,7 @@ func (obj *Config) LoadConfigByInfoWithContext(tarsCtx context.Context, configIn
 		return ret, err
 	}
 
-	err = buf.WriteString((*config), 2)
+	err = buf.WriteString(*config, 2)
 	if err != nil {
 		return ret, err
 	}
@@ -1507,7 +1507,7 @@ func (obj *Config) LoadConfigByInfoOneWayWithContext(tarsCtx context.Context, co
 		return ret, err
 	}
 
-	err = buf.WriteString((*config), 2)
+	err = buf.WriteString(*config, 2)
 	if err != nil {
 		return ret, err
 	}
@@ -1567,7 +1567,7 @@ func (obj *Config) CheckConfigByInfo(configInfo *ConfigInfo, result *string, opt
 		return ret, err
 	}
 
-	err = buf.WriteString((*result), 2)
+	err = buf.WriteString(*result, 2)
 	if err != nil {
 		return ret, err
 	}
@@ -1639,7 +1639,7 @@ func (obj *Config) CheckConfigByInfoWithContext(tarsCtx context.Context, configI
 		return ret, err
 	}
 
-	err = buf.WriteString((*result), 2)
+	err = buf.WriteString(*result, 2)
 	if err != nil {
 		return ret, err
 	}
@@ -1710,7 +1710,7 @@ func (obj *Config) CheckConfigByInfoOneWayWithContext(tarsCtx context.Context, c
 		return ret, err
 	}
 
-	err = buf.WriteString((*result), 2)
+	err = buf.WriteString(*result, 2)
 	if err != nil {
 		return ret, err
 	}
@@ -1775,7 +1775,7 @@ func (obj *Config) ListAllConfigByInfo(configInfo *GetConfigListInfo, vf *[]stri
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*vf))), 0)
+	err = buf.WriteInt32(int32(len(*vf)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -1822,7 +1822,7 @@ func (obj *Config) ListAllConfigByInfo(configInfo *GetConfigListInfo, vf *[]stri
 			return ret, err
 		}
 
-		(*vf) = make([]string, length)
+		*vf = make([]string, length)
 		for i4, e4 := int32(0), length; i4 < e4; i4++ {
 
 			err = readBuf.ReadString(&(*vf)[i4], 0, false)
@@ -1890,7 +1890,7 @@ func (obj *Config) ListAllConfigByInfoWithContext(tarsCtx context.Context, confi
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*vf))), 0)
+	err = buf.WriteInt32(int32(len(*vf)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -1936,7 +1936,7 @@ func (obj *Config) ListAllConfigByInfoWithContext(tarsCtx context.Context, confi
 			return ret, err
 		}
 
-		(*vf) = make([]string, length)
+		*vf = make([]string, length)
 		for i5, e5 := int32(0), length; i5 < e5; i5++ {
 
 			err = readBuf.ReadString(&(*vf)[i5], 0, false)
@@ -2004,7 +2004,7 @@ func (obj *Config) ListAllConfigByInfoOneWayWithContext(tarsCtx context.Context,
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*vf))), 0)
+	err = buf.WriteInt32(int32(len(*vf)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -2110,6 +2110,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 		var app string
 		var server string
 		var vf []string
+		vf = make([]string, 0)
 
 		if tarsReq.IVersion == basef.TARSVERSION {
 
@@ -2709,6 +2710,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 	case "ListConfigByInfo":
 		var configInfo ConfigInfo
 		var vf []string
+		vf = make([]string, 0)
 
 		if tarsReq.IVersion == basef.TARSVERSION {
 
@@ -3069,6 +3071,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 	case "ListAllConfigByInfo":
 		var configInfo GetConfigListInfo
 		var vf []string
+		vf = make([]string, 0)
 
 		if tarsReq.IVersion == basef.TARSVERSION {
 

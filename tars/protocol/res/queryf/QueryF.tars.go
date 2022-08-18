@@ -286,7 +286,7 @@ func (obj *QueryF) FindObjectById4Any(id string, activeEp *[]endpointf.EndpointF
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*activeEp))), 0)
+	err = buf.WriteInt32(int32(len(*activeEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -305,7 +305,7 @@ func (obj *QueryF) FindObjectById4Any(id string, activeEp *[]endpointf.EndpointF
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*inactiveEp))), 0)
+	err = buf.WriteInt32(int32(len(*inactiveEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -352,7 +352,7 @@ func (obj *QueryF) FindObjectById4Any(id string, activeEp *[]endpointf.EndpointF
 			return ret, err
 		}
 
-		(*activeEp) = make([]endpointf.EndpointF, length)
+		*activeEp = make([]endpointf.EndpointF, length)
 		for i2, e2 := int32(0), length; i2 < e2; i2++ {
 
 			err = (*activeEp)[i2].ReadBlock(readBuf, 0, false)
@@ -386,7 +386,7 @@ func (obj *QueryF) FindObjectById4Any(id string, activeEp *[]endpointf.EndpointF
 			return ret, err
 		}
 
-		(*inactiveEp) = make([]endpointf.EndpointF, length)
+		*inactiveEp = make([]endpointf.EndpointF, length)
 		for i3, e3 := int32(0), length; i3 < e3; i3++ {
 
 			err = (*inactiveEp)[i3].ReadBlock(readBuf, 0, false)
@@ -454,7 +454,7 @@ func (obj *QueryF) FindObjectById4AnyWithContext(tarsCtx context.Context, id str
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*activeEp))), 0)
+	err = buf.WriteInt32(int32(len(*activeEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -473,7 +473,7 @@ func (obj *QueryF) FindObjectById4AnyWithContext(tarsCtx context.Context, id str
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*inactiveEp))), 0)
+	err = buf.WriteInt32(int32(len(*inactiveEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -519,7 +519,7 @@ func (obj *QueryF) FindObjectById4AnyWithContext(tarsCtx context.Context, id str
 			return ret, err
 		}
 
-		(*activeEp) = make([]endpointf.EndpointF, length)
+		*activeEp = make([]endpointf.EndpointF, length)
 		for i4, e4 := int32(0), length; i4 < e4; i4++ {
 
 			err = (*activeEp)[i4].ReadBlock(readBuf, 0, false)
@@ -553,7 +553,7 @@ func (obj *QueryF) FindObjectById4AnyWithContext(tarsCtx context.Context, id str
 			return ret, err
 		}
 
-		(*inactiveEp) = make([]endpointf.EndpointF, length)
+		*inactiveEp = make([]endpointf.EndpointF, length)
 		for i5, e5 := int32(0), length; i5 < e5; i5++ {
 
 			err = (*inactiveEp)[i5].ReadBlock(readBuf, 0, false)
@@ -621,7 +621,7 @@ func (obj *QueryF) FindObjectById4AnyOneWayWithContext(tarsCtx context.Context, 
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*activeEp))), 0)
+	err = buf.WriteInt32(int32(len(*activeEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -640,7 +640,7 @@ func (obj *QueryF) FindObjectById4AnyOneWayWithContext(tarsCtx context.Context, 
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*inactiveEp))), 0)
+	err = buf.WriteInt32(int32(len(*inactiveEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -714,7 +714,7 @@ func (obj *QueryF) FindObjectById4All(id string, activeEp *[]endpointf.EndpointF
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*activeEp))), 0)
+	err = buf.WriteInt32(int32(len(*activeEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -733,7 +733,7 @@ func (obj *QueryF) FindObjectById4All(id string, activeEp *[]endpointf.EndpointF
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*inactiveEp))), 0)
+	err = buf.WriteInt32(int32(len(*inactiveEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -780,7 +780,7 @@ func (obj *QueryF) FindObjectById4All(id string, activeEp *[]endpointf.EndpointF
 			return ret, err
 		}
 
-		(*activeEp) = make([]endpointf.EndpointF, length)
+		*activeEp = make([]endpointf.EndpointF, length)
 		for i6, e6 := int32(0), length; i6 < e6; i6++ {
 
 			err = (*activeEp)[i6].ReadBlock(readBuf, 0, false)
@@ -814,7 +814,7 @@ func (obj *QueryF) FindObjectById4All(id string, activeEp *[]endpointf.EndpointF
 			return ret, err
 		}
 
-		(*inactiveEp) = make([]endpointf.EndpointF, length)
+		*inactiveEp = make([]endpointf.EndpointF, length)
 		for i7, e7 := int32(0), length; i7 < e7; i7++ {
 
 			err = (*inactiveEp)[i7].ReadBlock(readBuf, 0, false)
@@ -882,7 +882,7 @@ func (obj *QueryF) FindObjectById4AllWithContext(tarsCtx context.Context, id str
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*activeEp))), 0)
+	err = buf.WriteInt32(int32(len(*activeEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -901,7 +901,7 @@ func (obj *QueryF) FindObjectById4AllWithContext(tarsCtx context.Context, id str
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*inactiveEp))), 0)
+	err = buf.WriteInt32(int32(len(*inactiveEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -947,7 +947,7 @@ func (obj *QueryF) FindObjectById4AllWithContext(tarsCtx context.Context, id str
 			return ret, err
 		}
 
-		(*activeEp) = make([]endpointf.EndpointF, length)
+		*activeEp = make([]endpointf.EndpointF, length)
 		for i8, e8 := int32(0), length; i8 < e8; i8++ {
 
 			err = (*activeEp)[i8].ReadBlock(readBuf, 0, false)
@@ -981,7 +981,7 @@ func (obj *QueryF) FindObjectById4AllWithContext(tarsCtx context.Context, id str
 			return ret, err
 		}
 
-		(*inactiveEp) = make([]endpointf.EndpointF, length)
+		*inactiveEp = make([]endpointf.EndpointF, length)
 		for i9, e9 := int32(0), length; i9 < e9; i9++ {
 
 			err = (*inactiveEp)[i9].ReadBlock(readBuf, 0, false)
@@ -1049,7 +1049,7 @@ func (obj *QueryF) FindObjectById4AllOneWayWithContext(tarsCtx context.Context, 
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*activeEp))), 0)
+	err = buf.WriteInt32(int32(len(*activeEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -1068,7 +1068,7 @@ func (obj *QueryF) FindObjectById4AllOneWayWithContext(tarsCtx context.Context, 
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*inactiveEp))), 0)
+	err = buf.WriteInt32(int32(len(*inactiveEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -1142,7 +1142,7 @@ func (obj *QueryF) FindObjectByIdInSameGroup(id string, activeEp *[]endpointf.En
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*activeEp))), 0)
+	err = buf.WriteInt32(int32(len(*activeEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -1161,7 +1161,7 @@ func (obj *QueryF) FindObjectByIdInSameGroup(id string, activeEp *[]endpointf.En
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*inactiveEp))), 0)
+	err = buf.WriteInt32(int32(len(*inactiveEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -1208,7 +1208,7 @@ func (obj *QueryF) FindObjectByIdInSameGroup(id string, activeEp *[]endpointf.En
 			return ret, err
 		}
 
-		(*activeEp) = make([]endpointf.EndpointF, length)
+		*activeEp = make([]endpointf.EndpointF, length)
 		for i10, e10 := int32(0), length; i10 < e10; i10++ {
 
 			err = (*activeEp)[i10].ReadBlock(readBuf, 0, false)
@@ -1242,7 +1242,7 @@ func (obj *QueryF) FindObjectByIdInSameGroup(id string, activeEp *[]endpointf.En
 			return ret, err
 		}
 
-		(*inactiveEp) = make([]endpointf.EndpointF, length)
+		*inactiveEp = make([]endpointf.EndpointF, length)
 		for i11, e11 := int32(0), length; i11 < e11; i11++ {
 
 			err = (*inactiveEp)[i11].ReadBlock(readBuf, 0, false)
@@ -1310,7 +1310,7 @@ func (obj *QueryF) FindObjectByIdInSameGroupWithContext(tarsCtx context.Context,
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*activeEp))), 0)
+	err = buf.WriteInt32(int32(len(*activeEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -1329,7 +1329,7 @@ func (obj *QueryF) FindObjectByIdInSameGroupWithContext(tarsCtx context.Context,
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*inactiveEp))), 0)
+	err = buf.WriteInt32(int32(len(*inactiveEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -1375,7 +1375,7 @@ func (obj *QueryF) FindObjectByIdInSameGroupWithContext(tarsCtx context.Context,
 			return ret, err
 		}
 
-		(*activeEp) = make([]endpointf.EndpointF, length)
+		*activeEp = make([]endpointf.EndpointF, length)
 		for i12, e12 := int32(0), length; i12 < e12; i12++ {
 
 			err = (*activeEp)[i12].ReadBlock(readBuf, 0, false)
@@ -1409,7 +1409,7 @@ func (obj *QueryF) FindObjectByIdInSameGroupWithContext(tarsCtx context.Context,
 			return ret, err
 		}
 
-		(*inactiveEp) = make([]endpointf.EndpointF, length)
+		*inactiveEp = make([]endpointf.EndpointF, length)
 		for i13, e13 := int32(0), length; i13 < e13; i13++ {
 
 			err = (*inactiveEp)[i13].ReadBlock(readBuf, 0, false)
@@ -1477,7 +1477,7 @@ func (obj *QueryF) FindObjectByIdInSameGroupOneWayWithContext(tarsCtx context.Co
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*activeEp))), 0)
+	err = buf.WriteInt32(int32(len(*activeEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -1496,7 +1496,7 @@ func (obj *QueryF) FindObjectByIdInSameGroupOneWayWithContext(tarsCtx context.Co
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*inactiveEp))), 0)
+	err = buf.WriteInt32(int32(len(*inactiveEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -1575,7 +1575,7 @@ func (obj *QueryF) FindObjectByIdInSameStation(id string, sStation string, activ
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*activeEp))), 0)
+	err = buf.WriteInt32(int32(len(*activeEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -1594,7 +1594,7 @@ func (obj *QueryF) FindObjectByIdInSameStation(id string, sStation string, activ
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*inactiveEp))), 0)
+	err = buf.WriteInt32(int32(len(*inactiveEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -1641,7 +1641,7 @@ func (obj *QueryF) FindObjectByIdInSameStation(id string, sStation string, activ
 			return ret, err
 		}
 
-		(*activeEp) = make([]endpointf.EndpointF, length)
+		*activeEp = make([]endpointf.EndpointF, length)
 		for i14, e14 := int32(0), length; i14 < e14; i14++ {
 
 			err = (*activeEp)[i14].ReadBlock(readBuf, 0, false)
@@ -1675,7 +1675,7 @@ func (obj *QueryF) FindObjectByIdInSameStation(id string, sStation string, activ
 			return ret, err
 		}
 
-		(*inactiveEp) = make([]endpointf.EndpointF, length)
+		*inactiveEp = make([]endpointf.EndpointF, length)
 		for i15, e15 := int32(0), length; i15 < e15; i15++ {
 
 			err = (*inactiveEp)[i15].ReadBlock(readBuf, 0, false)
@@ -1748,7 +1748,7 @@ func (obj *QueryF) FindObjectByIdInSameStationWithContext(tarsCtx context.Contex
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*activeEp))), 0)
+	err = buf.WriteInt32(int32(len(*activeEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -1767,7 +1767,7 @@ func (obj *QueryF) FindObjectByIdInSameStationWithContext(tarsCtx context.Contex
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*inactiveEp))), 0)
+	err = buf.WriteInt32(int32(len(*inactiveEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -1813,7 +1813,7 @@ func (obj *QueryF) FindObjectByIdInSameStationWithContext(tarsCtx context.Contex
 			return ret, err
 		}
 
-		(*activeEp) = make([]endpointf.EndpointF, length)
+		*activeEp = make([]endpointf.EndpointF, length)
 		for i16, e16 := int32(0), length; i16 < e16; i16++ {
 
 			err = (*activeEp)[i16].ReadBlock(readBuf, 0, false)
@@ -1847,7 +1847,7 @@ func (obj *QueryF) FindObjectByIdInSameStationWithContext(tarsCtx context.Contex
 			return ret, err
 		}
 
-		(*inactiveEp) = make([]endpointf.EndpointF, length)
+		*inactiveEp = make([]endpointf.EndpointF, length)
 		for i17, e17 := int32(0), length; i17 < e17; i17++ {
 
 			err = (*inactiveEp)[i17].ReadBlock(readBuf, 0, false)
@@ -1920,7 +1920,7 @@ func (obj *QueryF) FindObjectByIdInSameStationOneWayWithContext(tarsCtx context.
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*activeEp))), 0)
+	err = buf.WriteInt32(int32(len(*activeEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -1939,7 +1939,7 @@ func (obj *QueryF) FindObjectByIdInSameStationOneWayWithContext(tarsCtx context.
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*inactiveEp))), 0)
+	err = buf.WriteInt32(int32(len(*inactiveEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -2018,7 +2018,7 @@ func (obj *QueryF) FindObjectByIdInSameSet(id string, setId string, activeEp *[]
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*activeEp))), 0)
+	err = buf.WriteInt32(int32(len(*activeEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -2037,7 +2037,7 @@ func (obj *QueryF) FindObjectByIdInSameSet(id string, setId string, activeEp *[]
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*inactiveEp))), 0)
+	err = buf.WriteInt32(int32(len(*inactiveEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -2084,7 +2084,7 @@ func (obj *QueryF) FindObjectByIdInSameSet(id string, setId string, activeEp *[]
 			return ret, err
 		}
 
-		(*activeEp) = make([]endpointf.EndpointF, length)
+		*activeEp = make([]endpointf.EndpointF, length)
 		for i18, e18 := int32(0), length; i18 < e18; i18++ {
 
 			err = (*activeEp)[i18].ReadBlock(readBuf, 0, false)
@@ -2118,7 +2118,7 @@ func (obj *QueryF) FindObjectByIdInSameSet(id string, setId string, activeEp *[]
 			return ret, err
 		}
 
-		(*inactiveEp) = make([]endpointf.EndpointF, length)
+		*inactiveEp = make([]endpointf.EndpointF, length)
 		for i19, e19 := int32(0), length; i19 < e19; i19++ {
 
 			err = (*inactiveEp)[i19].ReadBlock(readBuf, 0, false)
@@ -2191,7 +2191,7 @@ func (obj *QueryF) FindObjectByIdInSameSetWithContext(tarsCtx context.Context, i
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*activeEp))), 0)
+	err = buf.WriteInt32(int32(len(*activeEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -2210,7 +2210,7 @@ func (obj *QueryF) FindObjectByIdInSameSetWithContext(tarsCtx context.Context, i
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*inactiveEp))), 0)
+	err = buf.WriteInt32(int32(len(*inactiveEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -2256,7 +2256,7 @@ func (obj *QueryF) FindObjectByIdInSameSetWithContext(tarsCtx context.Context, i
 			return ret, err
 		}
 
-		(*activeEp) = make([]endpointf.EndpointF, length)
+		*activeEp = make([]endpointf.EndpointF, length)
 		for i20, e20 := int32(0), length; i20 < e20; i20++ {
 
 			err = (*activeEp)[i20].ReadBlock(readBuf, 0, false)
@@ -2290,7 +2290,7 @@ func (obj *QueryF) FindObjectByIdInSameSetWithContext(tarsCtx context.Context, i
 			return ret, err
 		}
 
-		(*inactiveEp) = make([]endpointf.EndpointF, length)
+		*inactiveEp = make([]endpointf.EndpointF, length)
 		for i21, e21 := int32(0), length; i21 < e21; i21++ {
 
 			err = (*inactiveEp)[i21].ReadBlock(readBuf, 0, false)
@@ -2363,7 +2363,7 @@ func (obj *QueryF) FindObjectByIdInSameSetOneWayWithContext(tarsCtx context.Cont
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*activeEp))), 0)
+	err = buf.WriteInt32(int32(len(*activeEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -2382,7 +2382,7 @@ func (obj *QueryF) FindObjectByIdInSameSetOneWayWithContext(tarsCtx context.Cont
 		return ret, err
 	}
 
-	err = buf.WriteInt32(int32(len((*inactiveEp))), 0)
+	err = buf.WriteInt32(int32(len(*inactiveEp)), 0)
 	if err != nil {
 		return ret, err
 	}
@@ -2606,7 +2606,9 @@ func (obj *QueryF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 	case "findObjectById4Any":
 		var id string
 		var activeEp []endpointf.EndpointF
+		activeEp = make([]endpointf.EndpointF, 0)
 		var inactiveEp []endpointf.EndpointF
+		inactiveEp = make([]endpointf.EndpointF, 0)
 
 		if tarsReq.IVersion == basef.TARSVERSION {
 
@@ -2785,7 +2787,9 @@ func (obj *QueryF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 	case "findObjectById4All":
 		var id string
 		var activeEp []endpointf.EndpointF
+		activeEp = make([]endpointf.EndpointF, 0)
 		var inactiveEp []endpointf.EndpointF
+		inactiveEp = make([]endpointf.EndpointF, 0)
 
 		if tarsReq.IVersion == basef.TARSVERSION {
 
@@ -2964,7 +2968,9 @@ func (obj *QueryF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 	case "findObjectByIdInSameGroup":
 		var id string
 		var activeEp []endpointf.EndpointF
+		activeEp = make([]endpointf.EndpointF, 0)
 		var inactiveEp []endpointf.EndpointF
+		inactiveEp = make([]endpointf.EndpointF, 0)
 
 		if tarsReq.IVersion == basef.TARSVERSION {
 
@@ -3144,7 +3150,9 @@ func (obj *QueryF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 		var id string
 		var sStation string
 		var activeEp []endpointf.EndpointF
+		activeEp = make([]endpointf.EndpointF, 0)
 		var inactiveEp []endpointf.EndpointF
+		inactiveEp = make([]endpointf.EndpointF, 0)
 
 		if tarsReq.IVersion == basef.TARSVERSION {
 
@@ -3342,7 +3350,9 @@ func (obj *QueryF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 		var id string
 		var setId string
 		var activeEp []endpointf.EndpointF
+		activeEp = make([]endpointf.EndpointF, 0)
 		var inactiveEp []endpointf.EndpointF
+		inactiveEp = make([]endpointf.EndpointF, 0)
 
 		if tarsReq.IVersion == basef.TARSVERSION {
 

@@ -698,6 +698,7 @@ func (obj *StatF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *re
 		}
 	case "reportSampleMsg":
 		var msg []StatSampleMsg
+		msg = make([]StatSampleMsg, 0)
 
 		if tarsReq.IVersion == basef.TARSVERSION {
 

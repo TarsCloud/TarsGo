@@ -101,7 +101,7 @@ func errString(hasRet bool) string {
 func genForHead(vc string) string {
 	i := `i` + vc
 	e := `e` + vc
-	return ` for ` + i + `,` + e + ` := int32(0),length;` + i + `<` + e + `;` + i + `++ `
+	return ` for ` + i + `,` + e + ` := int32(0), length;` + i + `<` + e + `;` + i + `++ `
 }
 
 // === rename area ===
@@ -253,6 +253,14 @@ func (gen *GenGo) saveToSourceFile(filename string) {
 		if err != nil {
 			gen.genErr(err.Error())
 		}
+	}
+}
+
+func (gen *GenGo) genVariableName(prefix, name string) string {
+	if prefix != "" {
+		return prefix + name
+	} else {
+		return strings.Trim(name, "()")
 	}
 }
 
@@ -487,7 +495,7 @@ func (gen *GenGo) genType(ty *VarType) string {
 	case tkTArray:
 		ret = "[" + fmt.Sprintf("%v", ty.TypeL) + "]" + gen.genType(ty.TypeK)
 	default:
-		gen.genErr("Unknow Type " + TokenMap[ty.Type])
+		gen.genErr("Unknown Type " + TokenMap[ty.Type])
 	}
 	return ret
 }
@@ -537,9 +545,9 @@ err = buf.WriteHead(codec.SimpleList, ` + tag + `)
 ` + errStr + `
 err = buf.WriteHead(codec.BYTE, 0)
 ` + errStr + `
-err = buf.WriteInt32(int32(len(` + prefix + mb.Key + `)), 0)
+err = buf.WriteInt32(int32(len(` + gen.genVariableName(prefix, mb.Key) + `)), 0)
 ` + errStr + `
-err = buf.WriteSlice` + unsign + `(` + prefix + mb.Key + `)
+err = buf.WriteSlice` + unsign + `(` + gen.genVariableName(prefix, mb.Key) + `)
 ` + errStr + `
 `)
 }
@@ -559,9 +567,9 @@ func (gen *GenGo) genWriteVector(mb *StructMember, prefix string, hasRet bool) {
 	c.WriteString(`
 err = buf.WriteHead(codec.LIST, ` + tag + `)
 ` + errStr + `
-err = buf.WriteInt32(int32(len(` + prefix + mb.Key + `)), 0)
+err = buf.WriteInt32(int32(len(` + gen.genVariableName(prefix, mb.Key) + `)), 0)
 ` + errStr + `
-for _, v := range ` + prefix + mb.Key + ` {
+for _, v := range ` + gen.genVariableName(prefix, mb.Key) + ` {
 `)
 	// for _, v := range can nesting for _, v := range，does not conflict, support multidimensional arrays
 
@@ -588,9 +596,9 @@ func (gen *GenGo) genWriteArray(mb *StructMember, prefix string, hasRet bool) {
 	c.WriteString(`
 err = buf.WriteHead(codec.LIST, ` + tag + `)
 ` + errStr + `
-err = buf.WriteInt32(int32(len(` + prefix + mb.Key + `)), 0)
+err = buf.WriteInt32(int32(len(` + gen.genVariableName(prefix, mb.Key) + `)), 0)
 ` + errStr + `
-for _, v := range ` + prefix + mb.Key + ` {
+for _, v := range ` + gen.genVariableName(prefix, mb.Key) + ` {
 `)
 	// for _, v := range can nesting for _, v := range，does not conflict, support multidimensional arrays
 
@@ -620,9 +628,9 @@ func (gen *GenGo) genWriteMap(mb *StructMember, prefix string, hasRet bool) {
 	c.WriteString(`
 err = buf.WriteHead(codec.MAP, ` + tag + `)
 ` + errStr + `
-err = buf.WriteInt32(int32(len(` + prefix + mb.Key + `)), 0)
+err = buf.WriteInt32(int32(len(` + gen.genVariableName(prefix, mb.Key) + `)), 0)
 ` + errStr + `
-for k` + vc + `, v` + vc + ` := range ` + prefix + mb.Key + ` {
+for k` + vc + `, v` + vc + ` := range ` + gen.genVariableName(prefix, mb.Key) + ` {
 `)
 	// for _, v := range can nesting for _, v := range，does not conflict, support multidimensional arrays
 
@@ -655,7 +663,7 @@ func (gen *GenGo) genWriteVar(v *StructMember, prefix string, hasRet bool) {
 			// tkEnum enumeration processing
 			tag := strconv.Itoa(int(v.Tag))
 			c.WriteString(`
-err = buf.WriteInt32(int32(` + prefix + v.Key + `),` + tag + `)
+err = buf.WriteInt32(int32(` + gen.genVariableName(prefix, v.Key) + `),` + tag + `)
 ` + errString(hasRet) + `
 `)
 		} else {
@@ -664,7 +672,7 @@ err = buf.WriteInt32(int32(` + prefix + v.Key + `),` + tag + `)
 	default:
 		tag := strconv.Itoa(int(v.Tag))
 		c.WriteString(`
-err = buf.Write` + upperFirstLetter(gen.genType(v.Type)) + `(` + prefix + v.Key + `, ` + tag + `)
+err = buf.Write` + upperFirstLetter(gen.genType(v.Type)) + `(` + gen.genVariableName(prefix, v.Key) + `, ` + tag + `)
 ` + errString(hasRet) + `
 `)
 	}
@@ -758,7 +766,7 @@ _, ty, err = readBuf.SkipToNoCheck(` + tag + `,` + require + `)
 if ty == codec.LIST {
 	err = readBuf.ReadInt32(&length, 0, true)
   ` + errStr + `
-  ` + prefix + mb.Key + ` = make(` + gen.genType(mb.Type) + `, length)
+  ` + gen.genVariableName(prefix, mb.Key) + ` = make(` + gen.genType(mb.Type) + `, length)
   ` + genForHead(vc) + `{
 `)
 
@@ -885,7 +893,7 @@ _, err = readBuf.SkipTo(codec.MAP, ` + tag + `, ` + require + `)
 	c.WriteString(`
 err = readBuf.ReadInt32(&length, 0, true)
 ` + errStr + `
-` + prefix + mb.Key + ` = make(` + gen.genType(mb.Type) + `)
+` + gen.genVariableName(prefix, mb.Key) + ` = make(` + gen.genType(mb.Type) + `)
 ` + genForHead(vc) + `{
 	var k` + vc + ` ` + gen.genType(mb.Type.TypeK) + `
 	var v` + vc + ` ` + gen.genType(mb.Type.TypeV) + `
