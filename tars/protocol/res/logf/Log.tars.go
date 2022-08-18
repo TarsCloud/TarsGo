@@ -562,6 +562,7 @@ func (obj *Log) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *requ
 		var file string
 		var format string
 		var buffer []string
+		buffer = make([]string, 0)
 
 		if tarsReq.IVersion == basef.TARSVERSION {
 
@@ -771,6 +772,7 @@ func (obj *Log) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *requ
 	case "loggerbyInfo":
 		var info LogInfo
 		var buffer []string
+		buffer = make([]string, 0)
 
 		if tarsReq.IVersion == basef.TARSVERSION {
 
