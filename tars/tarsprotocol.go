@@ -81,8 +81,8 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 		rspPackage.IRet = basef.TARSSERVERQUEUETIMEOUT
 		ip, _ := current.GetClientIPFromContext(ctx)
 		port, _ := current.GetClientPortFromContext(ctx)
-		TLOG.Errorf("handle queue timeout, obj:%s, func:%s, recv time:%d, timeout:%d, cost:%d, now:%d, addr:(%s:%d), reqid:%d",
-			reqPackage.SServantName, reqPackage.SFuncName, recvPkgTs, reqPackage.ITimeout, now-recvPkgTs, time.Now().UnixNano()/1e6, ip, port, reqPackage.IRequestId)
+		TLOG.Errorf("handle queue timeout, obj:%s, func:%s, recv time:%d, now:%d, timeout:%d, cost:%d,  addr:(%s:%s), reqid:%d",
+			reqPackage.SServantName, reqPackage.SFuncName, recvPkgTs, now, reqPackage.ITimeout, now-recvPkgTs, ip, port, reqPackage.IRequestId)
 	} else if reqPackage.SFuncName == "tars_ping" {
 		rspPackage.IVersion = reqPackage.IVersion
 		rspPackage.IRequestId = reqPackage.IRequestId
