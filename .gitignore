@@ -4,3 +4,4 @@
 *.tgz
 tars-protocol
 *go.sum
+.DS_Store

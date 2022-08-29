@@ -7,10 +7,11 @@ export LANG     = en_US.UTF-8
 GOPATH ?= $(shell go env GOPATH)
 GOROOT ?= $(shell go env GOROOT)
 GO      = ${GOROOT}/bin/go
+GO_MINOR_VERSION = $(shell $(GO) version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
+GO_MINOR_VERSION16 = 16
 
 #-------------------------------------------------------------------------------
 libpath=${subst :, ,$(GOPATH)}
-TARS2GO     := $(firstword $(subst :, , $(GOPATH)))/bin/tars2go
 GOMODULENAME:= $(shell head -n1 go.mod | awk '{print $$2}')
 
 ifeq (,$(findstring -outdir,$(J2GO_FLAG)))
@@ -44,16 +45,14 @@ copyfile = if test -z "$(APP)" || test -z "$(TARGET)"; then \
 
 ALL: $(TARGET)
 #----------------------------------------------------------------------------------
-$(TARGET): TARSBUILD $(GO_SRC)
+$(TARGET): TARSBUILD PROBUILD $(GO_SRC)
 	$(GO) mod tidy
 	$(GO) build $(GO_BUILD_FLAG) -o $@
 
 #----------------------------------------------------------------------------------
 ifneq ($(strip $(TARS_SRC)),)
-TARSBUILD: $(TARS_SRC)
-	@echo "install $(TARS2GO)..."	
-	#go get github.com/TarsCloud/TarsGo/tars/tools/tars2go && go install github.com/TarsCloud/TarsGo/tars/tools/tars2go
-	@echo -e "\e[33;1m$(TARS2GO)\e[0m \e[36;1m ${TARS_SRC} \e[0m..."
+TARSBUILD: $(TARS_SRC) tars2go
+	@echo "\033[33;1m$(TARS2GO)\033[0m \033[36;1m ${TARS_SRC} \033[0m..."
 	$(TARS2GO) $(J2GO_FLAG) $(TARS_SRC)
 else
 TARSBUILD: $(TARS_SRC)
@@ -61,14 +60,14 @@ TARSBUILD: $(TARS_SRC)
 endif
 
 ifneq ($(PRO_SRC),)
-PROBUILD: $(PRO_SRC)
-	@echo -e "\e[33;1mprotoc\e[0m \e[36;1m ${PRO_SRC} \e[0m..."
+PROBUILD: $(PRO_SRC) protoc-gen-go protoc-gen-go-tarsrpc
+	@echo "\033[33;1mprotoc\033[0m \033[36;1m ${PRO_SRC} \033[0m..."
 	@echo $(PB2GO) ${PB2GO_FLAG} $(addprefix --proto_path=, $(sort $(dir $(PRO_SRC)))) $(PRO_SRC)
 	$(foreach file,$(PRO_SRC),$(eval echo $(PB2GO) ${PB2GO_FLAG} --proto_path=$(dir $file) $file))
 	for file in $(sort $(PRO_SRC));\
 	do \
 		dirname=$$(dirname $$file);\
-		$(PB2GO) ${PB2GO_FLAG} --go_out=plugins=tarsrpc:$$dirname --proto_path=$$dirname $$file;\
+		$(PB2GO) ${PB2GO_FLAG} --go_out=$$dirname --go-tarsrpc_out=$$dirname --proto_path=$$dirname $$file;\
 	done
 else
 PROBUILD: $(PRO_SRC)
@@ -81,7 +80,7 @@ tar: $(TARGET) $(CONFIG)
 		echo "dir has exist:$(TARGET)_tmp_dir, abort."; \
 		exit 1; \
 	else \
-		mkdir $(TARGET)_tmp_dir $(TARGET)_tmp_dir/$(TARGET);\
+		mkdir -p $(TARGET)_tmp_dir/$(TARGET);\
 		cp -rf $(TARGET) $(CONFIG) $(TARGET)_tmp_dir/$(TARGET)/; \
 		cd $(TARGET)_tmp_dir; tar --exclude=".svn" --exclude="_svn" -czvf $(TARGET).tgz $(TARGET)/; cd ..; \
 		if [ -f "$(TARGET).tgz" ]; then \
@@ -113,11 +112,70 @@ cleanall:
 HELP += $(HELP_CLEAN)
 HELP += $(HELP_CLEANALL)
 
-HELP_CLEAN    = "\n\e[1;33mclean\e[0m:\t\t[remove $(LOCAL_OBJ) $(TARGET)]"
-HELP_CLEANALL = "\n\e[1;33mcleanall\e[0m:\t[clean & rm .*.d]"
-HELP_TAR      = "\n\e[1;33mtar\e[0m:\t\t[will do 'tar $(TARGET).tgz $(RELEASE_FILE)']"
+HELP_CLEAN    = "\n\033[1;33mclean\033[0m:\t\t[remove $(LOCAL_OBJ) $(TARGET)]"
+HELP_CLEANALL = "\n\033[1;33mcleanall\033[0m:\t[clean & rm .*.d]"
+HELP_TAR      = "\n\033[1;33mtar\033[0m:\t\t[will do 'tar $(TARGET).tgz $(RELEASE_FILE)']"
 
 help:
 	@echo -e $(HELP)"\n"
 
 #-------------------------------------------------------------------------------
+tars2go:
+ifeq (, $(shell which tars2go))
+	@{ \
+	set -e ;\
+	export GO111MODULE=on; \
+	TARS2GO_TMP_DIR=$$(mktemp -d);\
+	cd $$TARS2GO_DIR;\
+	go mod init tmp;\
+	if [ $(GO_MAJOR_VERSION) -gt $(GO_MAJOR_VERSION16) ]; then  \
+	go install github.com/TarsCloud/TarsGo/tars/tools/tars2go@latest;\
+	else \
+	go get github.com/TarsCloud/TarsGo/tars/tools/tars2go@latest;\
+	fi;\
+	rm -rf $$TARS2GO_TMP_DIR ;\
+	}
+TARS2GO=$(shell go env GOPATH)/bin/tars2go
+else
+TARS2GO=$(shell which tars2go)
+endif
+
+protoc-gen-go:
+ifeq (, $(shell which protoc-gen-go))
+	@{ \
+	set -e ;\
+	export GO111MODULE=on; \
+	PROTOC_GEN_GO_TMP_DIR=$$(mktemp -d);\
+	cd $$PROTOC_GEN_GO_TMP_DIR;\
+	go mod init tmp;\
+	if [ $(GO_MAJOR_VERSION) -gt $(GO_MAJOR_VERSION16) ]; then  \
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.0;\
+	else \
+	go get google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.0;\
+	fi;\
+	rm -rf $$PROTOC_GEN_GO_TMP_DIR ;\
+	}
+PROTOC_GEN_GO=$(shell go env GOPATH)/bin/protoc-gen-go
+else
+PROTOC_GEN_GO=$(shell which protoc-gen-go)
+endif
+
+protoc-gen-go-tarsrpc:
+ifeq (, $(shell which protoc-gen-go-tarsrpc))
+	@{ \
+	set -e ;\
+	export GO111MODULE=on; \
+	PROTOC_GEN_GO_TARSRPC_TMP_DIR=$$(mktemp -d);\
+	cd $$PROTOC_GEN_GO_TARSRPC_TMP_DIR;\
+	go mod init tmp;\
+	if [ $(GO_MAJOR_VERSION) -gt $(GO_MAJOR_VERSION16) ]; then  \
+	go install github.com/TarsCloud/TarsGo/tars/tools/protoc-gen-go-tarsrpc@latest;\
+	else \
+	go get github.com/TarsCloud/TarsGo/tars/tools/protoc-gen-go-tarsrpc@latest; \
+	fi;\
+	rm -rf $$PROTOC_GEN_GO_TARSRPC_TMP_DIR ;\
+	}
+PROTOC_GEN_GO_TARSRPC=$(shell go env GOPATH)/bin/protoc-gen-go-tarsrpc
+else
+PROTOC_GEN_GO_TARSRPC=$(shell which protoc-gen-go-tarsrpc)
+endif

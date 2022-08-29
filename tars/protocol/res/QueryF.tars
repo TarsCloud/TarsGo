@@ -30,7 +30,7 @@ module queryf
          *
          * @return  返回所有该对象的活动endpoint列表
          */
-	vector<endpointf::EndpointF> findObjectById(string id);
+		vector<endpointf::EndpointF> findObjectById(string id);
         
         /**根据id获取所有对象,包括活动和非活动对象
         *
