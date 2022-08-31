@@ -86,16 +86,13 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 	} else if reqPackage.SFuncName == "tars_ping" {
 		rspPackage.IVersion = reqPackage.IVersion
 		rspPackage.IRequestId = reqPackage.IRequestId
-		rspPackage.IRet = 0
 	} else {
 		var err error
 		if s.withContext {
-			ok := current.SetRequestStatus(ctx, reqPackage.Status)
-			if !ok {
+			if ok := current.SetRequestStatus(ctx, reqPackage.Status); !ok {
 				TLOG.Error("Set request status in context fail!")
 			}
-			ok = current.SetRequestContext(ctx, reqPackage.Context)
-			if !ok {
+			if ok := current.SetRequestContext(ctx, reqPackage.Context); !ok {
 				TLOG.Error("Set request context in context fail!")
 			}
 		}
