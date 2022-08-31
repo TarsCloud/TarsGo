@@ -183,6 +183,7 @@ func (gen *GenGo) genAll() {
 		// already compiled
 		return
 	}
+	gFileMap[gen.path] = true
 
 	gen.p.rename()
 	gen.genInclude(gen.p.IncParse)
@@ -207,8 +208,6 @@ func (gen *GenGo) genAll() {
 	for _, v := range gen.p.Interface {
 		gen.genInterface(&v)
 	}
-
-	gFileMap[gen.path] = true
 }
 
 func (gen *GenGo) genErr(err string) {
