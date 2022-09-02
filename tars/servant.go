@@ -15,7 +15,6 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
-	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
 var (
@@ -31,13 +30,14 @@ const (
 
 // ServantProxy tars servant proxy instance
 type ServantProxy struct {
-	name     string
-	comm     *Communicator
-	manager  EndpointManager
-	timeout  int
-	version  int16
-	proto    model.Protocol
-	queueLen int32
+	name         string
+	comm         *Communicator
+	manager      EndpointManager
+	syncTimeout  int
+	asyncTimeout int
+	version      int16
+	proto        model.Protocol
+	queueLen     int32
 
 	pushCallback func([]byte)
 }
@@ -51,7 +51,6 @@ func newServantProxy(comm *Communicator, objName string, opts ...EndpointManager
 	s := &ServantProxy{
 		comm:    comm,
 		proto:   &protocol.TarsProtocol{},
-		timeout: comm.Client.AsyncInvokeTimeout,
 		version: basef.TARSVERSION,
 	}
 	pos := strings.Index(objName, "@")
@@ -67,6 +66,12 @@ func newServantProxy(comm *Communicator, objName string, opts ...EndpointManager
 
 	// init manager
 	s.manager = GetManager(comm, objName, opts...)
+
+	s.comm = comm
+	s.proto = &protocol.TarsProtocol{}
+	s.syncTimeout = s.comm.Client.SyncInvokeTimeout
+	s.asyncTimeout = s.comm.Client.AsyncInvokeTimeout
+	s.version = basef.TARSVERSION
 	return s
 }
 
@@ -77,7 +82,7 @@ func (s *ServantProxy) Name() string {
 
 // TarsSetTimeout sets the timeout for client calling the server , which is in ms.
 func (s *ServantProxy) TarsSetTimeout(t int) {
-	s.timeout = t
+	s.syncTimeout = t
 }
 
 // TarsSetVersion set tars version
@@ -122,53 +127,44 @@ func (s *ServantProxy) TarsInvoke(ctx context.Context, cType byte,
 	resp *requestf.ResponsePacket) error {
 	defer CheckPanic()
 
-	// 将ctx中的dyeing信息传入到request中
-	var msgType int32
-	if dyeingKey, ok := current.GetDyeingKey(ctx); ok {
-		TLOG.Debug("dyeing debug: find dyeing key:", dyeingKey)
-		if status == nil {
-			status = make(map[string]string)
-		}
-		status[current.StatusDyedKey] = dyeingKey
-		msgType |= basef.TARSMESSAGETYPEDYED
+	msg := buildMessage(ctx, cType, sFuncName, buf, status, reqContext, resp, s)
+	timeout := time.Duration(s.syncTimeout) * time.Millisecond
+	err := s.invokeFilters(ctx, msg, timeout)
+
+	if err != nil {
+		return err
+	}
+	*resp = *msg.Resp
+	return nil
+}
+
+// TarsInvokeAsync is used for client invoking server.
+func (s *ServantProxy) TarsInvokeAsync(ctx context.Context, cType byte,
+	sFuncName string,
+	buf []byte,
+	status map[string]string,
+	reqContext map[string]string,
+	resp *requestf.ResponsePacket,
+	callback model.Callback) error {
+	defer CheckPanic()
+
+	msg := buildMessage(ctx, cType, sFuncName, buf, status, reqContext, resp, s)
+	msg.Req.ITimeout = int32(s.asyncTimeout)
+	if callback == nil {
+		msg.Req.CPacketType = basef.TARSONEWAY
+	} else {
+		msg.Async = true
+		msg.Callback = callback
 	}
 
-	// 将ctx中的trace信息传入到request中
-	if trace, ok := current.GetTarsTrace(ctx); ok && trace.Call() {
-		traceKey := trace.GetTraceFullKey(false)
-		TLOG.Debug("trace debug: find trace key:", traceKey)
-		if status == nil {
-			status = make(map[string]string)
-		}
-		status[current.StatusTraceKey] = traceKey
-		msgType |= basef.TARSMESSAGETYPETRACE
-	}
+	timeout := time.Duration(s.asyncTimeout) * time.Millisecond
+	return s.invokeFilters(ctx, msg, timeout)
+}
 
-	req := requestf.RequestPacket{
-		IVersion:     s.version,
-		CPacketType:  int8(cType),
-		IRequestId:   s.genRequestID(),
-		SServantName: s.name,
-		SFuncName:    sFuncName,
-		SBuffer:      tools.ByteToInt8(buf),
-		ITimeout:     int32(s.timeout),
-		Context:      reqContext,
-		Status:       status,
-		IMessageType: msgType,
-	}
-	msg := &Message{Req: &req, Ser: s, Resp: resp}
-	msg.Init()
-
-	timeout := time.Duration(s.timeout) * time.Millisecond
-	if ok, hashType, hashCode, isHash := current.GetClientHash(ctx); ok {
-		msg.isHash = isHash
-		msg.hashType = HashType(hashType)
-		msg.hashCode = hashCode
-	}
-
+func (s *ServantProxy) invokeFilters(ctx context.Context, msg *Message, timeout time.Duration) error {
 	if ok, to, isTimeout := current.GetClientTimeout(ctx); ok && isTimeout {
 		timeout = time.Duration(to) * time.Millisecond
-		req.ITimeout = int32(to)
+		msg.Req.ITimeout = int32(to)
 	}
 
 	var err error
@@ -196,11 +192,19 @@ func (s *ServantProxy) TarsInvoke(ctx context.Context, cType byte,
 			}
 		}
 	}
-	s.manager.postInvoke()
-
-	if err != nil {
+	// no async rpc call
+	if !msg.Async {
+		s.manager.postInvoke()
 		msg.End()
-		TLOG.Errorf("Invoke error: %s, %s, %v, cost:%d", s.name, sFuncName, err.Error(), msg.Cost())
+		s.reportStat(msg, err)
+	}
+
+	return err
+}
+
+func (s *ServantProxy) reportStat(msg *Message, err error) {
+	if err != nil {
+		TLOG.Errorf("Invoke error: %s, %s, %v, cost:%d", s.name, msg.Req.SFuncName, err.Error(), msg.Cost())
 		if msg.Resp == nil {
 			ReportStat(msg, StatSuccess, StatSuccess, StatFailed)
 		} else if msg.Status == basef.TARSINVOKETIMEOUT {
@@ -208,15 +212,12 @@ func (s *ServantProxy) TarsInvoke(ctx context.Context, cType byte,
 		} else {
 			ReportStat(msg, StatSuccess, StatSuccess, StatFailed)
 		}
-		return err
+		return
 	}
-	msg.End()
-	*resp = *msg.Resp
 	ReportStat(msg, StatFailed, StatSuccess, StatSuccess)
-	return err
 }
 
-func (s *ServantProxy) doInvoke(ctx context.Context, msg *Message, timeout time.Duration) error {
+func (s *ServantProxy) doInvoke(ctx context.Context, msg *Message, timeout time.Duration) (err error) {
 	adp, needCheck := s.manager.SelectAdapterProxy(msg)
 	if adp == nil {
 		return errors.New("no adapter Proxy selected:" + msg.Req.SServantName)
@@ -239,19 +240,53 @@ func (s *ServantProxy) doInvoke(ctx context.Context, msg *Message, timeout time.
 	atomic.AddInt32(&s.queueLen, 1)
 	readCh := make(chan *requestf.ResponsePacket)
 	adp.resp.Store(msg.Req.IRequestId, readCh)
-	defer func() {
+	var releaseFunc = func() {
 		CheckPanic()
 		atomic.AddInt32(&s.queueLen, -1)
 		adp.resp.Delete(msg.Req.IRequestId)
+	}
+	defer func() {
+		if !msg.Async || err != nil {
+			releaseFunc()
+		}
 	}()
-	if err := adp.Send(msg.Req); err != nil {
+
+	if err = adp.Send(msg.Req); err != nil {
 		adp.failAdd()
 		return err
 	}
+
 	if msg.Req.CPacketType == basef.TARSONEWAY {
 		adp.successAdd()
 		return nil
 	}
+
+	// async call rpc
+	if msg.Async {
+		go func() {
+			defer releaseFunc()
+			err := s.waitInvoke(msg, adp, timeout, needCheck)
+			s.manager.postInvoke()
+			msg.End()
+			s.reportStat(msg, err)
+			if msg.Status != basef.TARSINVOKETIMEOUT {
+				current.SetResponseContext(ctx, msg.Resp.Context)
+				current.SetResponseStatus(ctx, msg.Resp.Status)
+			}
+			if _, err := msg.Callback.Dispatch(ctx, msg.Req, msg.Resp, err); err != nil {
+				TLOG.Errorf("Callback error: %s, %s, %+v", s.name, msg.Req.SFuncName, err)
+			}
+		}()
+		return nil
+	}
+
+	return s.waitInvoke(msg, adp, timeout, needCheck)
+}
+
+func (s *ServantProxy) waitInvoke(msg *Message, adp *AdapterProxy, timeout time.Duration, needCheck bool) error {
+	ch, _ := adp.resp.Load(msg.Req.IRequestId)
+	readCh := ch.(chan *requestf.ResponsePacket)
+
 	select {
 	case <-rtimer.After(timeout):
 		msg.Status = basef.TARSINVOKETIMEOUT

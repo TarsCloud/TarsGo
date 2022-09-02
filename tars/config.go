@@ -80,8 +80,9 @@ type clientConfig struct {
 	ReportInterval          int
 	CheckStatusInterval     int
 	KeepAliveInterval       int
-	AsyncInvokeTimeout      int
 	// add client timeout
+	SyncInvokeTimeout  int
+	AsyncInvokeTimeout int
 	ClientQueueLen     int
 	ClientIdleTimeout  time.Duration
 	ClientReadTimeout  time.Duration
@@ -152,6 +153,7 @@ func newClientConfig() *clientConfig {
 		ReportInterval:          reportInterval,
 		CheckStatusInterval:     checkStatusInterval,
 		KeepAliveInterval:       keepAliveInterval,
+		SyncInvokeTimeout:       SyncInvokeTimeout,
 		AsyncInvokeTimeout:      AsyncInvokeTimeout,
 		ClientQueueLen:          ClientQueueLen,
 		ClientIdleTimeout:       tools.ParseTimeOut(ClientIdleTimeout),

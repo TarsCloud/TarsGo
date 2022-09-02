@@ -256,7 +256,7 @@ func (c *AdapterProxy) doKeepAlive() {
 		IRequestId:   c.servantProxy.genRequestID(),
 		SServantName: c.servantProxy.name,
 		SFuncName:    "tars_ping",
-		ITimeout:     int32(c.servantProxy.timeout),
+		ITimeout:     int32(c.servantProxy.asyncTimeout),
 	}
 	msg := &Message{Req: &req, Ser: c.servantProxy}
 	msg.Init()

@@ -85,8 +85,10 @@ const (
 	// communicator default ,update from remote config
 	refreshEndpointInterval int = 60000
 	reportInterval          int = 5000
+	// SyncInvokeTimeout sync invoke timeout
+	SyncInvokeTimeout int = 3000
 	// AsyncInvokeTimeout async invoke timeout
-	AsyncInvokeTimeout int = 3000
+	AsyncInvokeTimeout int = 5000
 
 	// check endpoint status every 1000 ms
 	checkStatusInterval int = 1000
