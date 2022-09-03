@@ -1,6 +1,7 @@
 package tars
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -23,15 +24,16 @@ func addServantCommon(v dispatch, f interface{}, obj string, withContext bool) {
 	objRunList = append(objRunList, obj)
 	cfg, ok := tarsConfig[obj]
 	if !ok {
-		ReportNotifyInfo(NotifyError, "servant obj name not found:"+obj)
-		TLOG.Debug("servant obj name not found:", obj)
-		panic(ok)
+		msg := fmt.Sprintf("tars servant obj name not found: %s", obj)
+		ReportNotifyInfo(NotifyError, msg)
+		TLOG.Debug(msg)
+		panic(errors.New(msg))
 	}
 	if v, ok := f.(destroyableImp); ok {
 		TLOG.Debugf("add destroyable obj %s", obj)
 		destroyableObjs = append(destroyableObjs, v)
 	}
-	TLOG.Debug("add:", cfg)
+	TLOG.Debug("add tars protocol server: %+v", cfg)
 
 	jp := NewTarsProtocol(v, f, withContext)
 	s := transport.NewTarsServer(jp, cfg)
@@ -47,11 +49,12 @@ func AddHttpServant(mux HttpHandler, obj string) {
 func AddHttpServantWithExceptionStatusChecker(mux HttpHandler, obj string, exceptionStatusChecker func(int) bool) {
 	cfg, ok := tarsConfig[obj]
 	if !ok {
-		ReportNotifyInfo(NotifyError, "servant obj name not found:"+obj)
-		TLOG.Debug("servant obj name not found:", obj)
-		panic(ok)
+		msg := fmt.Sprintf("http servant obj name not found: %s", obj)
+		ReportNotifyInfo(NotifyError, msg)
+		TLOG.Debug(msg)
+		panic(errors.New(msg))
 	}
-	TLOG.Debug("add http server:", cfg)
+	TLOG.Debugf("add http protocol server: %+v", cfg)
 	objRunList = append(objRunList, obj)
 	appConf := GetServerConfig()
 	addrInfo := strings.SplitN(cfg.Address, ":", 2)
@@ -78,11 +81,12 @@ func AddServantWithProtocol(proto transport.ServerProtocol, obj string) {
 	objRunList = append(objRunList, obj)
 	cfg, ok := tarsConfig[obj]
 	if !ok {
-		ReportNotifyInfo(NotifyError, "servant obj name not found:"+obj)
-		TLOG.Debug("servant obj name not found ", obj)
-		panic(ok)
+		msg := fmt.Sprintf("custom protocol servant obj name not found: %s", obj)
+		ReportNotifyInfo(NotifyError, msg)
+		TLOG.Debug(msg)
+		panic(errors.New(msg))
 	}
-	TLOG.Debug("add:", cfg)
+	TLOG.Debugf("add custom protocol server: %+v", cfg)
 	s := transport.NewTarsServer(proto, cfg)
 	goSvrs[obj] = s
 }

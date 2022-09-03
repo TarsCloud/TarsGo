@@ -477,7 +477,7 @@ func graceShutdown() {
 		go func(wg *sync.WaitGroup, obj destroyableImp) {
 			defer wg.Done()
 			obj.Destroy()
-			TLOG.Infof("grace Destroy succ %d", pid)
+			TLOG.Infof("grace Destroy success %d", pid)
 		}(&wg, obj)
 	}
 
@@ -488,7 +488,7 @@ func graceShutdown() {
 				defer wg.Done()
 				err := s.Shutdown(ctx)
 				if err == nil {
-					TLOG.Infof("grace shutdown http %s succ %d", objstr, pid)
+					TLOG.Infof("grace shutdown http %s success %d", objstr, pid)
 				} else {
 					TLOG.Infof("grace shutdown http %s failed within %v : %v", objstr, graceShutdownTimeout, err)
 				}
@@ -501,7 +501,7 @@ func graceShutdown() {
 				defer wg.Done()
 				err := s.Shutdown(ctx)
 				if err == nil {
-					TLOG.Infof("grace shutdown tars %s succ %d", objstr, pid)
+					TLOG.Infof("grace shutdown tars %s success %d", objstr, pid)
 				} else {
 					TLOG.Infof("grace shutdown tars %s failed within %v: %v", objstr, graceShutdownTimeout, err)
 				}
@@ -516,7 +516,7 @@ func graceShutdown() {
 
 	select {
 	case <-ctx.Done():
-		TLOG.Infof("grace shutdown all succ within : %v", graceShutdownTimeout)
+		TLOG.Infof("grace shutdown all success within : %v", graceShutdownTimeout)
 	case <-time.After(graceShutdownTimeout):
 		TLOG.Infof("grace shutdown timeout within : %v", graceShutdownTimeout)
 	}
