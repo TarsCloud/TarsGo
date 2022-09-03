@@ -8,6 +8,7 @@ import (
 	"sync"
 )
 
+// Deprecated: removed in next version
 // ChMap consistent hash map
 type ChMap struct {
 	lock       *sync.RWMutex

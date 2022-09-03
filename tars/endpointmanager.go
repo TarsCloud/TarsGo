@@ -429,14 +429,6 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 		return err
 	}
 
-	// compare, assert in same order
-	/*
-		if endpoint.IsEqual(&activeEp, &e.activeEpf) {
-			TLOG.Debug("endpoint not change: ", e.objName)
-			return nil
-		}
-	*/
-
 	if reflect.DeepEqual(&activeEp, &e.activeEpf) {
 		TLOG.Debugf("endpoint not change: %s, set: %s", e.objName, setDivision)
 		return nil
