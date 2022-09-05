@@ -38,6 +38,7 @@ type Message struct {
 	isHash   bool
 	Async    bool
 	Callback model.Callback
+	RespCh   chan *requestf.ResponsePacket
 }
 
 // Init define the beginTime
