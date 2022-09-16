@@ -27,6 +27,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/util/rogger"
 	"github.com/TarsCloud/TarsGo/tars/util/ssl"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
+	"go.uber.org/automaxprocs/maxprocs"
 )
 
 var tarsConfig map[string]*transport.TarsServerConf
@@ -62,6 +63,7 @@ func init() {
 	adminMethods = make(map[string]adminFn)
 	clientObjInfo = make(map[string]map[string]string)
 	clientObjTlsConfig = make(map[string]*tls.Config)
+	maxprocs.Set(maxprocs.Logger(TLOG.Infof))
 	rogger.SetLevel(rogger.ERROR)
 }
 
