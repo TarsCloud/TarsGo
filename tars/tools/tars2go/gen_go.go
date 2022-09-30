@@ -256,11 +256,10 @@ func (gen *GenGo) saveToSourceFile(filename string) {
 }
 
 func (gen *GenGo) genVariableName(prefix, name string) string {
-	if prefix != "" {
-		return prefix + name
-	} else {
+	if strings.HasPrefix(name, "(*") && strings.HasSuffix(name, ")") {
 		return strings.Trim(name, "()")
 	}
+	return prefix + name
 }
 
 func (gen *GenGo) genHead() {
