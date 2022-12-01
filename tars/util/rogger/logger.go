@@ -49,10 +49,12 @@ var (
 // Logger is the struct with name and writer.
 type Logger struct {
 	name   string
+	prefix string
 	writer LogWriter
 }
 
 type JsonLog struct {
+	Pre   string `json:pre,omitempty`
 	Time  string `json:"time"`
 	Func  string `json:"func"`
 	File  string `json:"file"`
@@ -122,7 +124,7 @@ func (lv *LogFormat) String() string {
 }
 
 // GetLogger return an logger instance
-func GetLogger(name string) *Logger {
+func GetLoggerWithPrefix(name string, pre string) *Logger {
 	loggerMutex.Lock()
 	defer loggerMutex.Unlock()
 	if lg, ok := loggerMap[name]; ok {
@@ -130,11 +132,17 @@ func GetLogger(name string) *Logger {
 	}
 	lg := &Logger{
 		name:   name,
+		prefix: pre,
 		writer: &ConsoleWriter{},
 	}
 
 	loggerMap[name] = lg
 	return lg
+}
+
+// GetLogger return an logger instance
+func GetLogger(name string) *Logger {
+	return GetLoggerWithPrefix(name, "")
 }
 
 // SetLevel sets the log level
@@ -316,6 +324,10 @@ func (l *Logger) Writef(depth int, level LogLevel, format string, v []interface{
 func (l *Logger) WriteLineF(depth int, level LogLevel, format string, v []interface{}) *logValue {
 	buf := bytes.NewBuffer(nil)
 	if l.writer.NeedPrefix() {
+		if len(l.prefix) > 0 {
+			fmt.Fprintf(buf, "%s|", l.prefix)
+		}
+
 		fmt.Fprintf(buf, "%s|", time.Now().Format("2006-01-02 15:04:05.000"))
 
 		if callerFlag {
@@ -349,6 +361,7 @@ func (l *Logger) WriteLineF(depth int, level LogLevel, format string, v []interf
 
 func (l *Logger) WriteJsonF(depth int, level LogLevel, format string, v []interface{}) *logValue {
 	log := JsonLog{}
+	log.Pre = l.prefix
 	log.Time = time.Now().Format("2006-01-02 15:04:05.000")
 
 	if callerFlag {

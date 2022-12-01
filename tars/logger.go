@@ -35,8 +35,8 @@ func Trace(traceKey, annotation, client, server, funcName string, ret int, data,
 }
 
 // GetLogger Get a logger
-func GetLogger(name string) *rogger.Logger {
-	logPath, cfg, lg := getLogger(name)
+func GetLoggerWithPrefix(name string, pre string) *rogger.Logger {
+	logPath, cfg, lg := getLogger(name, pre)
 	// if the default writer is not ConsoleWriter, the writer has already been configured
 	if !lg.IsConsoleWriter() {
 		return lg
@@ -48,10 +48,15 @@ func GetLogger(name string) *rogger.Logger {
 	return lg
 }
 
-func getLogger(name string) (logPath string, cfg *serverConfig, lg *rogger.Logger) {
+// GetLogger Get a logger
+func GetLogger(name string) *rogger.Logger {
+	return GetLoggerWithPrefix(name, "")
+}
+
+func getLogger(name string, pre string) (logPath string, cfg *serverConfig, lg *rogger.Logger) {
 	cfg = GetServerConfig()
 	if cfg == nil {
-		return "", nil, rogger.GetLogger(name)
+		return "", nil, rogger.GetLoggerWithPrefix(name, pre)
 	}
 	if name == "" {
 		name = cfg.App + "." + cfg.Server
@@ -59,7 +64,7 @@ func getLogger(name string) (logPath string, cfg *serverConfig, lg *rogger.Logge
 		name = cfg.App + "." + cfg.Server + "_" + name
 	}
 	logPath = filepath.Join(cfg.LogPath, cfg.App, cfg.Server)
-	lg = rogger.GetLogger(name)
+	lg = rogger.GetLoggerWithPrefix(name, pre)
 	return
 }
 
