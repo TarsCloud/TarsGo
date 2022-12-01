@@ -206,7 +206,7 @@ func (l *Logger) SetLogName(name string) {
 }
 
 // SetLogPrefix sets the log line prefix
-func (l Logger) SetLogPrefix(pre string) {
+func (l *Logger) SetLogPrefix(pre string) {
 	l.prefix = pre
 }
 
