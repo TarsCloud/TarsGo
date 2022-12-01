@@ -36,7 +36,7 @@ func Trace(traceKey, annotation, client, server, funcName string, ret int, data,
 
 // GetLogger Get a logger
 func GetLoggerWithPrefix(name string, pre string) *rogger.Logger {
-	logPath, cfg, lg := getLogger(name, pre)
+	logPath, cfg, lg := getLoggerWithPrefix(name, pre)
 	// if the default writer is not ConsoleWriter, the writer has already been configured
 	if !lg.IsConsoleWriter() {
 		return lg
