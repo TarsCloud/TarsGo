@@ -53,7 +53,7 @@ func GetLogger(name string) *rogger.Logger {
 	return GetLoggerWithPrefix(name, "")
 }
 
-func getLogger(name string, pre string) (logPath string, cfg *serverConfig, lg *rogger.Logger) {
+func getLoggerWithPrefix(name string, pre string) (logPath string, cfg *serverConfig, lg *rogger.Logger) {
 	cfg = GetServerConfig()
 	if cfg == nil {
 		return "", nil, rogger.GetLoggerWithPrefix(name, pre)
@@ -65,6 +65,11 @@ func getLogger(name string, pre string) (logPath string, cfg *serverConfig, lg *
 	}
 	logPath = filepath.Join(cfg.LogPath, cfg.App, cfg.Server)
 	lg = rogger.GetLoggerWithPrefix(name, pre)
+	return
+}
+
+func getLogger(name string) (logPath string, cfg *serverConfig, lg *rogger.Logger) {
+	getLoggerWithPrefix(name, "")
 	return
 }
 
