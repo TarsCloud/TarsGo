@@ -324,7 +324,7 @@ func GetRawConn(ctx context.Context) (net.Conn, *net.UDPAddr, bool) {
 	return nil, nil, false
 }
 
-// SetUDPConnWithContext set tcp/udp connection to the tars current.
+// SetRawConnWithContext set tcp/udp connection to the tars current.
 func SetRawConnWithContext(ctx context.Context, conn net.Conn, udpAddr *net.UDPAddr) bool {
 	tc, ok := currentFromContext(ctx)
 	if ok {

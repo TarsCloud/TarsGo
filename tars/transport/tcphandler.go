@@ -3,7 +3,6 @@ package transport
 import (
 	"context"
 	"crypto/tls"
-	"github.com/TarsCloud/TarsGo/tars/util/gtime"
 	"io"
 	"net"
 	"os"
@@ -17,6 +16,7 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/gpool"
 	"github.com/TarsCloud/TarsGo/tars/util/grace"
+	"github.com/TarsCloud/TarsGo/tars/util/gtime"
 )
 
 type tcpHandler struct {
@@ -37,7 +37,6 @@ type connInfo struct {
 	conn      net.Conn
 	idleTime  int64
 	numInvoke int32
-	writeLock sync.Mutex
 }
 
 func (h *tcpHandler) Listen() (err error) {
@@ -89,11 +88,9 @@ func (h *tcpHandler) handleConn(connSt *connInfo, pkg []byte) {
 			return
 		}
 
-		connSt.writeLock.Lock()
 		if _, err := connSt.conn.Write(rsp); err != nil {
 			TLOG.Errorf("send pkg to %v failed %v", connSt.conn.RemoteAddr(), err)
 		}
-		connSt.writeLock.Unlock()
 	}
 
 	cfg := h.conf
@@ -165,12 +162,14 @@ func (h *tcpHandler) sendCloseMsg() {
 	closeMsg := h.ts.svr.GetCloseMsg()
 	h.conns.Range(func(key, val interface{}) bool {
 		conn := val.(*connInfo)
-		conn.conn.SetReadDeadline(time.Now())
+		if err := conn.conn.SetReadDeadline(time.Now()); err != nil {
+			TLOG.Errorf("SetReadDeadline: %w", err)
+		}
 		// send a reconnect-message
 		TLOG.Debugf("send close message to %v", conn.conn.RemoteAddr())
-		conn.writeLock.Lock()
-		conn.conn.Write(closeMsg)
-		conn.writeLock.Unlock()
+		if _, err := conn.conn.Write(closeMsg); err != nil {
+			TLOG.Errorf("send closeMsg to %v failed %v", conn.conn.RemoteAddr(), err)
+		}
 		return true
 	})
 }
