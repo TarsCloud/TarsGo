@@ -54,7 +54,7 @@ type Logger struct {
 }
 
 type JsonLog struct {
-	Pre   string `json:pre,omitempty`
+	Pre   string `json:"pre,omitempty"`
 	Time  string `json:"time"`
 	Func  string `json:"func"`
 	File  string `json:"file"`
