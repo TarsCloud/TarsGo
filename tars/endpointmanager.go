@@ -130,7 +130,7 @@ func (g *globalManager) updateEndpoints() {
 		for _, e := range eps {
 			err := e.doFresh()
 			if err != nil {
-				TLOG.Errorf("update endpoint error, %s.", e.objName)
+				TLOG.Errorf("obj: %s update endpoint error: %v.", e.objName, err)
 			}
 		}
 
@@ -387,8 +387,7 @@ func (e *tarsEndpointManager) doFresh() error {
 	}
 	e.freshLock.Lock()
 	defer e.freshLock.Unlock()
-	err := e.findAndSetObj(e.locator)
-	return err
+	return e.findAndSetObj(e.locator)
 }
 
 func (e *tarsEndpointManager) preInvoke() {
@@ -424,9 +423,7 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 		return err
 	}
 	if ret != 0 {
-		err = fmt.Errorf("findAndSetObj %s fail, ret: %d", e.objName, ret)
-		TLOG.Error(err.Error())
-		return err
+		return fmt.Errorf("findAndSetObj %s fail, ret: %d", e.objName, ret)
 	}
 
 	if reflect.DeepEqual(&activeEp, &e.activeEpf) {
