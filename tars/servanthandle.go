@@ -58,9 +58,13 @@ func AddHttpServantWithExceptionStatusChecker(mux HttpHandler, obj string, excep
 	objRunList = append(objRunList, obj)
 	appConf := GetServerConfig()
 	addrInfo := strings.SplitN(cfg.Address, ":", 2)
-	var port int
+	var port int64
 	if len(addrInfo) == 2 {
-		port, _ = strconv.Atoi(addrInfo[1])
+		var err error
+		port, err = strconv.ParseInt(addrInfo[1], 10, 32)
+		if err != nil {
+			panic(fmt.Errorf("http server listen port: %s parse err: %v", addrInfo[1], err))
+		}
 	}
 	httpConf := &TarsHttpConf{
 		Container:              appConf.Container,

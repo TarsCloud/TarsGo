@@ -64,8 +64,9 @@ func (s *serverProtocol) Invoke(ctx context.Context, reqBytes []byte) []byte {
 		rsp.IRet = 1
 		rsp.SResultDesc = "decode request package error"
 	} else {
-		rsp.IRequestId = req.IRequestId
+		rsp.IVersion = req.IVersion
 		rsp.CPacketType = req.CPacketType
+		rsp.IRequestId = req.IRequestId
 		if req.SFuncName != "tars_ping" {
 			rspData := s.s.OnConnect(ctx, tools.Int8ToByte(req.SBuffer))
 			rsp.SBuffer = tools.ByteToInt8(rspData)
