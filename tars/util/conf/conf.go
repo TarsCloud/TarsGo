@@ -359,7 +359,7 @@ func (c *Conf) GetInt32WithDef(path string, defVal int32) int32 {
 	if err != nil {
 		return defVal
 	}
-	iValue, err := strconv.Atoi(value)
+	iValue, err := strconv.ParseInt(value, 10, 32)
 	if err != nil {
 		return defVal
 	}
