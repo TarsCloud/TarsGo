@@ -426,6 +426,10 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 		return fmt.Errorf("findAndSetObj %s fail, ret: %d", e.objName, ret)
 	}
 
+	// sort activeEp slice
+	sort.Slice(activeEp, func(i, j int) bool {
+		return activeEp[i].Host < activeEp[j].Host
+	})
 	if reflect.DeepEqual(&activeEp, &e.activeEpf) {
 		TLOG.Debugf("endpoint not change: %s, set: %s", e.objName, setDivision)
 		return nil
