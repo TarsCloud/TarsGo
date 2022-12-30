@@ -197,6 +197,7 @@ func (s *Protocol) InvokeTimeout(pkg []byte) []byte {
 // GetCloseMsg return a package to close connection
 func (s *Protocol) GetCloseMsg() []byte {
 	rspPackage := requestf.ResponsePacket{}
+	rspPackage.IVersion = basef.TARSVERSION
 	rspPackage.IRequestId = 0
 	rspPackage.SResultDesc = reconnectMsg
 	return s.rsp2Byte(&rspPackage)
