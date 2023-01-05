@@ -642,6 +642,9 @@ func (b *Reader) ReadUint8(data *uint8, tag byte, require bool) error {
 // ReadBool reads the bool value for the tag and the require or optional sign.
 func (b *Reader) ReadBool(data *bool, tag byte, require bool) error {
 	var tmp int8
+	if *data {
+		tmp = 1
+	}
 	err := b.ReadInt8(&tmp, tag, require)
 	if err != nil {
 		return err
