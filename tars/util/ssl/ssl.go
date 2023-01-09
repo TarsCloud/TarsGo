@@ -4,9 +4,10 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
-	"github.com/TarsCloud/TarsGo/tars/util/rogger"
 	"io/ioutil"
 	"reflect"
+
+	"github.com/TarsCloud/TarsGo/tars/util/rogger"
 )
 
 var log = rogger.GetLogger("ssl")
@@ -39,6 +40,7 @@ func NewServerTlsConfig(ca, cert, key string, verifyClient bool, ciphers string)
 
 func NewClientTlsConfig(ca, cert, key string, ciphers string) (tlsConfig *tls.Config, err error) {
 	tlsConfig = &tls.Config{}
+	insecureSkipVerify := true
 	if ca != "" {
 		certBytes, err := ioutil.ReadFile(ca)
 		if err != nil {
@@ -47,9 +49,9 @@ func NewClientTlsConfig(ca, cert, key string, ciphers string) (tlsConfig *tls.Co
 		rootCAs := x509.NewCertPool()
 		rootCAs.AppendCertsFromPEM(certBytes)
 		tlsConfig.RootCAs = rootCAs
-	} else {
-		tlsConfig.InsecureSkipVerify = true
+		insecureSkipVerify = false
 	}
+	tlsConfig.InsecureSkipVerify = insecureSkipVerify
 	if ciphers == "" && cert != "" {
 		if err = appendKeyPair(tlsConfig, cert, key); err != nil {
 			return nil, err
