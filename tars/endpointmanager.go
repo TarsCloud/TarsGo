@@ -83,7 +83,7 @@ func GetManager(comm *Communicator, objName string, opts ...EndpointManagerOptio
 	// if fresh is error,we should get it from cache
 	if err != nil {
 		for _, cache := range appCache.ObjCaches {
-			if objName == cache.Name && comm.GetLocator() == cache.Locator {
+			if em.objName == cache.Name && em.setDivision == cache.SetID && comm.GetLocator() == cache.Locator {
 				em.activeEpf = cache.Endpoints
 				newEps := make([]endpoint.Endpoint, len(em.activeEpf))
 				for i, ep := range em.activeEpf {
@@ -142,6 +142,7 @@ func (g *globalManager) updateEndpoints() {
 			objCache := make([]ObjCache, len(eps))
 			for i, e := range eps {
 				objCache[i].Name = e.objName
+				objCache[i].SetID = e.setDivision
 				objCache[i].Locator = e.comm.GetLocator()
 				objCache[i].Endpoints = e.activeEpf
 				objCache[i].InactiveEndpoints = e.inactiveEpf

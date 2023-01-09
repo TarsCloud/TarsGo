@@ -15,6 +15,7 @@ type AppCache struct {
 
 type ObjCache struct {
 	Name    string
+	SetID   string
 	Locator string
 
 	Endpoints         []endpointf.EndpointF
