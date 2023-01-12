@@ -41,7 +41,7 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 
 	if reqPackage.HasMessageType(basef.TARSMESSAGETYPEDYED) {
 		if dyeingKey, ok := reqPackage.Status[current.StatusDyedKey]; ok {
-			if ok := current.SetDyeingKey(ctx, dyeingKey); !ok {
+			if ok = current.SetDyeingKey(ctx, dyeingKey); !ok {
 				TLOG.Error("dyeing-debug: set dyeing key in current status error, dyeing key:", dyeingKey)
 			}
 		}
@@ -51,7 +51,7 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 	if reqPackage.HasMessageType(basef.TARSMESSAGETYPETRACE) {
 		if traceKey, ok := reqPackage.Status[current.StatusTraceKey]; ok {
 			TLOG.Info("[TARS] servant got a trace request, trace key:", traceKey)
-			if ok := current.InitTrace(ctx, traceKey); !ok {
+			if ok = current.InitTrace(ctx, traceKey); !ok {
 				TLOG.Error("trace-debug: set trace key in current status error, trace key:", traceKey)
 			}
 		}
@@ -72,30 +72,28 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 			ReportStatFromServer(reqPackage.SFuncName, "stat_from_server", rspPackage.IRet, endTime-recvPkgTs)
 		}()
 	}
+	// timeout or tars_ping or error
+	rspPackage.IVersion = reqPackage.IVersion
+	rspPackage.IRequestId = reqPackage.IRequestId
 
 	// Improve server timeout handling
 	now := time.Now().UnixNano() / 1e6
 	if ok && reqPackage.ITimeout > 0 && now-recvPkgTs > int64(reqPackage.ITimeout) {
-		rspPackage.IVersion = reqPackage.IVersion
-		rspPackage.IRequestId = reqPackage.IRequestId
 		rspPackage.IRet = basef.TARSSERVERQUEUETIMEOUT
 		ip, _ := current.GetClientIPFromContext(ctx)
 		port, _ := current.GetClientPortFromContext(ctx)
-		TLOG.Errorf("handle queue timeout, obj:%s, func:%s, recv time:%d, now:%d, timeout:%d, cost:%d,  addr:(%s:%s), reqid:%d",
+		TLOG.Errorf("handle queue timeout, obj:%s, func:%s, recv time:%d, now:%d, timeout:%d, cost:%d,  addr:(%s:%s), reqId:%d",
 			reqPackage.SServantName, reqPackage.SFuncName, recvPkgTs, now, reqPackage.ITimeout, now-recvPkgTs, ip, port, reqPackage.IRequestId)
-	} else if reqPackage.SFuncName == "tars_ping" {
-		rspPackage.IVersion = reqPackage.IVersion
-		rspPackage.IRequestId = reqPackage.IRequestId
-	} else {
-		var err error
+	} else if reqPackage.SFuncName != "tars_ping" { // not tars_ping, normal business call branch
 		if s.withContext {
-			if ok := current.SetRequestStatus(ctx, reqPackage.Status); !ok {
+			if ok = current.SetRequestStatus(ctx, reqPackage.Status); !ok {
 				TLOG.Error("Set request status in context fail!")
 			}
-			if ok := current.SetRequestContext(ctx, reqPackage.Context); !ok {
+			if ok = current.SetRequestContext(ctx, reqPackage.Context); !ok {
 				TLOG.Error("Set request context in context fail!")
 			}
 		}
+		var err error
 		if allFilters.sf != nil {
 			err = allFilters.sf(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
 		} else if sf := getMiddlewareServerFilter(); sf != nil {
@@ -105,23 +103,21 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 			for i, v := range allFilters.preSfs {
 				err = v(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
 				if err != nil {
-					TLOG.Errorf("Pre filter error, No.%v, err: %v", i, err.Error())
+					TLOG.Errorf("Pre filter error, No.%v, err: %v", i, err)
 				}
 			}
+			// execute business server
 			err = s.dispatcher.Dispatch(ctx, s.serverImp, &reqPackage, &rspPackage, s.withContext)
 			// execute post server filters
 			for i, v := range allFilters.postSfs {
 				err = v(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
 				if err != nil {
-					TLOG.Errorf("Post filter error, No.%v, err: %v", i, err.Error())
+					TLOG.Errorf("Post filter error, No.%v, err: %v", i, err)
 				}
 			}
 		}
 		if err != nil {
 			TLOG.Errorf("RequestID:%d, Found err: %v", reqPackage.IRequestId, err)
-			rspPackage.IVersion = reqPackage.IVersion
-			rspPackage.CPacketType = basef.TARSNORMAL
-			rspPackage.IRequestId = reqPackage.IRequestId
 			rspPackage.IRet = 1
 			rspPackage.SResultDesc = err.Error()
 			if tarsErr, ok := err.(*Error); ok {
@@ -130,9 +126,9 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 		}
 	}
 
-	// return ctype
+	// return packet type
 	rspPackage.CPacketType = reqPackage.CPacketType
-	if ok := current.SetPacketTypeFromContext(ctx, rspPackage.CPacketType); !ok {
+	if ok = current.SetPacketTypeFromContext(ctx, rspPackage.CPacketType); !ok {
 		TLOG.Error("SetPacketType in context fail!")
 	}
 

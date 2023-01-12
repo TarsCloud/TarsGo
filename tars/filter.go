@@ -19,8 +19,10 @@ type filters struct {
 	sfms    []ServerFilterMiddleware
 }
 
-var allFilters = filters{nil, nil, nil, nil, nil, nil, nil, nil}
-var dispatchReporter DispatchReporter
+var (
+	allFilters       = filters{}
+	dispatchReporter DispatchReporter
+)
 
 // Invoke is used for Invoke tars server service
 type Invoke func(ctx context.Context, msg *Message, timeout time.Duration) (err error)
