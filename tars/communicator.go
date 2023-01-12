@@ -81,7 +81,7 @@ func (c *Communicator) StringToProxy(servant string, p ProxyPrx, opts ...Endpoin
 	if servant == "" {
 		panic("empty servant")
 	}
-	sp := newServantProxy(c, servant, opts...)
+	sp := NewServantProxy(c, servant, opts...)
 	p.SetServant(sp)
 }
 

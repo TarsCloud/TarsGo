@@ -36,7 +36,7 @@ var httpSvrs map[string]*http.Server
 var shutdown chan bool
 var serList []string
 var objRunList []string
-var isShudowning int32
+var isShutdowning int32
 var clientObjInfo map[string]map[string]string
 var clientTlsConfig *tls.Config
 var clientObjTlsConfig map[string]*tls.Config
@@ -75,6 +75,47 @@ var cnf *conf.Conf
 func GetConf() *conf.Conf {
 	Init()
 	return cnf
+}
+
+type ServerConfOption func(*transport.TarsServerConf)
+
+func WithQueueCap(queueCap int) ServerConfOption {
+	return func(c *transport.TarsServerConf) {
+		c.QueueCap = queueCap
+	}
+}
+
+func WithTlsConfig(tlsConfig *tls.Config) ServerConfOption {
+	return func(c *transport.TarsServerConf) {
+		c.TlsConfig = tlsConfig
+	}
+}
+
+func WithMaxInvoke(maxInvoke int32) ServerConfOption {
+	return func(c *transport.TarsServerConf) {
+		c.MaxInvoke = maxInvoke
+	}
+}
+
+func newTarsServerConf(proto, address string, svrCfg *serverConfig, opts ...ServerConfOption) *transport.TarsServerConf {
+	svrConf := &transport.TarsServerConf{
+		Proto:          proto,
+		Address:        address,
+		MaxInvoke:      svrCfg.MaxInvoke,
+		AcceptTimeout:  svrCfg.AcceptTimeout,
+		ReadTimeout:    svrCfg.ReadTimeout,
+		WriteTimeout:   svrCfg.WriteTimeout,
+		HandleTimeout:  svrCfg.HandleTimeout,
+		IdleTimeout:    svrCfg.IdleTimeout,
+		QueueCap:       svrCfg.QueueCap,
+		TCPNoDelay:     svrCfg.TCPNoDelay,
+		TCPReadBuffer:  svrCfg.TCPReadBuffer,
+		TCPWriteBuffer: svrCfg.TCPWriteBuffer,
+	}
+	for _, opt := range opts {
+		opt(svrConf)
+	}
+	return svrConf
 }
 
 func initConfig() {
@@ -175,13 +216,13 @@ func initConfig() {
 	svrCfg.MaxPackageLength = c.GetIntWithDef("/tars/application/server<maxPackageLength>", MaxPackageLength)
 	protocol.SetMaxPackageLength(svrCfg.MaxPackageLength)
 	// tls
-	svrCfg.CA = c.GetString("/tars/application/server<ca>")
-	svrCfg.Cert = c.GetString("/tars/application/server<cert>")
 	svrCfg.Key = c.GetString("/tars/application/server<key>")
-	svrCfg.VerifyClient = c.GetStringWithDef("/tars/application/server<verifyclient>", "0") != "0"
-	svrCfg.Ciphers = c.GetString("/tars/application/server<ciphers>")
+	svrCfg.Cert = c.GetString("/tars/application/server<cert>")
 	var tlsConfig *tls.Config
-	if svrCfg.Cert != "" {
+	if svrCfg.Key != "" && svrCfg.Cert != "" {
+		svrCfg.CA = c.GetString("/tars/application/server<ca>")
+		svrCfg.VerifyClient = c.GetStringWithDef("/tars/application/server<verifyclient>", "0") != "0"
+		svrCfg.Ciphers = c.GetString("/tars/application/server<ciphers>")
 		tlsConfig, err = ssl.NewServerTlsConfig(svrCfg.CA, svrCfg.Cert, svrCfg.Key, svrCfg.VerifyClient, svrCfg.Ciphers)
 		if err != nil {
 			panic(err)
@@ -236,59 +277,35 @@ func initConfig() {
 		if end.Bind != "" {
 			host = end.Bind
 		}
-		svrConf := &transport.TarsServerConf{
-			Proto:          end.Proto,
-			Address:        fmt.Sprintf("%s:%d", host, end.Port),
-			MaxInvoke:      svrCfg.MaxInvoke,
-			AcceptTimeout:  svrCfg.AcceptTimeout,
-			ReadTimeout:    svrCfg.ReadTimeout,
-			WriteTimeout:   svrCfg.WriteTimeout,
-			HandleTimeout:  svrCfg.HandleTimeout,
-			IdleTimeout:    svrCfg.IdleTimeout,
-			QueueCap:       queuecap,
-			TCPNoDelay:     svrCfg.TCPNoDelay,
-			TCPReadBuffer:  svrCfg.TCPReadBuffer,
-			TCPWriteBuffer: svrCfg.TCPWriteBuffer,
-		}
-
+		var opts []ServerConfOption
+		opts = append(opts, WithQueueCap(queuecap))
 		if end.IsSSL() {
+			key := c.GetString("/tars/application/server/" + adapter + "<key>")
 			cert := c.GetString("/tars/application/server/" + adapter + "<cert>")
-			if cert != "" {
-				ca := c.GetString("/tars/application/server/" + adapter + "<ca>")
-				key := c.GetString("/tars/application/server/" + adapter + "<key>")
+			if key != "" && cert != "" {
+				ca = c.GetString("/tars/application/server/" + adapter + "<ca>")
 				verifyClient := c.GetString("/tars/application/server/"+adapter+"<verifyclient>") != "0"
 				ciphers := c.GetString("/tars/application/server/" + adapter + "<ciphers>")
-				svrConf.TlsConfig, err = ssl.NewServerTlsConfig(ca, cert, key, verifyClient, ciphers)
+				var adpTlsConfig *tls.Config
+				adpTlsConfig, err = ssl.NewServerTlsConfig(ca, cert, key, verifyClient, ciphers)
 				if err != nil {
 					panic(err)
 				}
+				opts = append(opts, WithTlsConfig(adpTlsConfig))
 			} else {
-				svrConf.TlsConfig = tlsConfig
+				// common tls.Config
+				opts = append(opts, WithTlsConfig(tlsConfig))
 			}
 		}
-		tarsConfig[svrObj] = svrConf
+		tarsConfig[svrObj] = newTarsServerConf(end.Proto, fmt.Sprintf("%s:%d", host, end.Port), svrCfg, opts...)
 	}
 	TLOG.Debug("config add ", tarsConfig)
 
 	if len(svrCfg.Local) > 0 {
 		localPoint := endpoint.Parse(svrCfg.Local)
-		adminCfg := &transport.TarsServerConf{
-			Proto:          "tcp",
-			Address:        fmt.Sprintf("%s:%d", localPoint.Host, localPoint.Port),
-			MaxInvoke:      svrCfg.MaxInvoke,
-			AcceptTimeout:  svrCfg.AcceptTimeout,
-			ReadTimeout:    svrCfg.ReadTimeout,
-			WriteTimeout:   svrCfg.WriteTimeout,
-			HandleTimeout:  svrCfg.HandleTimeout,
-			IdleTimeout:    svrCfg.IdleTimeout,
-			QueueCap:       svrCfg.QueueCap,
-			TCPNoDelay:     svrCfg.TCPNoDelay,
-			TCPReadBuffer:  svrCfg.TCPReadBuffer,
-			TCPWriteBuffer: svrCfg.TCPWriteBuffer,
-		}
-
-		tarsConfig["AdminObj"] = adminCfg
-		svrCfg.Adapters["AdminAdapter"] = adapterConfig{localPoint, "tcp", "AdminObj", 1}
+		// 管理端口不启动协程池
+		tarsConfig["AdminObj"] = newTarsServerConf(localPoint.Proto, fmt.Sprintf("%s:%d", localPoint.Host, localPoint.Port), svrCfg, WithMaxInvoke(0))
+		svrCfg.Adapters["AdminAdapter"] = adapterConfig{localPoint, localPoint.Proto, "AdminObj", 1}
 		RegisterAdmin(rogger.Admin, rogger.HandleDyeingAdmin)
 	}
 
@@ -302,7 +319,6 @@ func initConfig() {
 		authInfo["key"] = c.GetString("/tars/application/client/" + objName + "<key>")
 		authInfo["ciphers"] = c.GetString("/tars/application/client/" + objName + "<ciphers>")
 		clientObjInfo[objName] = authInfo
-
 		if authInfo["ca"] != "" {
 			var objTlsConfig *tls.Config
 			objTlsConfig, err = ssl.NewClientTlsConfig(authInfo["ca"], authInfo["cert"], authInfo["key"], authInfo["ciphers"])
@@ -317,7 +333,7 @@ func initConfig() {
 // Run the application
 func Run() {
 	defer rogger.FlushLogger()
-	isShudowning = 0
+	isShutdowning = 0
 	Init()
 	<-statInited
 
@@ -460,7 +476,7 @@ func graceRestart() {
 func graceShutdown() {
 	var wg sync.WaitGroup
 
-	atomic.StoreInt32(&isShudowning, 1)
+	atomic.StoreInt32(&isShutdowning, 1)
 	pid := os.Getpid()
 
 	var graceShutdownTimeout time.Duration
@@ -562,7 +578,7 @@ func mainLoop() {
 			ReportNotifyInfo(NotifyNormal, "stop")
 			return
 		case <-loop.C:
-			if atomic.LoadInt32(&isShudowning) == 1 {
+			if atomic.LoadInt32(&isShutdowning) == 1 {
 				continue
 			}
 			for name, adapter := range svrCfg.Adapters {
