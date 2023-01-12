@@ -70,7 +70,6 @@ func main() { //Init servant
 	// server
 	imp := new(EchoClientImp)          //New Imp
 	apps := new(StressTest.EchoClient) //New init the A Tars
-	//cfg := tars.GetServerConfig()      //Get Config File Object
 	apps.AddServant(imp, cfg.App+"."+cfg.Server+".EchoClientObj")
 	tars.Run()
 }

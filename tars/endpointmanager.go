@@ -79,9 +79,8 @@ func GetManager(comm *Communicator, objName string, opts ...EndpointManagerOptio
 		return v
 	}
 	g.eps[key] = em
-	err := em.doFresh()
 	// if fresh is error,we should get it from cache
-	if err != nil {
+	if err := em.doFresh(); err != nil {
 		for _, cache := range appCache.ObjCaches {
 			if em.objName == cache.Name && em.setDivision == cache.SetID && comm.GetLocator() == cache.Locator {
 				em.activeEpf = cache.Endpoints
@@ -127,10 +126,9 @@ func (g *globalManager) updateEndpoints() {
 		}
 		g.mlock.Unlock()
 		TLOG.Debugf("start refresh %d endpoints %d", len(eps), g.refreshInterval)
-		for _, e := range eps {
-			err := e.doFresh()
-			if err != nil {
-				TLOG.Errorf("obj: %s update endpoint error: %v.", e.objName, err)
+		for _, em := range eps {
+			if err := em.doFresh(); err != nil {
+				TLOG.Errorf("obj: %s update endpoint error: %v.", em.objName, err)
 			}
 		}
 
@@ -149,7 +147,9 @@ func (g *globalManager) updateEndpoints() {
 			}
 			appCache.ObjCaches = objCache
 			data, _ := json.MarshalIndent(&appCache, "", "    ")
-			ioutil.WriteFile(cachePath, data, 0644)
+			if err := ioutil.WriteFile(cachePath, data, 0644); err != nil {
+				TLOG.Errorf("update appCache error: %v", err)
+			}
 		}
 	}
 }
@@ -357,7 +357,7 @@ func (e *tarsEndpointManager) SelectAdapterProxy(msg *Message) (*AdapterProxy, b
 		ep, err = e.activeEpRoundRobin.Select(msg) // RoundRobin
 	}
 	if err != nil {
-		TLOG.Errorf("SelectAdapterProxy|enableWeight: %b, isHash: %b, hashType: %s, err: %+v", e.enableWeight(), msg.isHash, msg.hashType, err)
+		TLOG.Errorf("SelectAdapterProxy|enableWeight: %v, isHash: %b, hashType: %s, hashCode: %d, err: %v", e.enableWeight(), msg.isHash, msg.hashType, msg.hashCode, err)
 		goto random
 	}
 	if v, ok := e.epList.Load(ep.Key); ok {
@@ -420,7 +420,6 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 		ret, err = q.FindObjectByIdInSameGroup(e.objName, &activeEp, &inactiveEp)
 	}
 	if err != nil {
-		TLOG.Errorf("findAndSetObj %s fail, error: %v", e.objName, err)
 		return err
 	}
 	if ret != 0 {

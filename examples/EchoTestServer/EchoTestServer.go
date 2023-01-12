@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"path"
 
 	"github.com/TarsCloud/TarsGo/tars"
 
@@ -11,7 +12,8 @@ import (
 )
 
 func main() { //Init servant
-	f, err := os.Create("/usr/local/app/tars/app_log/cpu.profile")
+	cfg := tars.GetServerConfig() //Get Config File Object
+	f, err := os.Create(path.Join(cfg.LogPath, "cpu.profile"))
 	if err != nil {
 		log.Fatal("could not create CPU profile: ", err)
 	}
@@ -22,7 +24,6 @@ func main() { //Init servant
 
 	imp := new(EchoTestImp)                                    //New Imp
 	app := new(StressTest.EchoTest)                            //New init the A JCE
-	cfg := tars.GetServerConfig()                              //Get Config File Object
 	app.AddServant(imp, cfg.App+"."+cfg.Server+".EchoTestObj") //Register Servant
 	tars.Run()
 }
