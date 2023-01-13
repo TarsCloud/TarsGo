@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	comm := tars.NewCommunicator()
+	comm := tars.GetCommunicator()
 	obj := "TestApp.PushServer.MessageObj@tcp -h 127.0.0.1 -p 10014 -t 60000"
 	app := new(adminf.AdminF)
 	comm.StringToProxy(obj, app)

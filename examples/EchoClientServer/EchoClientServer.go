@@ -55,7 +55,7 @@ func (imp *EchoClientImp) Sub(a int32, b int32, c *int32) (int32, error) {
 }
 
 func main() { //Init servant
-	comm = tars.NewCommunicator()
+	comm = tars.GetCommunicator()
 
 	// client
 	log = tars.GetDayLogger("report", 1)

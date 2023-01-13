@@ -10,7 +10,7 @@ import (
 
 func main() {
 	tars.ServerConfigPath = "config.conf"
-	comm := tars.NewCommunicator()
+	comm := tars.GetCommunicator()
 	obj := fmt.Sprintf("App.TlsTestServer.TlsObj@ssl -h 127.0.0.1 -p 13015 -t 6000000000")
 	app := new(App.Tls)
 	comm.StringToProxy(obj, app)

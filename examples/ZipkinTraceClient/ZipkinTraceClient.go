@@ -11,7 +11,7 @@ import (
 )
 
 var sapp = new(ZipkinTraceApp.ZipkinTrace)
-var comm = tars.NewCommunicator()
+var comm = tars.GetCommunicator()
 var logger = tars.GetLogger("zipkin")
 
 func main() { // Init servant
