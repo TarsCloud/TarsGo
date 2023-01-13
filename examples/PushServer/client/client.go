@@ -13,7 +13,7 @@ func callback(data []byte) {
 }
 
 func main() {
-	comm := tars.NewCommunicator()
+	comm := tars.GetCommunicator()
 	obj := "TestApp.PushServer.MessageObj@tcp -h 127.0.0.1 -p 10015 -t 60000"
 	client := push.NewClient(callback)
 	comm.StringToProxy(obj, client)

@@ -14,22 +14,22 @@ type MyClient struct {
 }
 
 func (c *MyClient) Recv(pkg []byte) {
-	fmt.Println("recv:", string(pkg))
+	fmt.Print("recv:", string(pkg))
 	c.recvCount++
 }
 func (c *MyClient) ParsePackage(buff []byte) (pkgLen, status int) {
 	if len(buff) < 4 {
-		return 0, transport.PACKAGE_LESS
+		return 0, transport.PackageLess
 	}
 	if len(buff) > 10485760 {
-		return 0, transport.PACKAGE_ERROR
+		return 0, transport.PackageError
 	}
 	var idx = bytes.Index(buff, []byte("\n"))
 	if idx > 0 {
-		return idx + 1, transport.PACKAGE_FULL
+		return idx + 1, transport.PackageFull
 	}
 
-	return 0, transport.PACKAGE_LESS
+	return 0, transport.PackageLess
 }
 
 func getMsg(name string, idx int) []byte {

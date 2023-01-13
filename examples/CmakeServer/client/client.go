@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	comm := tars.NewCommunicator()
+	comm := tars.GetCommunicator()
 	obj := fmt.Sprintf("StressTest.EchoTestServer.EchoTestObj@tcp -h 127.0.0.1 -p 10015 -t 60000")
 	app := new(StressTest.EchoTest)
 	comm.StringToProxy(obj, app)

@@ -11,7 +11,7 @@ import (
 
 func main() {
 	tars.ServerConfigPath = "config.conf"
-	comm := tars.NewCommunicator()
+	comm := tars.GetCommunicator()
 	obj := fmt.Sprintf("Trace.TarsTraceFrontServer.FrontendObj@tcp -h 127.0.0.1 -p 10015 -t 60000")
 	app := new(Trace.Frontend)
 	comm.StringToProxy(obj, app)

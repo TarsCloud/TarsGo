@@ -24,22 +24,22 @@ func (s *CustomProtocolImp) DoClose(ctx context.Context) {
 // ParsePackage parse request package
 func (s *CustomProtocolImp) ParsePackage(buff []byte) (int, int) {
 	if len(buff) < 4 {
-		return 0, transport.PACKAGE_LESS
+		return 0, transport.PackageLess
 	}
 	if len(buff) > 10485760 {
-		return 0, transport.PACKAGE_ERROR
+		return 0, transport.PackageError
 	}
 	var idx = bytes.Index(buff, []byte("\n"))
 	if idx > 0 {
-		return idx + 1, transport.PACKAGE_FULL
+		return idx + 1, transport.PackageFull
 	}
 
-	return 0, transport.PACKAGE_LESS
+	return 0, transport.PackageLess
 }
 
 // Invoke process request and send response
 func (s *CustomProtocolImp) Invoke(ctx context.Context, req []byte) []byte {
-	fmt.Println("req:", req)
+	fmt.Print("req:", string(req))
 	reqMap, err := url.ParseQuery(strings.TrimSpace(string(req)))
 	if err != nil {
 		return []byte("ret=-1&msg=invalid_format\n")

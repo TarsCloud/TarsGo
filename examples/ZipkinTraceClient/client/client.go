@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	comm := tars.NewCommunicator()
+	comm := tars.GetCommunicator()
 	obj := fmt.Sprintf("ZipkinTraceApp.ZipkinTraceClient.ZipkinClientObj@tcp -h 127.0.0.1 -p 14015 -t 60000")
 	app := new(ZipkinTraceApp.ZipkinClient)
 	comm.StringToProxy(obj, app)

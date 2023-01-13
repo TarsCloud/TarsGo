@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	comm := tars.NewCommunicator()
+	comm := tars.GetCommunicator()
 	obj := fmt.Sprintf("StressTest.ContextTestServer.ContextTestObj@tcp -h 127.0.0.1 -p 10028 -t 60000")
 	app := new(StressTest.ContextTest)
 	comm.StringToProxy(obj, app)

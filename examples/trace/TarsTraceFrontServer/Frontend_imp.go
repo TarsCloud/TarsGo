@@ -15,7 +15,7 @@ type FrontendImp struct {
 // Init servant init
 func (imp *FrontendImp) Init() error {
 	//initialize servant here:
-	comm := tars.NewCommunicator()
+	comm := tars.GetCommunicator()
 	obj := fmt.Sprintf("Trace.TarsTraceBackServer.BackendObj@tcp -h 127.0.0.1 -p 20015 -t 60000")
 	app := new(Trace.Backend)
 	comm.StringToProxy(obj, app)
