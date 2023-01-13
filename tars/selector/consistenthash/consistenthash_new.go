@@ -119,10 +119,10 @@ func (c *ConsistentHash) FindInt32(key uint32) (endpoint.Endpoint, bool) {
 	index := sort.Search(len(c.sortedKeys), func(x int) bool {
 		return c.sortedKeys[x] >= key
 	})
+
 	if index >= len(c.sortedKeys) {
 		index = 0
 	}
-
 	return c.hashRing[c.sortedKeys[index]], true
 }
 
@@ -133,23 +133,19 @@ func (c *ConsistentHash) Refresh(eps []endpoint.Endpoint) {
 	c.hashRing = make(map[uint32]endpoint.Endpoint, len(eps))
 	c.sortedKeys = nil
 	for _, ep := range eps {
-		c.addLocked(ep)
+		_ = c.addLocked(ep)
 	}
-	sort.Slice(c.sortedKeys, func(x int, y int) bool {
-		return c.sortedKeys[x] < c.sortedKeys[y]
-	})
+	c.sort()
 }
 
-// Add : add the ep to the hash ring
+// Add the ep to the hash ring
 func (c *ConsistentHash) Add(ep endpoint.Endpoint) error {
 	c.Lock()
 	defer c.Unlock()
 	if err := c.addLocked(ep); err != nil {
 		return err
 	}
-	sort.Slice(c.sortedKeys, func(x int, y int) bool {
-		return c.sortedKeys[x] < c.sortedKeys[y]
-	})
+	c.sort()
 	return nil
 }
 
@@ -203,6 +199,30 @@ func (c *ConsistentHash) Remove(ep endpoint.Endpoint) error {
 	return nil
 }
 
+func (c *ConsistentHash) printNode() {
+	mapNode := map[string]uint32{}
+	// 打印哈希环
+	for i, hashCode := range c.sortedKeys {
+		var value uint32
+		if i == 0 {
+			value = 0xFFFFFFFF - c.sortedKeys[len(c.sortedKeys)-1] + c.sortedKeys[i]
+			mapNode[c.hashRing[hashCode].Host] += value
+		} else {
+			value = c.sortedKeys[i] - c.sortedKeys[i-1]
+			mapNode[c.hashRing[hashCode].Host] += value
+		}
+		fmt.Printf("printNode: %d|%s|%v\n", hashCode, c.hashRing[hashCode].Host, mapNode[c.hashRing[hashCode].Host])
+	}
+	avg, sum, n := float64(100), float64(0), float64(len(mapNode))
+	// 打印各个区间比例
+	for host, count := range mapNode {
+		c := 100*float64(count)*n/0xFFFFFFFF - avg
+		fmt.Printf("result: %s|%d|%f\n", host, count, c)
+		sum += (float64(count)*100*n/0xFFFFFFFF - avg) * (float64(count)*100*n/0xFFFFFFFF - avg)
+	}
+	fmt.Printf("variance: %f, size: %d\n", sum/n, len(c.sortedKeys))
+}
+
 func (c *ConsistentHash) weight(w int32) int {
 	weight := c.replicates
 	if c.enableWeight {
@@ -222,6 +242,10 @@ func (c *ConsistentHash) reBuildHashRingLocked() {
 	for vk := range c.hashRing {
 		c.sortedKeys = append(c.sortedKeys, vk)
 	}
+	c.sort()
+}
+
+func (c *ConsistentHash) sort() {
 	sort.Slice(c.sortedKeys, func(x, y int) bool {
 		return c.sortedKeys[x] < c.sortedKeys[y]
 	})
