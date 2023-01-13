@@ -38,7 +38,7 @@ var (
 )
 
 type globalManager struct {
-	eps                 map[string]*tarsEndpointManager
+	eps                 map[string]*endpointManager
 	mlock               *sync.Mutex
 	refreshInterval     int
 	checkStatusInterval int
@@ -47,7 +47,7 @@ type globalManager struct {
 func initOnceGManager(refreshInterval int, checkStatusInterval int) {
 	gManagerInitOnce.Do(func() {
 		gManager = &globalManager{refreshInterval: refreshInterval, checkStatusInterval: checkStatusInterval}
-		gManager.eps = make(map[string]*tarsEndpointManager)
+		gManager.eps = make(map[string]*endpointManager)
 		gManager.mlock = &sync.Mutex{}
 		go gManager.updateEndpoints()
 		go gManager.checkEpStatus()
@@ -101,7 +101,7 @@ func (g *globalManager) checkEpStatus() {
 	loop := time.NewTicker(time.Duration(g.checkStatusInterval) * time.Millisecond)
 	for range loop.C {
 		g.mlock.Lock()
-		eps := make([]*tarsEndpointManager, 0)
+		eps := make([]*endpointManager, 0)
 		for _, v := range g.eps {
 			if v.locator != nil {
 				eps = append(eps, v)
@@ -118,7 +118,7 @@ func (g *globalManager) updateEndpoints() {
 	loop := time.NewTicker(time.Duration(g.refreshInterval) * time.Millisecond)
 	for range loop.C {
 		g.mlock.Lock()
-		eps := make([]*tarsEndpointManager, 0)
+		eps := make([]*endpointManager, 0)
 		for _, v := range g.eps {
 			if v.locator != nil {
 				eps = append(eps, v)
@@ -154,8 +154,8 @@ func (g *globalManager) updateEndpoints() {
 	}
 }
 
-// tarsEndpointManager is a struct which contains endpoint information.
-type tarsEndpointManager struct {
+// endpointManager is a struct which contains endpoint information.
+type endpointManager struct {
 	objName     string // name only, no ip list
 	enableSet   bool
 	setDivision string
@@ -183,16 +183,16 @@ type tarsEndpointManager struct {
 }
 
 type EndpointManagerOption interface {
-	apply(e *tarsEndpointManager)
+	apply(e *endpointManager)
 	key(k *string)
 }
 
 type OptionFunc struct {
-	applyFunc func(*tarsEndpointManager)
+	applyFunc func(*endpointManager)
 	keyFunc   func(*string)
 }
 
-func (f OptionFunc) apply(e *tarsEndpointManager) {
+func (f OptionFunc) apply(e *endpointManager) {
 	if f.applyFunc != nil {
 		f.applyFunc(e)
 	}
@@ -204,12 +204,12 @@ func (f OptionFunc) key(e *string) {
 	}
 }
 
-func newOptionFunc(applyFunc func(*tarsEndpointManager), keyFunc func(*string)) OptionFunc {
+func newOptionFunc(applyFunc func(*endpointManager), keyFunc func(*string)) OptionFunc {
 	return OptionFunc{applyFunc: applyFunc, keyFunc: keyFunc}
 }
 
 func WithSet(setDivision string) OptionFunc {
-	return newOptionFunc(func(e *tarsEndpointManager) {
+	return newOptionFunc(func(e *endpointManager) {
 		if setDivision != "" {
 			e.enableSet = true
 			e.setDivision = setDivision
@@ -219,11 +219,11 @@ func WithSet(setDivision string) OptionFunc {
 	})
 }
 
-func newTarsEndpointManager(objName string, comm *Communicator, opts ...EndpointManagerOption) *tarsEndpointManager {
+func newTarsEndpointManager(objName string, comm *Communicator, opts ...EndpointManagerOption) *endpointManager {
 	if objName == "" {
 		return nil
 	}
-	e := &tarsEndpointManager{}
+	e := &endpointManager{}
 	e.comm = comm
 	e.freshLock = &sync.Mutex{}
 	e.epList = &sync.Map{}
@@ -260,7 +260,7 @@ func newTarsEndpointManager(objName string, comm *Communicator, opts ...Endpoint
 }
 
 // GetAllEndpoint returns all endpoint information as a array(support not tars service).
-func (e *tarsEndpointManager) GetAllEndpoint() []*endpoint.Endpoint {
+func (e *endpointManager) GetAllEndpoint() []*endpoint.Endpoint {
 	eps := e.activeEp[:]
 	out := make([]*endpoint.Endpoint, len(eps))
 	for i := 0; i < len(eps); i++ {
@@ -269,7 +269,7 @@ func (e *tarsEndpointManager) GetAllEndpoint() []*endpoint.Endpoint {
 	return out
 }
 
-func (e *tarsEndpointManager) checkStatus() {
+func (e *endpointManager) checkStatus() {
 	// only in active epf need to check.
 	for _, ef := range e.activeEpf {
 		ep := endpoint.Tars2endpoint(ef)
@@ -300,8 +300,8 @@ func (e *tarsEndpointManager) checkStatus() {
 			}
 
 			if needCheck {
-				if _, ok := e.checkAdapterList.Load(ep.Key); !ok {
-					adp := v.(*AdapterProxy)
+				if _, ok = e.checkAdapterList.Load(ep.Key); !ok {
+					adp = v.(*AdapterProxy)
 					e.checkAdapterList.Store(ep.Key, adp)
 					e.checkAdapter <- adp
 					TLOG.Errorf("checkStatus|insert check adapter, ep: %+v", ep.Key)
@@ -311,7 +311,7 @@ func (e *tarsEndpointManager) checkStatus() {
 	}
 }
 
-func (e *tarsEndpointManager) addAliveEp(ep endpoint.Endpoint) {
+func (e *endpointManager) addAliveEp(ep endpoint.Endpoint) {
 	e.epLock.Lock()
 	sortedEps := e.activeEp[:]
 	sortedEps = append(sortedEps, ep)
@@ -326,7 +326,7 @@ func (e *tarsEndpointManager) addAliveEp(ep endpoint.Endpoint) {
 }
 
 // SelectAdapterProxy returns the selected adapter.
-func (e *tarsEndpointManager) SelectAdapterProxy(msg *Message) (*AdapterProxy, bool) {
+func (e *endpointManager) SelectAdapterProxy(msg *Message) (*AdapterProxy, bool) {
 	e.epLock.Lock()
 	eps := e.activeEp[:]
 	e.epLock.Unlock()
@@ -382,7 +382,7 @@ random:
 	return adp, false
 }
 
-func (e *tarsEndpointManager) doFresh() error {
+func (e *endpointManager) doFresh() error {
 	if e.directProxy {
 		return nil
 	}
@@ -391,16 +391,16 @@ func (e *tarsEndpointManager) doFresh() error {
 	return e.findAndSetObj(e.locator)
 }
 
-func (e *tarsEndpointManager) preInvoke() {
+func (e *endpointManager) preInvoke() {
 	atomic.AddInt32(&e.invokeNum, 1)
 	e.lastInvoke = gtime.CurrUnixTime
 }
 
-func (e *tarsEndpointManager) postInvoke() {
+func (e *endpointManager) postInvoke() {
 	atomic.AddInt32(&e.invokeNum, -1)
 }
 
-func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
+func (e *endpointManager) findAndSetObj(q *queryf.QueryF) error {
 	activeEp := make([]endpointf.EndpointF, 0)
 	inactiveEp := make([]endpointf.EndpointF, 0)
 	var enableSet, ok bool
@@ -521,7 +521,7 @@ func (e *tarsEndpointManager) findAndSetObj(q *queryf.QueryF) error {
 	return nil
 }
 
-func (e *tarsEndpointManager) firstUpdateActiveEp(eps []endpoint.Endpoint) {
+func (e *endpointManager) firstUpdateActiveEp(eps []endpoint.Endpoint) {
 	if len(eps) == 0 {
 		return
 	}
@@ -556,6 +556,6 @@ func (e *tarsEndpointManager) firstUpdateActiveEp(eps []endpoint.Endpoint) {
 	e.activeEpModHash = modHashSelector
 }
 
-func (e *tarsEndpointManager) enableWeight() bool {
+func (e *endpointManager) enableWeight() bool {
 	return e.weightType == endpoint.EStaticWeight
 }

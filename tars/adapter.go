@@ -53,8 +53,7 @@ func NewAdapterProxy(objName string, point *endpointf.EndpointF, comm *Communica
 		proto = "ssl"
 	}
 	conf := &transport.TarsClientConf{
-		Proto: proto,
-		// NumConnect:   netthread,
+		Proto:        proto,
 		QueueLen:     comm.Client.ClientQueueLen,
 		IdleTimeout:  comm.Client.ClientIdleTimeout,
 		ReadTimeout:  comm.Client.ClientReadTimeout,
@@ -90,7 +89,7 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 	}()
 	packet, err := c.obj.proto.ResponseUnpack(pkg)
 	if err != nil {
-		TLOG.Error("decode packet error", err.Error())
+		TLOG.Errorf("decode packet error: %v", err)
 		return
 	}
 	if packet.IRequestId == 0 {
@@ -128,12 +127,12 @@ func (c *AdapterProxy) Send(req *requestf.RequestPacket) error {
 	return c.tarsClient.Send(sbuf)
 }
 
-// GetPoint : Get an endpoint
+// GetPoint get an endpoint
 func (c *AdapterProxy) GetPoint() *endpointf.EndpointF {
 	return c.point
 }
 
-// Close : Close the client
+// Close the client
 func (c *AdapterProxy) Close() {
 	c.tarsClient.Close()
 	c.closed = true
@@ -174,24 +173,26 @@ func (c *AdapterProxy) checkActive() (firstTime bool, needCheck bool) {
 
 	now := time.Now().Unix()
 	if c.status {
-		//check if healthy
+		//check if healthy，fail 5 times in a row within 5s
 		if (now-c.lastSuccessTime) >= failInterval && c.lastFailCount >= fainN {
 			c.status = false
 			c.lastBlockTime = now
 			return true, false
 		}
+		// lgt 60s
 		if (now - c.lastCheckTime) >= checkTime {
+			c.lastBlockTime = now
+			// The number of failures is more than 2 and the failure rate is more than 50%
 			if c.failCount >= overN && (float32(c.failCount)/float32(c.sendCount)) >= failRatio {
 				c.status = false
-				c.lastBlockTime = now
 				return true, false
 			}
-			c.lastCheckTime = now
 			return false, false
 		}
 		return false, false
 	}
 
+	// lgt 30s
 	if (now - c.lastBlockTime) >= tryTimeInterval {
 		c.lastBlockTime = now
 		if err := c.tarsClient.ReConnect(); err != nil {
@@ -251,11 +252,10 @@ func (c *AdapterProxy) doKeepAlive() {
 	}
 	c.lastKeepAliveTime = now
 
-	reqId := c.obj.genRequestID()
 	req := requestf.RequestPacket{
 		IVersion:     c.obj.version,
-		CPacketType:  int8(basef.TARSONEWAY),
-		IRequestId:   reqId,
+		CPacketType:  basef.TARSONEWAY,
+		IRequestId:   c.obj.genRequestID(),
 		SServantName: c.obj.name,
 		SFuncName:    "tars_ping",
 		ITimeout:     int32(c.obj.timeout),
