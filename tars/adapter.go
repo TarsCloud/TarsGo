@@ -25,7 +25,7 @@ type AdapterProxy struct {
 	tarsClient        *transport.TarsClient
 	conf              *transport.TarsClientConf
 	comm              *Communicator
-	obj               *ServantProxy
+	servantProxy      *ServantProxy
 	failCount         int32
 	lastFailCount     int32
 	sendCount         int32
@@ -41,7 +41,7 @@ type AdapterProxy struct {
 	closed bool
 }
 
-// NewAdapterProxy : Construct an adapter proxy
+// NewAdapterProxy create an adapter proxy
 func NewAdapterProxy(objName string, point *endpointf.EndpointF, comm *Communicator) *AdapterProxy {
 	c := &AdapterProxy{}
 	c.comm = comm
@@ -75,7 +75,7 @@ func NewAdapterProxy(objName string, point *endpointf.EndpointF, comm *Communica
 
 // ParsePackage : Parse packet from bytes
 func (c *AdapterProxy) ParsePackage(buff []byte) (int, int) {
-	return c.obj.proto.ParsePackage(buff)
+	return c.servantProxy.proto.ParsePackage(buff)
 }
 
 // Recv : Recover read channel when closed for timeout
@@ -87,7 +87,7 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 			TLOG.Error("recv pkg panic:", err)
 		}
 	}()
-	packet, err := c.obj.proto.ResponseUnpack(pkg)
+	packet, err := c.servantProxy.proto.ResponseUnpack(pkg)
 	if err != nil {
 		TLOG.Errorf("decode packet error: %v", err)
 		return
@@ -119,7 +119,7 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 func (c *AdapterProxy) Send(req *requestf.RequestPacket) error {
 	TLOG.Debug("send req:", req.IRequestId)
 	c.sendAdd()
-	sbuf, err := c.obj.proto.RequestPack(req)
+	sbuf, err := c.servantProxy.proto.RequestPack(req)
 	if err != nil {
 		TLOG.Debug("protocol wrong:", req.IRequestId)
 		return err
@@ -242,7 +242,7 @@ func (c *AdapterProxy) doKeepAlive() {
 		return
 	}
 
-	if c.obj.queueLen > c.comm.Client.ObjQueueMax {
+	if c.servantProxy.queueLen > c.comm.Client.ObjQueueMax {
 		return
 	}
 
@@ -253,21 +253,21 @@ func (c *AdapterProxy) doKeepAlive() {
 	c.lastKeepAliveTime = now
 
 	req := requestf.RequestPacket{
-		IVersion:     c.obj.version,
+		IVersion:     c.servantProxy.version,
 		CPacketType:  basef.TARSONEWAY,
-		IRequestId:   c.obj.genRequestID(),
-		SServantName: c.obj.name,
+		IRequestId:   c.servantProxy.genRequestID(),
+		SServantName: c.servantProxy.name,
 		SFuncName:    "tars_ping",
-		ITimeout:     int32(c.obj.timeout),
+		ITimeout:     int32(c.servantProxy.timeout),
 	}
-	msg := &Message{Req: &req, Ser: c.obj}
+	msg := &Message{Req: &req, Ser: c.servantProxy}
 	msg.Init()
 
 	msg.Adp = c
-	atomic.AddInt32(&c.obj.queueLen, 1)
+	atomic.AddInt32(&c.servantProxy.queueLen, 1)
 	defer func() {
 		CheckPanic()
-		atomic.AddInt32(&c.obj.queueLen, -1)
+		atomic.AddInt32(&c.servantProxy.queueLen, -1)
 	}()
 	if err := c.Send(msg.Req); err != nil {
 		c.failAdd()

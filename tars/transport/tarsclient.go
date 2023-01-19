@@ -31,10 +31,16 @@ type TarsClient struct {
 	// TODO remove it
 	conn *connection
 
-	cp        ClientProtocol
-	conf      *TarsClientConf
-	sendQueue chan []byte
+	cp            ClientProtocol
+	conf          *TarsClientConf
+	sendQueue     chan sendMsg
+	sendFailQueue chan sendMsg
 	// recvQueue chan []byte
+}
+
+type sendMsg struct {
+	req   []byte
+	retry uint8
 }
 
 type connection struct {
@@ -54,8 +60,13 @@ func NewTarsClient(address string, cp ClientProtocol, conf *TarsClientConf) *Tar
 	if conf.QueueLen <= 0 {
 		conf.QueueLen = 100
 	}
-	sendQueue := make(chan []byte, conf.QueueLen)
-	tc := &TarsClient{conf: conf, address: address, cp: cp, sendQueue: sendQueue}
+	tc := &TarsClient{
+		conf:          conf,
+		address:       address,
+		cp:            cp,
+		sendQueue:     make(chan sendMsg, conf.QueueLen),
+		sendFailQueue: make(chan sendMsg, 1),
+	}
 	tc.conn = &connection{tc: tc, isClosed: true, connLock: &sync.Mutex{}, dialTimeout: conf.DialTimeout}
 	return tc
 }
@@ -80,7 +91,7 @@ func (tc *TarsClient) Send(req []byte) error {
 	select {
 	case <-timerC:
 		return errors.New("tars client write timeout")
-	case tc.sendQueue <- req:
+	case tc.sendQueue <- sendMsg{req: req}:
 	}
 
 	return nil
@@ -114,7 +125,7 @@ func (tc *TarsClient) GraceClose(ctx context.Context) {
 }
 
 func (c *connection) send(conn net.Conn, connDone chan bool) {
-	var req []byte
+	var m sendMsg
 	t := time.NewTicker(time.Second)
 	defer t.Stop()
 	for {
@@ -122,8 +133,13 @@ func (c *connection) send(conn net.Conn, connDone chan bool) {
 		case <-connDone: // connection closed
 			return
 		default:
+		}
+		// get sendMsg
+		select {
+		case m = <-c.tc.sendFailQueue: // Send failure queue messages first
+		default:
 			select {
-			case req = <-c.tc.sendQueue: // Fetch jobs
+			case m = <-c.tc.sendQueue: // Fetch jobs
 			case <-t.C:
 				if c.isClosed {
 					return
@@ -141,11 +157,12 @@ func (c *connection) send(conn net.Conn, connDone chan bool) {
 			conn.SetWriteDeadline(time.Now().Add(c.tc.conf.WriteTimeout))
 		}
 		c.idleTime = time.Now()
-		_, err := conn.Write(req)
+		_, err := conn.Write(m.req)
 		if err != nil {
-			// TODO add retry time
-			c.tc.sendQueue <- req
-			TLOG.Error("send request error:", err)
+			// TODO add retry times
+			m.retry++
+			c.tc.sendFailQueue <- m
+			TLOG.Errorf("send request retry: %d, error: %v", m.retry, err)
 			c.close(conn)
 			return
 		}
@@ -166,8 +183,7 @@ func (c *connection) recv(conn net.Conn, connDone chan bool) {
 		}
 		n, err = conn.Read(buffer)
 		if err != nil {
-			netErr, ok := err.(net.Error)
-			if ok && netErr.Timeout() && netErr.Temporary() {
+			if netErr, ok := err.(net.Error); ok && netErr.Timeout() && netErr.Temporary() {
 				continue // no data, not error
 			}
 			if _, ok := err.(*net.OpError); ok {
@@ -210,6 +226,7 @@ func (c *connection) recv(conn net.Conn, connDone chan bool) {
 
 func (c *connection) ReConnect() (err error) {
 	c.connLock.Lock()
+	defer c.connLock.Unlock()
 	if c.isClosed {
 		TLOG.Debug("Connect:", c.tc.address, "Proto:", c.tc.conf.Proto)
 		if c.tc.conf.Proto == "ssl" {
@@ -220,7 +237,6 @@ func (c *connection) ReConnect() (err error) {
 		}
 
 		if err != nil {
-			c.connLock.Unlock()
 			return err
 		}
 		if c.tc.conf.Proto == "tcp" {
@@ -234,15 +250,14 @@ func (c *connection) ReConnect() (err error) {
 		go c.recv(c.conn, connDone)
 		go c.send(c.conn, connDone)
 	}
-	c.connLock.Unlock()
 	return nil
 }
 
 func (c *connection) close(conn net.Conn) {
 	c.connLock.Lock()
+	defer c.connLock.Unlock()
 	c.isClosed = true
 	if conn != nil {
 		conn.Close()
 	}
-	c.connLock.Unlock()
 }

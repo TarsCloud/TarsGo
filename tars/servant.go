@@ -221,7 +221,7 @@ func (s *ServantProxy) doInvoke(ctx context.Context, msg *Message, timeout time.
 	current.SetServerIPWithContext(ctx, ep.Host)
 	current.SetServerPortWithContext(ctx, fmt.Sprintf("%v", ep.Port))
 	msg.Adp = adp
-	adp.obj = s
+	adp.servantProxy = s
 
 	if s.pushCallback != nil {
 		// auto keep alive for push client
