@@ -263,7 +263,7 @@ func (t *tarsrpc) generateClientCode(service *protogen.Service, method *protogen
 			}
 			return output, nil
 		}
-	`, methodName, serviceName, methodName, inType, outType, method.GoName))
+	`, methodName, serviceName, methodName, inType, outType, method.Desc.Name()))
 }
 func (t *tarsrpc) generateDispatch(service *protogen.Service) {
 	serviceName := upperFirstLatter(service.GoName)
@@ -298,7 +298,7 @@ func (t *tarsrpc) generateDispatch(service *protogen.Service) {
 			if err != nil {
 				return err
 			}
-		`, method.GoName, t.gen.QualifiedGoIdent(method.Input.GoIdent), t.gen.QualifiedGoIdent(method.Output.GoIdent), serviceName, upperFirstLatter(method.GoName), serviceName, upperFirstLatter(method.GoName)))
+		`, method.Desc.Name(), t.gen.QualifiedGoIdent(method.Input.GoIdent), t.gen.QualifiedGoIdent(method.Output.GoIdent), serviceName, upperFirstLatter(method.GoName), serviceName, upperFirstLatter(method.GoName)))
 	}
 	t.P(`default:
 			return fmt.Errorf("func mismatch")
