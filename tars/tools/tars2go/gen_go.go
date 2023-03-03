@@ -746,20 +746,20 @@ func (gen *GenGo) genReadVector(mb *StructMember, prefix string, hasRet bool) {
 	tag := strconv.Itoa(int(mb.Tag))
 	vc := strconv.Itoa(gen.vc)
 	gen.vc++
-	require := "false"
 	if mb.Require {
-		require = "true"
-	}
-	if require == "false" {
 		c.WriteString(`
-have, ty, err = readBuf.SkipToNoCheck(` + tag + `,` + require + `)
-` + errStr + `
-if have {`)
-	} else {
-		c.WriteString(`
-_, ty, err = readBuf.SkipToNoCheck(` + tag + `,` + require + `)
+_, ty, err = readBuf.SkipToNoCheck(` + tag + `, true)
 ` + errStr + `
 `)
+	} else {
+		c.WriteString(`
+have, ty, err = readBuf.SkipToNoCheck(` + tag + `, false)
+` + errStr + `
+if have {`)
+		// 结束标记
+		defer func() {
+			c.WriteString("}\n")
+		}()
 	}
 
 	c.WriteString(`
@@ -790,10 +790,6 @@ if ty == codec.LIST {
   ` + errStr + `
 }
 `)
-
-	if require == "false" {
-		c.WriteString("}\n")
-	}
 }
 
 func (gen *GenGo) genReadArray(mb *StructMember, prefix string, hasRet bool) {
@@ -804,21 +800,21 @@ func (gen *GenGo) genReadArray(mb *StructMember, prefix string, hasRet bool) {
 	tag := strconv.Itoa(int(mb.Tag))
 	vc := strconv.Itoa(gen.vc)
 	gen.vc++
-	require := "false"
-	if mb.Require {
-		require = "true"
-	}
 
-	if require == "false" {
+	if mb.Require {
 		c.WriteString(`
-have, ty, err = readBuf.SkipToNoCheck(` + tag + `,` + require + `)
-` + errStr + `
-if have {`)
-	} else {
-		c.WriteString(`
-_, ty, err = readBuf.SkipToNoCheck(` + tag + `,` + require + `)
+_, ty, err = readBuf.SkipToNoCheck(` + tag + `, true)
 ` + errStr + `
 `)
+	} else {
+		c.WriteString(`
+have, ty, err = readBuf.SkipToNoCheck(` + tag + `, false)
+` + errStr + `
+if have {`)
+		// 结束标记
+		defer func() {
+			c.WriteString("}\n")
+		}()
 	}
 
 	c.WriteString(`
@@ -848,10 +844,6 @@ if ty == codec.LIST {
   ` + errStr + `
 }
 `)
-
-	if require == "false" {
-		c.WriteString("}\n")
-	}
 }
 
 func (gen *GenGo) genReadStruct(mb *StructMember, prefix string, hasRet bool) {
@@ -873,21 +865,21 @@ func (gen *GenGo) genReadMap(mb *StructMember, prefix string, hasRet bool) {
 	errStr := errString(hasRet)
 	vc := strconv.Itoa(gen.vc)
 	gen.vc++
-	require := "false"
-	if mb.Require {
-		require = "true"
-	}
 
-	if require == "false" {
+	if mb.Require {
 		c.WriteString(`
-have, err = readBuf.SkipTo(codec.MAP, ` + tag + `, ` + require + `)
-` + errStr + `
-if have {`)
-	} else {
-		c.WriteString(`
-_, err = readBuf.SkipTo(codec.MAP, ` + tag + `, ` + require + `)
+_, err = readBuf.SkipTo(codec.MAP, ` + tag + `, true)
 ` + errStr + `
 `)
+	} else {
+		c.WriteString(`
+have, err = readBuf.SkipTo(codec.MAP, ` + tag + `, false)
+` + errStr + `
+if have {`)
+		// 结束标记
+		defer func() {
+			c.WriteString("}\n")
+		}()
 	}
 
 	c.WriteString(`
@@ -914,9 +906,6 @@ err = readBuf.ReadInt32(&length, 0, true)
 	` + prefix + mb.Key + `[k` + vc + `] = v` + vc + `
 }
 `)
-	if require == "false" {
-		c.WriteString("}\n")
-	}
 }
 
 func (gen *GenGo) genReadVar(v *StructMember, prefix string, hasRet bool) {
@@ -931,11 +920,11 @@ func (gen *GenGo) genReadVar(v *StructMember, prefix string, hasRet bool) {
 		gen.genReadMap(v, prefix, hasRet)
 	case tkName:
 		if v.Type.CType == tkEnum {
-			tag := strconv.Itoa(int(v.Tag))
 			require := "false"
 			if v.Require {
 				require = "true"
 			}
+			tag := strconv.Itoa(int(v.Tag))
 			c.WriteString(`
 err = readBuf.ReadInt32((*int32)(&` + prefix + v.Key + `),` + tag + `, ` + require + `)
 ` + errString(hasRet) + `
@@ -944,11 +933,11 @@ err = readBuf.ReadInt32((*int32)(&` + prefix + v.Key + `),` + tag + `, ` + requi
 			gen.genReadStruct(v, prefix, hasRet)
 		}
 	default:
-		tag := strconv.Itoa(int(v.Tag))
 		require := "false"
 		if v.Require {
 			require = "true"
 		}
+		tag := strconv.Itoa(int(v.Tag))
 		c.WriteString(`
 err = readBuf.Read` + upperFirstLetter(gen.genType(v.Type)) + `(&` + prefix + v.Key + `, ` + tag + `, ` + require + `)
 ` + errString(hasRet) + `
@@ -1608,7 +1597,7 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 		c.WriteString("if tarsReq.IVersion == basef.TARSVERSION {" + "\n")
 
 		for k, v := range fun.Args {
-			//c.WriteString("var " + v.Name + " " + gen.genType(v.Type))
+
 			if !v.IsOut {
 				dummy := &StructMember{}
 				dummy.Type = v.Type
@@ -1617,11 +1606,7 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 				dummy.Require = true
 				gen.genReadVar(dummy, "", false)
 			}
-			//else {
-			//	c.WriteString("\n")
-			//}
 		}
-		//c.WriteString("}")
 
 		c.WriteString(`} else if tarsReq.IVersion == basef.TUPVERSION {
 		reqTup := tup.NewUniAttribute()
@@ -1825,19 +1810,6 @@ if ok && traceData.TraceCall {
 } else if tarsReq.IVersion == basef.TUPVERSION {
 rspTup := tup.NewUniAttribute()
 `)
-
-	//	if fun.HasRet {
-	//		c.WriteString(`
-	//		buf.Reset()
-	//		err = buf.WriteInt32(funRet, 0)
-	//		if err != nil {
-	//			return err
-	//		}
-	//		rspTup.PutBuffer("", buf.ToBytes())
-	//		rspTup.PutBuffer("tars_ret", buf.ToBytes())
-	//`)
-	//	}
-
 	if fun.HasRet {
 		dummy := &StructMember{}
 		dummy.Type = fun.RetType
@@ -1874,10 +1846,9 @@ rspTup := tup.NewUniAttribute()
 		return err
 	}
 } else if tarsReq.IVersion == basef.JSONVERSION {
-	rspJson := map[string]interface{} {}
+	rspJson := map[string]interface{}{}
 `)
 	if fun.HasRet {
-		//c.WriteString(`rspJson[""] = funRet` + "\n")
 		c.WriteString(`rspJson["tars_ret"] = funRet` + "\n")
 	}
 
