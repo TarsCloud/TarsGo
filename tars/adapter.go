@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/model"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
@@ -37,13 +38,17 @@ type AdapterProxy struct {
 	lastKeepAliveTime int64
 	pushCallback      func([]byte)
 	onceKeepAlive     sync.Once
-
-	closed bool
+	onDispatch        model.Ondispatch
+	asyncPushCh       chan *requestf.ResponsePacket //
+	closed            bool
 }
 
 // NewAdapterProxy create an adapter proxy
 func NewAdapterProxy(objName string, point *endpointf.EndpointF, comm *Communicator) *AdapterProxy {
 	c := &AdapterProxy{}
+	if c.asyncPushCh == nil {
+		c.asyncPushCh = make(chan *requestf.ResponsePacket)
+	}
 	c.comm = comm
 	c.point = point
 	proto := "tcp"
@@ -70,6 +75,16 @@ func NewAdapterProxy(objName string, point *endpointf.EndpointF, comm *Communica
 	c.conf = conf
 	c.tarsClient = transport.NewTarsClient(fmt.Sprintf("%s:%d", point.Host, point.Port), c, conf)
 	c.status = true
+
+	// push queue listenning
+	go func() {
+		for {
+			select {
+			case resp := <-c.asyncPushCh:
+				c.onPush(resp)
+			}
+		}
+	}()
 	return c
 }
 
@@ -93,7 +108,7 @@ func (c *AdapterProxy) Recv(pkg []byte) {
 		return
 	}
 	if packet.IRequestId == 0 {
-		c.onPush(packet)
+		c.asyncPushCh <- packet
 		return
 	}
 	if packet.CPacketType == basef.TARSONEWAY {
@@ -216,12 +231,23 @@ func (c *AdapterProxy) onPush(pkg *requestf.ResponsePacket) {
 		oldClient.GraceClose(ctx) // grace shutdown
 		return
 	}
-	// Support push msg
-	if c.pushCallback == nil {
-		return
+
+	switch pkg.IVersion {
+	case 0:
+		// raw socket push
+		if c.pushCallback == nil {
+			return
+		}
+		data := tools.Int8ToByte(pkg.SBuffer)
+		c.pushCallback(data)
+
+	case basef.TARSVERSION:
+		if c.onDispatch == nil {
+			return
+		}
+		// tars proto push
+		c.onDispatch.Ondispatch(pkg)
 	}
-	data := tools.Int8ToByte(pkg.SBuffer)
-	c.pushCallback(data)
 }
 
 func (c *AdapterProxy) autoKeepAlive() {
@@ -234,6 +260,18 @@ func (c *AdapterProxy) autoKeepAlive() {
 			return
 		}
 		c.doKeepAlive()
+	}
+}
+
+func (c *AdapterProxy) OnConnect(address string) {
+	if c.obj.onConnectCallback != nil {
+		c.obj.onConnectCallback(address)
+	}
+}
+
+func (c *AdapterProxy) OnClose(address string) {
+	if c.obj.onCloseCallback != nil {
+		c.obj.onCloseCallback(address)
 	}
 }
 

@@ -14,6 +14,7 @@ var tcKey = tarsCurrentKey(0x484900)
 // Current contains message for the specify request.
 // This current is used for server side.
 type Current struct {
+	uuid        string
 	clientIP    string
 	clientPort  string
 	recvPkgTs   int64
@@ -82,6 +83,23 @@ func SetClientPortWithContext(ctx context.Context, port string) bool {
 func currentFromContext(ctx context.Context) (*Current, bool) {
 	tc, ok := ctx.Value(tcKey).(*Current)
 	return tc, ok
+}
+
+func SetUUIDWithContext(ctx context.Context, uid string) bool {
+	tc, ok := currentFromContext(ctx)
+	if ok {
+		tc.uuid = uid
+	}
+	return ok
+}
+
+// GetUUID get current uuid using for connect uniqe mark
+func GetUUID(ctx context.Context) (uuid string, ret bool) {
+	tc, ok := currentFromContext(ctx)
+	if ok {
+		return tc.uuid, true
+	}
+	return
 }
 
 // SetResponseStatus set the response package' status .

@@ -1,0 +1,18 @@
+module demo
+{
+    struct RegReq
+    {
+        0 optional string msg;
+    };
+
+    struct RegRsp
+    {
+        0 optional string msg;
+    };
+
+    interface DemoObj
+    {
+        void Push(out string msg);
+        void Reg(RegReq req, out RegRsp rsp);
+    };
+};
