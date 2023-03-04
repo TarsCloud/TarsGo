@@ -31,15 +31,17 @@ const (
 
 // ServantProxy tars servant proxy instance
 type ServantProxy struct {
-	name     string
-	comm     *Communicator
-	manager  EndpointManager
-	timeout  int
-	version  int16
-	proto    model.Protocol
-	queueLen int32
-
-	pushCallback func([]byte)
+	name              string
+	comm              *Communicator
+	manager           EndpointManager
+	timeout           int
+	version           int16
+	proto             model.Protocol
+	queueLen          int32
+	ondispatch        model.Ondispatch
+	pushCallback      func([]byte)
+	onCloseCallback   func(string)
+	onConnectCallback func(string)
 }
 
 // NewServantProxy creates and initializes a servant proxy
@@ -102,9 +104,44 @@ func (s *ServantProxy) genRequestID() int32 {
 	}
 }
 
+func (s *ServantProxy) TarsPing(ctx context.Context) {
+	req := requestf.RequestPacket{
+		IVersion:     s.version,
+		CPacketType:  int8(basef.TARSONEWAY),
+		IRequestId:   s.genRequestID(),
+		SServantName: s.name,
+		SFuncName:    "tars_ping",
+		ITimeout:     int32(s.timeout),
+	}
+	msg := &Message{Req: &req, Ser: s}
+	msg.Init()
+	timeout := time.Duration(s.timeout) * time.Millisecond
+	s.manager.preInvoke()
+	err := s.doInvoke(ctx, msg, timeout)
+	s.manager.postInvoke()
+	if err != nil {
+		TLOG.Errorf("KsfPing err: %v", err)
+	}
+	msg.End()
+}
+
+func (s *ServantProxy) SetTarsCallback(ondispatch model.Ondispatch) {
+	s.ondispatch = ondispatch
+}
+
 // SetPushCallback set callback function for pushing
 func (s *ServantProxy) SetPushCallback(callback func([]byte)) {
 	s.pushCallback = callback
+}
+
+// SetPushCallback set callback function for pushing
+func (s *ServantProxy) SetOnConnectCallback(callback func(string)) {
+	s.onConnectCallback = callback
+}
+
+// SetPushCallback set callback function for pushing
+func (s *ServantProxy) SetOnCloseCallback(callback func(string)) {
+	s.onCloseCallback = callback
 }
 
 // TarsInvoke is used for client invoking server.
@@ -227,6 +264,11 @@ func (s *ServantProxy) doInvoke(ctx context.Context, msg *Message, timeout time.
 		// auto keep alive for push client
 		go adp.onceKeepAlive.Do(adp.autoKeepAlive)
 		adp.pushCallback = s.pushCallback
+	}
+
+	if s.ondispatch != nil {
+		go adp.onceKeepAlive.Do(adp.autoKeepAlive)
+		adp.onDispatch = s.ondispatch
 	}
 
 	atomic.AddInt32(&s.queueLen, 1)

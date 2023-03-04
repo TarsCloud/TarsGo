@@ -221,6 +221,7 @@ func (c *connection) ReConnect() (err error) {
 
 		if err != nil {
 			c.connLock.Unlock()
+			go c.tc.cp.OnClose(c.tc.address)
 			return err
 		}
 		if c.tc.conf.Proto == "tcp" {
@@ -230,6 +231,7 @@ func (c *connection) ReConnect() (err error) {
 		}
 		c.idleTime = time.Now()
 		c.isClosed = false
+		go c.tc.cp.OnConnect(c.tc.address)
 		connDone := make(chan bool, 1)
 		go c.recv(c.conn, connDone)
 		go c.send(c.conn, connDone)
@@ -244,5 +246,6 @@ func (c *connection) close(conn net.Conn) {
 	if conn != nil {
 		conn.Close()
 	}
+	go c.tc.cp.OnClose(c.tc.address)
 	c.connLock.Unlock()
 }
