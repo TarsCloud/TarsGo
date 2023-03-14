@@ -51,7 +51,7 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 	if reqPackage.HasMessageType(basef.TARSMESSAGETYPETRACE) {
 		if traceKey, ok := reqPackage.Status[current.StatusTraceKey]; ok {
 			TLOG.Info("[TARS] servant got a trace request, trace key:", traceKey)
-			if ok = current.InitTrace(ctx, traceKey); !ok {
+			if ok = current.InitTarsTrace(ctx, traceKey); !ok {
 				TLOG.Error("trace-debug: set trace key in current status error, trace key:", traceKey)
 			}
 		}

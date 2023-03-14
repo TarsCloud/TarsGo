@@ -4,7 +4,7 @@ import (
 	"context"
 	"net"
 
-	"github.com/TarsCloud/TarsGo/tars/util/trace"
+	tarstrace "github.com/TarsCloud/TarsGo/tars/util/trace"
 )
 
 type tarsCurrentKey int64
@@ -24,7 +24,7 @@ type Current struct {
 	resContext  map[string]string
 	needDyeing  bool
 	dyeingUser  string
-	traceData   *trace.TraceData
+	trace       *tarstrace.Trace
 
 	rawConn net.Conn
 	udpAddr *net.UDPAddr
@@ -266,51 +266,51 @@ func SetDyeingUser(ctx context.Context, user string) bool {
 
 const StatusTraceKey = "STATUS_TRACE_KEY"
 
-// TarsOpenTrace 开启trace
-func TarsOpenTrace(ctx context.Context, traceParams bool) bool {
+// OpenTarsTrace 开启trace
+func OpenTarsTrace(ctx context.Context, traceParams bool) bool {
 	tc, ok := currentFromContext(ctx)
 	if ok {
-		traceData := trace.NewTraceData()
+		trace := tarstrace.New()
 		if traceParams {
-			traceData.OpenTrace(15, 0)
+			trace.OpenTrace(15, 0)
 		} else {
-			traceData.OpenTrace(0, 0)
+			trace.OpenTrace(0, 0)
 		}
-		tc.traceData = traceData
+		tc.trace = trace
 	}
 	return ok
 }
 
-// InitTrace init trace data from the trace key.
-func InitTrace(ctx context.Context, traceKey string) bool {
-	tc, ok := currentFromContext(ctx)
+// InitTarsTrace init trace data from the trace key.
+func InitTarsTrace(ctx context.Context, traceKey string) bool {
+	_, ok := currentFromContext(ctx)
 	if ok {
-		traceData := trace.NewTraceData()
-		if !traceData.InitTrace(traceKey) {
+		trace := tarstrace.New()
+		if !trace.InitTrace(traceKey) {
 			return false
 		}
-		traceData.TraceCall = true
-		tc.traceData = traceData
+		trace.SetCall(true)
+		return SetTarsTrace(ctx, trace)
 	}
 	return ok
 }
 
-// GetTraceData get trace data from the context.
-func GetTraceData(ctx context.Context) (*trace.TraceData, bool) {
+// GetTarsTrace get trace data from the context.
+func GetTarsTrace(ctx context.Context) (*tarstrace.Trace, bool) {
 	tc, ok := currentFromContext(ctx)
 	if ok {
-		if tc.traceData != nil {
-			return tc.traceData, true
+		if tc.trace != nil {
+			return tc.trace, true
 		}
 	}
 	return nil, false
 }
 
-// SetTraceData set trace data to the tars current.
-func SetTraceData(ctx context.Context, traceData *trace.TraceData) bool {
+// SetTarsTrace set trace data to the tars current.
+func SetTarsTrace(ctx context.Context, trace *tarstrace.Trace) bool {
 	tc, ok := currentFromContext(ctx)
 	if ok {
-		tc.traceData = traceData
+		tc.trace = trace
 	}
 	return ok
 }

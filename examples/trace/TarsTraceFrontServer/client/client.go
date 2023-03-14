@@ -18,7 +18,7 @@ func main() {
 	var out, i int32
 	i = 123
 	ctx := current.ContextWithTarsCurrent(context.Background())
-	current.TarsOpenTrace(ctx, true)
+	current.OpenTarsTrace(ctx, true)
 	ret, err := app.AddWithContext(ctx, i, i*2, &out)
 	if err != nil {
 		fmt.Println(err)
