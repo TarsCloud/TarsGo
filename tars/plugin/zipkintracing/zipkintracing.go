@@ -192,26 +192,18 @@ func ZipkinClientFilter() tars.ClientFilter {
 		cSpan.SetTag("tars.method", msg.Req.SFuncName)
 		cSpan.SetTag("tars.protocol", "tars")
 		cSpan.SetTag("tars.client.version", tars.Version)
-		if msg.Req.Status != nil {
-			err = tracer.Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(msg.Req.Status))
-			if err != nil {
-				logger.Error("inject span to status error:", err)
-			}
-		} else {
-			s := make(map[string]string)
-			err = tracer.Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(s))
-			if err != nil {
-				logger.Error("inject span to status error:", err)
-			} else {
-				msg.Req.Status = s
-			}
+		if msg.Req.Status == nil {
+			msg.Req.Status = make(map[string]string)
+		}
+		err = tracer.Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(msg.Req.Status))
+		if err != nil {
+			logger.Error("inject span to status error:", err)
 		}
 		err = invoke(ctx, msg, timeout)
 		if err != nil {
 			ext.Error.Set(cSpan, true)
 			cSpan.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
 		}
-
 		return err
 	}
 }
