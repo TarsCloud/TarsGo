@@ -2,6 +2,7 @@ package zipkintracing
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -29,6 +30,7 @@ var tracerMap = map[string]opentracing.Tracer{}
 var isTrace = false
 
 // Init is used to init opentracing and zipkin
+// Deprecated: v1.3.11 version removed
 func Init(zipkinHTTPEndpoint string, sameSpan bool, traceID128Bit bool, debug bool,
 	hostPort, serviceName string) {
 	// set up a span reporter
@@ -56,10 +58,14 @@ func Init(zipkinHTTPEndpoint string, sameSpan bool, traceID128Bit bool, debug bo
 }
 
 // InitV2 is used to init opentracing and zipkin, all configs are loaded from server config
+// /tars/application/server add the following config
+// samplerate=0.5
+// sampleaddress=http://127.0.0.1:9411
+// sampletype=http
+// sampleencoding=json
 func InitV2() {
-	serverConfig := tars.GetServerConfig()
-	isTrace = serverConfig.SampleRate > 0
-
+	cfg := tars.GetServerConfig()
+	isTrace = cfg.SampleRate > 0
 	if !isTrace {
 		return
 	}
@@ -69,63 +75,58 @@ func InitV2() {
 		serializer zipkinreporter.SpanSerializer
 		err        error
 	)
-	switch serverConfig.SampleEncoding {
+	switch cfg.SampleEncoding {
 	case "json":
 		serializer = zipkinreporter.JSONSerializer{}
 	case "proto":
 		serializer = zipkin_proto3.SpanSerializer{}
 	default:
-		log.Fatalf("unsupported sample encoding: %s\n", serverConfig.SampleEncoding)
+		log.Fatalf("unsupported sample encoding: %s\n", cfg.SampleEncoding)
 	}
 
-	switch serverConfig.SampleType {
+	switch cfg.SampleType {
 	case "http":
-		url := strings.TrimRight(serverConfig.SampleAddress, "/") + "/api/v2/spans"
+		url := strings.TrimRight(cfg.SampleAddress, "/") + "/api/v2/spans"
 		rpt = zipkinhttp.NewReporter(url, zipkinhttp.Serializer(serializer))
 	case "kafka":
-		rpt, err = zipkinkafka.NewReporter(
-			strings.Split(serverConfig.SampleAddress, ","), zipkinkafka.Serializer(serializer),
-		)
+		brokers := strings.Split(cfg.SampleAddress, ",")
+		rpt, err = zipkinkafka.NewReporter(brokers, zipkinkafka.Serializer(serializer))
 		if err != nil {
-			log.Fatalf("unable to create tracer: %+v\n", err)
+			log.Fatalf("unable to create tracer: %v\n", err)
 		}
 	default:
-		log.Fatalf("unsupported sample type: %s\n", serverConfig.SampleType)
+		log.Fatalf("unsupported sample type: %s\n", cfg.SampleType)
 	}
 
-	sampler, err := zipkin.NewCountingSampler(serverConfig.SampleRate)
+	sampler, err := zipkin.NewCountingSampler(cfg.SampleRate)
 	if err != nil {
-		log.Fatalf("unable to create sampler: %+v\n", err)
+		log.Fatalf("unable to create sampler: %v\n", err)
 	}
 
-	for _, config := range serverConfig.Adapters {
-		endpoint, err := zipkin.NewEndpoint(
-			config.Obj, config.Endpoint.Host+":"+strconv.FormatInt(int64(config.Endpoint.Port), 10),
-		)
-
+	for _, adapter := range cfg.Adapters {
+		endpoint, err := zipkin.NewEndpoint(adapter.Obj, fmt.Sprintf("%s:%d", adapter.Endpoint.Host, adapter.Endpoint.Port))
 		if err != nil {
-			log.Fatalf("unable to create local endpoint: %+v\n", err)
+			log.Fatalf("unable to create local endpoint: %v\n", err)
 		}
 
 		nativeTracer, err := zipkin.NewTracer(rpt, zipkin.WithLocalEndpoint(endpoint), zipkin.WithSampler(sampler))
 		if err != nil {
-			log.Fatalf("unable to create tracer: %+v\n", err)
+			log.Fatalf("unable to create tracer: %v\n", err)
 		}
 
 		// use zipkin-go-opentracing to wrap our tracer
-		tracer := zipkinot.Wrap(nativeTracer)
-		tracerMap[config.Obj] = tracer
+		tracerMap[adapter.Obj] = zipkinot.Wrap(nativeTracer)
 	}
 
 	// If the request is not called by any servant(such as job, queue, scheduler), use opentracing.GlobalTracer()
-	endpoint, err := zipkin.NewEndpoint(serverConfig.App+"."+serverConfig.Server, "")
+	endpoint, err := zipkin.NewEndpoint(fmt.Sprintf("%s.%s", cfg.App, cfg.Server), "")
 	if err != nil {
-		log.Fatalf("unable to create local endpoint: %+v\n", err)
+		log.Fatalf("unable to create local endpoint: %v\n", err)
 	}
 
 	nativeTracer, err := zipkin.NewTracer(rpt, zipkin.WithLocalEndpoint(endpoint), zipkin.WithSampler(sampler))
 	if err != nil {
-		log.Fatalf("unable to create tracer: %+v\n", err)
+		log.Fatalf("unable to create tracer: %v\n", err)
 	}
 
 	opentracing.SetGlobalTracer(zipkinot.Wrap(nativeTracer))
@@ -162,9 +163,9 @@ func ZipkinClientFilter() tars.ClientFilter {
 			return invoke(ctx, msg, timeout)
 		}
 
-		var pCtx opentracing.SpanContext
+		var spanCtx opentracing.SpanContext
 		if parent := opentracing.SpanFromContext(ctx); parent != nil {
-			pCtx = parent.Context()
+			spanCtx = parent.Context()
 		}
 
 		cfg := tars.GetServerConfig()
@@ -179,30 +180,25 @@ func ZipkinClientFilter() tars.ClientFilter {
 			tracer = opentracing.GlobalTracer()
 		}
 
-		cSpan := tracer.StartSpan(
-			msg.Req.SFuncName,
-			opentracing.ChildOf(pCtx),
-			ext.SpanKindRPCClient,
-		)
-
-		defer cSpan.Finish()
-		cSpan.SetTag("client.ipv4", cfg.LocalIP)
-		cSpan.SetTag("client.port", port)
-		cSpan.SetTag("tars.interface", msg.Req.SServantName)
-		cSpan.SetTag("tars.method", msg.Req.SFuncName)
-		cSpan.SetTag("tars.protocol", "tars")
-		cSpan.SetTag("tars.client.version", tars.Version)
+		span := tracer.StartSpan(msg.Req.SFuncName, opentracing.ChildOf(spanCtx), ext.SpanKindRPCClient)
+		defer span.Finish()
+		span.SetTag("client.ipv4", cfg.LocalIP)
+		span.SetTag("client.port", port)
+		span.SetTag("tars.interface", msg.Req.SServantName)
+		span.SetTag("tars.method", msg.Req.SFuncName)
+		span.SetTag("tars.protocol", "tars")
+		span.SetTag("tars.client.version", tars.Version)
 		if msg.Req.Status == nil {
 			msg.Req.Status = make(map[string]string)
 		}
-		err = tracer.Inject(cSpan.Context(), opentracing.TextMap, opentracing.TextMapCarrier(msg.Req.Status))
+		err = tracer.Inject(span.Context(), opentracing.TextMap, opentracing.TextMapCarrier(msg.Req.Status))
 		if err != nil {
 			logger.Error("inject span to status error:", err)
 		}
 		err = invoke(ctx, msg, timeout)
 		if err != nil {
-			ext.Error.Set(cSpan, true)
-			cSpan.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
+			ext.Error.Set(span, true)
+			span.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
 		}
 		return err
 	}
@@ -210,8 +206,7 @@ func ZipkinClientFilter() tars.ClientFilter {
 
 // ZipkinServerFilter gets tars server filter for zipkin opentracing.
 func ZipkinServerFilter() tars.ServerFilter {
-	return func(ctx context.Context, d tars.Dispatch, f interface{},
-		req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error) {
+	return func(ctx context.Context, d tars.Dispatch, f interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error) {
 		if !isTrace {
 			return d(ctx, f, req, resp, withContext)
 		}
@@ -220,26 +215,26 @@ func ZipkinServerFilter() tars.ServerFilter {
 			tracer = opentracing.GlobalTracer()
 		}
 		ctx = ContextWithServant(ctx, req.SServantName)
-		var serverSpan opentracing.Span
-		pCtx, err := tracer.Extract(opentracing.TextMap, opentracing.TextMapCarrier(req.Status))
+		var span opentracing.Span
+		spanCtx, err := tracer.Extract(opentracing.TextMap, opentracing.TextMapCarrier(req.Status))
 		if err == nil {
-			serverSpan = tracer.StartSpan(req.SFuncName, ext.RPCServerOption(pCtx), ext.SpanKindRPCServer)
+			span = tracer.StartSpan(req.SFuncName, ext.RPCServerOption(spanCtx), ext.SpanKindRPCServer)
 		} else {
-			serverSpan = tracer.StartSpan(req.SFuncName, ext.SpanKindRPCServer)
+			span = tracer.StartSpan(req.SFuncName, ext.SpanKindRPCServer)
 		}
 
-		defer serverSpan.Finish()
+		defer span.Finish()
 		cfg := tars.GetServerConfig()
-		serverSpan.SetTag("server.ipv4", cfg.LocalIP)
-		serverSpan.SetTag("server.port", strconv.Itoa(int(cfg.Adapters[req.SServantName+"Adapter"].Endpoint.Port)))
+		span.SetTag("server.ipv4", cfg.LocalIP)
+		span.SetTag("server.port", strconv.Itoa(int(cfg.Adapters[req.SServantName+"Adapter"].Endpoint.Port)))
 		if cfg.Enableset {
-			serverSpan.SetTag("tars.set_division", cfg.Setdivision)
+			span.SetTag("tars.set_division", cfg.Setdivision)
 		}
-		ctx = opentracing.ContextWithSpan(ctx, serverSpan)
+		ctx = opentracing.ContextWithSpan(ctx, span)
 		err = d(ctx, f, req, resp, withContext)
 		if err != nil {
-			ext.Error.Set(serverSpan, true)
-			serverSpan.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
+			ext.Error.Set(span, true)
+			span.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
 		}
 		return err
 	}
@@ -247,61 +242,56 @@ func ZipkinServerFilter() tars.ServerFilter {
 
 // ZipkinHttpMiddleware zipkin http server router middleware
 func ZipkinHttpMiddleware(next http.Handler) http.Handler {
+	cfg := tars.GetServerConfig()
 	servantMap := make(map[string]string)
-	serverConfig := tars.GetServerConfig()
-	for _, adapterConfig := range serverConfig.Adapters {
-		servantMap[adapterConfig.Endpoint.Host+":"+strconv.FormatInt(
-			int64(adapterConfig.Endpoint.Port), 10,
-		)] = adapterConfig.Obj
+	for _, adapter := range cfg.Adapters {
+		servantMap[fmt.Sprintf("%s:%d", adapter.Endpoint.Host, adapter.Endpoint.Port)] = adapter.Obj
 	}
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			addr, ok := r.Context().Value(http.LocalAddrContextKey).(net.Addr)
-			if !ok {
-				next.ServeHTTP(w, r)
-				return
-			}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		addr, ok := r.Context().Value(http.LocalAddrContextKey).(net.Addr)
+		if !ok {
+			next.ServeHTTP(w, r)
+			return
+		}
 
-			servant := servantMap[addr.String()]
-			tracer := GetTracer(servant)
-			if tracer == nil {
-				next.ServeHTTP(w, r)
-				return
-			}
+		servant := servantMap[addr.String()]
+		tracer := GetTracer(servant)
+		if tracer == nil {
+			next.ServeHTTP(w, r)
+			return
+		}
 
-			var serverSpan opentracing.Span
-			pCtx, err := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
-			if err == nil {
-				serverSpan = tracer.StartSpan(r.URL.Path, ext.RPCServerOption(pCtx), ext.SpanKindRPCServer)
-			} else {
-				serverSpan = tracer.StartSpan(r.URL.Path, ext.SpanKindRPCServer)
-			}
+		var span opentracing.Span
+		spanCtx, err := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(r.Header))
+		if err == nil {
+			span = tracer.StartSpan(r.URL.Path, ext.RPCServerOption(spanCtx), ext.SpanKindRPCServer)
+		} else {
+			span = tracer.StartSpan(r.URL.Path, ext.SpanKindRPCServer)
+		}
 
-			defer serverSpan.Finish()
-			cfg := tars.GetServerConfig()
-			ext.HTTPUrl.Set(serverSpan, r.RequestURI)
-			ext.HTTPMethod.Set(serverSpan, r.Method)
-			serverSpan.SetTag("server.ipv4", cfg.LocalIP)
-			serverSpan.SetTag("server.port", strconv.Itoa(int(cfg.Adapters[servant+"Adapter"].Endpoint.Port)))
-			if cfg.Enableset {
-				serverSpan.SetTag("tars.set_division", cfg.Setdivision)
-			}
-			ctx := opentracing.ContextWithSpan(r.Context(), serverSpan)
-			ctx = ContextWithServant(ctx, servant)
-			r = r.WithContext(ctx)
-			recorder := httptest.NewRecorder()
-			next.ServeHTTP(recorder, r)
-			for k, v := range recorder.Result().Header {
-				w.Header()[k] = v
-			}
-			w.WriteHeader(recorder.Code)
-			_, _ = w.Write(recorder.Body.Bytes())
+		defer span.Finish()
+		ext.HTTPUrl.Set(span, r.RequestURI)
+		ext.HTTPMethod.Set(span, r.Method)
+		span.SetTag("server.ipv4", cfg.LocalIP)
+		span.SetTag("server.port", strconv.Itoa(int(cfg.Adapters[servant+"Adapter"].Endpoint.Port)))
+		if cfg.Enableset {
+			span.SetTag("tars.set_division", cfg.Setdivision)
+		}
+		ctx := opentracing.ContextWithSpan(r.Context(), span)
+		ctx = ContextWithServant(ctx, servant)
+		r = r.WithContext(ctx)
+		recorder := httptest.NewRecorder()
+		next.ServeHTTP(recorder, r)
+		for k, v := range recorder.Result().Header {
+			w.Header()[k] = v
+		}
+		w.WriteHeader(recorder.Code)
+		_, err = w.Write(recorder.Body.Bytes())
 
-			ext.HTTPStatusCode.Set(serverSpan, uint16(recorder.Code))
-			if err != nil {
-				ext.Error.Set(serverSpan, true)
-				serverSpan.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
-			}
-		},
-	)
+		ext.HTTPStatusCode.Set(span, uint16(recorder.Code))
+		if err != nil {
+			ext.Error.Set(span, true)
+			span.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
+		}
+	})
 }
