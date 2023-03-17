@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
+	"OpentelemetryServer/otel"
 	"OpentelemetryServer/tars-protocol/StressTest"
-	"OpentelemetryServer/tracer"
 
 	"github.com/TarsCloud/TarsGo/contrib/middleware/opentelemetry"
 	"github.com/TarsCloud/TarsGo/tars"
@@ -16,7 +16,7 @@ import (
 
 func main() {
 	serviceNameKey := fmt.Sprintf("%s.%s", "StressTest", "OpentelemetryClient")
-	tp := tracer.NewTracerProvider(serviceNameKey, "")
+	tp := otel.NewTracerProvider(serviceNameKey, "")
 	defer func() {
 		if err := tp.Shutdown(context.Background()); err != nil {
 			log.Printf("Error shutting down tracer provider: %v", err)
@@ -26,7 +26,7 @@ func main() {
 	tars.UseClientFilterMiddleware(filter.BuildClientFilter())
 	comm := tars.GetCommunicator()
 	obj := fmt.Sprintf("StressTest.OpentelemetryServer.OpenTelemetryObj@tcp -h 127.0.0.1 -p 10028 -t 60000")
-	app := new(StressTest.ContextTest)
+	app := new(StressTest.Opentelemetry)
 	comm.StringToProxy(obj, app)
 	var out, i int32
 	i = 11111
@@ -49,6 +49,6 @@ func main() {
 		}
 		fmt.Println(c)
 		fmt.Println(ret, out)
-		time.Sleep(time.Second * 30)
+		time.Sleep(time.Second * 5)
 	}
 }

@@ -17,7 +17,9 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/metric/instrument"
 	"go.opentelemetry.io/otel/propagation"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -30,6 +32,9 @@ type Opentelemetry struct {
 	Propagators    propagation.TextMapPropagator
 	TracerProvider trace.TracerProvider
 	MeterProvider  metric.MeterProvider
+
+	meter             metric.Meter
+	rpcServerDuration instrument.Int64Histogram
 }
 
 type Option func(*Opentelemetry)
@@ -46,14 +51,32 @@ func WithPropagators(p propagation.TextMapPropagator) Option {
 	}
 }
 
+func WithMeterProvider(mp metric.MeterProvider) Option {
+	return func(o *Opentelemetry) {
+		o.MeterProvider = mp
+	}
+}
+
 func New(opts ...Option) *Opentelemetry {
 	o := &Opentelemetry{
 		TracerProvider: otel.GetTracerProvider(),
 		Propagators:    otel.GetTextMapPropagator(),
+		MeterProvider:  otel.GetMeterProvider(),
 	}
 	for _, opt := range opts {
 		opt(o)
 	}
+
+	o.meter = o.MeterProvider.Meter(
+		instrumentationName,
+		metric.WithInstrumentationVersion(SemVersion()),
+		metric.WithSchemaURL(semconv.SchemaURL),
+	)
+	var err error
+	if o.rpcServerDuration, err = o.meter.Int64Histogram("tars.server.duration", instrument.WithUnit("ms")); err != nil {
+		otel.Handle(err)
+	}
+
 	return o
 }
 
@@ -67,21 +90,33 @@ func (o *Opentelemetry) BuildServerFilter() tars.ServerFilterMiddleware {
 			var span trace.Span
 			ctx = o.extract(ctx, req)
 			servants := strings.Split(req.SServantName, ".")
+			attrs := []attribute.KeyValue{
+				attribute.String("tars.application", servants[0]),
+				attribute.String("tars.server_name", servants[1]),
+				attribute.String("tars.interface", req.SServantName),
+				attribute.String("tars.method", req.SFuncName),
+				attribute.String("tars.local_ip", localIp),
+				attribute.String("tars.client.ipv4", ip),
+			}
 			ctx, span = tracer.Start(
 				ctx,
 				fmt.Sprintf("%s.%s", servants[2], req.SFuncName),
 				trace.WithSpanKind(trace.SpanKindServer),
-				trace.WithAttributes(
-					attribute.String("tars.interface", req.SServantName),
-					attribute.String("tars.method", req.SFuncName),
-					attribute.String("tars.local_ip", localIp),
-					attribute.Int("tars.request_id", int(req.IRequestId)),
-					attribute.String("tars.client.ipv4", ip),
-					attribute.String("tars.client.port", port),
-					attribute.String("tars.server.version", tars.Version),
-				),
+				trace.WithAttributes(attrs...),
+			)
+			span.SetAttributes(
+				attribute.String("tars.client.port", port),
+				attribute.Int("tars.request_id", int(req.IRequestId)),
 			)
 			defer span.End()
+
+			var statusCode int32
+			defer func(t time.Time) {
+				elapsedTime := time.Since(t) / time.Millisecond
+				attrs = append(attrs, TarsRpcRetKey.Int64(int64(statusCode)))
+				o.rpcServerDuration.Record(ctx, int64(elapsedTime), attrs...)
+			}(time.Now())
+
 			cfg := tars.GetServerConfig()
 			if cfg.Enableset {
 				span.SetAttributes(attribute.String("tars.set_division", cfg.Setdivision))
@@ -113,21 +148,32 @@ func (o *Opentelemetry) BuildHttpHandler() func(next http.Handler) http.Handler 
 			var span trace.Span
 			reqCtx := r.Context()
 			reqCtx = o.Propagators.Extract(reqCtx, propagation.HeaderCarrier(r.Header))
+			attrs := []attribute.KeyValue{
+				attribute.String("http.method", r.Method),
+				attribute.String("http.path", r.URL.Path),
+				attribute.String("http.scheme", r.URL.Scheme),
+				attribute.String("http.proto", r.Proto),
+				attribute.String("component", "web"),
+			}
 			reqCtx, span = tracer.Start(
 				reqCtx,
 				r.URL.Path,
 				trace.WithSpanKind(trace.SpanKindServer),
-				trace.WithAttributes(
-					attribute.String("http.method", r.Method),
-					attribute.String("http.url", r.URL.String()),
-					attribute.String("http.scheme", r.URL.Scheme),
-					attribute.String("http.proto", r.Proto),
-					attribute.String("peer.hostname", r.Host),
-					attribute.String("peer.address", r.RemoteAddr),
-					attribute.String("component", "web"),
-				),
+				trace.WithAttributes(attrs...),
+			)
+			span.SetAttributes(
+				attribute.String("http.url", r.URL.String()),
+				attribute.String("peer.hostname", r.Host),
+				attribute.String("peer.address", r.RemoteAddr),
 			)
 			defer span.End()
+
+			var statusCode int32
+			defer func(t time.Time) {
+				elapsedTime := time.Since(t) / time.Millisecond
+				attrs = append(attrs, TarsRpcRetKey.Int64(int64(statusCode)))
+				o.rpcServerDuration.Record(reqCtx, int64(elapsedTime), attrs...)
+			}(time.Now())
 
 			r = r.WithContext(reqCtx)
 			recorder := httptest.NewRecorder()
@@ -137,6 +183,7 @@ func (o *Opentelemetry) BuildHttpHandler() func(next http.Handler) http.Handler 
 				w.Header()[k] = v
 			}
 			w.WriteHeader(recorder.Code)
+			statusCode = int32(recorder.Code)
 			_, err := w.Write(recorder.Body.Bytes())
 			if err != nil {
 				span.SetStatus(codes.Error, "http server write failed")
