@@ -356,7 +356,9 @@ import (
 	"context"
 	"fmt"
 	"unsafe"
+	"net"
 	"encoding/json"
+	"encoding/binary"
 `)
 	if *gAddServant {
 		gen.code.WriteString("\"" + gen.tarsPath + "\"\n")
@@ -1116,6 +1118,10 @@ func (gen *GenGo) genInterface(itf *InterfaceInfo) {
 
 	gen.genIFDispatch(itf)
 
+	gen.genTarsCallback(itf)
+
+	gen.genSendPushResponse(itf)
+
 	gen.saveToSourceFile(itf.Name + ".tars.go")
 }
 
@@ -1137,6 +1143,80 @@ func (obj *` + itf.Name + `) SetServant(servant m.Servant) {
 	obj.servant = servant
 }
 `)
+	c.WriteString(`// GetServant gets servant for the service.
+func (obj *` + itf.Name + `) GetServant()(servant *m.Servant) {
+	return &obj.servant
+}
+`)
+	c.WriteString(` // SetOnConnectCallback
+func (obj *` + itf.Name + `) SetOnConnectCallback(callback func(string)) {
+	obj.servant.SetOnConnectCallback(callback)
+}
+`)
+
+	c.WriteString(` // SetOnCloseCallback
+func (obj *` + itf.Name + `) SetOnCloseCallback(callback func(string)) {
+	obj.servant.SetOnCloseCallback(callback)
+}
+`)
+	c.WriteString(` // SetTarsCallback
+func (obj *` + itf.Name + `) SetTarsCallback(callback ` + itf.Name + `TarsCallback) {
+	var push ` + itf.Name + `PushCallback 
+	push.Cb = callback
+	obj.servant.SetTarsCallback(&push)
+}
+`)
+
+	c.WriteString(` // SetPushCallback
+func (obj *` + itf.Name + `) SetPushCallback(callback func([]byte)) {
+	obj.servant.SetPushCallback(callback)
+}
+`)
+
+	c.WriteString(`func (obj *` + itf.Name + `) req2Byte(rsp *requestf.ResponsePacket) []byte {
+	req := requestf.RequestPacket{}
+	req.IVersion = rsp.IVersion
+	req.IRequestId = rsp.IRequestId
+	req.IMessageType = rsp.IMessageType
+	req.CPacketType = rsp.CPacketType
+	req.Context = rsp.Context
+	req.Status = rsp.Status
+	req.SBuffer = rsp.SBuffer
+
+	os := codec.NewBuffer()
+	req.WriteTo(os)
+	bs := os.ToBytes()
+	sbuf := bytes.NewBuffer(nil)
+	sbuf.Write(make([]byte, 4))
+	sbuf.Write(bs)
+	length := sbuf.Len()
+	binary.BigEndian.PutUint32(sbuf.Bytes(), uint32(length))
+	return sbuf.Bytes()
+}
+
+func (obj * ` + itf.Name + `) rsp2Byte(rsp *requestf.ResponsePacket) []byte {
+	if rsp.IVersion == basef.TUPVERSION {
+		return obj.req2Byte(rsp)
+	}
+	os := codec.NewBuffer()
+	rsp.WriteTo(os)
+	bs := os.ToBytes()
+	sbuf := bytes.NewBuffer(nil)
+	sbuf.Write(make([]byte, 4))
+	sbuf.Write(bs)
+	length := sbuf.Len()
+	binary.BigEndian.PutUint32(sbuf.Bytes(), uint32(length))
+	return sbuf.Bytes()
+}
+`)
+
+	c.WriteString(` // TarsPing 
+func (obj *` + itf.Name + `) TarsPing()  {
+	ctx := context.Background()
+	obj.servant.TarsPing(ctx)
+}
+`)
+
 	c.WriteString(`// TarsSetTimeout sets the timeout for the servant which is in ms.
 func (obj *` + itf.Name + `) TarsSetTimeout(timeout int) {
 	obj.servant.TarsSetTimeout(timeout)
@@ -1816,5 +1896,216 @@ if ok && traceData.TraceCall {
 	tars.Trace(traceData.GetTraceKey(trace.EstSS), trace.TraceAnnotationSS, tars.GetClientConfig().ModuleName, tarsReq.SServantName, "` + fun.OriginName + `", 0, traceParam, "")
 }`)
 		c.WriteString("\n\n")
+	}
+}
+
+func (gen *GenGo) genArgsForPush(arg *ArgInfo) {
+	c := &gen.code
+	if arg.IsOut {
+		c.WriteString(arg.Name + " ")
+		c.WriteString("*")
+		c.WriteString(gen.genType(arg.Type) + ",")
+	}
+}
+
+func (gen *GenGo) genTarsCallback(itf *InterfaceInfo) {
+	c := &gen.code
+
+	c.WriteString("type " + itf.Name + "TarsCallback interface {" + "\n")
+	for _, v := range itf.Fun {
+		gen.genIFPushCallback(itf.Name, &v)
+		gen.genIFPushExceptionCallback(itf.Name, &v)
+	}
+	c.WriteString("}" + "\n")
+
+	c.WriteString("// " + itf.Name + "PushCallback struct\n")
+	c.WriteString("type " + itf.Name + "PushCallback struct {" + "\n")
+	c.WriteString("Cb " + itf.Name + "TarsCallback" + "\n")
+	c.WriteString("}" + "\n")
+
+	// 生成PushCallback 接口Ondispatch
+	c.WriteString("func (cb *" + itf.Name + "PushCallback) Ondispatch(resp *requestf.ResponsePacket) {" + "\n")
+	c.WriteString("switch resp.SResultDesc {" + "\n")
+	for _, v := range itf.Fun {
+		var hasOut bool
+		for _, v := range v.Args {
+			if v.IsOut {
+				hasOut = true
+			}
+		}
+		if !hasOut && !v.HasRet {
+			continue
+		}
+		c.WriteString("case \"" + v.Name + "\":" + "\n")
+		c.WriteString("err := func() error {" + "\n")
+		c.WriteString("var err error" + "\n")
+		c.WriteString("readBuf := codec.NewReader(tools.Int8ToByte(resp.SBuffer))" + "\n")
+		if v.HasRet {
+			c.WriteString(" var ret = new(" + gen.genType(v.RetType) + ")")
+			dummy := &StructMember{}
+			dummy.Type = v.RetType
+			dummy.Key = "ret"
+			dummy.Tag = 0
+			dummy.Require = true
+			gen.genReadVar(dummy, "", false)
+		}
+		for k, arg := range v.Args {
+			if arg.IsOut {
+				hasOut = true
+				if len(arg.Type.TypeSt) == 0 {
+					c.WriteString("var " + arg.Name + "= new(" + gen.genType(arg.Type) + ")" + "\n")
+				} else {
+					c.WriteString("var " + arg.Name + "= new(" + arg.Type.TypeSt + ")" + "\n")
+				}
+				dummy := &StructMember{}
+				dummy.Type = arg.Type
+				dummy.Key = "(*" + arg.Name + ")"
+				dummy.Tag = int32(k + 1)
+				dummy.Require = true
+				gen.genReadVar(dummy, "", false)
+			}
+		}
+		c.WriteString(`			if resp.Context != nil {
+				cb.Cb.` + v.Name + `_Callback(`)
+		k := 0
+		if v.HasRet {
+			c.WriteString("ret")
+			k++
+		}
+		for _, arg := range v.Args {
+			if arg.IsOut {
+				if k == 0 {
+					c.WriteString(arg.Name)
+				} else {
+					c.WriteString(`, ` + arg.Name)
+				}
+				k++
+			}
+		}
+		c.WriteString(", resp.Context)" + "\n")
+		c.WriteString("return nil")
+		c.WriteString(`} else { `)
+		c.WriteString(`cb.Cb.` + v.Name + `_Callback(`)
+		{
+			k := 0
+			if v.HasRet {
+				c.WriteString("ret")
+				k++
+			}
+			for _, arg := range v.Args {
+				if arg.IsOut {
+					if k == 0 {
+						c.WriteString(arg.Name)
+					} else {
+						c.WriteString(`, ` + arg.Name)
+					}
+					k++
+				}
+			}
+		}
+		c.WriteString(")" + "\n")
+		c.WriteString("return nil")
+		c.WriteString("}" + "\n")
+		c.WriteString("}()" + "\n")
+		c.WriteString(`if err != nil {
+		cb.Cb.` + v.Name + `_ExceptionCallback(err)			
+}` + "\n")
+	}
+
+	c.WriteString("}" + "\n")
+	c.WriteString("}" + "\n")
+}
+
+func (gen *GenGo) genIFPushCallback(name string, f *FunInfo) {
+	c := &gen.code
+	c.WriteString(f.Name + "_Callback(")
+	if f.HasRet {
+		c.WriteString("ret *" + gen.genType(f.RetType) + ", ")
+	}
+	for _, v := range f.Args {
+		gen.genArgsForPush(&v)
+	}
+
+	c.WriteString(" opt ...map[string]string)" + "\n")
+}
+
+func (gen *GenGo) genIFPushExceptionCallback(name string, f *FunInfo) {
+	c := &gen.code
+	c.WriteString(f.Name + "_ExceptionCallback(err error)" + "\n")
+}
+
+func (gen *GenGo) genSendPushResponse(itf *InterfaceInfo) {
+	c := &gen.code
+	for _, fun := range itf.Fun {
+		var hasOut bool
+		for _, v := range fun.Args {
+			if v.IsOut {
+				hasOut = true
+			}
+		}
+		if !hasOut && !fun.HasRet {
+			continue
+		}
+
+		c.WriteString(`func (obj *` + itf.Name + `)AsyncSendResponse_` + fun.Name + `(ctx context.Context, `)
+		if fun.HasRet {
+			c.WriteString("ret *" + gen.genType(fun.RetType) + ", ")
+		}
+		for _, arg := range fun.Args {
+			gen.genArgsForPush(&arg)
+		}
+		c.WriteString(" opt ... map[string]string")
+		c.WriteString(`)(err error) {` + "\n")
+		c.WriteString(`
+	conn, udpAddr, ok := current.GetRawConn(ctx)
+	if !ok {
+		return fmt.Errorf("connection not found")
+	}
+`)
+		c.WriteString("buf := codec.NewBuffer()" + "\n")
+		if fun.HasRet {
+			dummy := &StructMember{}
+			dummy.Type = fun.RetType
+			dummy.Key = "ret"
+			dummy.Tag = 0
+			dummy.Require = true
+			gen.genWriteVar(dummy, "", false)
+		}
+		for k, v := range fun.Args {
+			if !v.IsOut {
+				continue
+			}
+			dummy := &StructMember{}
+			dummy.Type = v.Type
+			dummy.Key = v.Name
+			dummy.Tag = int32(k + 1)
+			if v.IsOut {
+				dummy.Key = "(*" + dummy.Key + ")"
+			}
+			gen.genWriteVar(dummy, "", false)
+		}
+		c.WriteString(`resp := &requestf.ResponsePacket{
+		SBuffer: tools.ByteToInt8(buf.ToBytes()),
+	}
+	resp.IVersion = basef.TARSVERSION
+	if resp.Status == nil {
+		resp.Status = make(map[string]string)
+	}
+	resp.Status["TARS_FUNC"] = "` + fun.Name + `"
+	resp.SResultDesc = "` + fun.Name + `" 
+	if len(opt) > 0 {
+		if opt[0] != nil{
+			resp.Context= opt[0]
+		}
+	}
+	rspData := obj.rsp2Byte(resp)
+	if udpAddr != nil {
+		udpConn, _ := conn.(*net.UDPConn)
+		_, err = udpConn.WriteToUDP(rspData, udpAddr)
+	} else {
+		_, err = conn.Write(rspData)
+	}
+	return err`)
+		c.WriteString("}" + "\n")
 	}
 }

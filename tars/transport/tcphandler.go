@@ -3,6 +3,8 @@ package transport
 import (
 	"context"
 	"crypto/tls"
+	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
+	"github.com/google/uuid"
 	"io"
 	"net"
 	"os"
@@ -12,7 +14,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
 	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/gpool"
 	"github.com/TarsCloud/TarsGo/tars/util/grace"
@@ -34,12 +35,14 @@ type tcpHandler struct {
 }
 
 type connInfo struct {
+	uuid      string
 	conn      net.Conn
 	idleTime  int64
 	numInvoke int32
 }
 
 func (h *tcpHandler) Listen() (err error) {
+	uuid.EnableRandPool()
 	cfg := h.conf
 	ln, err := grace.CreateListener("tcp", cfg.Address)
 	if err == nil {
@@ -65,6 +68,7 @@ func (h *tcpHandler) Listen() (err error) {
 func (h *tcpHandler) getConnContext(connSt *connInfo) context.Context {
 	ctx := current.ContextWithTarsCurrent(context.Background())
 	ipPort := strings.Split(connSt.conn.RemoteAddr().String(), ":")
+	current.SetUUIDWithContext(ctx, connSt.uuid)
 	current.SetClientIPWithContext(ctx, ipPort[0])
 	current.SetClientPortWithContext(ctx, ipPort[1])
 	current.SetRecvPkgTsFromContext(ctx, time.Now().UnixNano()/1e6)
@@ -136,7 +140,7 @@ func (h *tcpHandler) Handle() error {
 			case *tls.Conn:
 				TLOG.Debugf("TLS accept: %s, %d", conn.RemoteAddr(), os.Getpid())
 			}
-			cf := &connInfo{conn: conn}
+			cf := &connInfo{conn: conn, uuid: uuid.New().String()}
 			h.conns.Store(key, cf)
 			h.recv(cf)
 			h.conns.Delete(key)

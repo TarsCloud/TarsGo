@@ -27,6 +27,8 @@ type ServerProtocol interface {
 type ClientProtocol interface {
 	Recv(pkg []byte)
 	ParsePackage(buff []byte) (int, int)
+	OnClose(address string)
+	OnConnect(address string)
 }
 
 func isNoDataError(err error) bool {
