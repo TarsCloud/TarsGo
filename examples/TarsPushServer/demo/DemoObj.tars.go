@@ -243,7 +243,7 @@ func (obj *DemoObj) PushOneWayWithContext(tarsCtx context.Context, msg *string, 
 }
 
 // Reg is the proxy function for the method defined in the tars file, with the context
-func (obj *DemoObj) Reg(req *RegReq, rsp *RegRsp, opts ...map[string]string) (err error) {
+func (obj *DemoObj) Reg(req *RegReq, rsp *RegRsp, opts ...map[string]string) (ret Result, err error) {
 	var (
 		length int32
 		have   bool
@@ -252,12 +252,12 @@ func (obj *DemoObj) Reg(req *RegReq, rsp *RegRsp, opts ...map[string]string) (er
 	buf := codec.NewBuffer()
 	err = req.WriteBlock(buf, 1)
 	if err != nil {
-		return err
+		return ret, err
 	}
 
 	err = (*rsp).WriteBlock(buf, 2)
 	if err != nil {
-		return err
+		return ret, err
 	}
 
 	var statusMap map[string]string
@@ -273,13 +273,18 @@ func (obj *DemoObj) Reg(req *RegReq, rsp *RegRsp, opts ...map[string]string) (er
 
 	err = obj.servant.TarsInvoke(tarsCtx, 0, "Reg", buf.ToBytes(), statusMap, contextMap, tarsResp)
 	if err != nil {
-		return err
+		return ret, err
 	}
 
 	readBuf := codec.NewReader(tools.Int8ToByte(tarsResp.SBuffer))
+	err = ret.ReadBlock(readBuf, 0, true)
+	if err != nil {
+		return ret, err
+	}
+
 	err = (*rsp).ReadBlock(readBuf, 2, true)
 	if err != nil {
-		return err
+		return ret, err
 	}
 
 	if len(opts) == 1 {
@@ -306,11 +311,11 @@ func (obj *DemoObj) Reg(req *RegReq, rsp *RegRsp, opts ...map[string]string) (er
 	_ = length
 	_ = have
 	_ = ty
-	return nil
+	return ret, nil
 }
 
 // RegWithContext is the proxy function for the method defined in the tars file, with the context
-func (obj *DemoObj) RegWithContext(tarsCtx context.Context, req *RegReq, rsp *RegRsp, opts ...map[string]string) (err error) {
+func (obj *DemoObj) RegWithContext(tarsCtx context.Context, req *RegReq, rsp *RegRsp, opts ...map[string]string) (ret Result, err error) {
 	var (
 		length int32
 		have   bool
@@ -319,12 +324,12 @@ func (obj *DemoObj) RegWithContext(tarsCtx context.Context, req *RegReq, rsp *Re
 	buf := codec.NewBuffer()
 	err = req.WriteBlock(buf, 1)
 	if err != nil {
-		return err
+		return ret, err
 	}
 
 	err = (*rsp).WriteBlock(buf, 2)
 	if err != nil {
-		return err
+		return ret, err
 	}
 
 	traceData, ok := current.GetTraceData(tarsCtx)
@@ -355,13 +360,18 @@ func (obj *DemoObj) RegWithContext(tarsCtx context.Context, req *RegReq, rsp *Re
 	tarsResp := new(requestf.ResponsePacket)
 	err = obj.servant.TarsInvoke(tarsCtx, 0, "Reg", buf.ToBytes(), statusMap, contextMap, tarsResp)
 	if err != nil {
-		return err
+		return ret, err
 	}
 
 	readBuf := codec.NewReader(tools.Int8ToByte(tarsResp.SBuffer))
+	err = ret.ReadBlock(readBuf, 0, true)
+	if err != nil {
+		return ret, err
+	}
+
 	err = (*rsp).ReadBlock(readBuf, 2, true)
 	if err != nil {
-		return err
+		return ret, err
 	}
 
 	if ok && traceData.TraceCall {
@@ -369,6 +379,7 @@ func (obj *DemoObj) RegWithContext(tarsCtx context.Context, req *RegReq, rsp *Re
 		traceParamFlag := traceData.NeedTraceParam(trace.EstCR, uint(readBuf.Len()))
 		if traceParamFlag == trace.EnpNormal {
 			value := map[string]interface{}{}
+			value[""] = ret
 			value["rsp"] = *rsp
 			p, _ := json.Marshal(value)
 			traceParam = string(p)
@@ -402,11 +413,11 @@ func (obj *DemoObj) RegWithContext(tarsCtx context.Context, req *RegReq, rsp *Re
 	_ = length
 	_ = have
 	_ = ty
-	return nil
+	return ret, nil
 }
 
 // RegOneWayWithContext is the proxy function for the method defined in the tars file, with the context
-func (obj *DemoObj) RegOneWayWithContext(tarsCtx context.Context, req *RegReq, rsp *RegRsp, opts ...map[string]string) (err error) {
+func (obj *DemoObj) RegOneWayWithContext(tarsCtx context.Context, req *RegReq, rsp *RegRsp, opts ...map[string]string) (ret Result, err error) {
 	var (
 		length int32
 		have   bool
@@ -415,12 +426,12 @@ func (obj *DemoObj) RegOneWayWithContext(tarsCtx context.Context, req *RegReq, r
 	buf := codec.NewBuffer()
 	err = req.WriteBlock(buf, 1)
 	if err != nil {
-		return err
+		return ret, err
 	}
 
 	err = (*rsp).WriteBlock(buf, 2)
 	if err != nil {
-		return err
+		return ret, err
 	}
 
 	var statusMap map[string]string
@@ -435,7 +446,7 @@ func (obj *DemoObj) RegOneWayWithContext(tarsCtx context.Context, req *RegReq, r
 	tarsResp := new(requestf.ResponsePacket)
 	err = obj.servant.TarsInvoke(tarsCtx, 1, "Reg", buf.ToBytes(), statusMap, contextMap, tarsResp)
 	if err != nil {
-		return err
+		return ret, err
 	}
 
 	if len(opts) == 1 {
@@ -462,7 +473,215 @@ func (obj *DemoObj) RegOneWayWithContext(tarsCtx context.Context, req *RegReq, r
 	_ = length
 	_ = have
 	_ = ty
-	return nil
+	return ret, nil
+}
+
+// Notify is the proxy function for the method defined in the tars file, with the context
+func (obj *DemoObj) Notify(notify *Notify, opts ...map[string]string) (ret Result, err error) {
+	var (
+		length int32
+		have   bool
+		ty     byte
+	)
+	buf := codec.NewBuffer()
+	err = notify.WriteBlock(buf, 1)
+	if err != nil {
+		return ret, err
+	}
+
+	var statusMap map[string]string
+	var contextMap map[string]string
+	if len(opts) == 1 {
+		contextMap = opts[0]
+	} else if len(opts) == 2 {
+		contextMap = opts[0]
+		statusMap = opts[1]
+	}
+	tarsResp := new(requestf.ResponsePacket)
+	tarsCtx := context.Background()
+
+	err = obj.servant.TarsInvoke(tarsCtx, 0, "Notify", buf.ToBytes(), statusMap, contextMap, tarsResp)
+	if err != nil {
+		return ret, err
+	}
+
+	readBuf := codec.NewReader(tools.Int8ToByte(tarsResp.SBuffer))
+	err = ret.ReadBlock(readBuf, 0, true)
+	if err != nil {
+		return ret, err
+	}
+
+	if len(opts) == 1 {
+		for k := range contextMap {
+			delete(contextMap, k)
+		}
+		for k, v := range tarsResp.Context {
+			contextMap[k] = v
+		}
+	} else if len(opts) == 2 {
+		for k := range contextMap {
+			delete(contextMap, k)
+		}
+		for k, v := range tarsResp.Context {
+			contextMap[k] = v
+		}
+		for k := range statusMap {
+			delete(statusMap, k)
+		}
+		for k, v := range tarsResp.Status {
+			statusMap[k] = v
+		}
+	}
+	_ = length
+	_ = have
+	_ = ty
+	return ret, nil
+}
+
+// NotifyWithContext is the proxy function for the method defined in the tars file, with the context
+func (obj *DemoObj) NotifyWithContext(tarsCtx context.Context, notify *Notify, opts ...map[string]string) (ret Result, err error) {
+	var (
+		length int32
+		have   bool
+		ty     byte
+	)
+	buf := codec.NewBuffer()
+	err = notify.WriteBlock(buf, 1)
+	if err != nil {
+		return ret, err
+	}
+
+	traceData, ok := current.GetTraceData(tarsCtx)
+	if ok && traceData.TraceCall {
+		traceData.NewSpan()
+		var traceParam string
+		traceParamFlag := traceData.NeedTraceParam(trace.EstCS, uint(buf.Len()))
+		if traceParamFlag == trace.EnpNormal {
+			value := map[string]interface{}{}
+			value["notify"] = notify
+			p, _ := json.Marshal(value)
+			traceParam = string(p)
+		} else if traceParamFlag == trace.EnpOverMaxLen {
+			traceParam = "{\"trace_param_over_max_len\":true}"
+		}
+		tars.Trace(traceData.GetTraceKey(trace.EstCS), trace.TraceAnnotationCS, tars.GetClientConfig().ModuleName, obj.servant.Name(), "Notify", 0, traceParam, "")
+	}
+
+	var statusMap map[string]string
+	var contextMap map[string]string
+	if len(opts) == 1 {
+		contextMap = opts[0]
+	} else if len(opts) == 2 {
+		contextMap = opts[0]
+		statusMap = opts[1]
+	}
+
+	tarsResp := new(requestf.ResponsePacket)
+	err = obj.servant.TarsInvoke(tarsCtx, 0, "Notify", buf.ToBytes(), statusMap, contextMap, tarsResp)
+	if err != nil {
+		return ret, err
+	}
+
+	readBuf := codec.NewReader(tools.Int8ToByte(tarsResp.SBuffer))
+	err = ret.ReadBlock(readBuf, 0, true)
+	if err != nil {
+		return ret, err
+	}
+
+	if ok && traceData.TraceCall {
+		var traceParam string
+		traceParamFlag := traceData.NeedTraceParam(trace.EstCR, uint(readBuf.Len()))
+		if traceParamFlag == trace.EnpNormal {
+			value := map[string]interface{}{}
+			value[""] = ret
+			p, _ := json.Marshal(value)
+			traceParam = string(p)
+		} else if traceParamFlag == trace.EnpOverMaxLen {
+			traceParam = "{\"trace_param_over_max_len\":true}"
+		}
+		tars.Trace(traceData.GetTraceKey(trace.EstCR), trace.TraceAnnotationCR, tars.GetClientConfig().ModuleName, obj.servant.Name(), "Notify", int(tarsResp.IRet), traceParam, "")
+	}
+
+	if len(opts) == 1 {
+		for k := range contextMap {
+			delete(contextMap, k)
+		}
+		for k, v := range tarsResp.Context {
+			contextMap[k] = v
+		}
+	} else if len(opts) == 2 {
+		for k := range contextMap {
+			delete(contextMap, k)
+		}
+		for k, v := range tarsResp.Context {
+			contextMap[k] = v
+		}
+		for k := range statusMap {
+			delete(statusMap, k)
+		}
+		for k, v := range tarsResp.Status {
+			statusMap[k] = v
+		}
+	}
+	_ = length
+	_ = have
+	_ = ty
+	return ret, nil
+}
+
+// NotifyOneWayWithContext is the proxy function for the method defined in the tars file, with the context
+func (obj *DemoObj) NotifyOneWayWithContext(tarsCtx context.Context, notify *Notify, opts ...map[string]string) (ret Result, err error) {
+	var (
+		length int32
+		have   bool
+		ty     byte
+	)
+	buf := codec.NewBuffer()
+	err = notify.WriteBlock(buf, 1)
+	if err != nil {
+		return ret, err
+	}
+
+	var statusMap map[string]string
+	var contextMap map[string]string
+	if len(opts) == 1 {
+		contextMap = opts[0]
+	} else if len(opts) == 2 {
+		contextMap = opts[0]
+		statusMap = opts[1]
+	}
+
+	tarsResp := new(requestf.ResponsePacket)
+	err = obj.servant.TarsInvoke(tarsCtx, 1, "Notify", buf.ToBytes(), statusMap, contextMap, tarsResp)
+	if err != nil {
+		return ret, err
+	}
+
+	if len(opts) == 1 {
+		for k := range contextMap {
+			delete(contextMap, k)
+		}
+		for k, v := range tarsResp.Context {
+			contextMap[k] = v
+		}
+	} else if len(opts) == 2 {
+		for k := range contextMap {
+			delete(contextMap, k)
+		}
+		for k, v := range tarsResp.Context {
+			contextMap[k] = v
+		}
+		for k := range statusMap {
+			delete(statusMap, k)
+		}
+		for k, v := range tarsResp.Status {
+			statusMap[k] = v
+		}
+	}
+	_ = length
+	_ = have
+	_ = ty
+	return ret, nil
 }
 
 // SetServant sets servant for the service.
@@ -560,11 +779,13 @@ func (obj *DemoObj) AddServantWithContext(imp DemoObjServantWithContext, servant
 
 type DemoObjServant interface {
 	Push(msg *string) (err error)
-	Reg(req *RegReq, rsp *RegRsp) (err error)
+	Reg(req *RegReq, rsp *RegRsp) (ret Result, err error)
+	Notify(notify *Notify) (ret Result, err error)
 }
 type DemoObjServantWithContext interface {
 	Push(tarsCtx context.Context, msg *string) (err error)
-	Reg(tarsCtx context.Context, req *RegReq, rsp *RegRsp) (err error)
+	Reg(tarsCtx context.Context, req *RegReq, rsp *RegRsp) (ret Result, err error)
+	Notify(tarsCtx context.Context, notify *Notify) (ret Result, err error)
 }
 
 // Dispatch is used to call the server side implement for the method defined in the tars file. withContext shows using context or not.
@@ -720,12 +941,13 @@ func (obj *DemoObj) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *
 			tars.Trace(traceData.GetTraceKey(trace.EstSR), trace.TraceAnnotationSR, tars.GetClientConfig().ModuleName, tarsReq.SServantName, "Reg", 0, traceParam, "")
 		}
 
+		var funRet Result
 		if !withContext {
 			imp := val.(DemoObjServant)
-			err = imp.Reg(&req, &rsp)
+			funRet, err = imp.Reg(&req, &rsp)
 		} else {
 			imp := val.(DemoObjServantWithContext)
-			err = imp.Reg(tarsCtx, &req, &rsp)
+			funRet, err = imp.Reg(tarsCtx, &req, &rsp)
 		}
 
 		if err != nil {
@@ -735,6 +957,11 @@ func (obj *DemoObj) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *
 		if tarsReq.IVersion == basef.TARSVERSION {
 			buf.Reset()
 
+			err = funRet.WriteBlock(buf, 0)
+			if err != nil {
+				return err
+			}
+
 			err = rsp.WriteBlock(buf, 2)
 			if err != nil {
 				return err
@@ -742,6 +969,14 @@ func (obj *DemoObj) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *
 
 		} else if tarsReq.IVersion == basef.TUPVERSION {
 			rspTup := tup.NewUniAttribute()
+
+			err = funRet.WriteBlock(buf, 0)
+			if err != nil {
+				return err
+			}
+
+			rspTup.PutBuffer("", buf.ToBytes())
+			rspTup.PutBuffer("tars_ret", buf.ToBytes())
 
 			buf.Reset()
 			err = rsp.WriteBlock(buf, 0)
@@ -758,6 +993,7 @@ func (obj *DemoObj) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
 			rspJson := map[string]interface{}{}
+			rspJson["tars_ret"] = funRet
 			rspJson["rsp"] = rsp
 
 			var rspByte []byte
@@ -777,6 +1013,7 @@ func (obj *DemoObj) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *
 			traceParamFlag := traceData.NeedTraceParam(trace.EstSS, uint(buf.Len()))
 			if traceParamFlag == trace.EnpNormal {
 				value := map[string]interface{}{}
+				value[""] = funRet
 				value["rsp"] = rsp
 				p, _ := json.Marshal(value)
 				traceParam = string(p)
@@ -784,6 +1021,132 @@ func (obj *DemoObj) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *
 				traceParam = "{\"trace_param_over_max_len\":true}"
 			}
 			tars.Trace(traceData.GetTraceKey(trace.EstSS), trace.TraceAnnotationSS, tars.GetClientConfig().ModuleName, tarsReq.SServantName, "Reg", 0, traceParam, "")
+		}
+
+	case "Notify":
+		var notify Notify
+
+		if tarsReq.IVersion == basef.TARSVERSION {
+
+			err = notify.ReadBlock(readBuf, 1, true)
+			if err != nil {
+				return err
+			}
+
+		} else if tarsReq.IVersion == basef.TUPVERSION {
+			reqTup := tup.NewUniAttribute()
+			reqTup.Decode(readBuf)
+
+			var tupBuffer []byte
+
+			reqTup.GetBuffer("notify", &tupBuffer)
+			readBuf.Reset(tupBuffer)
+			err = notify.ReadBlock(readBuf, 0, true)
+			if err != nil {
+				return err
+			}
+
+		} else if tarsReq.IVersion == basef.JSONVERSION {
+			var jsonData map[string]interface{}
+			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
+			decoder.UseNumber()
+			err = decoder.Decode(&jsonData)
+			if err != nil {
+				return fmt.Errorf("decode reqpacket failed, error: %+v", err)
+			}
+			{
+				jsonStr, _ := json.Marshal(jsonData["notify"])
+				notify.ResetDefault()
+				if err = json.Unmarshal(jsonStr, &notify); err != nil {
+					return err
+				}
+			}
+
+		} else {
+			err = fmt.Errorf("decode reqpacket fail, error version: %d", tarsReq.IVersion)
+			return err
+		}
+
+		traceData, ok := current.GetTraceData(tarsCtx)
+		if ok && traceData.TraceCall {
+			var traceParam string
+			traceParamFlag := traceData.NeedTraceParam(trace.EstSR, uint(readBuf.Len()))
+			if traceParamFlag == trace.EnpNormal {
+				value := map[string]interface{}{}
+				value["notify"] = notify
+				p, _ := json.Marshal(value)
+				traceParam = string(p)
+			} else if traceParamFlag == trace.EnpOverMaxLen {
+				traceParam = "{\"trace_param_over_max_len\":true}"
+			}
+			tars.Trace(traceData.GetTraceKey(trace.EstSR), trace.TraceAnnotationSR, tars.GetClientConfig().ModuleName, tarsReq.SServantName, "Notify", 0, traceParam, "")
+		}
+
+		var funRet Result
+		if !withContext {
+			imp := val.(DemoObjServant)
+			funRet, err = imp.Notify(&notify)
+		} else {
+			imp := val.(DemoObjServantWithContext)
+			funRet, err = imp.Notify(tarsCtx, &notify)
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if tarsReq.IVersion == basef.TARSVERSION {
+			buf.Reset()
+
+			err = funRet.WriteBlock(buf, 0)
+			if err != nil {
+				return err
+			}
+
+		} else if tarsReq.IVersion == basef.TUPVERSION {
+			rspTup := tup.NewUniAttribute()
+
+			err = funRet.WriteBlock(buf, 0)
+			if err != nil {
+				return err
+			}
+
+			rspTup.PutBuffer("", buf.ToBytes())
+			rspTup.PutBuffer("tars_ret", buf.ToBytes())
+
+			buf.Reset()
+			err = rspTup.Encode(buf)
+			if err != nil {
+				return err
+			}
+		} else if tarsReq.IVersion == basef.JSONVERSION {
+			rspJson := map[string]interface{}{}
+			rspJson["tars_ret"] = funRet
+
+			var rspByte []byte
+			if rspByte, err = json.Marshal(rspJson); err != nil {
+				return err
+			}
+
+			buf.Reset()
+			err = buf.WriteSliceUint8(rspByte)
+			if err != nil {
+				return err
+			}
+		}
+
+		if ok && traceData.TraceCall {
+			var traceParam string
+			traceParamFlag := traceData.NeedTraceParam(trace.EstSS, uint(buf.Len()))
+			if traceParamFlag == trace.EnpNormal {
+				value := map[string]interface{}{}
+				value[""] = funRet
+				p, _ := json.Marshal(value)
+				traceParam = string(p)
+			} else if traceParamFlag == trace.EnpOverMaxLen {
+				traceParam = "{\"trace_param_over_max_len\":true}"
+			}
+			tars.Trace(traceData.GetTraceKey(trace.EstSS), trace.TraceAnnotationSS, tars.GetClientConfig().ModuleName, tarsReq.SServantName, "Notify", 0, traceParam, "")
 		}
 
 	default:
@@ -820,8 +1183,10 @@ func (obj *DemoObj) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *
 type DemoObjTarsCallback interface {
 	Push_Callback(msg *string, opt ...map[string]string)
 	Push_ExceptionCallback(err error)
-	Reg_Callback(rsp *RegRsp, opt ...map[string]string)
+	Reg_Callback(ret *Result, rsp *RegRsp, opt ...map[string]string)
 	Reg_ExceptionCallback(err error)
+	Notify_Callback(ret *Result, opt ...map[string]string)
+	Notify_ExceptionCallback(err error)
 }
 
 // DemoObjPushCallback struct
@@ -833,8 +1198,8 @@ func (cb *DemoObjPushCallback) Ondispatch(resp *requestf.ResponsePacket) {
 	switch resp.SResultDesc {
 	case "Push":
 		err := func() error {
-			readBuf := codec.NewReader(tools.Int8ToByte(resp.SBuffer))
 			var err error
+			readBuf := codec.NewReader(tools.Int8ToByte(resp.SBuffer))
 			var msg = new(string)
 
 			err = readBuf.ReadString(&(*msg), 1, true)
@@ -855,8 +1220,14 @@ func (cb *DemoObjPushCallback) Ondispatch(resp *requestf.ResponsePacket) {
 		}
 	case "Reg":
 		err := func() error {
-			readBuf := codec.NewReader(tools.Int8ToByte(resp.SBuffer))
 			var err error
+			readBuf := codec.NewReader(tools.Int8ToByte(resp.SBuffer))
+			var ret = new(Result)
+			err = ret.ReadBlock(readBuf, 0, true)
+			if err != nil {
+				return err
+			}
+
 			var rsp = new(RegRsp)
 
 			err = (*rsp).ReadBlock(readBuf, 2, true)
@@ -865,15 +1236,36 @@ func (cb *DemoObjPushCallback) Ondispatch(resp *requestf.ResponsePacket) {
 			}
 
 			if resp.Context != nil {
-				cb.Cb.Reg_Callback(rsp, resp.Context)
+				cb.Cb.Reg_Callback(ret, rsp, resp.Context)
 				return nil
 			} else {
-				cb.Cb.Reg_Callback(rsp)
+				cb.Cb.Reg_Callback(ret, rsp)
 				return nil
 			}
 		}()
 		if err != nil {
 			cb.Cb.Reg_ExceptionCallback(err)
+		}
+	case "Notify":
+		err := func() error {
+			var err error
+			readBuf := codec.NewReader(tools.Int8ToByte(resp.SBuffer))
+			var ret = new(Result)
+			err = ret.ReadBlock(readBuf, 0, true)
+			if err != nil {
+				return err
+			}
+
+			if resp.Context != nil {
+				cb.Cb.Notify_Callback(ret, resp.Context)
+				return nil
+			} else {
+				cb.Cb.Notify_Callback(ret)
+				return nil
+			}
+		}()
+		if err != nil {
+			cb.Cb.Notify_ExceptionCallback(err)
 		}
 	}
 }
@@ -884,6 +1276,7 @@ func (obj *DemoObj) AsyncSendResponse_Push(ctx context.Context, msg *string, opt
 		return fmt.Errorf("connection not found")
 	}
 	buf := codec.NewBuffer()
+
 	err = buf.WriteString(*msg, 1)
 	if err != nil {
 		return err
@@ -912,13 +1305,19 @@ func (obj *DemoObj) AsyncSendResponse_Push(ctx context.Context, msg *string, opt
 	}
 	return err
 }
-func (obj *DemoObj) AsyncSendResponse_Reg(ctx context.Context, rsp *RegRsp, opt ...map[string]string) (err error) {
+func (obj *DemoObj) AsyncSendResponse_Reg(ctx context.Context, ret *Result, rsp *RegRsp, opt ...map[string]string) (err error) {
 
 	conn, udpAddr, ok := current.GetRawConn(ctx)
 	if !ok {
 		return fmt.Errorf("connection not found")
 	}
 	buf := codec.NewBuffer()
+
+	err = ret.WriteBlock(buf, 0)
+	if err != nil {
+		return err
+	}
+
 	err = (*rsp).WriteBlock(buf, 2)
 	if err != nil {
 		return err
@@ -933,6 +1332,42 @@ func (obj *DemoObj) AsyncSendResponse_Reg(ctx context.Context, rsp *RegRsp, opt 
 	}
 	resp.Status["TARS_FUNC"] = "Reg"
 	resp.SResultDesc = "Reg"
+	if len(opt) > 0 {
+		if opt[0] != nil {
+			resp.Context = opt[0]
+		}
+	}
+	rspData := obj.rsp2Byte(resp)
+	if udpAddr != nil {
+		udpConn, _ := conn.(*net.UDPConn)
+		_, err = udpConn.WriteToUDP(rspData, udpAddr)
+	} else {
+		_, err = conn.Write(rspData)
+	}
+	return err
+}
+func (obj *DemoObj) AsyncSendResponse_Notify(ctx context.Context, ret *Result, opt ...map[string]string) (err error) {
+
+	conn, udpAddr, ok := current.GetRawConn(ctx)
+	if !ok {
+		return fmt.Errorf("connection not found")
+	}
+	buf := codec.NewBuffer()
+
+	err = ret.WriteBlock(buf, 0)
+	if err != nil {
+		return err
+	}
+
+	resp := &requestf.ResponsePacket{
+		SBuffer: tools.ByteToInt8(buf.ToBytes()),
+	}
+	resp.IVersion = basef.TARSVERSION
+	if resp.Status == nil {
+		resp.Status = make(map[string]string)
+	}
+	resp.Status["TARS_FUNC"] = "Notify"
+	resp.SResultDesc = "Notify"
 	if len(opt) > 0 {
 		if opt[0] != nil {
 			resp.Context = opt[0]

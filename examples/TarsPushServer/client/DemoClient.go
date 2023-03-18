@@ -7,10 +7,27 @@ import (
 	"time"
 )
 
+var prx *demo.DemoObj
+
 type Callback struct {
 	start int64
 	cost  int64
 	count int64
+}
+
+func (c *Callback) Reg_Callback(ret *demo.Result, rsp *demo.RegRsp, opt ...map[string]string) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *Callback) Notify_Callback(ret *demo.Result, opt ...map[string]string) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *Callback) Notify_ExceptionCallback(err error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (c *Callback) Push_Callback(msg *string, opt ...map[string]string) {
@@ -36,23 +53,25 @@ func (c Callback) Push_ExceptionCallback(err error) {
 	panic("implement me")
 }
 
-func (c Callback) Reg_Callback(rsp *demo.RegRsp, opt ...map[string]string) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (c Callback) Reg_ExceptionCallback(err error) {
 	//TODO implement me
 	panic("implement me")
 }
 
+func TestReg() {
+	req := &demo.RegReq{Msg: "reg"}
+	rsp := &demo.RegRsp{}
+	prx.Reg(req, rsp)
+}
+
 func main() {
 	com := tars.GetCommunicator()
 	obj := "Base.DemoServer.DemoObj@tcp -h 127.0.0.1 -p 8888 -t 60000"
-	prx := &demo.DemoObj{}
+	prx = &demo.DemoObj{}
 	com.StringToProxy(obj, prx)
 	prx.SetOnConnectCallback(func(s string) {
 		fmt.Println("<-----------onConnect--------->")
+		TestReg()
 	})
 	prx.SetOnCloseCallback(func(s string) {
 		fmt.Println("<-----------onClose----------->")
@@ -69,11 +88,7 @@ func main() {
 			}
 		}
 	}()
-	{
-		req := &demo.RegReq{Msg: "reg"}
-		rsp := &demo.RegRsp{}
-		prx.Reg(req, rsp)
-	}
+	prx.TarsPing()
 	for true {
 		time.Sleep(time.Second * 10)
 	}

@@ -358,6 +358,7 @@ import (
 	"unsafe"
 	"net"
 	"encoding/json"
+	"encoding/binary"
 `)
 	if *gAddServant {
 		gen.code.WriteString("\"" + gen.tarsPath + "\"\n")
@@ -1955,10 +1956,21 @@ func (gen *GenGo) genTarsCallback(itf *InterfaceInfo) {
 	c.WriteString("func (cb *" + itf.Name + "PushCallback) Ondispatch(resp *requestf.ResponsePacket) {" + "\n")
 	c.WriteString("switch resp.SResultDesc {" + "\n")
 	for _, v := range itf.Fun {
+		var hasOut bool
+		for _, v := range v.Args {
+			if v.IsOut {
+				hasOut = true
+			}
+		}
+		if !hasOut && !v.HasRet {
+			continue
+		}
 		c.WriteString("case \"" + v.Name + "\":" + "\n")
 		c.WriteString("err := func() error {" + "\n")
+		c.WriteString("var err error" + "\n")
 		c.WriteString("readBuf := codec.NewReader(tools.Int8ToByte(resp.SBuffer))" + "\n")
 		if v.HasRet {
+			c.WriteString(" var ret = new(" + gen.genType(v.RetType) + ")")
 			dummy := &StructMember{}
 			dummy.Type = v.RetType
 			dummy.Key = "ret"
@@ -1966,9 +1978,9 @@ func (gen *GenGo) genTarsCallback(itf *InterfaceInfo) {
 			dummy.Require = true
 			gen.genReadVar(dummy, "", false)
 		}
-		c.WriteString("var err error" + "\n")
 		for k, arg := range v.Args {
 			if arg.IsOut {
+				hasOut = true
 				if len(arg.Type.TypeSt) == 0 {
 					c.WriteString("var " + arg.Name + "= new(" + gen.genType(arg.Type) + ")" + "\n")
 				} else {
@@ -1984,17 +1996,19 @@ func (gen *GenGo) genTarsCallback(itf *InterfaceInfo) {
 		}
 		c.WriteString(`			if resp.Context != nil {
 				cb.Cb.` + v.Name + `_Callback(`)
-		{
-			k := 0
-			for _, arg := range v.Args {
-				if arg.IsOut {
-					if k == 0 {
-						c.WriteString(arg.Name)
-					} else {
-						c.WriteString(`, ` + arg.Name)
-					}
-					k++
+		k := 0
+		if v.HasRet {
+			c.WriteString("ret")
+			k++
+		}
+		for _, arg := range v.Args {
+			if arg.IsOut {
+				if k == 0 {
+					c.WriteString(arg.Name)
+				} else {
+					c.WriteString(`, ` + arg.Name)
 				}
+				k++
 			}
 		}
 		c.WriteString(", resp.Context)" + "\n")
@@ -2003,6 +2017,10 @@ func (gen *GenGo) genTarsCallback(itf *InterfaceInfo) {
 		c.WriteString(`cb.Cb.` + v.Name + `_Callback(`)
 		{
 			k := 0
+			if v.HasRet {
+				c.WriteString("ret")
+				k++
+			}
 			for _, arg := range v.Args {
 				if arg.IsOut {
 					if k == 0 {
@@ -2030,6 +2048,9 @@ func (gen *GenGo) genTarsCallback(itf *InterfaceInfo) {
 func (gen *GenGo) genIFPushCallback(name string, f *FunInfo) {
 	c := &gen.code
 	c.WriteString(f.Name + "_Callback(")
+	if f.HasRet {
+		c.WriteString("ret *" + gen.genType(f.RetType) + ", ")
+	}
 	for _, v := range f.Args {
 		gen.genArgsForPush(&v)
 	}
@@ -2045,7 +2066,20 @@ func (gen *GenGo) genIFPushExceptionCallback(name string, f *FunInfo) {
 func (gen *GenGo) genSendPushResponse(itf *InterfaceInfo) {
 	c := &gen.code
 	for _, fun := range itf.Fun {
+		var hasOut bool
+		for _, v := range fun.Args {
+			if v.IsOut {
+				hasOut = true
+			}
+		}
+		if !hasOut && !fun.HasRet {
+			continue
+		}
+
 		c.WriteString(`func (obj *` + itf.Name + `)AsyncSendResponse_` + fun.Name + `(ctx context.Context, `)
+		if fun.HasRet {
+			c.WriteString("ret *" + gen.genType(fun.RetType) + ", ")
+		}
 		for _, arg := range fun.Args {
 			gen.genArgsForPush(&arg)
 		}
@@ -2057,7 +2091,15 @@ func (gen *GenGo) genSendPushResponse(itf *InterfaceInfo) {
 		return fmt.Errorf("connection not found")
 	}
 `)
-		c.WriteString("buf := codec.NewBuffer()")
+		c.WriteString("buf := codec.NewBuffer()" + "\n")
+		if fun.HasRet {
+			dummy := &StructMember{}
+			dummy.Type = fun.RetType
+			dummy.Key = "ret"
+			dummy.Tag = 0
+			dummy.Require = true
+			gen.genWriteVar(dummy, "", false)
+		}
 		for k, v := range fun.Args {
 			if !v.IsOut {
 				continue
@@ -2069,7 +2111,7 @@ func (gen *GenGo) genSendPushResponse(itf *InterfaceInfo) {
 			if v.IsOut {
 				dummy.Key = "(*" + dummy.Key + ")"
 			}
-			gen.genWriteVar(dummy, "", fun.HasRet)
+			gen.genWriteVar(dummy, "", false)
 		}
 		c.WriteString(`resp := &requestf.ResponsePacket{
 		SBuffer: tools.ByteToInt8(buf.ToBytes()),

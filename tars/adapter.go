@@ -264,14 +264,14 @@ func (c *AdapterProxy) autoKeepAlive() {
 }
 
 func (c *AdapterProxy) OnConnect(address string) {
-	if c.obj.onConnectCallback != nil {
-		c.obj.onConnectCallback(address)
+	if c.servantProxy.onConnectCallback != nil {
+		c.servantProxy.onConnectCallback(address)
 	}
 }
 
 func (c *AdapterProxy) OnClose(address string) {
-	if c.obj.onCloseCallback != nil {
-		c.obj.onCloseCallback(address)
+	if c.servantProxy.onCloseCallback != nil {
+		c.servantProxy.onCloseCallback(address)
 	}
 }
 
