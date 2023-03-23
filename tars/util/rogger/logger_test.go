@@ -5,8 +5,8 @@ import (
 	"time"
 )
 
-// XTestLogger test logger writes.
-func XTestLogger(t *testing.T) {
+// TestLogger test logger writes.
+func TestLogger(t *testing.T) {
 	SetLevel(DEBUG)
 	lg := GetLogger("debug")
 	// lg.SetConsole()
@@ -28,7 +28,7 @@ func XTestLogger(t *testing.T) {
 }
 
 // XTestGetLogList test get log list
-func XTestGetLogList(t *testing.T) {
+func TestGetLogList(t *testing.T) {
 	w := NewDateWriter("./logs", "abc", HOUR, 0)
 	w.cleanOldLogs()
 }

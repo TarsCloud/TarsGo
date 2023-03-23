@@ -54,12 +54,14 @@ type Logger struct {
 }
 
 type JsonLog struct {
-	Pre   string `json:"pre,omitempty"`
-	Time  string `json:"time"`
-	Func  string `json:"func"`
-	File  string `json:"file"`
-	Level string `json:"level"`
-	Msg   string `json:"msg"`
+	Pre     string `json:"pre,omitempty"`
+	Time    string `json:"time"`
+	TraceId string `json:"trace_id,omitempty"`
+	SpanId  string `json:"span_id,omitempty"`
+	Func    string `json:"func"`
+	File    string `json:"file"`
+	Level   string `json:"level"`
+	Msg     string `json:"msg"`
 }
 
 // LogLevel is uint8 type
@@ -95,8 +97,8 @@ func (lv *LogLevel) String() string {
 	}
 }
 
-// Colored enable colored level string when use console writer
-func (lv *LogLevel) coloredString() string {
+// ColoredString enable colored level string when use console writer
+func (lv *LogLevel) ColoredString() string {
 	switch *lv {
 	case DEBUG:
 		return "\x1b[34mDEBUG\x1b[0m" // blue
@@ -166,12 +168,17 @@ func GetLogFormat() LogFormat {
 
 // GetFormat get global log format and return string
 func GetFormat() string {
-	return logLevel.String()
+	return logFormat.String()
 }
 
 // Colored enable colored level string when use console writer
 func Colored() {
 	colored = true
+}
+
+// IsColored returns whether to enable colored when use console writer
+func IsColored() bool {
+	return colored
 }
 
 // StringToLevel turns string to LogLevel
@@ -200,14 +207,41 @@ func SetCallerFlag(flag bool) {
 	callerFlag = flag
 }
 
+// CallerFlag returns the caller's state string when writing to the log
+func CallerFlag() bool {
+	return callerFlag
+}
+
 // SetLogName sets the log name
+// Deprecated: recommended to use SetName, v1.4.0 will be removed
 func (l *Logger) SetLogName(name string) {
 	l.name = name
 }
 
+// SetName sets the log name
+func (l *Logger) SetName(name string) {
+	l.name = name
+}
+
+// Name return the log name
+func (l *Logger) Name() string {
+	return l.name
+}
+
 // SetLogPrefix sets the log line prefix
+// Deprecated: recommended to use SetPrefix, v1.4.0 will be removed
 func (l *Logger) SetLogPrefix(pre string) {
 	l.prefix = pre
+}
+
+// SetPrefix sets the log line prefix
+func (l *Logger) SetPrefix(prefix string) {
+	l.prefix = prefix
+}
+
+// Prefix returns the log line prefix
+func (l *Logger) Prefix() string {
+	return l.prefix
 }
 
 // SetFileRoller sets the file rolled by size in MB, with max num of files.
@@ -228,6 +262,11 @@ func (l *Logger) IsConsoleWriter() bool {
 // SetWriter sets the writer to the logger.
 func (l *Logger) SetWriter(w LogWriter) {
 	l.writer = w
+}
+
+// Writer return the log LogWriter.
+func (l *Logger) Writer() LogWriter {
+	return l.writer
 }
 
 // SetDayRoller sets the logger to rotate by day, with max num files.
@@ -314,20 +353,24 @@ func (l *Logger) Writef(depth int, level LogLevel, format string, v []interface{
 	}
 
 	if logFormat == Json {
-		logQueue <- l.WriteJsonF(depth, level, format, v)
+		logQueue <- l.writeJson(depth, level, format, v)
 	} else {
-		logQueue <- l.WriteLineF(depth, level, format, v)
+		logQueue <- l.writeLine(depth, level, format, v)
 	}
 }
 
+// Deprecated: will be removed in a future version, v1.4.0 will be removed
 func (l *Logger) WriteLineF(depth int, level LogLevel, format string, v []interface{}) *logValue {
+	return l.writeLine(depth, level, format, v)
+}
+
+func (l *Logger) writeLine(depth int, level LogLevel, format string, v []interface{}) *logValue {
 	buf := bytes.NewBuffer(nil)
 	if l.writer.NeedPrefix() {
+		fmt.Fprintf(buf, "%s|", time.Now().Format("2006-01-02 15:04:05.000"))
 		if len(l.prefix) > 0 {
 			fmt.Fprintf(buf, "%s|", l.prefix)
 		}
-
-		fmt.Fprintf(buf, "%s|", time.Now().Format("2006-01-02 15:04:05.000"))
 
 		if callerFlag {
 			pc, file, line, ok := runtime.Caller(depth + callerSkip)
@@ -337,10 +380,10 @@ func (l *Logger) WriteLineF(depth int, level LogLevel, format string, v []interf
 			} else {
 				file = filepath.Base(file)
 			}
-			fmt.Fprintf(buf, "%s:%s:%d|", file, getFuncName(runtime.FuncForPC(pc).Name()), line)
+			fmt.Fprintf(buf, "%s:%s:%d|", file, FuncName(runtime.FuncForPC(pc)), line)
 		}
-		if colored && l.IsConsoleWriter() {
-			buf.WriteString(level.coloredString())
+		if IsColored() && l.IsConsoleWriter() {
+			buf.WriteString(level.ColoredString())
 		} else {
 			buf.WriteString(level.String())
 		}
@@ -358,7 +401,12 @@ func (l *Logger) WriteLineF(depth int, level LogLevel, format string, v []interf
 	return &logValue{value: buf.Bytes(), writer: l.writer}
 }
 
+// Deprecated: will be removed in a future version, v1.4.0 will be removed
 func (l *Logger) WriteJsonF(depth int, level LogLevel, format string, v []interface{}) *logValue {
+	return l.writeJson(depth, level, format, v)
+}
+
+func (l *Logger) writeJson(depth int, level LogLevel, format string, v []interface{}) *logValue {
 	log := JsonLog{}
 	log.Pre = l.prefix
 	log.Time = time.Now().Format("2006-01-02 15:04:05.000")
@@ -371,7 +419,7 @@ func (l *Logger) WriteJsonF(depth int, level LogLevel, format string, v []interf
 		} else {
 			file = filepath.Base(file)
 		}
-		log.Func = getFuncName(runtime.FuncForPC(pc).Name())
+		log.Func = FuncName(runtime.FuncForPC(pc))
 		log.File = fmt.Sprintf("%s:%d", file, line)
 	}
 	log.Level = level.String()
@@ -388,7 +436,13 @@ func (l *Logger) WriteJsonF(depth int, level LogLevel, format string, v []interf
 	return &logValue{value: buf.Bytes(), writer: l.writer}
 }
 
-func getFuncName(name string) string {
+// WriteLog write log into log files ignore the log level and log prefix
+func (l *Logger) WriteLog(msg []byte) {
+	logQueue <- &logValue{value: msg, writer: l.writer}
+}
+
+func FuncName(f *runtime.Func) string {
+	name := f.Name()
 	idx := strings.LastIndexByte(name, '/')
 	if idx != -1 {
 		name = name[idx:]
@@ -398,11 +452,6 @@ func getFuncName(name string) string {
 		}
 	}
 	return name
-}
-
-// WriteLog write log into log files ignore the log level and log prefix
-func (l *Logger) WriteLog(msg []byte) {
-	logQueue <- &logValue{value: msg, writer: l.writer}
 }
 
 // FlushLogger flush all log to disk.
