@@ -30,7 +30,7 @@ var tracerMap = map[string]opentracing.Tracer{}
 var isTrace = false
 
 // Init is used to init opentracing and zipkin
-// Deprecated: v1.3.11 version removed
+// Deprecated: v1.4.0 version removed
 func Init(zipkinHTTPEndpoint string, sameSpan bool, traceID128Bit bool, debug bool,
 	hostPort, serviceName string) {
 	// set up a span reporter
