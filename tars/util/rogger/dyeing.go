@@ -90,10 +90,10 @@ func (l *Logger) DyeingWritef(ctx context.Context, depth int, level LogLevel, ex
 			} else {
 				file = filepath.Base(file)
 			}
-			fmt.Fprintf(buf, "%s:%s:%d|", file, getFuncName(runtime.FuncForPC(pc).Name()), line)
+			fmt.Fprintf(buf, "%s:%s:%d|", file, FuncName(runtime.FuncForPC(pc)), line)
 		}
-		if colored && l.IsConsoleWriter() {
-			buf.WriteString(level.coloredString())
+		if IsColored() && l.IsConsoleWriter() {
+			buf.WriteString(level.ColoredString())
 		} else {
 			buf.WriteString(level.String())
 		}
