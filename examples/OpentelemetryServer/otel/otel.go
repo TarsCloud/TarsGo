@@ -1,17 +1,25 @@
-package tracer
+package otel
 
 import (
 	"context"
 	"log"
 	"os"
 	"sync"
+	"time"
 
+	gp "github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/exporters/prometheus"
+	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/exporters/zipkin"
 	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/sdk/metric"
 	sdkresource "go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
@@ -75,6 +83,8 @@ func NewTracerProvider(serviceName, exporterTyp string) *sdktrace.TracerProvider
 		exporter, err = newZipkinExporter(serviceName)
 	case "jaeger":
 		exporter, err = newJaegerExporter()
+	case "oltphttp":
+		exporter, err = otlptracehttp.New(context.Background(), otlptracehttp.WithInsecure())
 	default: // otlp
 		exporter, err = newOtlpExporter()
 	}
@@ -89,4 +99,39 @@ func NewTracerProvider(serviceName, exporterTyp string) *sdktrace.TracerProvider
 	otel.SetTracerProvider(tp)
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	return tp
+}
+
+func NewMeterProvider(serviceName, exporterTyp string) *metric.MeterProvider {
+	var (
+		exporter metric.Exporter
+		err      error
+
+		pexporter *prometheus.Exporter
+	)
+	switch exporterTyp {
+	case "stdout":
+		exporter, err = stdoutmetric.New()
+	case "prometheus":
+		registry := gp.NewRegistry()
+		pexporter, err = prometheus.New(prometheus.WithRegisterer(registry))
+	case "oltphttp":
+		exporter, err = otlpmetrichttp.New(context.Background(), otlpmetrichttp.WithInsecure())
+	default: // otlp
+		exporter, err = otlpmetricgrpc.New(context.Background(), otlpmetricgrpc.WithInsecure())
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var mp *metric.MeterProvider
+	switch exporterTyp {
+	case "prometheus":
+		mp = metric.NewMeterProvider(metric.WithResource(initResource(serviceName)), metric.WithReader(pexporter))
+	default:
+		// Register the exporter with an SDK via a periodic reader.
+		read := metric.NewPeriodicReader(exporter, metric.WithInterval(1*time.Second))
+		mp = metric.NewMeterProvider(metric.WithResource(initResource(serviceName)), metric.WithReader(read))
+	}
+	otel.SetMeterProvider(mp)
+	return mp
 }
