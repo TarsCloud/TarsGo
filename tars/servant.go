@@ -128,8 +128,8 @@ func (s *ServantProxy) TarsInvoke(ctx context.Context, cType byte,
 	}
 
 	// 将ctx中的trace信息传入到request中
-	if traceData, ok := current.GetTraceData(ctx); ok && traceData.TraceCall {
-		traceKey := traceData.GetTraceKeyFull(false)
+	if trace, ok := current.GetTarsTrace(ctx); ok && trace.Call() {
+		traceKey := trace.GetTraceFullKey(false)
 		TLOG.Debug("trace debug: find trace key:", traceKey)
 		if status == nil {
 			status = make(map[string]string)

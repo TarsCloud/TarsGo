@@ -16,11 +16,11 @@ var (
 	loggerOnce  sync.Once
 )
 
-func Trace(traceKey, annotation, client, server, funcName string, ret int, data, ex string) {
+func Trace(traceKey, annotation, client, server, funcName string, ret int32, data, ex string) {
 	loggerOnce.Do(func() (err error) {
 		defer func() {
 			if r := recover(); r != nil {
-				err = fmt.Errorf("%+v", r)
+				err = fmt.Errorf("loggerOnce err: %+v", r)
 			}
 		}()
 		traceLogger = GetRemoteLogger("_t_trace_")
@@ -30,7 +30,7 @@ func Trace(traceKey, annotation, client, server, funcName string, ret int, data,
 		TLOG.Error("trace logger init error")
 		return
 	}
-	msg := traceKey + "|" + annotation + "|" + client + "|" + server + "|" + funcName + "|" + strconv.FormatInt(time.Now().UnixNano()/1e6, 10) + "|" + strconv.Itoa(ret) + "|" + base64.StdEncoding.EncodeToString([]byte(data)) + "|" + ex
+	msg := traceKey + "|" + annotation + "|" + client + "|" + server + "|" + funcName + "|" + strconv.FormatInt(time.Now().UnixNano()/1e6, 10) + "|" + strconv.Itoa(int(ret)) + "|" + base64.StdEncoding.EncodeToString([]byte(data)) + "|" + ex
 	traceLogger.Trace(msg)
 }
 

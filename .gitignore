@@ -3,5 +3,5 @@
 *.tar.gz
 *.tgz
 tars-protocol
-*go.sum
+examples/*/go.sum
 .DS_Store

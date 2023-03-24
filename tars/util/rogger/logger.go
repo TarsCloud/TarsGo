@@ -324,7 +324,7 @@ func (l *Logger) Trace(msg string) {
 	if l.writer.NeedPrefix() {
 		buf.WriteByte('\n')
 	}
-	logQueue <- &logValue{value: buf.Bytes(), writer: l.writer}
+	l.WriteLog(buf.Bytes())
 }
 
 // Debugf logs interface in debug loglevel with formating string
