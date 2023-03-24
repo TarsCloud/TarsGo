@@ -212,12 +212,6 @@ func CallerFlag() bool {
 	return callerFlag
 }
 
-// SetLogName sets the log name
-// Deprecated: recommended to use SetName, v1.4.0 will be removed
-func (l *Logger) SetLogName(name string) {
-	l.name = name
-}
-
 // SetName sets the log name
 func (l *Logger) SetName(name string) {
 	l.name = name
@@ -226,12 +220,6 @@ func (l *Logger) SetName(name string) {
 // Name return the log name
 func (l *Logger) Name() string {
 	return l.name
-}
-
-// SetLogPrefix sets the log line prefix
-// Deprecated: recommended to use SetPrefix, v1.4.0 will be removed
-func (l *Logger) SetLogPrefix(pre string) {
-	l.prefix = pre
 }
 
 // SetPrefix sets the log line prefix
@@ -359,11 +347,6 @@ func (l *Logger) Writef(depth int, level LogLevel, format string, v []interface{
 	}
 }
 
-// Deprecated: will be removed in a future version, v1.4.0 will be removed
-func (l *Logger) WriteLineF(depth int, level LogLevel, format string, v []interface{}) *logValue {
-	return l.writeLine(depth, level, format, v)
-}
-
 func (l *Logger) writeLine(depth int, level LogLevel, format string, v []interface{}) *logValue {
 	buf := bytes.NewBuffer(nil)
 	if l.writer.NeedPrefix() {
@@ -399,11 +382,6 @@ func (l *Logger) writeLine(depth int, level LogLevel, format string, v []interfa
 		buf.WriteByte('\n')
 	}
 	return &logValue{value: buf.Bytes(), writer: l.writer}
-}
-
-// Deprecated: will be removed in a future version, v1.4.0 will be removed
-func (l *Logger) WriteJsonF(depth int, level LogLevel, format string, v []interface{}) *logValue {
-	return l.writeJson(depth, level, format, v)
 }
 
 func (l *Logger) writeJson(depth int, level LogLevel, format string, v []interface{}) *logValue {
