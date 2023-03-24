@@ -29,41 +29,13 @@ var logger = tars.GetLogger("tracing")
 var tracerMap = map[string]opentracing.Tracer{}
 var isTrace = false
 
-// Init is used to init opentracing and zipkin
-// Deprecated: v1.4.0 version removed, InitV2 rename Init
-func Init(zipkinHTTPEndpoint string, sameSpan bool, traceID128Bit bool, debug bool,
-	hostPort, serviceName string) {
-	// set up a span reporter
-	reporter := zipkinhttp.NewReporter(zipkinHTTPEndpoint)
-	// defer reporter.Close()
-
-	// create our local service endpoint
-	endpoint, err := zipkin.NewEndpoint(serviceName, hostPort)
-	if err != nil {
-		log.Fatalf("unable to create local endpoint: %+v\n", err)
-	}
-
-	// initialize our tracer
-	nativeTracer, err := zipkin.NewTracer(reporter, zipkin.WithLocalEndpoint(endpoint))
-	if err != nil {
-		log.Fatalf("unable to create tracer: %+v\n", err)
-	}
-
-	// use zipkin-go-opentracing to wrap our tracer
-	tracer := zipkinot.Wrap(nativeTracer)
-
-	// optionally set as Global OpenTracing tracer instance
-	opentracing.SetGlobalTracer(tracer)
-	isTrace = true
-}
-
-// InitV2 is used to init opentracing and zipkin, all configs are loaded from server config
+// Init is used to init opentracing and zipkin, all configs are loaded from server config
 // /tars/application/server add the following config
 // samplerate=0.5
 // sampleaddress=http://127.0.0.1:9411
 // sampletype=http
 // sampleencoding=json
-func InitV2() {
+func Init() {
 	cfg := tars.GetServerConfig()
 	isTrace = cfg.SampleRate > 0
 	if !isTrace {
