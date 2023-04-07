@@ -3,8 +3,6 @@ package trace
 import (
 	"strconv"
 	"strings"
-
-	"github.com/google/uuid"
 )
 
 // SpanContext 调用链追踪信息
@@ -46,7 +44,10 @@ const (
 	AnnotationSS = "ss"
 )
 
-var traceParamMaxLen uint = 1 // 默认1K
+var (
+	idGenerator           = newGenerator()
+	traceParamMaxLen uint = 1 // 默认1K
+)
 
 // SetTraceParamMaxLen 设置控制参数长度
 func SetTraceParamMaxLen(len uint) {
@@ -121,7 +122,7 @@ func (c *SpanContext) Reset() {
 
 // NewSpan 生成spanId
 func (c *SpanContext) NewSpan() {
-	c.spanID = uuid.NewString()
+	c.spanID = idGenerator.NewSpanID()
 	if len(c.parentSpanID) == 0 {
 		c.parentSpanID = c.spanID
 	}
@@ -215,7 +216,7 @@ func (t *Trace) NeedTraceParam(es SpanType, len uint) NeedParam {
 // @param traceFlag: 调用链日志输出参数控制，取值范围0-15， 0 不用打参数， 其他情况按位做控制开关，从低位到高位分别控制CS、CR、SR、SS，为1则输出对应参数
 // @param maxLen: 参数输出最大长度， 不传或者默认0， 则按服务模板默认取值
 func (t *Trace) OpenTrace(traceFlag int, maxLen uint) bool {
-	traceID := uuid.NewString()
+	traceID := idGenerator.NewTraceID()
 	if maxLen > 0 {
 		traceID = strconv.FormatInt(int64(traceFlag), 16) + "." + strconv.Itoa(int(maxLen)) + "-" + traceID
 	} else {
