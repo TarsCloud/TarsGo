@@ -18,22 +18,22 @@ type RemoteTimeWriter struct {
 
 // NewRemoteTimeWriter new and init RemoteTimeWriter
 func NewRemoteTimeWriter() *RemoteTimeWriter {
-	rw := new(RemoteTimeWriter)
-	rw.logInfo = new(logf.LogInfo)
-	rw.logInfo.SFormat = "%Y%m%d"
-	rw.logInfo.SConcatStr = "_"
-
-	logs := make(chan string, remoteLogQueueSize)
-	rw.logs = logs
-	rw.logPtr = new(logf.Log)
-	comm := NewCommunicator()
-	node := GetServerConfig().Log
+	rw := &RemoteTimeWriter{
+		logInfo: &logf.LogInfo{
+			SFormat:    "%Y%m%d",
+			SConcatStr: "_",
+		},
+		logs:   make(chan string, remoteLogQueueSize),
+		logPtr: new(logf.Log),
+	}
 	rw.EnableSuffix(true)
 	rw.EnablePrefix(true)
 	rw.SetSeparator("|")
 	rw.SetPrefix(true)
 
-	comm.StringToProxy(node, rw.logPtr)
+	log := GetServerConfig().Log
+	comm := GetCommunicator()
+	comm.StringToProxy(log, rw.logPtr)
 	go rw.Sync2remote()
 	return rw
 }
@@ -89,12 +89,11 @@ func (rw *RemoteTimeWriter) InitServerInfo(app string, server string, filename s
 	successServerInfo := serverInfo + "_log_send_succ"
 	successSum := NewSum()
 	rw.reportSuccessPtr = CreatePropertyReport(successServerInfo, successSum)
-
 }
 
 // EnableSuffix puts suffix after logs.
-func (rw *RemoteTimeWriter) EnableSuffix(hasSufix bool) {
-	rw.logInfo.BHasSufix = hasSufix
+func (rw *RemoteTimeWriter) EnableSuffix(hasSuffix bool) {
+	rw.logInfo.BHasSufix = hasSuffix
 }
 
 // EnablePrefix puts prefix before logs.
@@ -129,12 +128,12 @@ func (rw *RemoteTimeWriter) InitFormat(s string) {
 	rw.logInfo.SFormat = s
 }
 
-// NeedPrefix return if need prefix for the logger.
+// NeedPrefix return if you need prefix for the logger.
 func (rw *RemoteTimeWriter) NeedPrefix() bool {
 	return rw.hasPrefix
 }
 
-// SetPrefix set if need prefix for the logger.
+// SetPrefix set if you need prefix for the logger.
 func (rw *RemoteTimeWriter) SetPrefix(enable bool) {
 	rw.hasPrefix = enable
 }

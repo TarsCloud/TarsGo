@@ -1,7 +1,9 @@
 package main
 
-import "context"
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // ZipkinTraceImp struct
 type ZipkinTraceImp struct {

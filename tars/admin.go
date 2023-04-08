@@ -11,21 +11,30 @@ import (
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/util/debug"
-	logger "github.com/TarsCloud/TarsGo/tars/util/rogger"
+	"github.com/TarsCloud/TarsGo/tars/util/rogger"
 )
 
 // Admin struct
 type Admin struct {
+	app *application
 }
 
-var (
-	isShutdownByAdmin int32 = 0
-)
+type adminFn func(string) (string, error)
+
+// RegisterAdmin register admin functions
+func RegisterAdmin(name string, fn adminFn) {
+	defaultApp.RegisterAdmin(name, fn)
+}
+
+// RegisterAdmin register admin functions
+func (a *application) RegisterAdmin(name string, fn adminFn) {
+	a.adminMethods[name] = fn
+}
 
 // Shutdown all servant by admin
 func (a *Admin) Shutdown() error {
-	atomic.StoreInt32(&isShutdownByAdmin, 1)
-	go graceShutdown()
+	atomic.StoreInt32(&a.app.isShutdownByAdmin, 1)
+	go a.app.graceShutdown()
 	return nil
 }
 
@@ -36,21 +45,21 @@ func (a *Admin) Notify(command string) (string, error) {
 	go ReportNotifyInfo(NotifyNormal, "AdminServant::notify:"+command)
 	switch cmd[0] {
 	case "tars.viewversion":
-		return GetServerConfig().Version, nil
+		return a.app.ServerConfig().Version, nil
 	case "tars.setloglevel":
 		if len(cmd) >= 2 {
-			appCache.LogLevel = cmd[1]
+			a.app.appCache.LogLevel = cmd[1]
 			switch cmd[1] {
 			case "INFO":
-				logger.SetLevel(logger.INFO)
+				rogger.SetLevel(rogger.INFO)
 			case "WARN":
-				logger.SetLevel(logger.WARN)
+				rogger.SetLevel(rogger.WARN)
 			case "ERROR":
-				logger.SetLevel(logger.ERROR)
+				rogger.SetLevel(rogger.ERROR)
 			case "DEBUG":
-				logger.SetLevel(logger.DEBUG)
+				rogger.SetLevel(rogger.DEBUG)
 			case "NONE":
-				logger.SetLevel(logger.OFF)
+				rogger.SetLevel(rogger.OFF)
 			default:
 				return fmt.Sprintf("%s failed: unknown log level [%s]!", cmd[0], cmd[1]), nil
 			}
@@ -61,7 +70,7 @@ func (a *Admin) Notify(command string) (string, error) {
 		debug.DumpStack(true, "stackinfo", "tars.dumpstack:")
 		return fmt.Sprintf("%s succ", command), nil
 	case "tars.loadconfig":
-		cfg := GetServerConfig()
+		cfg := a.app.ServerConfig()
 		remoteConf := NewRConf(cfg.App, cfg.Server, cfg.BasePath)
 		_, err := remoteConf.GetConfig(cmd[1])
 		if err != nil {
@@ -71,7 +80,7 @@ func (a *Admin) Notify(command string) (string, error) {
 	case "tars.connection":
 		return fmt.Sprintf("%s not support now!", command), nil
 	case "tars.gracerestart":
-		graceRestart()
+		a.app.graceRestart()
 		return "restart gracefully!", nil
 	case "tars.pprof":
 		port := ":8080"
@@ -85,7 +94,7 @@ func (a *Admin) Notify(command string) (string, error) {
 				timeout = time.Second * time.Duration(t)
 			}
 		}
-		cfg := GetServerConfig()
+		cfg := a.app.ServerConfig()
 		addr := cfg.LocalIP + port
 		go func() {
 			mux := http.NewServeMux()
@@ -103,14 +112,9 @@ func (a *Admin) Notify(command string) (string, error) {
 		}()
 		return "see http://" + addr + "/debug/pprof/", nil
 	default:
-		if fn, ok := adminMethods[cmd[0]]; ok {
+		if fn, ok := a.app.adminMethods[cmd[0]]; ok {
 			return fn(command)
 		}
 		return fmt.Sprintf("%s not support now!", command), nil
 	}
-}
-
-// RegisterAdmin register admin functions
-func RegisterAdmin(name string, fn adminFn) {
-	adminMethods[name] = fn
 }

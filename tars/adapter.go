@@ -16,8 +16,6 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
-var reconnectMsg = "_reconnect_"
-
 // AdapterProxy : Adapter proxy
 type AdapterProxy struct {
 	resp              sync.Map
@@ -61,10 +59,10 @@ func NewAdapterProxy(objName string, point *endpointf.EndpointF, comm *Communica
 		DialTimeout:  comm.Client.ClientDialTimeout,
 	}
 	if point.Istcp == endpoint.SSL {
-		if tlsConfig, ok := clientObjTlsConfig[objName]; ok {
+		if tlsConfig, ok := comm.app.clientObjTlsConfig[objName]; ok {
 			conf.TlsConfig = tlsConfig
 		} else {
-			conf.TlsConfig = clientTlsConfig
+			conf.TlsConfig = comm.app.clientTlsConfig
 		}
 	}
 	c.conf = conf

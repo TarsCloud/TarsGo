@@ -19,10 +19,15 @@ type dispatch interface {
 
 // Protocol is struct for dispatch with tars protocol.
 type Protocol struct {
+	app         *application
 	dispatcher  dispatch
 	serverImp   interface{}
 	withContext bool
 }
+
+const (
+	reconnectMsg = "_reconnect_"
+)
 
 // NewTarsProtocol return a TarsProtocol with dispatcher and implement interface.
 // withContext explain using context or not.
@@ -94,13 +99,13 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 			}
 		}
 		var err error
-		if allFilters.sf != nil {
-			err = allFilters.sf(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
-		} else if sf := getMiddlewareServerFilter(); sf != nil {
+		if s.app.allFilters.sf != nil {
+			err = s.app.allFilters.sf(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
+		} else if sf := s.app.getMiddlewareServerFilter(); sf != nil {
 			err = sf(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
 		} else {
 			// execute pre server filters
-			for i, v := range allFilters.preSfs {
+			for i, v := range s.app.allFilters.preSfs {
 				err = v(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
 				if err != nil {
 					TLOG.Errorf("Pre filter error, No.%v, err: %v", i, err)
@@ -109,7 +114,7 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 			// execute business server
 			err = s.dispatcher.Dispatch(ctx, s.serverImp, &reqPackage, &rspPackage, s.withContext)
 			// execute post server filters
-			for i, v := range allFilters.postSfs {
+			for i, v := range s.app.allFilters.postSfs {
 				err = v(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
 				if err != nil {
 					TLOG.Errorf("Post filter error, No.%v, err: %v", i, err)

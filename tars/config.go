@@ -7,21 +7,6 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
-var svrCfg *serverConfig
-var cltCfg *clientConfig
-
-// GetServerConfig Get server config
-func GetServerConfig() *serverConfig {
-	Init()
-	return svrCfg
-}
-
-// GetClientConfig Get client config
-func GetClientConfig() *clientConfig {
-	Init()
-	return cltCfg
-}
-
 type adapterConfig struct {
 	Endpoint endpoint.Endpoint
 	Protocol string
@@ -106,28 +91,38 @@ type clientConfig struct {
 	ObjQueueMax        int32
 }
 
+// GetServerConfig Get server config
+func GetServerConfig() *serverConfig {
+	return defaultApp.ServerConfig()
+}
+
+// GetClientConfig Get client config
+func GetClientConfig() *clientConfig {
+	return defaultApp.ClientConfig()
+}
+
+// ServerConfig returns server config
+func (a *application) ServerConfig() *serverConfig {
+	a.init()
+	return a.svrCfg
+}
+
+// ClientConfig returns client config
+func (a *application) ClientConfig() *clientConfig {
+	a.init()
+	return a.cltCfg
+}
+
 func newServerConfig() *serverConfig {
 	return &serverConfig{
-		Node:                    "",
-		App:                     "",
-		Server:                  "",
-		LogPath:                 "",
 		LogSize:                 defaultRotateSizeMB,
 		LogNum:                  defaultRotateN,
 		LogLevel:                "INFO",
 		Version:                 Version,
 		LocalIP:                 tools.GetLocalIP(),
-		Local:                   "",
-		BasePath:                "",
-		DataPath:                "",
-		Config:                  "",
-		Notify:                  "",
-		Log:                     "",
 		Adapters:                make(map[string]adapterConfig),
-		Container:               "",
 		Isdocker:                false,
 		Enableset:               false,
-		Setdivision:             "",
 		AcceptTimeout:           tools.ParseTimeOut(AcceptTimeout),
 		ReadTimeout:             tools.ParseTimeOut(ReadTimeout),
 		WriteTimeout:            tools.ParseTimeOut(ReadTimeout),

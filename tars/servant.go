@@ -48,7 +48,12 @@ func NewServantProxy(comm *Communicator, objName string, opts ...EndpointManager
 }
 
 func newServantProxy(comm *Communicator, objName string, opts ...EndpointManagerOption) *ServantProxy {
-	s := &ServantProxy{}
+	s := &ServantProxy{
+		comm:    comm,
+		proto:   &protocol.TarsProtocol{},
+		timeout: comm.Client.AsyncInvokeTimeout,
+		version: basef.TARSVERSION,
+	}
 	pos := strings.Index(objName, "@")
 	if pos > 0 {
 		s.name = objName[0:pos]
@@ -62,10 +67,6 @@ func newServantProxy(comm *Communicator, objName string, opts ...EndpointManager
 
 	// init manager
 	s.manager = GetManager(comm, objName, opts...)
-	s.comm = comm
-	s.proto = &protocol.TarsProtocol{}
-	s.timeout = s.comm.Client.AsyncInvokeTimeout
-	s.version = basef.TARSVERSION
 	return s
 }
 
@@ -167,13 +168,14 @@ func (s *ServantProxy) TarsInvoke(ctx context.Context, cType byte,
 
 	var err error
 	s.manager.preInvoke()
-	if allFilters.cf != nil {
-		err = allFilters.cf(ctx, msg, s.doInvoke, timeout)
-	} else if cf := getMiddlewareClientFilter(); cf != nil {
+	app := s.comm.app
+	if app.allFilters.cf != nil {
+		err = app.allFilters.cf(ctx, msg, s.doInvoke, timeout)
+	} else if cf := app.getMiddlewareClientFilter(); cf != nil {
 		err = cf(ctx, msg, s.doInvoke, timeout)
 	} else {
 		// execute pre client filters
-		for i, v := range allFilters.preCfs {
+		for i, v := range app.allFilters.preCfs {
 			err = v(ctx, msg, s.doInvoke, timeout)
 			if err != nil {
 				TLOG.Errorf("Pre filter error, no: %v, err: %v", i, err.Error())
@@ -182,7 +184,7 @@ func (s *ServantProxy) TarsInvoke(ctx context.Context, cType byte,
 		// execute rpc
 		err = s.doInvoke(ctx, msg, timeout)
 		// execute post client filters
-		for i, v := range allFilters.postCfs {
+		for i, v := range app.allFilters.postCfs {
 			filterErr := v(ctx, msg, s.doInvoke, timeout)
 			if filterErr != nil {
 				TLOG.Errorf("Post filter error, no: %v, err: %v", i, filterErr.Error())
