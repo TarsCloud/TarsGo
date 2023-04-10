@@ -16,11 +16,11 @@ var remoteLog *rogger.Logger
 var info string
 var comm *tars.Communicator
 
-//EchoClientImp struct
+// EchoClientImp struct
 type EchoClientImp struct {
 }
 
-//Add implement
+// Add implement
 func (imp *EchoClientImp) Add(a int32, b int32, c *int32) (int32, error) {
 	sum := tars.NewSum()
 	count := tars.NewCount()
@@ -48,7 +48,7 @@ func (imp *EchoClientImp) Add(a int32, b int32, c *int32) (int32, error) {
 	return 0, nil
 }
 
-//Sub implement
+// Sub implement
 func (imp *EchoClientImp) Sub(a int32, b int32, c *int32) (int32, error) {
 	*c = a - b
 	return 0, nil

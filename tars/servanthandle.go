@@ -11,16 +11,16 @@ import (
 )
 
 // AddServant add dispatch and interface for object.
-func AddServant(v dispatch, f interface{}, obj string) {
+func AddServant(v dispatch, f any, obj string) {
 	addServantCommon(v, f, obj, false)
 }
 
 // AddServantWithContext add dispatch and interface for object, which have ctx,context
-func AddServantWithContext(v dispatch, f interface{}, obj string) {
+func AddServantWithContext(v dispatch, f any, obj string) {
 	addServantCommon(v, f, obj, true)
 }
 
-func addServantCommon(v dispatch, f interface{}, obj string, withContext bool) {
+func addServantCommon(v dispatch, f any, obj string, withContext bool) {
 	objRunList = append(objRunList, obj)
 	cfg, ok := tarsConfig[obj]
 	if !ok {

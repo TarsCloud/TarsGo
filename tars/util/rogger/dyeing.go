@@ -29,7 +29,7 @@ type dyeingLogValue struct {
 	Level     LogLevel
 	Value     []byte
 	DyeingKey string
-	ExtInfo   interface{}
+	ExtInfo   any
 }
 
 // GetDyeingLogQueue get dyeingLogQueue, which will contain dyeing log if dyeing switch is on(by call DyeingSwitch).
@@ -38,39 +38,39 @@ func GetDyeingLogQueue() *chan *dyeingLogValue {
 	return &dyeingLogQueue
 }
 
-func (l *Logger) DyeingDebug(ctx context.Context, ext interface{}, v ...interface{}) {
+func (l *Logger) DyeingDebug(ctx context.Context, ext any, v ...any) {
 	l.DyeingWritef(ctx, 0, DEBUG, ext, "", v)
 }
 
-func (l *Logger) DyeingInfo(ctx context.Context, ext interface{}, v ...interface{}) {
+func (l *Logger) DyeingInfo(ctx context.Context, ext any, v ...any) {
 	l.DyeingWritef(ctx, 0, INFO, ext, "", v)
 }
 
-func (l *Logger) DyeingWarn(ctx context.Context, ext interface{}, v ...interface{}) {
+func (l *Logger) DyeingWarn(ctx context.Context, ext any, v ...any) {
 	l.DyeingWritef(ctx, 0, WARN, ext, "", v)
 }
 
-func (l *Logger) DyeingError(ctx context.Context, ext interface{}, v ...interface{}) {
+func (l *Logger) DyeingError(ctx context.Context, ext any, v ...any) {
 	l.DyeingWritef(ctx, 0, ERROR, ext, "", v)
 }
 
-func (l *Logger) DyeingDebugf(ctx context.Context, ext interface{}, format string, v ...interface{}) {
+func (l *Logger) DyeingDebugf(ctx context.Context, ext any, format string, v ...any) {
 	l.DyeingWritef(ctx, 0, DEBUG, ext, format, v)
 }
 
-func (l *Logger) DyeingInfof(ctx context.Context, ext interface{}, format string, v ...interface{}) {
+func (l *Logger) DyeingInfof(ctx context.Context, ext any, format string, v ...any) {
 	l.DyeingWritef(ctx, 0, INFO, ext, format, v)
 }
 
-func (l *Logger) DyeingWarnf(ctx context.Context, ext interface{}, format string, v ...interface{}) {
+func (l *Logger) DyeingWarnf(ctx context.Context, ext any, format string, v ...any) {
 	l.DyeingWritef(ctx, 0, WARN, ext, format, v)
 }
 
-func (l *Logger) DyeingErrorf(ctx context.Context, ext interface{}, format string, v ...interface{}) {
+func (l *Logger) DyeingErrorf(ctx context.Context, ext any, format string, v ...any) {
 	l.DyeingWritef(ctx, 0, ERROR, ext, format, v)
 }
 
-func (l *Logger) DyeingWritef(ctx context.Context, depth int, level LogLevel, ext interface{}, format string, v []interface{}) {
+func (l *Logger) DyeingWritef(ctx context.Context, depth int, level LogLevel, ext any, format string, v []any) {
 	l.Writef(depth+1, level, format, v)
 
 	dyeingKey, ok := current.GetDyeingKey(ctx)

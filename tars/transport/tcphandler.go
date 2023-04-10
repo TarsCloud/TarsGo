@@ -160,7 +160,7 @@ func (h *tcpHandler) OnShutdown() {
 func (h *tcpHandler) sendCloseMsg() {
 	// send close-package
 	closeMsg := h.ts.svr.GetCloseMsg()
-	h.conns.Range(func(key, val interface{}) bool {
+	h.conns.Range(func(key, val any) bool {
 		conn := val.(*connInfo)
 		if err := conn.conn.SetReadDeadline(time.Now()); err != nil {
 			TLOG.Errorf("SetReadDeadline: %w", err)
@@ -189,7 +189,7 @@ func (h *tcpHandler) CloseIdles(n int64) bool {
 	}
 
 	allClosed := true
-	h.conns.Range(func(key, val interface{}) bool {
+	h.conns.Range(func(key, val any) bool {
 		conn := val.(*connInfo)
 		TLOG.Debugf("num invoke %d %v", atomic.LoadInt32(&conn.numInvoke), conn.idleTime+n > time.Now().Unix())
 		if atomic.LoadInt32(&conn.numInvoke) > 0 || conn.idleTime+n > time.Now().Unix() {

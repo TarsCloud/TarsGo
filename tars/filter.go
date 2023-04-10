@@ -28,7 +28,7 @@ var (
 type Invoke func(ctx context.Context, msg *Message, timeout time.Duration) (err error)
 
 // DispatchReporter is the reporter in server-side dispatch, and will be used in logging
-type DispatchReporter func(ctx context.Context, req []interface{}, rsp []interface{}, returns []interface{})
+type DispatchReporter func(ctx context.Context, req []any, rsp []any, returns []any)
 
 // RegisterDispatchReporter registers the server dispatch reporter
 func RegisterDispatchReporter(f DispatchReporter) {
@@ -51,10 +51,10 @@ func RegisterPostClientFilter(f ClientFilter) {
 }
 
 // Dispatch server side Dispatch
-type Dispatch func(context.Context, interface{}, *requestf.RequestPacket, *requestf.ResponsePacket, bool) error
+type Dispatch func(context.Context, any, *requestf.RequestPacket, *requestf.ResponsePacket, bool) error
 
 // ServerFilter is used for add Filter for server dispatcher ,for implementing plugins like opentracing.
-type ServerFilter func(ctx context.Context, d Dispatch, f interface{},
+type ServerFilter func(ctx context.Context, d Dispatch, f any,
 	req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error)
 
 // ClientFilter is used for filter request & response for client, for implementing plugins like opentracing
@@ -117,7 +117,7 @@ func getMiddlewareServerFilter() ServerFilter {
 		return nil
 	}
 
-	sf := func(ctx context.Context, d Dispatch, f interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error) {
+	sf := func(ctx context.Context, d Dispatch, f any, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error) {
 		return d(ctx, f, req, resp, withContext)
 	}
 

@@ -7,11 +7,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"fmt"
 	m "github.com/TarsCloud/TarsGo/tars/model"
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
+	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/tup"
 	"github.com/TarsCloud/TarsGo/tars/util/current"
@@ -2471,7 +2471,7 @@ type QueryFServantWithContext interface {
 }
 
 // Dispatch is used to call the server side implement for the method defined in the tars file. withContext shows using context or not.
-func (obj *QueryF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *requestf.RequestPacket, tarsResp *requestf.ResponsePacket, withContext bool) (err error) {
+func (obj *QueryF) Dispatch(tarsCtx context.Context, val any, tarsReq *requestf.RequestPacket, tarsResp *requestf.ResponsePacket, withContext bool) (err error) {
 	var (
 		length int32
 		have   bool
@@ -2504,7 +2504,7 @@ func (obj *QueryF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 			}
 
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
 			decoder.UseNumber()
 			err = decoder.Decode(&jsonData)
@@ -2589,7 +2589,7 @@ func (obj *QueryF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 				return err
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			rspJson := map[string]interface{}{}
+			rspJson := map[string]any{}
 			rspJson["tars_ret"] = funRet
 
 			var rspByte []byte
@@ -2631,7 +2631,7 @@ func (obj *QueryF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 			}
 
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
 			decoder.UseNumber()
 			err = decoder.Decode(&jsonData)
@@ -2768,7 +2768,7 @@ func (obj *QueryF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 				return err
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			rspJson := map[string]interface{}{}
+			rspJson := map[string]any{}
 			rspJson["tars_ret"] = funRet
 			rspJson["activeEp"] = activeEp
 			rspJson["inactiveEp"] = inactiveEp
@@ -2812,7 +2812,7 @@ func (obj *QueryF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 			}
 
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
 			decoder.UseNumber()
 			err = decoder.Decode(&jsonData)
@@ -2949,7 +2949,7 @@ func (obj *QueryF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 				return err
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			rspJson := map[string]interface{}{}
+			rspJson := map[string]any{}
 			rspJson["tars_ret"] = funRet
 			rspJson["activeEp"] = activeEp
 			rspJson["inactiveEp"] = inactiveEp
@@ -2993,7 +2993,7 @@ func (obj *QueryF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 			}
 
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
 			decoder.UseNumber()
 			err = decoder.Decode(&jsonData)
@@ -3130,7 +3130,7 @@ func (obj *QueryF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 				return err
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			rspJson := map[string]interface{}{}
+			rspJson := map[string]any{}
 			rspJson["tars_ret"] = funRet
 			rspJson["activeEp"] = activeEp
 			rspJson["inactiveEp"] = inactiveEp
@@ -3187,7 +3187,7 @@ func (obj *QueryF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 			}
 
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
 			decoder.UseNumber()
 			err = decoder.Decode(&jsonData)
@@ -3330,7 +3330,7 @@ func (obj *QueryF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 				return err
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			rspJson := map[string]interface{}{}
+			rspJson := map[string]any{}
 			rspJson["tars_ret"] = funRet
 			rspJson["activeEp"] = activeEp
 			rspJson["inactiveEp"] = inactiveEp
@@ -3387,7 +3387,7 @@ func (obj *QueryF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 			}
 
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
 			decoder.UseNumber()
 			err = decoder.Decode(&jsonData)
@@ -3530,7 +3530,7 @@ func (obj *QueryF) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 				return err
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			rspJson := map[string]interface{}{}
+			rspJson := map[string]any{}
 			rspJson["tars_ret"] = funRet
 			rspJson["activeEp"] = activeEp
 			rspJson["inactiveEp"] = inactiveEp

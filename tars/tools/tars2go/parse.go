@@ -56,7 +56,7 @@ type ArgInfo struct {
 	Type       *VarType
 }
 
-//FunInfo record function information.
+// FunInfo record function information.
 type FunInfo struct {
 	Name       string // after the uppercase converted name
 	OriginName string // original name

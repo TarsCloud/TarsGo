@@ -2097,7 +2097,7 @@ type ConfigServantWithContext interface {
 }
 
 // Dispatch is used to call the server side implement for the method defined in the tars file. withContext shows using context or not.
-func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *requestf.RequestPacket, tarsResp *requestf.ResponsePacket, withContext bool) (err error) {
+func (obj *Config) Dispatch(tarsCtx context.Context, val any, tarsReq *requestf.RequestPacket, tarsResp *requestf.ResponsePacket, withContext bool) (err error) {
 	var (
 		length int32
 		have   bool
@@ -2145,7 +2145,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 			}
 
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
 			decoder.UseNumber()
 			err = decoder.Decode(&jsonData)
@@ -2248,7 +2248,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 				return err
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			rspJson := map[string]interface{}{}
+			rspJson := map[string]any{}
 			rspJson["tars_ret"] = funRet
 			rspJson["vf"] = vf
 
@@ -2314,7 +2314,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 			}
 
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
 			decoder.UseNumber()
 			err = decoder.Decode(&jsonData)
@@ -2396,7 +2396,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 				return err
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			rspJson := map[string]interface{}{}
+			rspJson := map[string]any{}
 			rspJson["tars_ret"] = funRet
 			rspJson["config"] = config
 
@@ -2462,7 +2462,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 			}
 
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
 			decoder.UseNumber()
 			err = decoder.Decode(&jsonData)
@@ -2544,7 +2544,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 				return err
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			rspJson := map[string]interface{}{}
+			rspJson := map[string]any{}
 			rspJson["tars_ret"] = funRet
 			rspJson["config"] = config
 
@@ -2610,7 +2610,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 			}
 
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
 			decoder.UseNumber()
 			err = decoder.Decode(&jsonData)
@@ -2692,7 +2692,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 				return err
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			rspJson := map[string]interface{}{}
+			rspJson := map[string]any{}
 			rspJson["tars_ret"] = funRet
 			rspJson["result"] = result
 
@@ -2733,7 +2733,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 			}
 
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
 			decoder.UseNumber()
 			err = decoder.Decode(&jsonData)
@@ -2831,7 +2831,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 				return err
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			rspJson := map[string]interface{}{}
+			rspJson := map[string]any{}
 			rspJson["tars_ret"] = funRet
 			rspJson["vf"] = vf
 
@@ -2871,7 +2871,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 			}
 
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
 			decoder.UseNumber()
 			err = decoder.Decode(&jsonData)
@@ -2942,7 +2942,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 				return err
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			rspJson := map[string]interface{}{}
+			rspJson := map[string]any{}
 			rspJson["tars_ret"] = funRet
 			rspJson["config"] = config
 
@@ -2982,7 +2982,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 			}
 
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
 			decoder.UseNumber()
 			err = decoder.Decode(&jsonData)
@@ -3053,7 +3053,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 				return err
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			rspJson := map[string]interface{}{}
+			rspJson := map[string]any{}
 			rspJson["tars_ret"] = funRet
 			rspJson["result"] = result
 
@@ -3094,7 +3094,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 			}
 
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
 			decoder.UseNumber()
 			err = decoder.Decode(&jsonData)
@@ -3192,7 +3192,7 @@ func (obj *Config) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 				return err
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			rspJson := map[string]interface{}{}
+			rspJson := map[string]any{}
 			rspJson["tars_ret"] = funRet
 			rspJson["vf"] = vf
 

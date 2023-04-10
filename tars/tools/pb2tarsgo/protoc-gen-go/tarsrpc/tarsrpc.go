@@ -62,12 +62,12 @@ type tarsrpc struct {
 	gen *generator.Generator
 }
 
-//Name returns the name of this plugin
+// Name returns the name of this plugin
 func (t *tarsrpc) Name() string {
 	return "tarsrpc"
 }
 
-//Init initializes the plugin.
+// Init initializes the plugin.
 func (t *tarsrpc) Init(gen *generator.Generator) {
 	t.gen = gen
 }
@@ -100,7 +100,7 @@ func (t *tarsrpc) GenerateImports(file *generator.FileDescriptor) {
 }
 
 // P forwards to g.gen.P.
-func (t *tarsrpc) P(args ...interface{}) { t.gen.P(args...) }
+func (t *tarsrpc) P(args ...any) { t.gen.P(args...) }
 
 // Generate generates code for the services in the given file.
 func (t *tarsrpc) Generate(file *generator.FileDescriptor) {

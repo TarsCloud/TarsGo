@@ -84,7 +84,7 @@ CreateUdp:
 // GetAllListenFiles returns all listen files
 func GetAllListenFiles() map[string]*os.File {
 	files := make(map[string]*os.File)
-	allListenFds.Range(func(k, v interface{}) bool {
+	allListenFds.Range(func(k, v any) bool {
 		key := k.(string)
 		val := v.(filer)
 		if file, err := val.File(); err == nil {

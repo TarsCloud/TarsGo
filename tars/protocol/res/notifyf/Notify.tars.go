@@ -821,7 +821,7 @@ type NotifyServantWithContext interface {
 }
 
 // Dispatch is used to call the server side implement for the method defined in the tars file. withContext shows using context or not.
-func (obj *Notify) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *requestf.RequestPacket, tarsResp *requestf.ResponsePacket, withContext bool) (err error) {
+func (obj *Notify) Dispatch(tarsCtx context.Context, val any, tarsReq *requestf.RequestPacket, tarsResp *requestf.ResponsePacket, withContext bool) (err error) {
 	var (
 		length int32
 		have   bool
@@ -880,7 +880,7 @@ func (obj *Notify) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 			}
 
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
 			decoder.UseNumber()
 			err = decoder.Decode(&jsonData)
@@ -935,7 +935,7 @@ func (obj *Notify) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 				return err
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			rspJson := map[string]interface{}{}
+			rspJson := map[string]any{}
 
 			var rspByte []byte
 			if rspByte, err = json.Marshal(rspJson); err != nil {
@@ -998,7 +998,7 @@ func (obj *Notify) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 			}
 
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
 			decoder.UseNumber()
 			err = decoder.Decode(&jsonData)
@@ -1053,7 +1053,7 @@ func (obj *Notify) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 				return err
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			rspJson := map[string]interface{}{}
+			rspJson := map[string]any{}
 
 			var rspByte []byte
 			if rspByte, err = json.Marshal(rspJson); err != nil {
@@ -1091,7 +1091,7 @@ func (obj *Notify) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 			}
 
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
 			decoder.UseNumber()
 			err = decoder.Decode(&jsonData)
@@ -1162,7 +1162,7 @@ func (obj *Notify) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 				return err
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			rspJson := map[string]interface{}{}
+			rspJson := map[string]any{}
 			rspJson["tars_ret"] = funRet
 			rspJson["stInfo"] = stInfo
 
@@ -1201,7 +1201,7 @@ func (obj *Notify) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 			}
 
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
 			decoder.UseNumber()
 			err = decoder.Decode(&jsonData)
@@ -1245,7 +1245,7 @@ func (obj *Notify) Dispatch(tarsCtx context.Context, val interface{}, tarsReq *r
 				return err
 			}
 		} else if tarsReq.IVersion == basef.JSONVERSION {
-			rspJson := map[string]interface{}{}
+			rspJson := map[string]any{}
 
 			var rspByte []byte
 			if rspByte, err = json.Marshal(rspJson); err != nil {

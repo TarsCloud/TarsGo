@@ -26,6 +26,6 @@ func GetErrorCode(err error) int32 {
 }
 
 // Errorf return the tars.Error instance
-func Errorf(code int32, format string, args ...interface{}) *Error {
+func Errorf(code int32, format string, args ...any) *Error {
 	return &Error{Code: code, Message: fmt.Sprintf(format, args...)}
 }

@@ -344,7 +344,7 @@ func (p *PropertyReportHelper) ReportToServer() {
 	}
 	// head.SContainer = cfg.Container
 
-	p.reportPtrs.Range(func(key, val interface{}) bool {
+	p.reportPtrs.Range(func(key, val any) bool {
 		v := val.(*PropertyReport)
 		head.PropertyName = v.key
 

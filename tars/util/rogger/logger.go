@@ -283,22 +283,22 @@ func (l *Logger) SetConsole() {
 }
 
 // Debug logs interface in debug loglevel.
-func (l *Logger) Debug(v ...interface{}) {
+func (l *Logger) Debug(v ...any) {
 	l.Writef(0, DEBUG, "", v)
 }
 
 // Info logs interface in Info loglevel.
-func (l *Logger) Info(v ...interface{}) {
+func (l *Logger) Info(v ...any) {
 	l.Writef(0, INFO, "", v)
 }
 
 // Warn logs interface in warning loglevel
-func (l *Logger) Warn(v ...interface{}) {
+func (l *Logger) Warn(v ...any) {
 	l.Writef(0, WARN, "", v)
 }
 
 // Error logs interface in Error loglevel
-func (l *Logger) Error(v ...interface{}) {
+func (l *Logger) Error(v ...any) {
 	l.Writef(0, ERROR, "", v)
 }
 
@@ -316,26 +316,26 @@ func (l *Logger) Trace(msg string) {
 }
 
 // Debugf logs interface in debug loglevel with formating string
-func (l *Logger) Debugf(format string, v ...interface{}) {
+func (l *Logger) Debugf(format string, v ...any) {
 	l.Writef(0, DEBUG, format, v)
 }
 
 // Infof logs interface in Infof loglevel with formating string
-func (l *Logger) Infof(format string, v ...interface{}) {
+func (l *Logger) Infof(format string, v ...any) {
 	l.Writef(0, INFO, format, v)
 }
 
 // Warnf logs interface in warning loglevel with formating string
-func (l *Logger) Warnf(format string, v ...interface{}) {
+func (l *Logger) Warnf(format string, v ...any) {
 	l.Writef(0, WARN, format, v)
 }
 
 // Errorf logs interface in Error loglevel with formating string
-func (l *Logger) Errorf(format string, v ...interface{}) {
+func (l *Logger) Errorf(format string, v ...any) {
 	l.Writef(0, ERROR, format, v)
 }
 
-func (l *Logger) Writef(depth int, level LogLevel, format string, v []interface{}) {
+func (l *Logger) Writef(depth int, level LogLevel, format string, v []any) {
 	if level < logLevel {
 		return
 	}
@@ -347,7 +347,7 @@ func (l *Logger) Writef(depth int, level LogLevel, format string, v []interface{
 	}
 }
 
-func (l *Logger) writeLine(depth int, level LogLevel, format string, v []interface{}) *logValue {
+func (l *Logger) writeLine(depth int, level LogLevel, format string, v []any) *logValue {
 	buf := bytes.NewBuffer(nil)
 	if l.writer.NeedPrefix() {
 		fmt.Fprintf(buf, "%s|", time.Now().Format("2006-01-02 15:04:05.000"))
@@ -384,7 +384,7 @@ func (l *Logger) writeLine(depth int, level LogLevel, format string, v []interfa
 	return &logValue{value: buf.Bytes(), writer: l.writer}
 }
 
-func (l *Logger) writeJson(depth int, level LogLevel, format string, v []interface{}) *logValue {
+func (l *Logger) writeJson(depth int, level LogLevel, format string, v []any) *logValue {
 	log := JsonLog{}
 	log.Pre = l.prefix
 	log.Time = time.Now().Format("2006-01-02 15:04:05.000")

@@ -14,19 +14,19 @@ import (
 )
 
 type dispatch interface {
-	Dispatch(context.Context, interface{}, *requestf.RequestPacket, *requestf.ResponsePacket, bool) error
+	Dispatch(context.Context, any, *requestf.RequestPacket, *requestf.ResponsePacket, bool) error
 }
 
 // Protocol is struct for dispatch with tars protocol.
 type Protocol struct {
 	dispatcher  dispatch
-	serverImp   interface{}
+	serverImp   any
 	withContext bool
 }
 
 // NewTarsProtocol return a TarsProtocol with dispatcher and implement interface.
 // withContext explain using context or not.
-func NewTarsProtocol(dispatcher dispatch, imp interface{}, withContext bool) *Protocol {
+func NewTarsProtocol(dispatcher dispatch, imp any, withContext bool) *Protocol {
 	s := &Protocol{dispatcher: dispatcher, serverImp: imp, withContext: withContext}
 	return s
 }

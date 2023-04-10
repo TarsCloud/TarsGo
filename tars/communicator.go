@@ -89,7 +89,7 @@ func (c *Communicator) StringToProxy(servant string, p ProxyPrx, opts ...Endpoin
 // var comm *tars.Communicator
 // comm = tars.NewCommunicator()
 // e.g. comm.SetProperty("locator", "tars.tarsregistry.QueryObj@tcp -h ... -p ...")
-func (c *Communicator) SetProperty(key string, value interface{}) {
+func (c *Communicator) SetProperty(key string, value any) {
 	c.properties.Store(key, value)
 	c.SetTraceParam(key)
 }

@@ -447,7 +447,7 @@ func (e *endpointManager) findAndSetObj(q *queryf.QueryF) error {
 	}
 
 	// delete useless cache
-	e.epList.Range(func(key, value interface{}) bool {
+	e.epList.Range(func(key, value any) bool {
 		flagActive := false
 		flagInactive := false
 

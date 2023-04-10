@@ -136,7 +136,7 @@ func (u *UniAttribute) Decode(is *codec.Reader) error {
 	return err
 }
 
-func (u *UniAttribute) putBase(data interface{}, os *codec.Buffer) error {
+func (u *UniAttribute) putBase(data any, os *codec.Buffer) error {
 	var err error
 	//os := codec.NewBuffer()
 	switch d := data.(type) {
@@ -171,7 +171,7 @@ func (u *UniAttribute) putBase(data interface{}, os *codec.Buffer) error {
 	return err
 }
 
-func (u *UniAttribute) doPut(data interface{}, os *codec.Buffer) error {
+func (u *UniAttribute) doPut(data any, os *codec.Buffer) error {
 	var err error
 	switch reflect.TypeOf(data).Kind() {
 	case reflect.Slice, reflect.Array:
@@ -249,7 +249,7 @@ func (u *UniAttribute) doPut(data interface{}, os *codec.Buffer) error {
 	return err
 }
 
-func (u *UniAttribute) Put(k string, data interface{}) error {
+func (u *UniAttribute) Put(k string, data any) error {
 	var err error
 	os := codec.NewBuffer()
 	err = u.doPut(data, os)
@@ -261,7 +261,7 @@ func (u *UniAttribute) Put(k string, data interface{}) error {
 	return err
 }
 
-func (u *UniAttribute) getBase(data interface{}, is *codec.Reader) error {
+func (u *UniAttribute) getBase(data any, is *codec.Reader) error {
 	var err error
 	// if v, ok := u._data[k]; ok {
 	// 	is := codec.NewReader(v)
@@ -300,7 +300,7 @@ func (u *UniAttribute) getBase(data interface{}, is *codec.Reader) error {
 	return err
 }
 
-func (u *UniAttribute) DoGet(data interface{}, is *codec.Reader) error {
+func (u *UniAttribute) DoGet(data any, is *codec.Reader) error {
 	var err error
 	// vOF := reflect.ValueOf(data).Elem()
 	switch reflect.TypeOf(data).Kind() {
@@ -346,7 +346,7 @@ func (u *UniAttribute) DoGet(data interface{}, is *codec.Reader) error {
 	return err
 }
 
-func (u *UniAttribute) Get(k string, data interface{}) error {
+func (u *UniAttribute) Get(k string, data any) error {
 	var err error
 	if v, ok := u._data[k]; ok {
 		//is := codec.NewReader(v)

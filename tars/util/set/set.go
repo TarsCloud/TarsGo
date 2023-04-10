@@ -13,7 +13,7 @@ type Set struct {
 }
 
 // NewSet news a set
-func NewSet(opt ...interface{}) *Set {
+func NewSet(opt ...any) *Set {
 	s := new(Set)
 	for _, o := range opt {
 		s.Add(o)
@@ -22,7 +22,7 @@ func NewSet(opt ...interface{}) *Set {
 }
 
 // Add : add an element to Set
-func (s *Set) Add(e interface{}) bool {
+func (s *Set) Add(e any) bool {
 	_, ok := s.el.LoadOrStore(e, s.length)
 	if !ok {
 		atomic.AddInt32(&s.length, 1)
@@ -31,7 +31,7 @@ func (s *Set) Add(e interface{}) bool {
 }
 
 // Remove remove an element from set.
-func (s *Set) Remove(e interface{}) {
+func (s *Set) Remove(e any) {
 	atomic.AddInt32(&s.length, -1)
 	atomic.CompareAndSwapInt32(&s.length, -1, 0)
 	s.el.Delete(e)
@@ -44,8 +44,8 @@ func (s *Set) Clear() {
 }
 
 // Slice init set from []interface.
-func (s *Set) Slice() (list []interface{}) {
-	s.el.Range(func(k, v interface{}) bool {
+func (s *Set) Slice() (list []any) {
+	s.el.Range(func(k, v any) bool {
 		list = append(list, k)
 		return true
 	})
@@ -58,7 +58,7 @@ func (s *Set) Len() int32 {
 }
 
 // Has indicates whether the set has the element.
-func (s *Set) Has(e interface{}) bool {
+func (s *Set) Has(e any) bool {
 	if _, ok := s.el.Load(e); ok {
 		return true
 	}

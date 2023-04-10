@@ -27,7 +27,7 @@ func init() {
 	gFileMap = make(map[string]bool)
 }
 
-//GenGo record go code information.
+// GenGo record go code information.
 type GenGo struct {
 	I        []string // imports with path
 	code     bytes.Buffer
@@ -42,7 +42,7 @@ type GenGo struct {
 	ProtoName string
 }
 
-//NewGenGo build up a new path
+// NewGenGo build up a new path
 func NewGenGo(path string, module string, outdir string) *GenGo {
 	if outdir != "" {
 		b := []byte(outdir)
@@ -70,7 +70,7 @@ func path2ProtoName(path string) string {
 	return path[iBegin:iEnd]
 }
 
-//Initial capitalization
+// Initial capitalization
 func upperFirstLetter(s string) string {
 	if len(s) == 0 {
 		return ""
