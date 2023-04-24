@@ -19,16 +19,14 @@ type HttpHandler interface {
 	SetConfig(cfg *TarsHttpConf)
 }
 
-var _ HttpHandler = (*TarsHttpMux)(nil)
-var realIPHeader []string
-
-func init() {
-	realIPHeader = []string{ // the order is important
+var (
+	_            HttpHandler = (*TarsHttpMux)(nil)
+	realIPHeader             = []string{ // the order is important
 		"X-Real-Ip",
 		"X-Forwarded-For-Pound",
 		"X-Forwarded-For",
 	}
-}
+)
 
 // TarsHttpConf is configuration for tars http server.
 type TarsHttpConf struct {

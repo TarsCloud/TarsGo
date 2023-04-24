@@ -2,19 +2,10 @@ package tars
 
 import (
 	"fmt"
-	"io/ioutil"
-	"sync"
+	"os"
 
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/configf"
 )
-
-func saveFile(path string, filename string, content string) error {
-	err := ioutil.WriteFile(fmt.Sprintf("%s/%s", path, filename), []byte(content), 0644)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 // RConf struct for getting remote config.
 type RConf struct {
@@ -25,48 +16,55 @@ type RConf struct {
 	path   string
 }
 
-var (
-	defaultRConf *RConf
-	onceRConf    sync.Once
-)
-
 // GetRConf returns a default RConf
 func GetRConf() *RConf {
-	initDefaultRConf()
-	return defaultRConf
-}
-
-func initDefaultRConf() {
-	onceRConf.Do(func() {
-		cfg := GetServerConfig()
-		defaultRConf = NewRConf(cfg.App, cfg.Server, cfg.BasePath)
-	})
+	return defaultApp.GetRemoteConf()
 }
 
 // GetConfigList get server level config list
 func GetConfigList() (fList []string, err error) {
-	initDefaultRConf()
-	return defaultRConf.GetConfigList()
+	return defaultApp.GetConfigList()
 }
 
 // AddAppConfig add app level config
 func AddAppConfig(filename string) (config string, err error) {
-	initDefaultRConf()
-	return defaultRConf.GetAppConfig(filename)
+	return defaultApp.AddAppConfig(filename)
 }
 
 // AddConfig add server level config
 func AddConfig(filename string) (config string, err error) {
-	initDefaultRConf()
-	return defaultRConf.GetConfig(filename)
+	return defaultApp.AddConfig(filename)
+}
+
+func (a *application) GetRemoteConf() *RConf {
+	a.onceRConf.Do(func() {
+		cfg := a.ServerConfig()
+		a.defaultRConf = NewRConf(cfg.App, cfg.Server, cfg.BasePath)
+	})
+	return a.defaultRConf
+}
+
+// GetConfigList get server level config list
+func (a *application) GetConfigList() (fList []string, err error) {
+	return a.GetRemoteConf().GetConfigList()
+}
+
+// AddAppConfig add app level config
+func (a *application) AddAppConfig(filename string) (config string, err error) {
+	return a.GetRemoteConf().GetAppConfig(filename)
+}
+
+// AddConfig add server level config
+func (a *application) AddConfig(filename string) (config string, err error) {
+	return a.GetRemoteConf().GetConfig(filename)
 }
 
 // NewRConf init a RConf, path should be getting from GetServerConfig().BasePath
 func NewRConf(app string, server string, path string) *RConf {
-	comm := NewCommunicator()
-	tc := new(configf.Config)
-	obj := GetServerConfig().Config
+	comm := GetCommunicator()
+	obj := comm.app.ServerConfig().Config
 
+	tc := new(configf.Config)
 	comm.StringToProxy(obj, tc)
 	return &RConf{app, server, comm, tc, path}
 }
@@ -131,4 +129,12 @@ func (c *RConf) getConfig(info configf.ConfigInfo) (config string, err error) {
 		return config, err
 	}
 	return config, nil
+}
+
+func saveFile(path string, filename string, content string) error {
+	err := os.WriteFile(fmt.Sprintf("%s/%s", path, filename), []byte(content), 0644)
+	if err != nil {
+		return err
+	}
+	return nil
 }

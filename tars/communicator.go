@@ -15,46 +15,50 @@ type ProxyPrx interface {
 	SetServant(s.Servant)
 }
 
-var (
-	communicator     *Communicator
-	onceCommunicator sync.Once
-)
+// Communicator struct
+type Communicator struct {
+	Client     *clientConfig
+	app        *application
+	properties sync.Map
+}
 
 // GetCommunicator returns a default communicator
 func GetCommunicator() *Communicator {
-	onceCommunicator.Do(func() {
-		communicator = NewCommunicator()
-	})
-	return communicator
+	return defaultApp.Communicator()
 }
 
 // NewCommunicator returns a new communicator. A Communicator is used for communicating with
 // the server side which should only init once and be global!!!
 func NewCommunicator() *Communicator {
-	c := new(Communicator)
+	return defaultApp.NewCommunicator()
+}
+
+// Communicator returns a default communicator
+func (a *application) Communicator() *Communicator {
+	a.onceCommunicator.Do(func() {
+		a.communicator = a.NewCommunicator()
+	})
+	return a.communicator
+}
+
+func (a *application) NewCommunicator() *Communicator {
+	c := &Communicator{app: a, Client: a.ClientConfig()}
 	c.init()
 	return c
 }
 
-// Communicator struct
-type Communicator struct {
-	Client     *clientConfig
-	properties sync.Map
-}
-
 func (c *Communicator) init() {
-	c.Client = GetClientConfig()
 	c.SetProperty("locator", c.Client.Locator)
 	c.SetProperty("isclient", true)
 	c.SetProperty("enableset", false)
-	if GetServerConfig() != nil {
-		c.SetProperty("notify", GetServerConfig().Notify)
-		c.SetProperty("node", GetServerConfig().Node)
-		c.SetProperty("server", GetServerConfig().Server)
+	if svrCfg := c.app.ServerConfig(); svrCfg != nil {
+		c.SetProperty("notify", svrCfg.Notify)
+		c.SetProperty("node", svrCfg.Node)
+		c.SetProperty("server", svrCfg.Server)
 		c.SetProperty("isclient", false)
-		if GetServerConfig().Enableset {
+		if svrCfg.Enableset {
 			c.SetProperty("enableset", true)
-			c.SetProperty("setdivision", GetServerConfig().Setdivision)
+			c.SetProperty("setdivision", svrCfg.Setdivision)
 		}
 	}
 }
@@ -67,13 +71,8 @@ func (c *Communicator) GetLocator() string {
 
 // SetLocator sets locator with obj
 func (c *Communicator) SetLocator(obj string) {
-	defer func() {
-		go func() {
-			_ = statInitOnce.Do(initReport)
-		}()
-	}()
-	c.Client.Locator = obj
 	c.SetProperty("locator", obj)
+	c.Client.Locator = obj
 }
 
 // StringToProxy sets the servant of ProxyPrx p with a string servant

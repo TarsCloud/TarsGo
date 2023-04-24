@@ -2,10 +2,6 @@ package tars
 
 import "github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 
-var (
-	appCache AppCache
-)
-
 type AppCache struct {
 	TarsVersion string
 	ModifyTime  string
@@ -23,5 +19,9 @@ type ObjCache struct {
 }
 
 func GetAppCache() AppCache {
-	return appCache
+	return defaultApp.AppCache()
+}
+
+func (a *application) AppCache() AppCache {
+	return defaultApp.appCache
 }

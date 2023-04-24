@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"hash/crc32"
-	"io/ioutil"
 	"math/rand"
+	"os"
 	"path/filepath"
 	"reflect"
 	"sort"
@@ -40,13 +40,15 @@ var (
 type globalManager struct {
 	eps                 map[string]*endpointManager
 	mlock               *sync.Mutex
+	app                 *application
 	refreshInterval     int
 	checkStatusInterval int
 }
 
-func initOnceGManager(refreshInterval int, checkStatusInterval int) {
+func initOnceGManager(app *application) {
 	gManagerInitOnce.Do(func() {
-		gManager = &globalManager{refreshInterval: refreshInterval, checkStatusInterval: checkStatusInterval}
+		cltCfg := app.ClientConfig()
+		gManager = &globalManager{app: app, refreshInterval: cltCfg.RefreshEndpointInterval, checkStatusInterval: cltCfg.CheckStatusInterval}
 		gManager.eps = make(map[string]*endpointManager)
 		gManager.mlock = &sync.Mutex{}
 		go gManager.updateEndpoints()
@@ -57,7 +59,7 @@ func initOnceGManager(refreshInterval int, checkStatusInterval int) {
 // GetManager return a endpoint manager from global endpoint manager
 func GetManager(comm *Communicator, objName string, opts ...EndpointManagerOption) EndpointManager {
 	// tars
-	initOnceGManager(comm.Client.RefreshEndpointInterval, comm.Client.CheckStatusInterval)
+	initOnceGManager(comm.app)
 	g := gManager
 	g.mlock.Lock()
 	key := objName + ":" + comm.hashKey()
@@ -81,7 +83,7 @@ func GetManager(comm *Communicator, objName string, opts ...EndpointManagerOptio
 	g.eps[key] = em
 	// if fresh is error,we should get it from cache
 	if err := em.doFresh(); err != nil {
-		for _, cache := range appCache.ObjCaches {
+		for _, cache := range comm.app.appCache.ObjCaches {
 			if em.objName == cache.Name && em.setDivision == cache.SetID && comm.GetLocator() == cache.Locator {
 				em.activeEpf = cache.Endpoints
 				newEps := make([]endpoint.Endpoint, len(em.activeEpf))
@@ -133,10 +135,10 @@ func (g *globalManager) updateEndpoints() {
 		}
 
 		// cache to file
-		cfg := GetServerConfig()
-		if cfg != nil && cfg.DataPath != "" {
-			cachePath := filepath.Join(cfg.DataPath, cfg.Server) + ".tarsdat"
-			appCache.ModifyTime = gtime.CurrDateTime
+		svrCfg := g.app.ServerConfig()
+		if svrCfg != nil && svrCfg.DataPath != "" {
+			cachePath := filepath.Join(svrCfg.DataPath, svrCfg.Server) + ".tarsdat"
+			g.app.appCache.ModifyTime = gtime.CurrDateTime
 			objCache := make([]ObjCache, len(eps))
 			for i, e := range eps {
 				objCache[i].Name = e.objName
@@ -145,9 +147,9 @@ func (g *globalManager) updateEndpoints() {
 				objCache[i].Endpoints = e.activeEpf
 				objCache[i].InactiveEndpoints = e.inactiveEpf
 			}
-			appCache.ObjCaches = objCache
-			data, _ := json.MarshalIndent(&appCache, "", "    ")
-			if err := ioutil.WriteFile(cachePath, data, 0644); err != nil {
+			g.app.appCache.ObjCaches = objCache
+			data, _ := json.MarshalIndent(&g.app.appCache, "", "    ")
+			if err := os.WriteFile(cachePath, data, 0644); err != nil {
 				TLOG.Errorf("update appCache error: %v", err)
 			}
 		}
@@ -472,7 +474,7 @@ func (e *endpointManager) findAndSetObj(q *queryf.QueryF) error {
 		return true
 	})
 
-	bSameType, lastType := true, newEps[0].WeightType
+	sameType, lastType := true, newEps[0].WeightType
 	// delete active endpoint which status is false
 	sortedEps := make([]endpoint.Endpoint, 0)
 	for _, ep := range newEps {
@@ -487,12 +489,12 @@ func (e *endpointManager) findAndSetObj(q *queryf.QueryF) error {
 
 		// check weightType
 		if ep.WeightType != lastType {
-			bSameType = false
+			sameType = false
 		}
 	}
 
 	e.weightType = endpoint.ELoop
-	if bSameType {
+	if sameType {
 		e.weightType = endpoint.WeightType(lastType)
 	}
 
@@ -525,18 +527,18 @@ func (e *endpointManager) firstUpdateActiveEp(eps []endpoint.Endpoint) {
 	if len(eps) == 0 {
 		return
 	}
-	bSameType, lastType := true, eps[0].WeightType
+	sameType, lastType := true, eps[0].WeightType
 	sortedEps := make([]endpoint.Endpoint, 0, len(eps))
 	for _, ep := range eps {
 		sortedEps = append(sortedEps, ep)
 		// check weightType
 		if ep.WeightType != lastType {
-			bSameType = false
+			sameType = false
 		}
 	}
 
 	e.weightType = endpoint.ELoop
-	if bSameType {
+	if sameType {
 		e.weightType = endpoint.WeightType(lastType)
 	}
 

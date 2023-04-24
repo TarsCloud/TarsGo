@@ -2,12 +2,13 @@ package base
 
 import (
 	"bytes"
-	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/bindata"
-	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/consts"
 	"os"
 	"path"
 	"strings"
 	"text/template"
+
+	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/bindata"
+	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/consts"
 )
 
 const (

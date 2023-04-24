@@ -41,21 +41,20 @@ func (n *NotifyHelper) ReportNotifyInfo(level int32, info string) {
 	n.tm.ELevel = notifyf.NOTIFYLEVEL(level)
 	n.tm.SMessage = info
 	TLOG.Debug(n.tm)
-	n.tn.ReportNotifyInfo(&n.tm)
+	if err := n.tn.ReportNotifyInfo(&n.tm); err != nil {
+		TLOG.Errorf("ReportNotifyInfo err: %v", err)
+	}
 }
 
 // ReportNotifyInfo reports notify information with level and info
 func ReportNotifyInfo(level int32, info string) {
-	ha := new(NotifyHelper)
-	comm := NewCommunicator()
-	notify := GetServerConfig().Notify
-	if notify == "" {
+	svrCfg := GetServerConfig()
+	if svrCfg.Notify == "" {
 		return
 	}
-	app := GetServerConfig().App
-	server := GetServerConfig().Server
-	container := GetServerConfig().Container
-	ha.SetNotifyInfo(comm, notify, app, server, container)
+	comm := GetCommunicator()
+	ha := new(NotifyHelper)
+	ha.SetNotifyInfo(comm, svrCfg.Notify, svrCfg.App, svrCfg.Server, svrCfg.Container)
 	defer func() {
 		if err := recover(); err != nil {
 			TLOG.Debug(err)
