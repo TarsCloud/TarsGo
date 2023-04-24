@@ -129,86 +129,90 @@ func GetTracer(servant string) opentracing.Tracer {
 }
 
 // ZipkinClientFilter gets tars client filter for zipkin opentracing.
-func ZipkinClientFilter() tars.ClientFilter {
-	return func(ctx context.Context, msg *tars.Message, invoke tars.Invoke, timeout time.Duration) (err error) {
-		if !isTrace {
-			return invoke(ctx, msg, timeout)
-		}
+func ZipkinClientFilter() tars.ClientFilterMiddleware {
+	return func(next tars.ClientFilter) tars.ClientFilter {
+		return func(ctx context.Context, msg *tars.Message, invoke tars.Invoke, timeout time.Duration) (err error) {
+			if !isTrace {
+				return next(ctx, msg, invoke, timeout)
+			}
 
-		var spanCtx opentracing.SpanContext
-		if parent := opentracing.SpanFromContext(ctx); parent != nil {
-			spanCtx = parent.Context()
-		}
+			var spanCtx opentracing.SpanContext
+			if parent := opentracing.SpanFromContext(ctx); parent != nil {
+				spanCtx = parent.Context()
+			}
 
-		cfg := tars.GetServerConfig()
-		var tracer opentracing.Tracer
-		var port string
-		if servant := ServantFromContext(ctx); servant != "" {
-			tracer = GetTracer(servant)
-			port = strconv.Itoa(int(cfg.Adapters[servant+"Adapter"].Endpoint.Port))
-		}
+			cfg := tars.GetServerConfig()
+			var tracer opentracing.Tracer
+			var port string
+			if servant := ServantFromContext(ctx); servant != "" {
+				tracer = GetTracer(servant)
+				port = strconv.Itoa(int(cfg.Adapters[servant+"Adapter"].Endpoint.Port))
+			}
 
-		if tracer == nil {
-			tracer = opentracing.GlobalTracer()
-		}
+			if tracer == nil {
+				tracer = opentracing.GlobalTracer()
+			}
 
-		span := tracer.StartSpan(msg.Req.SFuncName, opentracing.ChildOf(spanCtx), ext.SpanKindRPCClient)
-		defer span.Finish()
-		span.SetTag("client.ipv4", cfg.LocalIP)
-		span.SetTag("client.port", port)
-		span.SetTag("tars.interface", msg.Req.SServantName)
-		span.SetTag("tars.method", msg.Req.SFuncName)
-		span.SetTag("tars.protocol", "tars")
-		span.SetTag("tars.client.version", tars.Version)
-		if msg.Req.Status == nil {
-			msg.Req.Status = make(map[string]string)
+			span := tracer.StartSpan(msg.Req.SFuncName, opentracing.ChildOf(spanCtx), ext.SpanKindRPCClient)
+			defer span.Finish()
+			span.SetTag("client.ipv4", cfg.LocalIP)
+			span.SetTag("client.port", port)
+			span.SetTag("tars.interface", msg.Req.SServantName)
+			span.SetTag("tars.method", msg.Req.SFuncName)
+			span.SetTag("tars.protocol", "tars")
+			span.SetTag("tars.client.version", tars.Version)
+			if msg.Req.Status == nil {
+				msg.Req.Status = make(map[string]string)
+			}
+			err = tracer.Inject(span.Context(), opentracing.TextMap, opentracing.TextMapCarrier(msg.Req.Status))
+			if err != nil {
+				logger.Error("inject span to status error:", err)
+			}
+			err = next(ctx, msg, invoke, timeout)
+			if err != nil {
+				ext.Error.Set(span, true)
+				span.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
+			}
+			return err
 		}
-		err = tracer.Inject(span.Context(), opentracing.TextMap, opentracing.TextMapCarrier(msg.Req.Status))
-		if err != nil {
-			logger.Error("inject span to status error:", err)
-		}
-		err = invoke(ctx, msg, timeout)
-		if err != nil {
-			ext.Error.Set(span, true)
-			span.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
-		}
-		return err
 	}
 }
 
 // ZipkinServerFilter gets tars server filter for zipkin opentracing.
-func ZipkinServerFilter() tars.ServerFilter {
-	return func(ctx context.Context, d tars.Dispatch, f interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error) {
-		if !isTrace {
-			return d(ctx, f, req, resp, withContext)
-		}
-		tracer := GetTracer(req.SServantName)
-		if tracer == nil {
-			tracer = opentracing.GlobalTracer()
-		}
-		ctx = ContextWithServant(ctx, req.SServantName)
-		var span opentracing.Span
-		spanCtx, err := tracer.Extract(opentracing.TextMap, opentracing.TextMapCarrier(req.Status))
-		if err == nil {
-			span = tracer.StartSpan(req.SFuncName, ext.RPCServerOption(spanCtx), ext.SpanKindRPCServer)
-		} else {
-			span = tracer.StartSpan(req.SFuncName, ext.SpanKindRPCServer)
-		}
+func ZipkinServerFilter() tars.ServerFilterMiddleware {
+	return func(next tars.ServerFilter) tars.ServerFilter {
+		return func(ctx context.Context, d tars.Dispatch, f interface{}, req *requestf.RequestPacket, resp *requestf.ResponsePacket, withContext bool) (err error) {
+			if !isTrace {
+				return next(ctx, d, f, req, resp, withContext)
+			}
+			tracer := GetTracer(req.SServantName)
+			if tracer == nil {
+				tracer = opentracing.GlobalTracer()
+			}
+			ctx = ContextWithServant(ctx, req.SServantName)
+			var span opentracing.Span
+			spanCtx, err := tracer.Extract(opentracing.TextMap, opentracing.TextMapCarrier(req.Status))
+			if err == nil {
+				span = tracer.StartSpan(req.SFuncName, ext.RPCServerOption(spanCtx), ext.SpanKindRPCServer)
+			} else {
+				span = tracer.StartSpan(req.SFuncName, ext.SpanKindRPCServer)
+			}
 
-		defer span.Finish()
-		cfg := tars.GetServerConfig()
-		span.SetTag("server.ipv4", cfg.LocalIP)
-		span.SetTag("server.port", strconv.Itoa(int(cfg.Adapters[req.SServantName+"Adapter"].Endpoint.Port)))
-		if cfg.Enableset {
-			span.SetTag("tars.set_division", cfg.Setdivision)
+			defer span.Finish()
+			cfg := tars.GetServerConfig()
+			span.SetTag("server.ipv4", cfg.LocalIP)
+			span.SetTag("server.port", strconv.Itoa(int(cfg.Adapters[req.SServantName+"Adapter"].Endpoint.Port)))
+			if cfg.Enableset {
+				span.SetTag("tars.set_division", cfg.Setdivision)
+			}
+			ctx = opentracing.ContextWithSpan(ctx, span)
+			err = next(ctx, d, f, req, resp, withContext)
+			if err != nil {
+				ext.Error.Set(span, true)
+				span.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
+			}
+			return err
 		}
-		ctx = opentracing.ContextWithSpan(ctx, span)
-		err = d(ctx, f, req, resp, withContext)
-		if err != nil {
-			ext.Error.Set(span, true)
-			span.LogFields(oplog.String("event", "error"), oplog.String("message", err.Error()))
-		}
-		return err
 	}
 }
 
