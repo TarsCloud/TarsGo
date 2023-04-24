@@ -3,11 +3,11 @@ package main
 import "context"
 import "time"
 
-//ZipkinTraceImp struct
+// ZipkinTraceImp struct
 type ZipkinTraceImp struct {
 }
 
-//Add implement
+// Add implement
 func (imp *ZipkinTraceImp) Add(ctx context.Context, a int32, b int32, c *int32) (int32, error) {
 	//Doing something in your function
 	*c = a * b
@@ -16,7 +16,7 @@ func (imp *ZipkinTraceImp) Add(ctx context.Context, a int32, b int32, c *int32) 
 	return 0, nil
 }
 
-//Sub implement
+// Sub implement
 func (imp *ZipkinTraceImp) Sub(ctx context.Context, a int32, b int32, c *int32) (int32, error) {
 	//Doing something in your function
 	*c = a / b

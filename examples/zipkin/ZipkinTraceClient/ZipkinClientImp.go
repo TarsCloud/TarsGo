@@ -2,11 +2,11 @@ package main
 
 import "context"
 
-//ZipkinClientImp struct
+// ZipkinClientImp struct
 type ZipkinClientImp struct {
 }
 
-//Add implemnet
+// Add implemnet
 func (imp *ZipkinClientImp) Add(ctx context.Context, a int32, b int32, c *int32) (int32, error) {
 	//Doing something in your function
 	//...
@@ -20,7 +20,7 @@ func (imp *ZipkinClientImp) Add(ctx context.Context, a int32, b int32, c *int32)
 	return 0, nil
 }
 
-//Sub implement
+// Sub implement
 func (imp *ZipkinClientImp) Sub(ctx context.Context, a int32, b int32, c *int32) (int32, error) {
 	//Doing something in your function
 	//...
