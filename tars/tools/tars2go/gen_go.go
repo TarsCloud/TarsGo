@@ -1802,6 +1802,7 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 		c.WriteString("if tarsReq.IVersion == basef.TARSVERSION {\n")
 
 		for k, v := range fun.Args {
+
 			if !v.IsOut {
 				dummy := &StructMember{}
 				dummy.Type = v.Type
