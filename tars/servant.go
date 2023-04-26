@@ -90,6 +90,11 @@ func (s *ServantProxy) TarsSetProtocol(proto model.Protocol) {
 	s.proto = proto
 }
 
+// Endpoints returns all active endpoint.Endpoint
+func (s *ServantProxy) Endpoints() []*endpoint.Endpoint {
+	return s.manager.GetAllEndpoint()
+}
+
 // 生成请求 ID
 func (s *ServantProxy) genRequestID() int32 {
 	// 尽力防止溢出

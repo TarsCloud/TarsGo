@@ -3,11 +3,14 @@ package model
 import (
 	"context"
 
+	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
+
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 )
 
 // Servant is interface for call the remote server.
 type Servant interface {
+	Name() string
 	TarsInvoke(ctx context.Context, cType byte,
 		sFuncName string,
 		buf []byte,
@@ -16,7 +19,7 @@ type Servant interface {
 		resp *requestf.ResponsePacket) error
 	TarsSetTimeout(t int)
 	TarsSetProtocol(Protocol)
-	Name() string
+	Endpoints() []*endpoint.Endpoint
 	SetPushCallback(callback func([]byte))
 }
 

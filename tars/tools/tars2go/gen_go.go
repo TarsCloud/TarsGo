@@ -27,7 +27,7 @@ func init() {
 	gFileMap = make(map[string]bool)
 }
 
-//GenGo record go code information.
+// GenGo record go code information.
 type GenGo struct {
 	I        []string // imports with path
 	code     bytes.Buffer
@@ -42,7 +42,7 @@ type GenGo struct {
 	ProtoName string
 }
 
-//NewGenGo build up a new path
+// NewGenGo build up a new path
 func NewGenGo(path string, module string, outdir string) *GenGo {
 	if outdir != "" {
 		b := []byte(outdir)
@@ -70,7 +70,7 @@ func path2ProtoName(path string) string {
 	return path[iBegin:iEnd]
 }
 
-//Initial capitalization
+// Initial capitalization
 func upperFirstLetter(s string) string {
 	if len(s) == 0 {
 		return ""
@@ -95,7 +95,8 @@ func errString(hasRet bool) string {
 	}
 	return `if err != nil {
   ` + retStr + `
-  }` + "\n"
+  }
+`
 }
 
 func genForHead(vc string) string {
@@ -276,7 +277,7 @@ import (
 	"fmt"
 
 `)
-	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/codec\"\n")
+	gen.code.WriteString(`"` + gen.tarsPath + "/protocol/codec\"\n")
 
 	mImports := make(map[string]bool)
 	for _, st := range gen.p.Struct {
@@ -359,19 +360,20 @@ import (
 	"encoding/json"
 `)
 	if *gAddServant {
-		gen.code.WriteString("\"" + gen.tarsPath + "\"\n")
+		gen.code.WriteString(`"` + gen.tarsPath + "\"\n")
 	}
 
-	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/res/requestf\"\n")
-	gen.code.WriteString("m \"" + gen.tarsPath + "/model\"\n")
-	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/codec\"\n")
-	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/tup\"\n")
-	gen.code.WriteString("\"" + gen.tarsPath + "/protocol/res/basef\"\n")
-	gen.code.WriteString("\"" + gen.tarsPath + "/util/tools\"\n")
+	gen.code.WriteString(`"` + gen.tarsPath + "/protocol/res/requestf\"\n")
+	gen.code.WriteString(`m "` + gen.tarsPath + "/model\"\n")
+	gen.code.WriteString(`"` + gen.tarsPath + "/protocol/codec\"\n")
+	gen.code.WriteString(`"` + gen.tarsPath + "/protocol/tup\"\n")
+	gen.code.WriteString(`"` + gen.tarsPath + "/protocol/res/basef\"\n")
+	gen.code.WriteString(`"` + gen.tarsPath + "/util/tools\"\n")
+	gen.code.WriteString(`"` + gen.tarsPath + "/util/endpoint\"\n")
+	gen.code.WriteString(`"` + gen.tarsPath + "/util/current\"\n")
 	if !withoutTrace {
 		gen.code.WriteString("tarstrace \"" + gen.tarsPath + "/util/trace\"\n")
 	}
-	gen.code.WriteString("\"" + gen.tarsPath + "/util/current\"\n")
 
 	if *gModuleCycle == true {
 		for k, v := range itf.DependModuleWithJce {
@@ -1122,15 +1124,10 @@ func (gen *GenGo) genInterface(itf *InterfaceInfo) {
 func (gen *GenGo) genIFProxy(itf *InterfaceInfo) {
 	c := &gen.code
 	c.WriteString("// " + itf.Name + " struct\n")
-	c.WriteString("type " + itf.Name + " struct {" + "\n")
-	c.WriteString("servant m.Servant" + "\n")
-	c.WriteString("}" + "\n")
-
-	for _, v := range itf.Fun {
-		gen.genIFProxyFun(itf.Name, &v, false, false)
-		gen.genIFProxyFun(itf.Name, &v, true, false)
-		gen.genIFProxyFun(itf.Name, &v, true, true)
-	}
+	c.WriteString("type " + itf.Name + ` struct {
+	servant m.Servant
+}
+`)
 
 	c.WriteString(`// SetServant sets servant for the service.
 func (obj *` + itf.Name + `) SetServant(servant m.Servant) {
@@ -1149,6 +1146,12 @@ func (obj *` + itf.Name + `) TarsSetProtocol(p m.Protocol) {
 }
 `)
 
+	c.WriteString(`// Endpoints returns all active endpoint.Endpoint
+func (obj *` + itf.Name + `) Endpoints() []*endpoint.Endpoint {
+	return obj.servant.Endpoints()
+}
+`)
+
 	if *gAddServant {
 		c.WriteString(`// AddServant adds servant  for the service.
 func (obj *` + itf.Name + `) AddServant(imp ` + itf.Name + `Servant, servantObj string) {
@@ -1161,11 +1164,17 @@ func (obj *` + itf.Name + `) AddServantWithContext(imp ` + itf.Name + `ServantWi
 }
 `)
 	}
+
+	for _, v := range itf.Fun {
+		gen.genIFProxyFun(itf.Name, &v, false, false)
+		gen.genIFProxyFun(itf.Name, &v, true, false)
+		gen.genIFProxyFun(itf.Name, &v, true, true)
+	}
 }
 
 func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo, withContext bool, isOneWay bool) {
 	c := &gen.code
-	if withContext == true {
+	if withContext {
 		if isOneWay {
 			c.WriteString("// " + fun.Name + "OneWayWithContext is the proxy function for the method defined in the tars file, with the context\n")
 			c.WriteString("func (obj *" + interfName + ") " + fun.Name + "OneWayWithContext(tarsCtx context.Context,")
@@ -1182,10 +1191,28 @@ func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo, withContext boo
 	}
 
 	c.WriteString(" opts ...map[string]string)")
+
+	// not WithContext caller WithContext method
+	if !withContext {
+		if fun.HasRet {
+			c.WriteString("(" + gen.genType(fun.RetType) + ", error) {\n")
+		} else {
+			c.WriteString("error { \n")
+		}
+
+		c.WriteString("return obj." + fun.Name + "WithContext(context.Background(),")
+		for _, v := range fun.Args {
+			c.WriteString(v.Name + ",")
+		}
+		c.WriteString(" opts ...)\n")
+		c.WriteString("}\n")
+		return
+	}
+
 	if fun.HasRet {
-		c.WriteString("(ret " + gen.genType(fun.RetType) + ", err error){" + "\n")
+		c.WriteString("(ret " + gen.genType(fun.RetType) + ", err error) {\n")
 	} else {
-		c.WriteString("(err error)" + "{" + "\n")
+		c.WriteString("(err error) {\n")
 	}
 
 	c.WriteString(`	var (
@@ -1213,23 +1240,9 @@ func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo, withContext boo
 	c.WriteString("\n")
 	errStr := errString(fun.HasRet)
 
-	if !withContext {
+	// trace
+	if !isOneWay && !withoutTrace {
 		c.WriteString(`
-var statusMap map[string]string
-var contextMap map[string]string
-if len(opts) == 1{
-	contextMap =opts[0]
-}else if len(opts) == 2 {
-	contextMap = opts[0]
-	statusMap = opts[1]
-}
-tarsResp := new(requestf.ResponsePacket)
-tarsCtx := context.Background()
-`)
-	} else {
-		// trace
-		if !isOneWay && !withoutTrace {
-			c.WriteString(`
 trace, ok := current.GetTarsTrace(tarsCtx)
 if ok && trace.Call() {
 	var traceParam string
@@ -1238,23 +1251,23 @@ if ok && trace.Call() {
 	if traceParamFlag == tarstrace.EnpNormal {
 		value := map[string]interface{}{}
 `)
-			for _, v := range fun.Args {
-				if !v.IsOut {
-					c.WriteString(`value["` + v.Name + `"] = ` + v.Name + "\n")
-				}
+		for _, v := range fun.Args {
+			if !v.IsOut {
+				c.WriteString(`value["` + v.Name + `"] = ` + v.Name + "\n")
 			}
-			c.WriteString(`jm, _ := json.Marshal(value)
+		}
+		c.WriteString(`jm, _ := json.Marshal(value)
 		traceParam = string(jm)
 	} else if traceParamFlag == tarstrace.EnpOverMaxLen {
 `)
-			c.WriteString("traceParam = `{\"trace_param_over_max_len\":true}`")
-			c.WriteString(`
+		c.WriteString("traceParam = `{\"trace_param_over_max_len\":true}`")
+		c.WriteString(`
 	}
 	tars.Trace(trace.GetTraceKey(tarstrace.EstCS), tarstrace.AnnotationCS, tars.GetClientConfig().ModuleName, obj.servant.Name(), "` + fun.Name + `", 0, traceParam, "")
 }`)
-			c.WriteString("\n\n")
-		}
-		c.WriteString(`var statusMap map[string]string
+		c.WriteString("\n\n")
+	}
+	c.WriteString(`var statusMap map[string]string
 var contextMap map[string]string
 if len(opts) == 1{
 	contextMap =opts[0]
@@ -1264,7 +1277,6 @@ if len(opts) == 1{
 }
 
 tarsResp := new(requestf.ResponsePacket)`)
-	}
 
 	if isOneWay {
 		c.WriteString(`
@@ -1332,42 +1344,43 @@ if ok && trace.Call() {
 }`)
 			c.WriteString("\n\n")
 		}
+
+		c.WriteString(`
+	if len(opts) == 1 {
+		for k := range(contextMap){
+			delete(contextMap, k)
+		}
+		for k, v := range(tarsResp.Context){
+			contextMap[k] = v
+		}
+	} else if len(opts) == 2 {
+		for k := range(contextMap){
+			delete(contextMap, k)
+		}
+		for k, v := range(tarsResp.Context){
+			contextMap[k] = v
+		}
+		for k := range(statusMap){
+			delete(statusMap, k)
+		}
+		for k, v := range(tarsResp.Status){
+			statusMap[k] = v
+		}
+	}`)
 	}
 
 	c.WriteString(`
-if len(opts) == 1 {
-	for k := range(contextMap){
-		delete(contextMap, k)
-	}
-	for k, v := range(tarsResp.Context){
-		contextMap[k] = v
-	}
-} else if len(opts) == 2 {
-	for k := range(contextMap){
-		delete(contextMap, k)
-	}
-	for k, v := range(tarsResp.Context){
-		contextMap[k] = v
-	}
-	for k := range(statusMap){
-		delete(statusMap, k)
-	}
-	for k, v := range(tarsResp.Status){
-		statusMap[k] = v
-	}
-}
   _ = length
   _ = have
   _ = ty
-  `)
-
+`)
 	if fun.HasRet {
-		c.WriteString("return ret, nil" + "\n")
+		c.WriteString("return ret, nil\n")
 	} else {
-		c.WriteString("return nil" + "\n")
+		c.WriteString("return nil\n")
 	}
 
-	c.WriteString("}" + "\n")
+	c.WriteString("}\n")
 }
 
 func (gen *GenGo) genArgs(arg *ArgInfo) {
@@ -1382,20 +1395,20 @@ func (gen *GenGo) genArgs(arg *ArgInfo) {
 
 func (gen *GenGo) genIFServer(itf *InterfaceInfo) {
 	c := &gen.code
-	c.WriteString("type " + itf.Name + "Servant interface {" + "\n")
+	c.WriteString("type " + itf.Name + "Servant interface {\n")
 	for _, v := range itf.Fun {
 		gen.genIFServerFun(&v)
 	}
-	c.WriteString("}" + "\n")
+	c.WriteString("}\n")
 }
 
 func (gen *GenGo) genIFServerWithContext(itf *InterfaceInfo) {
 	c := &gen.code
-	c.WriteString("type " + itf.Name + "ServantWithContext interface {" + "\n")
+	c.WriteString("type " + itf.Name + "ServantWithContext interface {\n")
 	for _, v := range itf.Fun {
 		gen.genIFServerFunWithContext(&v)
 	}
-	c.WriteString("}" + "\n")
+	c.WriteString("} \n")
 }
 
 func (gen *GenGo) genIFServerFun(fun *FunInfo) {
@@ -1409,7 +1422,7 @@ func (gen *GenGo) genIFServerFun(fun *FunInfo) {
 	if fun.HasRet {
 		c.WriteString("ret " + gen.genType(fun.RetType) + ", ")
 	}
-	c.WriteString("err error)" + "\n")
+	c.WriteString("err error)\n")
 }
 
 func (gen *GenGo) genIFServerFunWithContext(fun *FunInfo) {
@@ -1423,7 +1436,7 @@ func (gen *GenGo) genIFServerFunWithContext(fun *FunInfo) {
 	if fun.HasRet {
 		c.WriteString("ret " + gen.genType(fun.RetType) + ", ")
 	}
-	c.WriteString("err error)" + "\n")
+	c.WriteString("err error)\n")
 }
 
 func (gen *GenGo) genIFDispatch(itf *InterfaceInfo) {
@@ -1518,7 +1531,7 @@ func (gen *GenGo) genSwitchCase(tname string, fun *FunInfo) {
 	c.WriteString("\n")
 
 	if inArgsCount > 0 {
-		c.WriteString("if tarsReq.IVersion == basef.TARSVERSION {" + "\n")
+		c.WriteString("if tarsReq.IVersion == basef.TARSVERSION {\n")
 
 		for k, v := range fun.Args {
 
@@ -1640,7 +1653,7 @@ if ok && trace.Call() {
 				c.WriteString(v.Name + ",")
 			}
 		}
-		c.WriteString(")" + "\n } \n")
+		c.WriteString(") \n}\n")
 
 	} else {
 		c.WriteString(`if !withContext {
@@ -1702,15 +1715,6 @@ if ok && trace.Call() {
 	if tarsReq.IVersion == basef.TARSVERSION {
 	buf.Reset()
 	`)
-
-	//	if fun.HasRet {
-	//		c.WriteString(`
-	//		err = buf.WriteInt32(funRet, 0)
-	//		if err != nil {
-	//			return err
-	//		}
-	//`)
-	//	}
 
 	if fun.HasRet {
 		dummy := &StructMember{}
@@ -1822,7 +1826,7 @@ if ok && trace.Call() {
 		c.WriteString(`
 }
 	tars.Trace(trace.GetTraceKey(tarstrace.EstSS), tarstrace.AnnotationSS, tars.GetClientConfig().ModuleName, tarsReq.SServantName, "` + fun.OriginName + `", 0, traceParam, "")
-}`)
-		c.WriteString("\n\n")
+}
+`)
 	}
 }
