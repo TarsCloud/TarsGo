@@ -49,9 +49,11 @@ func NewServantProxy(comm *Communicator, objName string, opts ...EndpointManager
 
 func newServantProxy(comm *Communicator, objName string, opts ...EndpointManagerOption) *ServantProxy {
 	s := &ServantProxy{
-		comm:    comm,
-		proto:   &protocol.TarsProtocol{},
-		version: basef.TARSVERSION,
+		comm:         comm,
+		proto:        &protocol.TarsProtocol{},
+		syncTimeout:  comm.Client.AsyncInvokeTimeout,
+		asyncTimeout: comm.Client.AsyncInvokeTimeout,
+		version:      basef.TARSVERSION,
 	}
 	pos := strings.Index(objName, "@")
 	if pos > 0 {
@@ -66,12 +68,6 @@ func newServantProxy(comm *Communicator, objName string, opts ...EndpointManager
 
 	// init manager
 	s.manager = GetManager(comm, objName, opts...)
-
-	s.comm = comm
-	s.proto = &protocol.TarsProtocol{}
-	s.syncTimeout = s.comm.Client.SyncInvokeTimeout
-	s.asyncTimeout = s.comm.Client.AsyncInvokeTimeout
-	s.version = basef.TARSVERSION
 	return s
 }
 
@@ -127,7 +123,7 @@ func (s *ServantProxy) TarsInvoke(ctx context.Context, cType byte,
 	resp *requestf.ResponsePacket) error {
 	defer CheckPanic()
 
-	msg := buildMessage(ctx, cType, sFuncName, buf, status, reqContext, resp, s)
+	msg := newMessage(ctx, cType, sFuncName, buf, status, reqContext, resp, s)
 	timeout := time.Duration(s.syncTimeout) * time.Millisecond
 	if err := s.invokeFilters(ctx, msg, timeout); err != nil {
 		return err
@@ -146,7 +142,7 @@ func (s *ServantProxy) TarsInvokeAsync(ctx context.Context, cType byte,
 	callback model.Callback) error {
 	defer CheckPanic()
 
-	msg := buildMessage(ctx, cType, sFuncName, buf, status, reqContext, resp, s)
+	msg := newMessage(ctx, cType, sFuncName, buf, status, reqContext, resp, s)
 	msg.Req.ITimeout = int32(s.asyncTimeout)
 	if callback == nil {
 		msg.Req.CPacketType = basef.TARSONEWAY

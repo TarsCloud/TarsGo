@@ -75,7 +75,7 @@ func (m *Message) IsHash() bool {
 	return m.isHash
 }
 
-func buildMessage(ctx context.Context, cType byte,
+func newMessage(ctx context.Context, cType byte,
 	sFuncName string,
 	buf []byte,
 	status map[string]string,
