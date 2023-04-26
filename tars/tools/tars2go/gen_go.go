@@ -1402,7 +1402,6 @@ if ok && trace.Call() {
   _ = length
   _ = have
   _ = ty
-
 `)
 
 	if isAsync {
