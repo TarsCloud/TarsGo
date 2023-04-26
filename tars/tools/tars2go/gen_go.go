@@ -1250,7 +1250,7 @@ func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo, withContext boo
 		if v.IsOut {
 			dummy.Key = "(*" + dummy.Key + ")"
 		}
-		gen.genWriteVar(dummy, "", fun.HasRet && !isOneWay && !isAsync)
+		gen.genWriteVar(dummy, "", fun.HasRet && !isAsync)
 	}
 	// empty args and below separate
 	c.WriteString("\n")
@@ -1311,7 +1311,7 @@ tarsResp := new(requestf.ResponsePacket)
 		`)
 	} else if isOneWay {
 		c.WriteString(`err = obj.servant.TarsInvokeAsync(tarsCtx, 1, "` + fun.OriginName + `", buf.ToBytes(), statusMap, contextMap, tarsResp, nil)
-		` + errString(false) + `
+		` + errString(fun.HasRet) + `
 		`)
 	} else {
 		c.WriteString(`err = obj.servant.TarsInvoke(tarsCtx, 0, "` + fun.OriginName + `", buf.ToBytes(), statusMap, contextMap, tarsResp)
@@ -1344,7 +1344,7 @@ tarsResp := new(requestf.ResponsePacket)
 			}
 		}
 		if !withoutTrace {
-			traceParamFlag := "traceParamFlag := traceData.NeedTraceParam(trace.EstCR, uint(0))"
+			traceParamFlag := "traceParamFlag := tarace.NeedTraceParam(trace.EstCR, uint(0))"
 			if isOut || fun.HasRet {
 				traceParamFlag = "traceParamFlag := trace.NeedTraceParam(tarstrace.EstCR, uint(readBuf.Len()))"
 			}
@@ -1663,11 +1663,11 @@ func (gen *GenGo) genCallbackSwitchCase(tname string, fun *FunInfo) {
 	}
 	if !withoutTrace {
 		c.WriteString(`
-traceData, ok := current.GetTraceData(tarsCtx)
-if ok && traceData.TraceCall {
+trace, ok := current.GetTarsTrace(tarsCtx)
+if ok && trace.Call() {
 	var traceParam string
-	traceParamFlag := traceData.NeedTraceParam(trace.EstCR, uint(readBuf.Len()))
-	if traceParamFlag == trace.EnpNormal {
+	traceParamFlag := trace.NeedTraceParam(tarstrace.EstCR, uint(readBuf.Len()))
+	if traceParamFlag == tarstrace.EnpNormal {
 		value := map[string]interface{}{}
 `)
 		if fun.HasRet {
@@ -1678,12 +1678,12 @@ if ok && traceData.TraceCall {
 				c.WriteString(`value["` + v.Name + `"] = ` + v.Name + "\n")
 			}
 		}
-		c.WriteString(`p, _ := json.Marshal(value)
-		traceParam = string(p)
-	} else if traceParamFlag == trace.EnpOverMaxLen {
+		c.WriteString(`jm, _ := json.Marshal(value)
+		traceParam = string(jm)
+	} else if traceParamFlag == tarstrace.EnpOverMaxLen {
 		traceParam = "{\"trace_param_over_max_len\":true}"
 	}
-	tars.Trace(traceData.GetTraceKey(trace.EstCR), trace.TraceAnnotationCR, tars.GetClientConfig().ModuleName, tarsReq.SServantName, "` + fun.OriginName + `", int(tarsResp.IRet), traceParam, "")
+	tars.Trace(trace.GetTraceKey(tarstrace.EstCR), tarstrace.AnnotationCR, tars.GetClientConfig().ModuleName, tarsReq.SServantName, "` + fun.OriginName + `", tarsResp.IRet, traceParam, "")
 }`)
 		c.WriteString("\n\n")
 	}
