@@ -43,9 +43,9 @@ func (e *elem) setValue(value string) *elem {
 	return e
 }
 
-func (e *elem) addChild(name string, child *elem) *elem {
+func (e *elem) addChild(name string, child *elem) {
 	e.children[name] = child
-	return e
+	return
 }
 
 func (e *elem) addLine(line string) *elem {
@@ -158,7 +158,7 @@ func (e *elem) getMap(path string) (map[string]string, error) {
 	kvMap := make(map[string]string)
 	targetNode, err := e.getElem(pathVec)
 	if err != nil {
-		return kvMap, nil
+		return kvMap, err
 	}
 	for _, child := range targetNode.children {
 		if child.isLeaf() {

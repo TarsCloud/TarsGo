@@ -1,9 +1,10 @@
 package selector
 
 import (
-	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 	"math"
 	"sort"
+
+	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 )
 
 // HashType is the hash type
@@ -48,7 +49,8 @@ type Selector interface {
 }
 
 func BuildStaticWeightList(endpoints []endpoint.Endpoint) []int {
-	var maxRange, totalWeight, totalCapacity, minWeight, maxWeight = 0, 0, 0, math.MaxInt32, math.MinInt32
+	var maxRange, totalWeight, totalCapacity int
+	minWeight, maxWeight := math.MaxInt32, math.MinInt32
 	for _, node := range endpoints {
 		if endpoint.WeightType(node.WeightType) != endpoint.EStaticWeight {
 			return nil

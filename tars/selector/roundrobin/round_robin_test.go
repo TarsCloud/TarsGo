@@ -1,8 +1,9 @@
 package roundrobin
 
 import (
-	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 	"testing"
+
+	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 )
 
 func TestRoundRobin(t *testing.T) {
