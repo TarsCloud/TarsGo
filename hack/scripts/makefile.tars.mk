@@ -56,7 +56,7 @@ ifneq ($(PRO_SRC),)
 PROBUILD: $(PRO_SRC)
 	@echo -e "\e[33;1mprotoc\e[0m \e[36;1m ${PRO_SRC} \e[0m..."
 	@echo $(PB2GO) ${PB2GO_FLAG} $(addprefix --proto_path=, $(sort $(dir $(PRO_SRC)))) $(PRO_SRC)
-	$(foreach file,$(PRO_SRC),$(eval echo $(PB2GO) ${PB2GO_FLAG} --proto_path=$(dir $file) $file))
+	$(foreach file,$(PRO_SRC),$(eval echo $(PB2GO) ${PB2GO_FLAG} --proto_path=$(dir $(file)) $(file)))
 	for file in $(sort $(PRO_SRC));\
 	do \
 		dirname=$$(dirname $$file);\

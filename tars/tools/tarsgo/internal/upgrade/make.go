@@ -2,12 +2,14 @@ package upgrade
 
 import (
 	"fmt"
-	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/base"
-	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/bindata"
-	"github.com/fatih/color"
-	"github.com/spf13/cobra"
 	"os"
 	"path"
+
+	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/base"
+	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/bindata"
+	"github.com/TarsCloud/TarsGo/tars/tools/tarsgo/internal/consts"
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
 )
 
 // MakeCmd represents the new command.
@@ -25,13 +27,13 @@ tarsgo upgrade make`,
 		err = base.CopyFile(makefile, makefile, []string{
 			`
 libpath=${subst :, ,$(GOPATH)}`, "",
-			"$(foreach path,$(libpath),$(eval -include $(path)/src/github.com/TarsCloud/TarsGo/tars/makefile.tars))", "-include scripts/makefile.tars.gomod",
-			"$(foreach path,$(libpath),$(eval -include $(path)/src/github.com/TarsCloud/TarsGo/tars/makefile.tars.gomod))", "-include scripts/makefile.tars.gomod",
+			"$(foreach path,$(libpath),$(eval -include $(path)/src/github.com/TarsCloud/TarsGo/tars/makefile.tars))", "-include " + consts.IncludeMakefile,
+			"$(foreach path,$(libpath),$(eval -include $(path)/src/github.com/TarsCloud/TarsGo/tars/makefile.tars.gomod))", "-include " + consts.IncludeMakefile,
 		})
 		if err != nil {
 			panic(err)
 		}
-		err = bindata.RestoreAsset(wd, "scripts/makefile.tars.gomod")
+		err = bindata.RestoreAsset(wd, consts.IncludeMakefile)
 		if err != nil {
 			panic(err)
 		}
