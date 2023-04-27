@@ -3,7 +3,7 @@ module github.com/TarsCloud/TarsGo/contrib/log
 go 1.17
 
 require (
-	github.com/TarsCloud/TarsGo v1.3.11-0.20230324025206-9c0cd0efd13e
+	github.com/TarsCloud/TarsGo v1.4.1
 	go.opentelemetry.io/otel/trace v1.14.0
 )
 
@@ -17,7 +17,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-playground/validator/v10 v10.10.0 // indirect
 	github.com/goccy/go-json v0.9.7 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
