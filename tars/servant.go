@@ -174,27 +174,11 @@ func (s *ServantProxy) TarsInvoke(ctx context.Context, cType byte,
 	var err error
 	s.manager.preInvoke()
 	app := s.comm.app
-	if app.allFilters.cf != nil {
-		err = app.allFilters.cf(ctx, msg, s.doInvoke, timeout)
-	} else if cf := app.getMiddlewareClientFilter(); cf != nil {
+	if cf := app.getMiddlewareClientFilter(); cf != nil {
 		err = cf(ctx, msg, s.doInvoke, timeout)
 	} else {
-		// execute pre client filters
-		for i, v := range app.allFilters.preCfs {
-			err = v(ctx, msg, s.doInvoke, timeout)
-			if err != nil {
-				TLOG.Errorf("Pre filter error, no: %v, err: %v", i, err.Error())
-			}
-		}
 		// execute rpc
 		err = s.doInvoke(ctx, msg, timeout)
-		// execute post client filters
-		for i, v := range app.allFilters.postCfs {
-			filterErr := v(ctx, msg, s.doInvoke, timeout)
-			if filterErr != nil {
-				TLOG.Errorf("Post filter error, no: %v, err: %v", i, filterErr.Error())
-			}
-		}
 	}
 	s.manager.postInvoke()
 
