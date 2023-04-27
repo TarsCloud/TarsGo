@@ -385,6 +385,7 @@ func (b *Reader) unreadHead(curTag byte) {
 }
 
 // Next return the []byte of next n .
+//
 //go:nosplit
 func (b *Reader) Next(n int) []byte {
 	if n <= 0 {
@@ -397,6 +398,7 @@ func (b *Reader) Next(n int) []byte {
 }
 
 // Skip the next n byte.
+//
 //go:nosplit
 func (b *Reader) Skip(n int) {
 	if n <= 0 {

@@ -16,7 +16,7 @@ func TestTimeWheel(t *testing.T) {
 	wg := sync.WaitGroup{}
 	for i := 0; i < 100; i++ {
 		wg.Add(1)
-		go func(i int) {
+		go func() {
 			start := time.Now().UnixNano()
 			<-After(sleepTime)
 			end := time.Now().UnixNano()
@@ -27,7 +27,7 @@ func TestTimeWheel(t *testing.T) {
 				deviation -= d
 			}
 			wg.Done()
-		}(i)
+		}()
 		time.Sleep(time.Millisecond * 100)
 	}
 	wg.Wait()

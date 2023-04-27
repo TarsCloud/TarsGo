@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"encoding/binary"
+
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 )

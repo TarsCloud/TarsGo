@@ -3,11 +3,12 @@ package protocol
 import (
 	"bytes"
 	"encoding/binary"
+	"testing"
+
 	"github.com/TarsCloud/TarsGo/tars/protocol/codec"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestSetMaxPackageLength(t *testing.T) {

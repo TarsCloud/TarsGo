@@ -1,0 +1,29 @@
+run:
+  timeout: 30m
+  skip-dirs:
+  - tars/protocol/res
+
+linters:
+  disable-all: true
+  enable:
+  - unused
+  - ineffassign
+  - goimports
+  - gofmt
+  - misspell
+  - unparam
+  - unconvert
+  - govet
+  # - errcheck
+  - staticcheck
+
+linters-settings:
+  staticcheck:
+    go: "1.17"
+    checks:
+    - "all"
+    # TODO(fix) Using a deprecated function, variable, constant or field
+    - "-SA1019"
+
+  unused:
+    go: "1.17"

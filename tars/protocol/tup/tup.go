@@ -30,7 +30,7 @@ func (u *UniAttribute) PutBuffer(k string, buf []byte) {
 func (u *UniAttribute) GetBuffer(k string, buf *[]byte) error {
 	var (
 		err error
-		ok  = false
+		ok  bool
 	)
 	if *buf, ok = u._data[k]; !ok {
 		err = fmt.Errorf("tup get error: donot find key: %s", k)

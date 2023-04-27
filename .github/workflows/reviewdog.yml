@@ -1,22 +1,20 @@
 name: reviewdog
 on: [pull_request]
 jobs:
-  staticcheck:
-    name: runner / staticcheck
+  golangci-lint:
     runs-on: ubuntu-latest
+    name: runner / golangci-lint
     steps:
-      - uses: actions/checkout@v2
-      - name: disable demo lint check
-        run: |
-          rm -rf tars/tools/Demo*
-      - uses: reviewdog/action-staticcheck@v1
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v3
+      - name: golangci-lint
+        uses: reviewdog/action-golangci-lint@v2
         with:
           github_token: ${{ secrets.github_token }}
           # Change reviewdog reporter if you need [github-pr-check,github-check,github-pr-review].
           reporter: github-pr-review
           # Report all results.
           filter_mode: nofilter
-          # Exit with 1 when it find at least one finding.
+          # Exit with 1 when it finds at least one finding.
           fail_on_error: true
-          # Set staticcheck flags
-          staticcheck_flags: -checks=inherit,-SA1019,-SA4001
+          #golangci_lint_flags
