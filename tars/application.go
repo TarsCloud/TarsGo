@@ -48,8 +48,8 @@ type application struct {
 	clientObjTlsConfig map[string]*tls.Config
 	clientTlsConfig    *tls.Config
 
-	defaultRConf *RConf
-	onceRConf    sync.Once
+	rConf     *RConf
+	onceRConf sync.Once
 
 	appCache         AppCache
 	destroyableObjs  []destroyableImp
@@ -76,7 +76,11 @@ func init() {
 	_, _ = maxprocs.Set(maxprocs.Logger(TLOG.Infof))
 	rogger.SetLevel(rogger.ERROR)
 
-	defaultApp = &application{
+	defaultApp = newApp()
+}
+
+func newApp() *application {
+	return &application{
 		tarsConfig:         make(map[string]*transport.TarsServerConf),
 		goSvrs:             make(map[string]*transport.TarsServer),
 		httpSvrs:           make(map[string]*http.Server),
@@ -91,6 +95,10 @@ func init() {
 // GetConf Get server conf.Conf config
 func GetConf() *conf.Conf {
 	return defaultApp.GetConf()
+}
+
+func Run() {
+	defaultApp.Run()
 }
 
 // GetConf Get server conf.Conf config
@@ -130,7 +138,7 @@ func (a *application) initConfig() {
 		TLOG.Errorf("Parse server config fail %v", err)
 		return
 	}
-	defaultApp.conf = c
+	a.conf = c
 
 	// Config.go
 	// init server config
@@ -164,7 +172,7 @@ func (a *application) initConfig() {
 
 	cachePath := filepath.Join(a.svrCfg.DataPath, a.svrCfg.Server) + ".tarsdat"
 	if cacheData, err := os.ReadFile(cachePath); err == nil {
-		_ = json.Unmarshal(cacheData, &defaultApp.appCache)
+		_ = json.Unmarshal(cacheData, &a.appCache)
 	}
 
 	if a.svrCfg.LogLevel == "" {
@@ -178,7 +186,7 @@ func (a *application) initConfig() {
 	}
 
 	// cache
-	defaultApp.appCache.TarsVersion = Version
+	a.appCache.TarsVersion = Version
 
 	// add timeout config
 	a.svrCfg.AcceptTimeout = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/server<accepttimeout>", AcceptTimeout))
@@ -251,7 +259,7 @@ func (a *application) initConfig() {
 		if err != nil {
 			panic(err)
 		}
-		defaultApp.clientTlsConfig = clientTlsConfig
+		a.clientTlsConfig = clientTlsConfig
 	}
 
 	serList := c.GetDomain("/tars/application/server")
@@ -322,10 +330,6 @@ func (a *application) initConfig() {
 	}
 }
 
-func Run() {
-	defaultApp.Run()
-}
-
 // Run the application
 func (a *application) Run() {
 	defer rogger.FlushLogger()
@@ -340,15 +344,15 @@ func (a *application) Run() {
 	}
 
 	// add adminF
-	if _, ok := defaultApp.tarsConfig["AdminObj"]; ok {
+	if _, ok := a.tarsConfig["AdminObj"]; ok {
 		adf := new(adminf.AdminF)
 		ad := newAdmin(a)
 		AddServant(adf, ad, "AdminObj")
 	}
 
 	lisDone := &sync.WaitGroup{}
-	for _, obj := range defaultApp.objRunList {
-		if s, ok := defaultApp.httpSvrs[obj]; ok {
+	for _, obj := range a.objRunList {
+		if s, ok := a.httpSvrs[obj]; ok {
 			lisDone.Add(1)
 			go func(obj string) {
 				addr := s.Addr
@@ -382,7 +386,7 @@ func (a *application) Run() {
 			continue
 		}
 
-		s := defaultApp.goSvrs[obj]
+		s := a.goSvrs[obj]
 		if s == nil {
 			a.teerDown(fmt.Errorf("obj not found %s", obj))
 			break
@@ -472,7 +476,7 @@ func (a *application) graceRestart() {
 func (a *application) graceShutdown() {
 	var wg sync.WaitGroup
 
-	atomic.StoreInt32(&defaultApp.isShutdowning, 1)
+	atomic.StoreInt32(&a.isShutdowning, 1)
 	pid := os.Getpid()
 
 	var graceShutdownTimeout time.Duration
@@ -486,7 +490,7 @@ func (a *application) graceShutdown() {
 	TLOG.Infof("grace shutdown start %d in %v", pid, graceShutdownTimeout)
 	ctx, cancel := context.WithTimeout(context.Background(), graceShutdownTimeout)
 
-	for _, obj := range defaultApp.destroyableObjs {
+	for _, obj := range a.destroyableObjs {
 		wg.Add(1)
 		go func(wg *sync.WaitGroup, obj destroyableImp) {
 			defer wg.Done()
@@ -495,8 +499,8 @@ func (a *application) graceShutdown() {
 		}(&wg, obj)
 	}
 
-	for _, obj := range defaultApp.objRunList {
-		if s, ok := defaultApp.httpSvrs[obj]; ok {
+	for _, obj := range a.objRunList {
+		if s, ok := a.httpSvrs[obj]; ok {
 			wg.Add(1)
 			go func(s *http.Server, ctx context.Context, wg *sync.WaitGroup, objstr string) {
 				defer wg.Done()
@@ -509,7 +513,7 @@ func (a *application) graceShutdown() {
 			}(s, ctx, &wg, obj)
 		}
 
-		if s, ok := defaultApp.goSvrs[obj]; ok {
+		if s, ok := a.goSvrs[obj]; ok {
 			wg.Add(1)
 			go func(s *transport.TarsServer, ctx context.Context, wg *sync.WaitGroup, objstr string) {
 				defer wg.Done()
@@ -571,11 +575,11 @@ func (a *application) mainLoop() {
 
 	for {
 		select {
-		case <-defaultApp.shutdown:
+		case <-a.shutdown:
 			ReportNotifyInfo(NotifyNormal, "stop")
 			return
 		case <-loop.C:
-			if atomic.LoadInt32(&defaultApp.isShutdowning) == 1 {
+			if atomic.LoadInt32(&a.isShutdowning) == 1 {
 				continue
 			}
 			for name, adapter := range a.svrCfg.Adapters {
@@ -584,7 +588,7 @@ func (a *application) mainLoop() {
 					ha.KeepAlive(name)
 					continue
 				}
-				if s, ok := defaultApp.goSvrs[adapter.Obj]; ok {
+				if s, ok := a.goSvrs[adapter.Obj]; ok {
 					if !s.IsZombie(svrCfg.ZombieTimeout) {
 						ha.KeepAlive(name)
 					}
