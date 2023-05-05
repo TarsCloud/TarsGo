@@ -342,7 +342,7 @@ func (a *application) Run() {
 	// add adminF
 	if _, ok := defaultApp.tarsConfig["AdminObj"]; ok {
 		adf := new(adminf.AdminF)
-		ad := new(Admin)
+		ad := newAdmin(a)
 		AddServant(adf, ad, "AdminObj")
 	}
 

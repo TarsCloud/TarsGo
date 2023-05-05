@@ -21,6 +21,10 @@ type Admin struct {
 
 type adminFn func(string) (string, error)
 
+func newAdmin(app *application) *Admin {
+	return &Admin{app: app}
+}
+
 // RegisterAdmin register admin functions
 func RegisterAdmin(name string, fn adminFn) {
 	defaultApp.RegisterAdmin(name, fn)
