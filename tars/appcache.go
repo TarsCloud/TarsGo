@@ -23,5 +23,5 @@ func GetAppCache() AppCache {
 }
 
 func (a *application) AppCache() AppCache {
-	return defaultApp.appCache
+	return a.appCache
 }

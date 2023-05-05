@@ -39,9 +39,9 @@ func AddConfig(filename string) (config string, err error) {
 func (a *application) GetRemoteConf() *RConf {
 	a.onceRConf.Do(func() {
 		cfg := a.ServerConfig()
-		a.defaultRConf = NewRConf(cfg.App, cfg.Server, cfg.BasePath)
+		a.rConf = NewRConf(cfg.App, cfg.Server, cfg.BasePath)
 	})
-	return a.defaultRConf
+	return a.rConf
 }
 
 // GetConfigList get server level config list
