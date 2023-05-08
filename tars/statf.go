@@ -170,7 +170,7 @@ var (
 
 func initReport(app *application) error {
 	cfg := app.ClientConfig()
-	if cfg.Stat == "" || !strings.Contains(cfg.Stat, "@") {
+	if cfg.Stat == "" || (cfg.Locator == "" && !strings.Contains(cfg.Stat, "@")) {
 		statInited <- struct{}{}
 		return fmt.Errorf("stat init error")
 	}

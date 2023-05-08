@@ -328,7 +328,7 @@ var (
 
 func initProReport() error {
 	cfg := GetClientConfig()
-	if cfg.Property == "" || !strings.Contains(cfg.Property, "@") {
+	if cfg.Property == "" || (cfg.Locator == "" && !strings.Contains(cfg.Property, "@")) {
 		return fmt.Errorf("property emptry")
 	}
 	comm := GetCommunicator()
