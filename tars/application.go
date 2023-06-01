@@ -504,11 +504,10 @@ func (a *application) graceShutdown() {
 			wg.Add(1)
 			go func(s *http.Server, ctx context.Context, wg *sync.WaitGroup, objstr string) {
 				defer wg.Done()
-				err := s.Shutdown(ctx)
-				if err == nil {
-					TLOG.Infof("grace shutdown http %s success %d", objstr, pid)
+				if err := s.Shutdown(ctx); err != nil {
+					TLOG.Errorf("grace shutdown http %s failed within %v, err%v", objstr, graceShutdownTimeout, err)
 				} else {
-					TLOG.Infof("grace shutdown http %s failed within %v : %v", objstr, graceShutdownTimeout, err)
+					TLOG.Infof("grace shutdown http %s success %d", objstr, pid)
 				}
 			}(s, ctx, &wg, obj)
 		}
@@ -517,11 +516,10 @@ func (a *application) graceShutdown() {
 			wg.Add(1)
 			go func(s *transport.TarsServer, ctx context.Context, wg *sync.WaitGroup, objstr string) {
 				defer wg.Done()
-				err := s.Shutdown(ctx)
-				if err == nil {
-					TLOG.Infof("grace shutdown tars %s success %d", objstr, pid)
+				if err := s.Shutdown(ctx); err != nil {
+					TLOG.Errorf("grace shutdown tars %s failed within %v, err: %v", objstr, graceShutdownTimeout, err)
 				} else {
-					TLOG.Infof("grace shutdown tars %s failed within %v: %v", objstr, graceShutdownTimeout, err)
+					TLOG.Infof("grace shutdown tars %s success %d", objstr, pid)
 				}
 			}(s, ctx, &wg, obj)
 		}
@@ -536,7 +534,7 @@ func (a *application) graceShutdown() {
 	case <-ctx.Done():
 		TLOG.Infof("grace shutdown all success within : %v", graceShutdownTimeout)
 	case <-time.After(graceShutdownTimeout):
-		TLOG.Infof("grace shutdown timeout within : %v", graceShutdownTimeout)
+		TLOG.Errorf("grace shutdown timeout within : %v", graceShutdownTimeout)
 	}
 
 	a.teerDown(nil)

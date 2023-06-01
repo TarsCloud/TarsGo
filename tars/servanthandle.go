@@ -58,7 +58,7 @@ func (a *application) addServantCommon(v dispatch, f interface{}, obj string, wi
 		TLOG.Debugf("add destroyable obj %s", obj)
 		a.destroyableObjs = append(a.destroyableObjs, v)
 	}
-	TLOG.Debug("add tars protocol server: %+v", cfg)
+	TLOG.Debugf("add tars protocol server: %+v", cfg)
 
 	jp := NewTarsProtocol(v, f, withContext)
 	jp.app = a
