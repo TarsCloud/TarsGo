@@ -3,7 +3,7 @@ module github.com/TarsCloud/TarsGo/contrib/gin
 go 1.17
 
 require (
-	github.com/TarsCloud/TarsGo v1.4.3
+	github.com/TarsCloud/TarsGo v1.4.4
 	github.com/gin-gonic/gin v1.9.1
 )
 
@@ -25,7 +25,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
-	go.uber.org/automaxprocs v1.5.1 // indirect
+	go.uber.org/automaxprocs v1.5.2 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
