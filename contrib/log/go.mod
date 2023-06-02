@@ -3,7 +3,7 @@ module github.com/TarsCloud/TarsGo/contrib/log
 go 1.17
 
 require (
-	github.com/TarsCloud/TarsGo v1.4.1
+	github.com/TarsCloud/TarsGo v1.4.3
 	go.opentelemetry.io/otel/trace v1.14.0
 )
 
