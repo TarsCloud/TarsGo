@@ -184,12 +184,15 @@ func initReport(app *application) error {
 
 // ReportStatBase is base method for report statistics.
 func ReportStatBase(head *statf.StatMicMsgHead, body *statf.StatMicMsgBody, FromServer bool) {
-	statInfo := StatInfo{Head: *head, Body: *body}
-	statInfo.Head.TarsVersion = Version
-	// statInfo.Head.IStatVer = 2
-	if StatReport != nil {
-		StatReport.ReportMicMsg(statInfo, FromServer)
+	if StatReport == nil {
+		return
 	}
+	statInfo := StatInfo{Head: *head, Body: *body}
+	if statInfo.Head.TarsVersion == "" {
+		statInfo.Head.TarsVersion = Version
+	}
+	// statInfo.Head.IStatVer = 2
+	StatReport.ReportMicMsg(statInfo, FromServer)
 }
 
 // ReportStatFromClient report the statics from client.

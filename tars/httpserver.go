@@ -118,10 +118,7 @@ func (mux *TarsHttpMux) reportHttpStat(st *httpStatInfo) {
 		statBody.MinRspTime = int32(st.costTime)
 	}
 
-	info := StatInfo{}
-	info.Head = statInfo
-	info.Body = statBody
-	StatReport.pushBackMsg(info, true)
+	ReportStatBase(&statInfo, &statBody, true)
 }
 
 // SetConfig sets the cfg tho the TarsHttpMux.
