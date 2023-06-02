@@ -7,11 +7,9 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/statf"
-	"github.com/gin-gonic/gin"
 )
 
 type HttpHandler interface {
@@ -42,9 +40,7 @@ type TarsHttpConf struct {
 // TarsHttpMux is http.ServeMux for tars http server.
 type TarsHttpMux struct {
 	http.ServeMux
-	cfg     *TarsHttpConf
-	gin     *gin.Engine
-	ginOnce sync.Once
+	cfg *TarsHttpConf
 }
 
 type httpStatInfo struct {
@@ -63,21 +59,6 @@ func newHttpStatInfo(reqAddr, pattern string, statusCode int, costTime int64) *h
 	}
 }
 
-// GetGinEngine sets the cfg tho the *gin.Engine.
-func (mux *TarsHttpMux) GetGinEngine() *gin.Engine {
-	mux.ginOnce.Do(func() {
-		mux.gin = gin.Default()
-		mux.gin.Use(func(c *gin.Context) {
-			startTime := time.Now().UnixNano() / 1e6
-			c.Next()
-			costTime := time.Now().UnixNano()/1e6 - startTime
-			st := newHttpStatInfo(mux.getClientIp(c.Request), c.FullPath(), c.Writer.Status(), costTime)
-			go mux.reportHttpStat(st)
-		})
-	})
-	return mux.gin
-}
-
 // ServeHTTP is the server for the TarsHttpMux.
 func (mux *TarsHttpMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.RequestURI == "*" {
@@ -88,20 +69,15 @@ func (mux *TarsHttpMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tw := &TarsResponseWriter{w, 0}
-	if mux.gin != nil {
-		mux.gin.ServeHTTP(tw, r)
-	} else {
-		h, pattern := mux.Handler(r)
-		startTime := time.Now().UnixNano() / 1e6
-		h.ServeHTTP(tw, r)
-		costTime := time.Now().UnixNano()/1e6 - startTime
-
-		if pattern == "" {
-			pattern = "/"
-		}
-		st := newHttpStatInfo(mux.getClientIp(r), pattern, tw.StatusCode, costTime)
-		go mux.reportHttpStat(st)
+	h, pattern := mux.Handler(r)
+	startTime := time.Now().UnixNano() / 1e6
+	h.ServeHTTP(tw, r)
+	costTime := time.Now().UnixNano()/1e6 - startTime
+	if pattern == "" {
+		pattern = "/"
 	}
+	st := newHttpStatInfo(mux.getClientIp(r), pattern, tw.StatusCode, costTime)
+	go mux.reportHttpStat(st)
 }
 
 func (mux *TarsHttpMux) reportHttpStat(st *httpStatInfo) {
@@ -142,10 +118,7 @@ func (mux *TarsHttpMux) reportHttpStat(st *httpStatInfo) {
 		statBody.MinRspTime = int32(st.costTime)
 	}
 
-	info := StatInfo{}
-	info.Head = statInfo
-	info.Body = statBody
-	StatReport.pushBackMsg(info, true)
+	ReportStatBase(&statInfo, &statBody, true)
 }
 
 // SetConfig sets the cfg tho the TarsHttpMux.
