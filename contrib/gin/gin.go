@@ -11,17 +11,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ServerOption func(*ginServer)
+type ServerOption func(*Server)
 
-type ginServer struct {
+type Server struct {
 	*gin.Engine
 	cfg *tars.TarsHttpConf
 }
 
-var _ tars.HttpHandler = (*ginServer)(nil)
+var _ tars.HttpHandler = (*Server)(nil)
 
-func New(opts ...ServerOption) tars.HttpHandler {
-	s := &ginServer{
+func New(opts ...ServerOption) *Server {
+	s := &Server{
 		Engine: gin.Default(),
 	}
 	for _, opt := range opts {
@@ -31,8 +31,8 @@ func New(opts ...ServerOption) tars.HttpHandler {
 	return s
 }
 
-func (g *ginServer) middleware() {
-	g.Engine.Use(func(c *gin.Context) {
+func (g *Server) middleware() {
+	g.Use(func(c *gin.Context) {
 		startTime := time.Now()
 		if c.Request.RequestURI == "*" {
 			if c.Request.ProtoAtLeast(1, 1) {
@@ -47,11 +47,11 @@ func (g *ginServer) middleware() {
 	})
 }
 
-func (g *ginServer) SetConfig(cfg *tars.TarsHttpConf) {
+func (g *Server) SetConfig(cfg *tars.TarsHttpConf) {
 	g.cfg = cfg
 }
 
-func (g *ginServer) reportHttpStat(clientIP, pattern string, statusCode int, costTime int64) {
+func (g *Server) reportHttpStat(clientIP, pattern string, statusCode int, costTime int64) {
 	if g.cfg == nil {
 		return
 	}
