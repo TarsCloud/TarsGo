@@ -17,6 +17,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"go.uber.org/automaxprocs/maxprocs"
+
 	"github.com/TarsCloud/TarsGo/tars/protocol"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/adminf"
 	"github.com/TarsCloud/TarsGo/tars/transport"
@@ -26,7 +28,6 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/util/rogger"
 	"github.com/TarsCloud/TarsGo/tars/util/ssl"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
-	"go.uber.org/automaxprocs/maxprocs"
 )
 
 type destroyableImp interface {
@@ -73,7 +74,6 @@ var (
 )
 
 func init() {
-	_, _ = maxprocs.Set(maxprocs.Logger(TLOG.Infof))
 	rogger.SetLevel(rogger.ERROR)
 
 	defaultApp = newApp()
@@ -328,6 +328,7 @@ func (a *application) initConfig() {
 			a.clientObjTlsConfig[objName] = objTlsConfig
 		}
 	}
+	_, _ = maxprocs.Set(maxprocs.Logger(TLOG.Infof))
 }
 
 // Run the application
