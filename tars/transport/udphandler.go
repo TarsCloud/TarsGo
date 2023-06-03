@@ -13,66 +13,65 @@ import (
 )
 
 type udpHandler struct {
-	conf *TarsServerConf
-	ts   *TarsServer
+	config *TarsServerConf
+	server *TarsServer
 
 	conn *net.UDPConn
 }
 
-func (h *udpHandler) Listen() (err error) {
-	cfg := h.conf
-	h.conn, err = grace.CreateUDPConn(cfg.Address)
+func (u *udpHandler) Listen() (err error) {
+	cfg := u.config
+	u.conn, err = grace.CreateUDPConn(cfg.Address)
 	if err != nil {
 		return err
 	}
-	TLOG.Info("UDP listen", h.conn.LocalAddr())
+	TLOG.Info("UDP listen", u.conn.LocalAddr())
 	return nil
 }
 
-func (h *udpHandler) getConnContext(udpAddr *net.UDPAddr) context.Context {
+func (u *udpHandler) getConnContext(udpAddr *net.UDPAddr) context.Context {
 	ctx := current.ContextWithTarsCurrent(context.Background())
 	current.SetClientIPWithContext(ctx, udpAddr.IP.String())
 	current.SetClientPortWithContext(ctx, strconv.Itoa(udpAddr.Port))
 	current.SetRecvPkgTsFromContext(ctx, time.Now().UnixNano()/1e6)
-	current.SetRawConnWithContext(ctx, h.conn, udpAddr)
+	current.SetRawConnWithContext(ctx, u.conn, udpAddr)
 	return ctx
 }
 
-func (h *udpHandler) Handle() error {
-	atomic.AddInt32(&h.ts.numConn, 1)
+func (u *udpHandler) Handle() error {
+	atomic.AddInt32(&u.server.numConn, 1)
 	// wait invoke done
 	defer func() {
 		tick := time.NewTicker(time.Second)
 		defer tick.Stop()
-		for atomic.LoadInt32(&h.ts.numInvoke) > 0 {
+		for atomic.LoadInt32(&u.server.numInvoke) > 0 {
 			<-tick.C
 		}
-		atomic.AddInt32(&h.ts.numConn, -1)
+		atomic.AddInt32(&u.server.numConn, -1)
 	}()
 	buffer := make([]byte, 65535)
 	for {
-		if atomic.LoadInt32(&h.ts.isClosed) == 1 {
+		if atomic.LoadInt32(&u.server.isClosed) == 1 {
 			return nil
 		}
-		n, udpAddr, err := h.conn.ReadFromUDP(buffer)
+		n, udpAddr, err := u.conn.ReadFromUDP(buffer)
 		if err != nil {
-			if atomic.LoadInt32(&h.ts.isClosed) == 1 {
+			if atomic.LoadInt32(&u.server.isClosed) == 1 {
 				return nil
 			}
 			if isNoDataError(err) {
 				continue
-			} else {
-				TLOG.Errorf("Close connection %s: %v", h.conf.Address, err)
-				return err // TODO: check if necessary
 			}
+			TLOG.Errorf("Close connection %s: %v", u.config.Address, err)
+			return err // TODO: check if necessary
 		}
 		pkg := make([]byte, n)
 		copy(pkg, buffer[0:n])
-		ctx := h.getConnContext(udpAddr)
 		go func() {
-			atomic.AddInt32(&h.ts.numInvoke, 1)
-			defer atomic.AddInt32(&h.ts.numInvoke, -1)
-			rsp := h.ts.invoke(ctx, pkg) // no need to check package
+			atomic.AddInt32(&u.server.numInvoke, 1)
+			defer atomic.AddInt32(&u.server.numInvoke, -1)
+			ctx := u.getConnContext(udpAddr)
+			rsp := u.server.invoke(ctx, pkg) // no need to check package
 
 			cPacketType, ok := current.GetPacketTypeFromContext(ctx)
 			if !ok {
@@ -83,19 +82,19 @@ func (h *udpHandler) Handle() error {
 				return
 			}
 
-			if _, err := h.conn.WriteToUDP(rsp, udpAddr); err != nil {
+			if _, err := u.conn.WriteToUDP(rsp, udpAddr); err != nil {
 				TLOG.Errorf("send pkg to %v failed %v", udpAddr, err)
 			}
 		}()
 	}
 }
 
-func (h *udpHandler) OnShutdown() {
+func (u *udpHandler) OnShutdown() {
 }
 
-func (h *udpHandler) CloseIdles(n int64) bool {
-	if h.ts.numInvoke == 0 {
-		h.conn.Close()
+func (u *udpHandler) CloseIdles(_ int64) bool {
+	if u.server.numInvoke == 0 {
+		u.conn.Close()
 		return true
 	}
 	return false
