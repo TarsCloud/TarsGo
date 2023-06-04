@@ -14,6 +14,14 @@ const (
 	PackageError
 )
 
+// ServerHandler is interface with listen and handler method
+type ServerHandler interface {
+	Listen() error
+	Handle() error
+	OnShutdown()
+	CloseIdles(n int64) bool
+}
+
 // ServerProtocol is interface for handling the server side tars package.
 type ServerProtocol interface {
 	Invoke(ctx context.Context, pkg []byte) []byte

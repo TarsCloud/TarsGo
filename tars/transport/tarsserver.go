@@ -12,14 +12,6 @@ import (
 // TLOG  is logger for transport.
 var TLOG = rogger.GetLogger("TLOG")
 
-// ServerHandler  is interface with listen and handler method
-type ServerHandler interface {
-	Listen() error
-	Handle() error
-	OnShutdown()
-	CloseIdles(n int64) bool
-}
-
 // TarsServerConf server config for tars server side.
 type TarsServerConf struct {
 	Proto          string
@@ -39,8 +31,8 @@ type TarsServerConf struct {
 
 // TarsServer tars server struct.
 type TarsServer struct {
-	svr        ServerProtocol
-	conf       *TarsServerConf
+	protocol   ServerProtocol
+	config     *TarsServerConf
 	handle     ServerHandler
 	lastInvoke time.Time
 	isClosed   int32
@@ -48,21 +40,21 @@ type TarsServer struct {
 	numConn    int32
 }
 
-// NewTarsServer new TarsServer and init with conf.
-func NewTarsServer(svr ServerProtocol, conf *TarsServerConf) *TarsServer {
-	ts := &TarsServer{svr: svr, conf: conf}
+// NewTarsServer new TarsServer and init with config.
+func NewTarsServer(protocol ServerProtocol, config *TarsServerConf) *TarsServer {
+	ts := &TarsServer{protocol: protocol, config: config}
 	ts.isClosed = 0
 	ts.lastInvoke = time.Now()
 	return ts
 }
 
 func (ts *TarsServer) getHandler() (sh ServerHandler) {
-	if ts.conf.Proto == "tcp" {
-		sh = &tcpHandler{conf: ts.conf, ts: ts}
-	} else if ts.conf.Proto == "udp" {
-		sh = &udpHandler{conf: ts.conf, ts: ts}
+	if ts.config.Proto == "tcp" {
+		sh = &tcpHandler{config: ts.config, server: ts}
+	} else if ts.config.Proto == "udp" {
+		sh = &udpHandler{config: ts.config, server: ts}
 	} else {
-		panic("unsupport protocol: " + ts.conf.Proto)
+		panic("unsupport protocol: " + ts.config.Proto)
 	}
 	return
 }
@@ -105,7 +97,7 @@ func (ts *TarsServer) Shutdown(ctx context.Context) error {
 
 // GetConfig gets the tars server config.
 func (ts *TarsServer) GetConfig() *TarsServerConf {
-	return ts.conf
+	return ts.config
 }
 
 // IsZombie show whether the server is hanged by the request.
@@ -115,19 +107,19 @@ func (ts *TarsServer) IsZombie(timeout time.Duration) bool {
 }
 
 func (ts *TarsServer) invoke(ctx context.Context, pkg []byte) []byte {
-	cfg := ts.conf
+	cfg := ts.config
 	var rsp []byte
 	if cfg.HandleTimeout == 0 {
-		rsp = ts.svr.Invoke(ctx, pkg)
+		rsp = ts.protocol.Invoke(ctx, pkg)
 	} else {
 		invokeDone, cancelFunc := context.WithTimeout(context.Background(), cfg.HandleTimeout)
 		go func() {
-			rsp = ts.svr.Invoke(ctx, pkg)
+			rsp = ts.protocol.Invoke(ctx, pkg)
 			cancelFunc()
 		}()
 		<-invokeDone.Done()
 		if len(rsp) == 0 { // The rsp must be none-empty
-			rsp = ts.svr.InvokeTimeout(pkg)
+			rsp = ts.protocol.InvokeTimeout(pkg)
 		}
 	}
 	return rsp
