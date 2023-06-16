@@ -1,144 +1,17 @@
-package main
+package lexer
 
 import (
 	"bytes"
 	"strconv"
 	"strings"
+
+	"github.com/TarsCloud/TarsGo/tars/tools/tars2go/token"
 )
-
-// EOS is byte stream terminator
-const EOS = 0
-
-// TK is a byte type.
-type TK byte
-
-const (
-	tkEos          TK = iota
-	tkBraceLeft       //({)
-	tkBraceRight      //}
-	tkSemi            //;
-	tkEq              //=
-	tkShl             //<
-	tkShr             //>
-	tkComma           //,
-	tkPtl             //(
-	tkPtr             //)
-	tkSquareLeft      //[
-	tkSquarerRight    //]
-	tkInclude         //#include
-
-	tkDummyKeywordBegin
-	// keyword
-	tkModule
-	tkEnum
-	tkStruct
-	tkInterface
-	tkRequire
-	tkOptional
-	tkConst
-	tkUnsigned
-	tkVoid
-	tkOut
-	tkKey
-	tkTrue
-	tkFalse
-	tkDummyKeywordEnd
-
-	tkDummyTypeBegin
-	// type
-	tkTInt
-	tkTBool
-	tkTShort
-	tkTByte
-	tkTLong
-	tkTFloat
-	tkTDouble
-	tkTString
-	tkTVector
-	tkTMap
-	tkTArray
-	tkDummyTypeEnd
-
-	tkName // variable name
-	// value
-	tkString
-	tkInteger
-	tkFloat
-)
-
-// TokenMap record token  value.
-var TokenMap = [...]string{
-	tkEos: "<eos>",
-
-	tkBraceLeft:    "{",
-	tkBraceRight:   "}",
-	tkSemi:         ";",
-	tkEq:           "=",
-	tkShl:          "<",
-	tkShr:          ">",
-	tkComma:        ",",
-	tkPtl:          "(",
-	tkPtr:          ")",
-	tkSquareLeft:   "[",
-	tkSquarerRight: "]",
-	tkInclude:      "#include",
-
-	// keyword
-	tkModule:    "module",
-	tkEnum:      "enum",
-	tkStruct:    "struct",
-	tkInterface: "interface",
-	tkRequire:   "require",
-	tkOptional:  "optional",
-	tkConst:     "const",
-	tkUnsigned:  "unsigned",
-	tkVoid:      "void",
-	tkOut:       "out",
-	tkKey:       "key",
-	tkTrue:      "true",
-	tkFalse:     "false",
-
-	// type
-	tkTInt:    "int",
-	tkTBool:   "bool",
-	tkTShort:  "short",
-	tkTByte:   "byte",
-	tkTLong:   "long",
-	tkTFloat:  "float",
-	tkTDouble: "double",
-	tkTString: "string",
-	tkTVector: "vector",
-	tkTMap:    "map",
-	tkTArray:  "array",
-
-	tkName: "<name>",
-	// value
-	tkString:  "<string>",
-	tkInteger: "<INTEGER>",
-	tkFloat:   "<FLOAT>",
-}
-
-// SemInfo is struct.
-type SemInfo struct {
-	I int64
-	F float64
-	S string
-}
-
-// Token record token information.
-type Token struct {
-	T    TK
-	S    *SemInfo
-	Line int
-}
 
 // LexState record lexical state.
 type LexState struct {
 	current    byte
 	lineNumber int
-
-	//t         Token
-	//lookahead Token
 
 	tokenBuff bytes.Buffer
 	buff      *bytes.Buffer
@@ -162,19 +35,6 @@ func isLetter(b byte) bool {
 	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') || b == '_'
 }
 
-func isType(t TK) bool {
-	return t > tkDummyTypeBegin && t < tkDummyTypeEnd
-}
-
-func isNumberType(t TK) bool {
-	switch t {
-	case tkTInt, tkTBool, tkTShort, tkTByte, tkTLong, tkTFloat, tkTDouble:
-		return true
-	default:
-		return false
-	}
-}
-
 func (ls *LexState) lexErr(err string) {
 	line := strconv.Itoa(ls.lineNumber)
 	panic(ls.source + ": " + line + ".    " + err)
@@ -189,10 +49,10 @@ func (ls *LexState) incLine() {
 	ls.lineNumber++
 }
 
-func (ls *LexState) readNumber() (TK, *SemInfo) {
+func (ls *LexState) readNumber() (token.Type, *token.SemInfo) {
 	hasDot := false
 	isHex := false
-	sem := &SemInfo{}
+	sem := &token.SemInfo{}
 	for isNumber(ls.current) || ls.current == '.' || ls.current == 'x' || ls.current == 'X' ||
 		(isHex && isHexNumber(ls.current)) {
 
@@ -211,18 +71,18 @@ func (ls *LexState) readNumber() (TK, *SemInfo) {
 			ls.lexErr(err.Error())
 		}
 		sem.F = f
-		return tkFloat, sem
+		return token.Float, sem
 	}
 	i, err := strconv.ParseInt(sem.S, 0, 64)
 	if err != nil {
 		ls.lexErr(err.Error())
 	}
 	sem.I = i
-	return tkInteger, sem
+	return token.Integer, sem
 }
 
-func (ls *LexState) readIdent() (TK, *SemInfo) {
-	sem := &SemInfo{}
+func (ls *LexState) readIdent() (token.Type, *token.SemInfo) {
+	sem := &token.SemInfo{}
 	var last byte
 
 	// :: Point number processing namespace
@@ -244,21 +104,21 @@ func (ls *LexState) readIdent() (TK, *SemInfo) {
 		}
 	}
 
-	for i := tkDummyKeywordBegin + 1; i < tkDummyKeywordEnd; i++ {
-		if TokenMap[i] == sem.S {
+	for i := token.DummyKeywordBegin + 1; i < token.DummyKeywordEnd; i++ {
+		if token.Value(i) == sem.S {
 			return i, nil
 		}
 	}
-	for i := tkDummyTypeBegin + 1; i < tkDummyTypeEnd; i++ {
-		if TokenMap[i] == sem.S {
+	for i := token.DummyTypeBegin + 1; i < token.DummyTypeEnd; i++ {
+		if token.Value(i) == sem.S {
 			return i, nil
 		}
 	}
 
-	return tkName, sem
+	return token.Name, sem
 }
 
-func (ls *LexState) readSharp() (TK, *SemInfo) {
+func (ls *LexState) readSharp() (token.Type, *token.SemInfo) {
 	ls.next()
 	for isLetter(ls.current) {
 		ls.tokenBuff.WriteByte(ls.current)
@@ -268,15 +128,14 @@ func (ls *LexState) readSharp() (TK, *SemInfo) {
 		ls.lexErr("not #include")
 	}
 
-	return tkInclude, nil
+	return token.Include, nil
 }
 
-func (ls *LexState) readString() (TK, *SemInfo) {
-
-	sem := &SemInfo{}
+func (ls *LexState) readString() (token.Type, *token.SemInfo) {
+	sem := &token.SemInfo{}
 	ls.next()
 	for {
-		if ls.current == EOS {
+		if ls.current == token.EOF {
 			ls.lexErr(`no match "`)
 		} else if ls.current == '"' {
 			ls.next()
@@ -288,20 +147,20 @@ func (ls *LexState) readString() (TK, *SemInfo) {
 	}
 	sem.S = ls.tokenBuff.String()
 
-	return tkString, sem
+	return token.String, sem
 }
 
 func (ls *LexState) readLongComment() {
 	for {
 		switch ls.current {
-		case EOS:
+		case token.EOF:
 			ls.lexErr("respect */")
 			return
 		case '\n', '\r':
 			ls.incLine()
 		case '*':
 			ls.next()
-			if ls.current == EOS {
+			if ls.current == token.EOF {
 				return
 			} else if ls.current == '/' {
 				ls.next()
@@ -317,11 +176,11 @@ func (ls *LexState) next() {
 	var err error
 	ls.current, err = ls.buff.ReadByte()
 	if err != nil {
-		ls.current = EOS
+		ls.current = token.EOF
 	}
 }
 
-func (ls *LexState) llexDefault() (TK, *SemInfo) {
+func (ls *LexState) llexDefault() (token.Type, *token.SemInfo) {
 	switch {
 	case isNumber(ls.current):
 		return ls.readNumber()
@@ -334,12 +193,12 @@ func (ls *LexState) llexDefault() (TK, *SemInfo) {
 }
 
 // Do lexical analysis.
-func (ls *LexState) llex() (TK, *SemInfo) {
+func (ls *LexState) lLex() (token.Type, *token.SemInfo) {
 	for {
 		ls.tokenBuff.Reset()
 		switch ls.current {
-		case EOS:
-			return tkEos, nil
+		case token.EOF:
+			return token.Eof, nil
 		case ' ', '\t', '\f', '\v':
 			ls.next()
 		case '\n', '\r':
@@ -347,7 +206,7 @@ func (ls *LexState) llex() (TK, *SemInfo) {
 		case '/': // Comment processing
 			ls.next()
 			if ls.current == '/' {
-				for !isNewLine(ls.current) && ls.current != EOS {
+				for !isNewLine(ls.current) && ls.current != token.EOF {
 					ls.next()
 				}
 			} else if ls.current == '*' {
@@ -358,37 +217,37 @@ func (ls *LexState) llex() (TK, *SemInfo) {
 			}
 		case '{':
 			ls.next()
-			return tkBraceLeft, nil
+			return token.BraceLeft, nil
 		case '}':
 			ls.next()
-			return tkBraceRight, nil
+			return token.BraceRight, nil
 		case ';':
 			ls.next()
-			return tkSemi, nil
+			return token.Semi, nil
 		case '=':
 			ls.next()
-			return tkEq, nil
+			return token.Eq, nil
 		case '<':
 			ls.next()
-			return tkShl, nil
+			return token.Shl, nil
 		case '>':
 			ls.next()
-			return tkShr, nil
+			return token.Shr, nil
 		case ',':
 			ls.next()
-			return tkComma, nil
+			return token.Comma, nil
 		case '(':
 			ls.next()
-			return tkPtl, nil
+			return token.Ptl, nil
 		case ')':
 			ls.next()
-			return tkPtr, nil
+			return token.Ptr, nil
 		case '[':
 			ls.next()
-			return tkSquareLeft, nil
+			return token.SquareLeft, nil
 		case ']':
 			ls.next()
-			return tkSquarerRight, nil
+			return token.SquarerRight, nil
 		case '"':
 			return ls.readString()
 		case '#':
@@ -401,9 +260,9 @@ func (ls *LexState) llex() (TK, *SemInfo) {
 }
 
 // NextToken return token after lexical analysis.
-func (ls *LexState) NextToken() *Token {
-	tk := &Token{}
-	tk.T, tk.S = ls.llex()
+func (ls *LexState) NextToken() *token.Token {
+	tk := &token.Token{}
+	tk.T, tk.S = ls.lLex()
 	tk.Line = ls.lineNumber
 	return tk
 }
