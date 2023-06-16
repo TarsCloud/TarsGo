@@ -1111,6 +1111,8 @@ func (gen *GenGo) genInterface(itf *InterfaceInfo) {
 	gen.genHead()
 	gen.genIFPackage(itf)
 
+	gen.genIFCallbackInterfaceWithContext(itf)
+	gen.genIFCallbackDispatch(itf)
 	gen.genIFProxy(itf)
 
 	gen.genIFServer(itf)
@@ -1166,16 +1168,20 @@ func (obj *` + itf.Name + `) AddServantWithContext(imp ` + itf.Name + `ServantWi
 	}
 
 	for _, v := range itf.Fun {
-		gen.genIFProxyFun(itf.Name, &v, false, false)
-		gen.genIFProxyFun(itf.Name, &v, true, false)
-		gen.genIFProxyFun(itf.Name, &v, true, true)
+		gen.genIFProxyFun(itf.Name, &v, false, false, false)
+		gen.genIFProxyFun(itf.Name, &v, true, false, false)
+		gen.genIFProxyFun(itf.Name, &v, true, false, true)
+		gen.genIFProxyFun(itf.Name, &v, true, true, false)
 	}
 }
 
-func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo, withContext bool, isOneWay bool) {
+func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo, withContext bool, isOneWay bool, isAsync bool) {
 	c := &gen.code
 	if withContext {
-		if isOneWay {
+		if isAsync {
+			c.WriteString("// Async" + fun.Name + "WithContext is the proxy function for the method defined in the tars file, with the context\n")
+			c.WriteString("func (obj *" + interfName + ") Async" + fun.Name + "WithContext(tarsCtx context.Context, callback " + interfName + "Callback, ")
+		} else if isOneWay {
 			c.WriteString("// " + fun.Name + "OneWayWithContext is the proxy function for the method defined in the tars file, with the context\n")
 			c.WriteString("func (obj *" + interfName + ") " + fun.Name + "OneWayWithContext(tarsCtx context.Context,")
 		} else {
@@ -1187,6 +1193,9 @@ func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo, withContext boo
 		c.WriteString("func (obj *" + interfName + ") " + fun.Name + "(")
 	}
 	for _, v := range fun.Args {
+		if isAsync && v.IsOut {
+			continue
+		}
 		gen.genArgs(&v)
 	}
 
@@ -1209,8 +1218,11 @@ func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo, withContext boo
 		return
 	}
 
-	if fun.HasRet {
-		c.WriteString("(ret " + gen.genType(fun.RetType) + ", err error) {\n")
+	// 异步调用不需要返回值
+	if isAsync {
+		c.WriteString("(err error) {\n")
+	} else if fun.HasRet {
+		c.WriteString("(ret " + gen.genType(fun.RetType) + ", err error){\n")
 	} else {
 		c.WriteString("(err error) {\n")
 	}
@@ -1224,6 +1236,10 @@ func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo, withContext boo
 	c.WriteString("buf := codec.NewBuffer()")
 	var isOut bool
 	for k, v := range fun.Args {
+		// 异步调用不传递out参数
+		if isAsync && v.IsOut {
+			continue
+		}
 		if v.IsOut {
 			isOut = true
 		}
@@ -1234,14 +1250,16 @@ func (gen *GenGo) genIFProxyFun(interfName string, fun *FunInfo, withContext boo
 		if v.IsOut {
 			dummy.Key = "(*" + dummy.Key + ")"
 		}
-		gen.genWriteVar(dummy, "", fun.HasRet)
+		gen.genWriteVar(dummy, "", fun.HasRet && !isAsync)
 	}
 	// empty args and below separate
 	c.WriteString("\n")
-	errStr := errString(fun.HasRet)
 
 	// trace
 	if !isOneWay && !withoutTrace {
+		if isAsync {
+			c.WriteString(`if callback != nil {`)
+		}
 		c.WriteString(`
 trace, ok := current.GetTarsTrace(tarsCtx)
 if ok && trace.Call() {
@@ -1265,6 +1283,9 @@ if ok && trace.Call() {
 	}
 	tars.Trace(trace.GetTraceKey(tarstrace.EstCS), tarstrace.AnnotationCS, tars.GetClientConfig().ModuleName, obj.servant.Name(), "` + fun.Name + `", 0, traceParam, "")
 }`)
+		if isAsync {
+			c.WriteString(`}`)
+		}
 		c.WriteString("\n\n")
 	}
 	c.WriteString(`var statusMap map[string]string
@@ -1275,25 +1296,34 @@ if len(opts) == 1{
 	contextMap = opts[0]
 	statusMap = opts[1]
 }
-
-tarsResp := new(requestf.ResponsePacket)`)
-
-	if isOneWay {
+tarsResp := new(requestf.ResponsePacket)
+`)
+	if isAsync {
+		c.WriteString("var cb *" + interfName + "CallbackProxy\n")
+		c.WriteString(`if callback != nil {`)
 		c.WriteString(`
-		err = obj.servant.TarsInvoke(tarsCtx, 1, "` + fun.OriginName + `", buf.ToBytes(), statusMap, contextMap, tarsResp)
-		` + errStr + `
+		cb = &` + interfName + `CallbackProxy{callback: callback}
+`)
+		c.WriteString(`}
+		err = obj.servant.TarsInvokeAsync(tarsCtx, 0, "` + fun.OriginName + `", buf.ToBytes(), statusMap, contextMap, tarsResp, cb)
+`)
+		c.WriteString(errString(false) + `
+		`)
+	} else if isOneWay {
+		c.WriteString(`err = obj.servant.TarsInvokeAsync(tarsCtx, 1, "` + fun.OriginName + `", buf.ToBytes(), statusMap, contextMap, tarsResp, nil)
+		` + errString(fun.HasRet) + `
 		`)
 	} else {
-		c.WriteString(`
-		err = obj.servant.TarsInvoke(tarsCtx, 0, "` + fun.OriginName + `", buf.ToBytes(), statusMap, contextMap, tarsResp)
-		` + errStr + `
+		c.WriteString(`err = obj.servant.TarsInvoke(tarsCtx, 0, "` + fun.OriginName + `", buf.ToBytes(), statusMap, contextMap, tarsResp)
+		` + errString(fun.HasRet) + `
 		`)
 	}
 
-	if (isOut || fun.HasRet) && !isOneWay {
+	if (isOut || fun.HasRet) && !isOneWay && !isAsync {
 		c.WriteString("readBuf := codec.NewReader(tools.Int8ToByte(tarsResp.SBuffer))")
 	}
-	if fun.HasRet && !isOneWay {
+	// read return value
+	if fun.HasRet && !isOneWay && !isAsync {
 		dummy := &StructMember{}
 		dummy.Type = fun.RetType
 		dummy.Key = "ret"
@@ -1302,7 +1332,7 @@ tarsResp := new(requestf.ResponsePacket)`)
 		gen.genReadVar(dummy, "", fun.HasRet)
 	}
 
-	if !isOneWay {
+	if !isOneWay && !isAsync {
 		for k, v := range fun.Args {
 			if v.IsOut {
 				dummy := &StructMember{}
@@ -1313,8 +1343,8 @@ tarsResp := new(requestf.ResponsePacket)`)
 				gen.genReadVar(dummy, "", fun.HasRet)
 			}
 		}
-		if withContext && !withoutTrace {
-			traceParamFlag := "traceParamFlag := trace.NeedTraceParam(tarstrace.EstCR, uint(0))"
+		if !withoutTrace {
+			traceParamFlag := "traceParamFlag := tarace.NeedTraceParam(trace.EstCR, uint(0))"
 			if isOut || fun.HasRet {
 				traceParamFlag = "traceParamFlag := trace.NeedTraceParam(tarstrace.EstCR, uint(readBuf.Len()))"
 			}
@@ -1368,13 +1398,15 @@ if ok && trace.Call() {
 		}
 	}`)
 	}
-
 	c.WriteString(`
   _ = length
   _ = have
   _ = ty
 `)
-	if fun.HasRet {
+
+	if isAsync {
+		c.WriteString("return nil\n")
+	} else if fun.HasRet {
 		c.WriteString("return ret, nil\n")
 	} else {
 		c.WriteString("return nil\n")
@@ -1393,6 +1425,20 @@ func (gen *GenGo) genArgs(arg *ArgInfo) {
 	c.WriteString(gen.genType(arg.Type) + ",")
 }
 
+func (gen *GenGo) genIFCallbackInterfaceWithContext(itf *InterfaceInfo) {
+	c := &gen.code
+	c.WriteString("type " + itf.Name + "Callback interface {" + "\n")
+	for _, v := range itf.Fun {
+		gen.genIFCallbackFunWithContext(&v)
+	}
+	c.WriteString("}" + "\n\n")
+
+	c.WriteString("// " + itf.Name + "CallbackProxy struct\n")
+	c.WriteString("type " + itf.Name + "CallbackProxy struct {" + "\n")
+	c.WriteString("callback " + itf.Name + "Callback\n")
+	c.WriteString("}" + "\n\n")
+}
+
 func (gen *GenGo) genIFServer(itf *InterfaceInfo) {
 	c := &gen.code
 	c.WriteString("type " + itf.Name + "Servant interface {\n")
@@ -1408,7 +1454,22 @@ func (gen *GenGo) genIFServerWithContext(itf *InterfaceInfo) {
 	for _, v := range itf.Fun {
 		gen.genIFServerFunWithContext(&v)
 	}
-	c.WriteString("} \n")
+	c.WriteString("}\n")
+}
+
+func (gen *GenGo) genIFCallbackFunWithContext(fun *FunInfo) {
+	c := &gen.code
+	c.WriteString("Callback" + fun.Name + "(tarsCtx context.Context, ")
+	if fun.HasRet {
+		c.WriteString("ret " + gen.genType(fun.RetType) + ", ")
+	}
+	for _, v := range fun.Args {
+		if v.IsOut {
+			gen.genArgs(&v)
+		}
+	}
+	c.WriteString(")\n")
+	c.WriteString("Callback" + fun.Name + "Error(tarsCtx context.Context, err error)\n")
 }
 
 func (gen *GenGo) genIFServerFun(fun *FunInfo) {
@@ -1437,6 +1498,212 @@ func (gen *GenGo) genIFServerFunWithContext(fun *FunInfo) {
 		c.WriteString("ret " + gen.genType(fun.RetType) + ", ")
 	}
 	c.WriteString("err error)\n")
+}
+
+func (gen *GenGo) genIFCallbackDispatch(itf *InterfaceInfo) {
+	c := &gen.code
+	c.WriteString("// Dispatch is used to call the server side implement for the method defined in the tars file\n")
+	c.WriteString("func(obj *" + itf.Name + `CallbackProxy) Dispatch(tarsCtx context.Context, tarsReq *requestf.RequestPacket, tarsResp *requestf.ResponsePacket, errResp error) (ret int32, err error) {
+	var (
+		length int32
+		have bool
+		ty byte
+	)
+  `)
+
+	var param bool
+	for _, v := range itf.Fun {
+		if len(v.Args) > 0 {
+			param = true
+			break
+		}
+	}
+
+	if param {
+		c.WriteString("readBuf := codec.NewReader(tools.Int8ToByte(tarsResp.SBuffer))")
+	} else {
+		c.WriteString("readBuf := codec.NewReader(nil)")
+	}
+	c.WriteString(`
+	buf := codec.NewBuffer()
+	switch tarsReq.SFuncName {
+`)
+
+	for _, v := range itf.Fun {
+		gen.genCallbackSwitchCase(itf.Name, &v)
+	}
+
+	c.WriteString(`
+	default:
+		return basef.TARSSERVERSUCCESS, fmt.Errorf("func mismatch")
+	}
+
+	_ = readBuf
+	_ = buf
+	_ = length
+	_ = have
+	_ = ty
+	return tarsResp.IRet, nil
+}
+`)
+}
+
+func (gen *GenGo) genCallbackSwitchCase(tname string, fun *FunInfo) {
+	c := &gen.code
+	c.WriteString(`case "` + fun.OriginName + `":` + "\n")
+
+	c.WriteString(`ret := tarsResp.IRet
+		if errResp != nil {
+		obj.callback.Callback` + fun.Name + `Error(tarsCtx, errResp)
+		return ret, nil
+	}
+`)
+	c.WriteString(`
+		defer func() {
+			if err != nil {
+				obj.callback.Callback` + fun.Name + `Error(tarsCtx, err)
+			}
+		}()
+`)
+	if fun.HasRet {
+		c.WriteString("var funRet " + gen.genType(fun.RetType))
+		dummy := &StructMember{}
+		dummy.Type = fun.RetType
+		dummy.Key = "funRet"
+		dummy.Tag = 0
+		dummy.Require = true
+		gen.genReadVar(dummy, "", fun.HasRet)
+	}
+
+	outArgsCount := 0
+	for _, v := range fun.Args {
+		if v.IsOut {
+			c.WriteString("var " + v.Name + " " + gen.genType(v.Type) + "\n")
+			if v.Type.Type == tkTMap {
+				c.WriteString(v.Name + " = make(" + gen.genType(v.Type) + ")\n")
+			} else if v.Type.Type == tkTVector {
+				c.WriteString(v.Name + " = make(" + gen.genType(v.Type) + ", 0)\n")
+			}
+			outArgsCount++
+		}
+	}
+
+	c.WriteString("\n")
+
+	if outArgsCount > 0 {
+		c.WriteString("if tarsResp.IVersion == basef.TARSVERSION {\n")
+
+		for k, v := range fun.Args {
+			if v.IsOut {
+				dummy := &StructMember{}
+				dummy.Type = v.Type
+				dummy.Key = v.Name
+				dummy.Tag = int32(k + 1)
+				dummy.Require = true
+				gen.genReadVar(dummy, "", true)
+			}
+		}
+
+		c.WriteString(`} else if tarsResp.IVersion == basef.TUPVERSION {
+		reqTup := tup.NewUniAttribute()
+		reqTup.Decode(readBuf)
+
+		var tupBuffer []byte
+
+		`)
+		for _, v := range fun.Args {
+			if v.IsOut {
+				c.WriteString("\n")
+				c.WriteString(`reqTup.GetBuffer("` + v.Name + `", &tupBuffer)` + "\n")
+				c.WriteString("readBuf.Reset(tupBuffer)")
+
+				dummy := &StructMember{}
+				dummy.Type = v.Type
+				dummy.Key = v.Name
+				dummy.Tag = 0
+				dummy.Require = true
+				gen.genReadVar(dummy, "", true)
+			}
+		}
+
+		c.WriteString(`} else if tarsResp.IVersion == basef.JSONVERSION {
+		var jsonData map[string]interface{}
+		decoder := json.NewDecoder(bytes.NewReader(readBuf.ToBytes()))
+		decoder.UseNumber()
+		err = decoder.Decode(&jsonData)
+		if err != nil {
+			return ret, fmt.Errorf("decode resppacket failed, error: %+v", err)
+		}
+		`)
+
+		for _, v := range fun.Args {
+			if v.IsOut {
+				c.WriteString("{\n")
+				c.WriteString(`jsonStr, _ := json.Marshal(jsonData["` + v.Name + `"])` + "\n")
+				if v.Type.CType == tkStruct {
+					c.WriteString(v.Name + ".ResetDefault()\n")
+				}
+				c.WriteString("if err = json.Unmarshal(jsonStr, &" + v.Name + "); err != nil {")
+				c.WriteString(`
+					return ret, err
+				}
+				}
+				`)
+			}
+		}
+
+		c.WriteString(`
+		} else {
+			err = fmt.Errorf("decode resppacket fail, error version: %d", tarsReq.IVersion)
+			return ret, err
+		}`)
+
+		c.WriteString("\n\n")
+	}
+	if !withoutTrace {
+		c.WriteString(`
+trace, ok := current.GetTarsTrace(tarsCtx)
+if ok && trace.Call() {
+	var traceParam string
+	traceParamFlag := trace.NeedTraceParam(tarstrace.EstCR, uint(readBuf.Len()))
+	if traceParamFlag == tarstrace.EnpNormal {
+		value := map[string]interface{}{}
+`)
+		if fun.HasRet {
+			c.WriteString(`value[""] = funRet` + "\n")
+		}
+		for _, v := range fun.Args {
+			if v.IsOut {
+				c.WriteString(`value["` + v.Name + `"] = ` + v.Name + "\n")
+			}
+		}
+		c.WriteString(`jm, _ := json.Marshal(value)
+		traceParam = string(jm)
+	} else if traceParamFlag == tarstrace.EnpOverMaxLen {
+		traceParam = "{\"trace_param_over_max_len\":true}"
+	}
+	tars.Trace(trace.GetTraceKey(tarstrace.EstCR), tarstrace.AnnotationCR, tars.GetClientConfig().ModuleName, tarsReq.SServantName, "` + fun.OriginName + `", tarsResp.IRet, traceParam, "")
+}`)
+		c.WriteString("\n\n")
+	}
+
+	c.WriteString(`
+	if err != nil {
+		return ret, err
+	}
+	`)
+
+	c.WriteString(`
+		obj.callback.Callback` + fun.Name + `(tarsCtx,`)
+	if fun.HasRet {
+		c.WriteString("funRet, ")
+	}
+	for _, v := range fun.Args {
+		if v.IsOut {
+			c.WriteString("&" + v.Name + ",")
+		}
+	}
+	c.WriteString(")\n")
 }
 
 func (gen *GenGo) genIFDispatch(itf *InterfaceInfo) {

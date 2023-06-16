@@ -236,6 +236,7 @@ func (a *application) initConfig() {
 	a.cltCfg.Stat = cMap["stat"]
 	a.cltCfg.Property = cMap["property"]
 	a.cltCfg.ModuleName = cMap["modulename"]
+	a.cltCfg.SyncInvokeTimeout = c.GetIntWithDef("/tars/application/client<sync-invoke-timeout>", SyncInvokeTimeout)
 	a.cltCfg.AsyncInvokeTimeout = c.GetIntWithDef("/tars/application/client<async-invoke-timeout>", AsyncInvokeTimeout)
 	a.cltCfg.RefreshEndpointInterval = c.GetIntWithDef("/tars/application/client<refresh-endpoint-interval>", refreshEndpointInterval)
 	a.cltCfg.ReportInterval = c.GetIntWithDef("/tars/application/client<report-interval>", reportInterval)
