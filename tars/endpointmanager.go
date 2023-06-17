@@ -1,8 +1,8 @@
 package tars
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
 	"hash/crc32"
 	"math/rand"
 	"os"
@@ -16,6 +16,8 @@ import (
 
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/queryf"
+	"github.com/TarsCloud/TarsGo/tars/registry"
+	tarsregistry "github.com/TarsCloud/TarsGo/tars/registry/tars"
 	"github.com/TarsCloud/TarsGo/tars/selector/consistenthash"
 	"github.com/TarsCloud/TarsGo/tars/selector/modhash"
 	"github.com/TarsCloud/TarsGo/tars/selector/roundrobin"
@@ -74,7 +76,7 @@ func GetManager(comm *Communicator, objName string, opts ...EndpointManagerOptio
 	g.mlock.Unlock()
 
 	TLOG.Debug("Create endpoint manager for ", objName)
-	em := newTarsEndpointManager(objName, comm, opts...) // avoid dead lock
+	em := newEndpointManager(objName, comm, opts...) // avoid dead lock
 	g.mlock.Lock()
 	if v, ok := g.eps[key]; ok {
 		g.mlock.Unlock()
@@ -90,7 +92,7 @@ func GetManager(comm *Communicator, objName string, opts ...EndpointManagerOptio
 				for i, ep := range em.activeEpf {
 					newEps[i] = endpoint.Tars2endpoint(ep)
 				}
-				em.firstUpdateActiveEp(newEps)
+				em.updateActiveEp(newEps)
 				TLOG.Debugf("init endpoint %s %v %v", objName, em.activeEp, em.inactiveEpf)
 			}
 		}
@@ -105,7 +107,7 @@ func (g *globalManager) checkEpStatus() {
 		g.mlock.Lock()
 		eps := make([]*endpointManager, 0)
 		for _, v := range g.eps {
-			if v.locator != nil {
+			if v.registrar != nil {
 				eps = append(eps, v)
 			}
 		}
@@ -122,7 +124,7 @@ func (g *globalManager) updateEndpoints() {
 		g.mlock.Lock()
 		eps := make([]*endpointManager, 0)
 		for _, v := range g.eps {
-			if v.locator != nil {
+			if v.registrar != nil {
 				eps = append(eps, v)
 			}
 		}
@@ -163,7 +165,7 @@ type endpointManager struct {
 	setDivision string
 	directProxy bool
 	comm        *Communicator
-	locator     *queryf.QueryF
+	registrar   registry.Registrar
 
 	epList      *sync.Map
 	epLock      *sync.Mutex
@@ -221,7 +223,7 @@ func WithSet(setDivision string) OptionFunc {
 	})
 }
 
-func newTarsEndpointManager(objName string, comm *Communicator, opts ...EndpointManagerOption) *endpointManager {
+func newEndpointManager(objName string, comm *Communicator, opts ...EndpointManagerOption) *endpointManager {
 	if objName == "" {
 		return nil
 	}
@@ -246,16 +248,21 @@ func newTarsEndpointManager(objName string, comm *Communicator, opts ...Endpoint
 		for i, end := range ends {
 			eps[i] = endpoint.Parse(end)
 		}
-		e.firstUpdateActiveEp(eps)
+		e.updateActiveEp(eps)
 	} else {
 		// [proxy] TODO singleton
 		TLOG.Debug("proxy mode:", objName)
 		e.objName = objName
 		e.directProxy = false
-		obj, _ := e.comm.GetProperty("locator")
-		e.locator = new(queryf.QueryF)
-		TLOG.Debug("string to proxy locator ", obj)
-		e.comm.StringToProxy(obj, e.locator)
+		if e.comm.opt.registrar == nil {
+			obj, _ := e.comm.GetProperty("locator")
+			query := new(queryf.QueryF)
+			TLOG.Debug("string to proxy locator ", obj)
+			e.comm.StringToProxy(obj, query)
+			e.registrar = tarsregistry.New(query)
+		} else {
+			e.registrar = e.comm.opt.registrar
+		}
 		e.checkAdapter = make(chan *AdapterProxy, 1000)
 	}
 	return e
@@ -390,7 +397,7 @@ func (e *endpointManager) doFresh() error {
 	}
 	e.freshLock.Lock()
 	defer e.freshLock.Unlock()
-	return e.findAndSetObj(e.locator)
+	return e.refreshEndpoints()
 }
 
 func (e *endpointManager) preInvoke() {
@@ -402,30 +409,26 @@ func (e *endpointManager) postInvoke() {
 	atomic.AddInt32(&e.invokeNum, -1)
 }
 
-func (e *endpointManager) findAndSetObj(q *queryf.QueryF) error {
-	activeEp := make([]endpointf.EndpointF, 0)
-	inactiveEp := make([]endpointf.EndpointF, 0)
-	var enableSet, ok bool
-	var setDivision string
-	var ret int32
-	var err error
+func (e *endpointManager) refreshEndpoints() error {
+	var (
+		activeEp, inactiveEp []endpointf.EndpointF
+		enableSet, ok        bool
+		setDivision          string
+		err                  error
+	)
 	if e.enableSet && e.setDivision != "" {
-		enableSet = e.enableSet
-		setDivision = e.setDivision
+		enableSet, setDivision = e.enableSet, e.setDivision
 	} else if enableSet, ok = e.comm.GetPropertyBool("enableset"); ok {
 		setDivision, _ = e.comm.GetProperty("setdivision")
 	}
 
 	if enableSet {
-		ret, err = q.FindObjectByIdInSameSet(e.objName, setDivision, &activeEp, &inactiveEp)
+		activeEp, inactiveEp, err = e.registrar.QueryServantBySet(context.Background(), e.objName, setDivision)
 	} else {
-		ret, err = q.FindObjectByIdInSameGroup(e.objName, &activeEp, &inactiveEp)
+		activeEp, inactiveEp, err = e.registrar.QueryServant(context.Background(), e.objName)
 	}
 	if err != nil {
 		return err
-	}
-	if ret != 0 {
-		return fmt.Errorf("findAndSetObj %s fail, ret: %d", e.objName, ret)
 	}
 
 	// sort activeEp slice
@@ -438,10 +441,14 @@ func (e *endpointManager) findAndSetObj(q *queryf.QueryF) error {
 	}
 
 	if len(activeEp) == 0 {
-		TLOG.Errorf("findAndSetObj %s, empty of active endpoint", e.objName)
+		TLOG.Errorf("refreshEndpoints %s, empty of active endpoint", e.objName)
 		return nil
 	}
-	TLOG.Debugf("findAndSetObj|call FindObjectById ok, obj: %s, ret: %d, active: %v, inactive: %v", e.objName, ret, activeEp, inactiveEp)
+	e.epLock.Lock()
+	e.activeEpf = activeEp
+	e.inactiveEpf = inactiveEp
+	e.epLock.Unlock()
+	TLOG.Debugf("refreshEndpoints|call QueryServant or QueryServantBySet, obj: %s, set: %s, active: %v, inactive: %v", e.objName, setDivision, activeEp, inactiveEp)
 
 	newEps := make([]endpoint.Endpoint, len(activeEp))
 	for i, ep := range activeEp {
@@ -469,14 +476,22 @@ func (e *endpointManager) findAndSetObj(q *queryf.QueryF) error {
 		if !flagActive && !flagInactive {
 			value.(*AdapterProxy).Close()
 			e.epList.Delete(key)
-			TLOG.Debugf("findAndSetObj|delete useless endpoint from epList: %+v", key)
+			TLOG.Debugf("refreshEndpoints|delete useless endpoint from epList: %+v", key)
 		}
 		return true
 	})
 
+	e.updateActiveEp(newEps)
+	return nil
+}
+
+func (e *endpointManager) updateActiveEp(newEps []endpoint.Endpoint) {
+	if len(newEps) == 0 {
+		return
+	}
 	sameType, lastType := true, newEps[0].WeightType
 	// delete active endpoint which status is false
-	sortedEps := make([]endpoint.Endpoint, 0)
+	sortedEps := make([]endpoint.Endpoint, 0, len(newEps))
 	for _, ep := range newEps {
 		if v, ok := e.epList.Load(ep.Key); ok {
 			adp := v.(*AdapterProxy)
@@ -502,60 +517,21 @@ func (e *endpointManager) findAndSetObj(q *queryf.QueryF) error {
 	sort.Slice(sortedEps, func(i int, j int) bool {
 		return crc32.ChecksumIEEE([]byte(sortedEps[i].Key)) < crc32.ChecksumIEEE([]byte(sortedEps[j].Key))
 	})
-
-	roundRobinSelector := roundrobin.New(e.enableWeight())
-	roundRobinSelector.Refresh(sortedEps)
-	conHashSelector := consistenthash.New(e.enableWeight(), consistenthash.KetamaHash)
-	conHashSelector.Refresh(sortedEps)
-	modHashSelector := modhash.New(e.enableWeight())
-	roundRobinSelector.Refresh(sortedEps)
-
-	e.epLock.Lock()
-	e.activeEpf = activeEp
-	e.inactiveEpf = inactiveEp
-	e.activeEp = sortedEps
-	e.activeEpRoundRobin = roundRobinSelector
-	e.activeEpConHash = conHashSelector
-	e.activeEpModHash = modHashSelector
-	e.epLock.Unlock()
-
-	TLOG.Debugf("findAndSetObj|activeEp: %+v", sortedEps)
-	return nil
-}
-
-func (e *endpointManager) firstUpdateActiveEp(eps []endpoint.Endpoint) {
-	if len(eps) == 0 {
-		return
-	}
-	sameType, lastType := true, eps[0].WeightType
-	sortedEps := make([]endpoint.Endpoint, 0, len(eps))
-	for _, ep := range eps {
-		sortedEps = append(sortedEps, ep)
-		// check weightType
-		if ep.WeightType != lastType {
-			sameType = false
-		}
-	}
-
-	e.weightType = endpoint.ELoop
-	if sameType {
-		e.weightType = endpoint.WeightType(lastType)
-	}
-
-	// make endpoint slice sorted
-	sort.Slice(sortedEps, func(i int, j int) bool {
-		return crc32.ChecksumIEEE([]byte(sortedEps[i].Key)) < crc32.ChecksumIEEE([]byte(sortedEps[j].Key))
-	})
 	roundRobinSelector := roundrobin.New(e.enableWeight())
 	roundRobinSelector.Refresh(sortedEps)
 	conHashSelector := consistenthash.New(e.enableWeight(), consistenthash.KetamaHash)
 	conHashSelector.Refresh(sortedEps)
 	modHashSelector := modhash.New(e.enableWeight())
 	modHashSelector.Refresh(sortedEps)
+
+	e.epLock.Lock()
 	e.activeEp = sortedEps
 	e.activeEpRoundRobin = roundRobinSelector
 	e.activeEpConHash = conHashSelector
 	e.activeEpModHash = modHashSelector
+	e.epLock.Unlock()
+
+	TLOG.Debugf("updateActiveEp|activeEp: %+v", sortedEps)
 }
 
 func (e *endpointManager) enableWeight() bool {
