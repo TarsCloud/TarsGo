@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/TarsCloud/TarsGo/tars/protocol/res/endpointf"
 	"github.com/TarsCloud/TarsGo/tars/registry"
 	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
 	"github.com/polarismesh/polaris-go"
+	"github.com/polarismesh/polaris-go/pkg/model"
 )
 
 const (
@@ -28,7 +28,7 @@ func WithNamespace(namespace string) RegistryOption {
 	}
 }
 
-func New(provider polaris.ProviderAPI, opts ...RegistryOption) registry.Registry {
+func New(provider polaris.ProviderAPI, opts ...RegistryOption) registry.Registrar {
 	consumer := polaris.NewConsumerAPIByContext(provider.SDKContext())
 	pr := &polarisRegistry{namespace: "tars", provider: provider, consumer: consumer}
 	for _, opt := range opts {
@@ -69,11 +69,11 @@ func New(provider polaris.ProviderAPI, opts ...RegistryOption) registry.Registry
 
 func (pr *polarisRegistry) Registry(_ context.Context, servant *registry.ServantInstance) error {
 	instance := &polaris.InstanceRegisterRequest{}
+	instance.Service = servant.Servant
+	instance.Namespace = pr.namespace
 	instance.Host = servant.Endpoint.Host
 	instance.Port = int(servant.Endpoint.Port)
 	instance.Protocol = &servant.Protocol
-	instance.Namespace = pr.namespace
-	instance.Service = servant.Servant
 	if servant.Endpoint.Weight > 0 {
 		weight := int(servant.Endpoint.Weight)
 		instance.Weight = &weight
@@ -82,6 +82,7 @@ func (pr *polarisRegistry) Registry(_ context.Context, servant *registry.Servant
 		timeout := time.Duration(servant.Endpoint.Timeout) * time.Millisecond
 		instance.Timeout = &timeout
 	}
+	instance.Version = &servant.TarsVersion
 	instance.Metadata = createMetadata(servant)
 	_, err := pr.provider.RegisterInstance(instance)
 	return err
@@ -89,8 +90,8 @@ func (pr *polarisRegistry) Registry(_ context.Context, servant *registry.Servant
 
 func (pr *polarisRegistry) Deregister(_ context.Context, servant *registry.ServantInstance) error {
 	instance := &polaris.InstanceDeRegisterRequest{}
-	instance.Namespace = pr.namespace
 	instance.Service = servant.Servant
+	instance.Namespace = pr.namespace
 	instance.Host = servant.Endpoint.Host
 	instance.Port = int(servant.Endpoint.Port)
 	if servant.Endpoint.Timeout > 0 {
@@ -101,7 +102,7 @@ func (pr *polarisRegistry) Deregister(_ context.Context, servant *registry.Serva
 	return err
 }
 
-func (pr *polarisRegistry) QueryServant(_ context.Context, id string) (activeEp []endpointf.EndpointF, inactiveEp []endpointf.EndpointF, err error) {
+func (pr *polarisRegistry) QueryServant(_ context.Context, id string) (activeEp []registry.Endpoint, inactiveEp []registry.Endpoint, err error) {
 	req := &polaris.GetAllInstancesRequest{}
 	req.Namespace = pr.namespace
 	req.Service = id
@@ -111,10 +112,7 @@ func (pr *polarisRegistry) QueryServant(_ context.Context, id string) (activeEp 
 	}
 	instances := resp.GetInstances()
 	for _, ins := range instances {
-		ep := endpoint.Parse(ins.GetMetadata()[endpointMeta])
-		ep.Host = ins.GetHost()
-		ep.Port = int32(ins.GetPort())
-		epf := endpoint.Endpoint2tars(ep)
+		epf := instanceToEndpoint(ins)
 		if ins.IsHealthy() {
 			activeEp = append(activeEp, epf)
 		} else {
@@ -124,7 +122,7 @@ func (pr *polarisRegistry) QueryServant(_ context.Context, id string) (activeEp 
 	return activeEp, inactiveEp, err
 }
 
-func (pr *polarisRegistry) QueryServantBySet(_ context.Context, id, setId string) (activeEp []endpointf.EndpointF, inactiveEp []endpointf.EndpointF, err error) {
+func (pr *polarisRegistry) QueryServantBySet(_ context.Context, id, setId string) (activeEp []registry.Endpoint, inactiveEp []registry.Endpoint, err error) {
 	req := &polaris.GetInstancesRequest{}
 	req.Namespace = pr.namespace
 	req.Service = id
@@ -138,10 +136,7 @@ func (pr *polarisRegistry) QueryServantBySet(_ context.Context, id, setId string
 	}
 	instances := resp.GetInstances()
 	for _, ins := range instances {
-		ep := endpoint.Parse(ins.GetMetadata()[endpointMeta])
-		ep.Host = ins.GetHost()
-		ep.Port = int32(ins.GetPort())
-		epf := endpoint.Endpoint2tars(ep)
+		epf := instanceToEndpoint(ins)
 		if ins.IsHealthy() {
 			activeEp = append(activeEp, epf)
 		} else {
@@ -156,7 +151,8 @@ func createMetadata(servant *registry.ServantInstance) map[string]string {
 	metadata["tarsVersion"] = servant.TarsVersion
 	metadata["app"] = servant.App
 	metadata["server"] = servant.Server
-	metadata[endpointMeta] = servant.Endpoint.String()
+	ep := endpoint.Tars2endpoint(servant.Endpoint)
+	metadata[endpointMeta] = ep.String()
 	// polaris plugin
 	metadata["internal-enable-set"] = "N"
 	if servant.EnableSet {
@@ -164,4 +160,13 @@ func createMetadata(servant *registry.ServantInstance) map[string]string {
 		metadata["internal-set-name"] = servant.SetDivision
 	}
 	return metadata
+}
+
+func instanceToEndpoint(instance model.Instance) registry.Endpoint {
+	md := instance.GetMetadata()
+	ep := endpoint.Parse(instance.GetMetadata()[endpointMeta])
+	ep.Host = instance.GetHost()
+	ep.Port = int32(instance.GetPort())
+	ep.SetId = md["internal-set-name"]
+	return endpoint.Endpoint2tars(ep)
 }
