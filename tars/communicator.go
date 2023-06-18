@@ -19,6 +19,7 @@ type ProxyPrx interface {
 type Communicator struct {
 	Client     *clientConfig
 	app        *application
+	opt        *options
 	properties sync.Map
 }
 
@@ -29,8 +30,8 @@ func GetCommunicator() *Communicator {
 
 // NewCommunicator returns a new communicator. A Communicator is used for communicating with
 // the server side which should only init once and be global!!!
-func NewCommunicator() *Communicator {
-	return defaultApp.NewCommunicator()
+func NewCommunicator(opts ...Option) *Communicator {
+	return defaultApp.NewCommunicator(opts...)
 }
 
 // Communicator returns a default communicator
@@ -41,8 +42,21 @@ func (a *application) Communicator() *Communicator {
 	return a.communicator
 }
 
-func (a *application) NewCommunicator() *Communicator {
-	c := &Communicator{app: a, Client: a.ClientConfig()}
+func (a *application) NewCommunicator(opts ...Option) *Communicator {
+	a.init()
+	return newCommunicator(a, a.ClientConfig(), opts...)
+}
+
+func newCommunicator(app *application, client *clientConfig, opts ...Option) *Communicator {
+	o := *app.opt
+	for _, opt := range opts {
+		opt(&o)
+	}
+	c := &Communicator{
+		Client: client,
+		app:    app,
+		opt:    &o,
+	}
 	c.init()
 	return c
 }

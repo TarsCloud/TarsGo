@@ -36,6 +36,7 @@ type destroyableImp interface {
 
 type application struct {
 	conf               *conf.Conf
+	opt                *options
 	svrCfg             *serverConfig
 	cltCfg             *clientConfig
 	communicator       *Communicator
@@ -81,6 +82,7 @@ func init() {
 
 func newApp() *application {
 	return &application{
+		opt:                &options{},
 		tarsConfig:         make(map[string]*transport.TarsServerConf),
 		goSvrs:             make(map[string]*transport.TarsServer),
 		httpSvrs:           make(map[string]*http.Server),
@@ -97,8 +99,8 @@ func GetConf() *conf.Conf {
 	return defaultApp.GetConf()
 }
 
-func Run() {
-	defaultApp.Run()
+func Run(opts ...Option) {
+	defaultApp.Run(opts...)
 }
 
 // GetConf Get server conf.Conf config
@@ -332,11 +334,15 @@ func (a *application) initConfig() {
 }
 
 // Run the application
-func (a *application) Run() {
+func (a *application) Run(opts ...Option) {
 	defer rogger.FlushLogger()
 	a.isShutdowning = 0
 	a.init()
 	<-statInited
+
+	for _, opt := range opts {
+		opt(a.opt)
+	}
 
 	for _, env := range os.Environ() {
 		if strings.HasPrefix(env, grace.InheritFdPrefix) {
@@ -490,6 +496,12 @@ func (a *application) graceShutdown() {
 
 	TLOG.Infof("grace shutdown start %d in %v", pid, graceShutdownTimeout)
 	ctx, cancel := context.WithTimeout(context.Background(), graceShutdownTimeout)
+	// deregister service
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		a.deregisterAdapters(ctx)
+	}()
 
 	for _, obj := range a.destroyableObjs {
 		wg.Add(1)
@@ -570,8 +582,11 @@ func (a *application) mainLoop() {
 	go ha.ReportVersion(svrCfg.Version)
 	go ha.KeepAlive("") //first start
 	go a.handleSignal()
-	loop := time.NewTicker(svrCfg.MainLoopTicker)
+	// registrar service
+	ctx := context.Background()
+	go a.registryAdapters(ctx)
 
+	loop := time.NewTicker(svrCfg.MainLoopTicker)
 	for {
 		select {
 		case <-a.shutdown:
