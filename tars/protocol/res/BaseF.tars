@@ -19,10 +19,10 @@ module basef
     ////////////////////////////////////////////////////////////////
     // 定义协议的版本号
 
-    const short TARSVERSION   = 0x01;
-    const short TUPVERSION    = 0x03;
-    const short XMLVERSION    = 0x04;
-    const short JSONVERSION   = 0x05;
+    const short TARSVERSION     = 0x01;
+    const short TUPVERSION      = 0x03;
+    const short XMLVERSION      = 0x04;
+    const short JSONVERSION     = 0x05;
 
     ////////////////////////////////////////////////////////////////
     // 定义消息的类型
@@ -32,7 +32,7 @@ module basef
 
     // 单向调用
     const byte TARSONEWAY  = 0x01;
-
+    
     ////////////////////////////////////////////////////////////////
     // TARS定义的返回码
 
@@ -65,6 +65,6 @@ module basef
     //const int TARSMESSAGETYPELOADED = 0x20;    //按负载值调用程序
     //const int TARSMESSAGETYPESETED = 0x40;     //按set规则调用类型，此字段后面将不使用
     const int TARSMESSAGETYPESETNAME = 0x80;     //按setname规则调用类型
-    const int TARSMESSAGETYPETRACE   = 0x100;    //trace调用链消息
+    const int TARSMESSAGETYPETRACE   = 0x100;    //track调用链消息
     /////////////////////////////////////////////////////////////////
 };

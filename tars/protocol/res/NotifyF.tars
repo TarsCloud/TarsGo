@@ -79,6 +79,7 @@ struct ReportInfo
     6 require string sMessage;
     7 optional string sThreadId;
     8 optional NOTIFYLEVEL eLevel;
+    9 optional string sNodeName;
     
 };
 

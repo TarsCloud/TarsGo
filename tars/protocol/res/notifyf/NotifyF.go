@@ -426,6 +426,7 @@ type ReportInfo struct {
 	SMessage   string      `json:"sMessage"`
 	SThreadId  string      `json:"sThreadId"`
 	ELevel     NOTIFYLEVEL `json:"eLevel"`
+	SNodeName  string      `json:"sNodeName"`
 }
 
 func (st *ReportInfo) ResetDefault() {
@@ -477,6 +478,11 @@ func (st *ReportInfo) ReadFrom(readBuf *codec.Reader) error {
 	}
 
 	err = readBuf.ReadInt32((*int32)(&st.ELevel), 8, false)
+	if err != nil {
+		return err
+	}
+
+	err = readBuf.ReadString(&st.SNodeName, 9, false)
 	if err != nil {
 		return err
 	}
@@ -559,6 +565,11 @@ func (st *ReportInfo) WriteTo(buf *codec.Buffer) (err error) {
 	}
 
 	err = buf.WriteInt32(int32(st.ELevel), 8)
+	if err != nil {
+		return err
+	}
+
+	err = buf.WriteString(st.SNodeName, 9)
 	if err != nil {
 		return err
 	}
