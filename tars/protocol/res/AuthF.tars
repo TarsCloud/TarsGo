@@ -1,0 +1,139 @@
+module authf
+{
+
+/*
+* local auth
+*/
+struct BasicAuthInfo
+{
+    1 optional string sObjName;
+    2 optional string sAccessKey; // AK
+    3 optional string sSecretKey; // SK plainText
+    4 optional string sHashSecretKey2; // or SK with sha 2 times, ascii format
+};
+
+/*
+* The auth message client send
+*/
+struct BasicAuthPackage
+{
+    1 require string sObjName;
+    2 require string sAccessKey; // AK
+    3 require long iTime; // timestamp
+    4 optional string sHashMethod = "sha1";
+
+    // how to use sign
+    // 1. tmpKey = md5sum(secret2 | timestamp); all know this 16bytes
+    // 2. client use tmpKey to enc secret1, ie, the client knows secret
+    // 3. server use tmpKey to dec secret1, then sha1(secret1) to check if ok
+    5 optional string sSignature;
+};
+
+// 认证状态：
+enum AUTH_STATE
+{
+    AUTH_INIT = -127,
+    AUTH_SUCC = 0,
+
+    AUTH_PROTO_ERR = -100,
+    AUTH_WRONG_OBJ = -101,
+    AUTH_WRONG_AK = -102,
+    AUTH_WRONG_TIME = -103, // wrong timestamp
+    AUTH_NOT_SUPPORT_ENC = -104,
+    AUTH_DEC_FAIL = -105, // may be wrong secret key
+    AUTH_ERROR = -106,
+    // other positive : user defined intermediate states
+    // other negative : user defined failed states
+};
+
+enum AUTH_TYPE
+{
+    AUTH_TYPENONE = 0, // no auth
+    AUTH_TYPELOCAL = 1, // local auth
+};
+
+/*
+* token唯一标识
+*/
+struct TokenKey
+{
+    1 require string sApplication; // client's app
+    2 require string sServer; // client's server
+	3 require string sObjName; // call this obj, name是全局唯一的
+};
+
+
+/*
+* 鉴权请求,从client到业务server到AUTH
+*/
+struct AuthRequest
+{
+    1 require TokenKey sKey;
+    2 require string sToken;
+};
+
+/*鉴权结果是int， state的值*/
+
+/*
+* 账号请求,从web到AUTH
+*/
+struct TokenRequest
+{
+	1 require vector<string> vObjName; // objname是全局唯一的
+};
+
+/*
+* 账号库,从AUTH到web
+*/
+struct TokenResponse
+{
+	1 require string sObjName;              // objname是全局唯一的
+	2 require map<string, string> mTokens;  // key = 主调方app.server, value = token
+};
+/*
+* req 申请token,从web到AUTH, web ip需要认证，最好是白名单
+*/
+struct ApplyTokenRequest
+{
+	1 require TokenKey sKey;
+};
+
+/*
+* rsp 
+*/
+struct ApplyTokenResponse
+{
+    1 require TokenKey sKey;
+	2 require string sToken;
+};
+
+/*
+* req 删除token,从web到AUTH, web ip需要认证，最好是白名单
+*/
+struct DeleteTokenRequest
+{
+	1 require TokenKey sKey;
+};
+
+
+interface Auth
+{
+    /**
+    * 请求远程鉴权,被调服务向authserver发送token，authserver返回状态
+    **/
+    int authProcess(AuthRequest request);
+    /**
+    * 请求token账号库
+    **/
+    vector<TokenResponse> getTokens(TokenRequest request);
+    /**
+    * 创建token
+    **/
+    ApplyTokenResponse applyToken(ApplyTokenRequest request);
+    /**
+    * del token from web
+    **/
+    int deleteToken(DeleteTokenRequest request);
+};
+
+};
