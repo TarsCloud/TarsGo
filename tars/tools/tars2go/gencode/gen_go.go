@@ -433,10 +433,11 @@ func (g *GenGo) genStructDefine(st *ast.StructInfo) {
 	g.P("// ", st.Name, " struct implement")
 	g.P("type ", st.Name, " struct {")
 	for _, v := range st.Mb {
+		tarsTag := `tars:"` + v.OriginKey + `,tag:` + strconv.Itoa(int(v.Tag)) + `,require:` + strconv.FormatBool(v.Require) + `"`
 		if g.opt.JsonOmitEmpty {
-			g.P(v.Key, " ", g.genType(v.Type), " `json:\"", v.OriginKey, ",omitempty\"`")
+			g.P(v.Key, " ", g.genType(v.Type), " `json:\"", v.OriginKey, ",omitempty\" ", tarsTag, "`")
 		} else {
-			g.P(v.Key, " ", g.genType(v.Type), " `json:\"", v.OriginKey, "\"`")
+			g.P(v.Key, " ", g.genType(v.Type), " `json:\"", v.OriginKey, "\" ", tarsTag, "`")
 		}
 	}
 	g.P("}")
@@ -469,19 +470,19 @@ func (g *GenGo) genWriteSimpleList(mb *ast.StructMember, prefix string, hasRet b
 	g.P(errStr)
 	g.P("err = buf.WriteInt32(int32(len(", g.genVariableName(prefix, mb.Key), ")), 0)")
 	g.P(errStr)
-	g.P("err = buf.WriteSlice", unsigned, `(`, g.genVariableName(prefix, mb.Key), ")")
+	g.P("err = buf.WriteSlice", unsigned, "(", g.genVariableName(prefix, mb.Key), ")")
 	g.P(errStr)
 }
 
 func (g *GenGo) genWriteVector(mb *ast.StructMember, prefix string, hasRet bool) {
+	if !mb.Require {
+		g.P("if len(", g.genVariableName(prefix, mb.Key), ") > 0 {")
+		defer g.P("}")
+	}
 	// SimpleList
 	if mb.Type.TypeK.Type == token.TByte && !mb.Type.TypeK.Unsigned {
 		g.genWriteSimpleList(mb, prefix, hasRet)
 		return
-	}
-	if !mb.Require {
-		g.P("if len(", g.genVariableName(prefix, mb.Key), ") > 0 {")
-		defer g.P("}")
 	}
 	// LIST
 	errStr := errString(hasRet)
@@ -493,24 +494,28 @@ func (g *GenGo) genWriteVector(mb *ast.StructMember, prefix string, hasRet bool)
 	g.P("for _, v := range ", g.genVariableName(prefix, mb.Key), " {")
 	// for _, v := range can nesting for _, v := range，does not conflict, support multidimensional arrays
 
-	dummy := &ast.StructMember{}
-	dummy.Type = mb.Type.TypeK
-	dummy.Key = "v"
+	dummy := &ast.StructMember{
+		Require: true,
+		Type:    mb.Type.TypeK,
+		Key:     "v",
+	}
 	g.genWriteVar(dummy, "", hasRet)
 
 	g.P("}")
 }
 
 func (g *GenGo) genWriteArray(mb *ast.StructMember, prefix string, hasRet bool) {
+	if !mb.Require {
+		g.P("if len(", g.genVariableName(prefix, mb.Key), ") > 0 {")
+		defer g.P("}")
+	}
+
 	// SimpleList
 	if mb.Type.TypeK.Type == token.TByte && !mb.Type.TypeK.Unsigned {
 		g.genWriteSimpleList(mb, prefix, hasRet)
 		return
 	}
-	if !mb.Require {
-		g.P("if len(", g.genVariableName(prefix, mb.Key), ") > 0 {")
-		defer g.P("}")
-	}
+
 	// LIST
 	errStr := errString(hasRet)
 	tag := strconv.Itoa(int(mb.Tag))
@@ -520,17 +525,13 @@ func (g *GenGo) genWriteArray(mb *ast.StructMember, prefix string, hasRet bool) 
 	g.P(errStr)
 	// for _, v := range can nesting for _, v := range，does not conflict, support multidimensional arrays
 	g.P("for _, v := range ", g.genVariableName(prefix, mb.Key), " {")
-	dummy := &ast.StructMember{}
-	dummy.Type = mb.Type.TypeK
-	dummy.Key = "v"
+	dummy := &ast.StructMember{
+		Require: true,
+		Type:    mb.Type.TypeK,
+		Key:     "v",
+	}
 	g.genWriteVar(dummy, "", hasRet)
 	g.P("}")
-}
-
-func (g *GenGo) genWriteStruct(mb *ast.StructMember, prefix string, hasRet bool) {
-	tag := strconv.Itoa(int(mb.Tag))
-	g.P("err = ", prefix, mb.Key, ".WriteBlock(buf, ", tag, ")")
-	g.P(errString(hasRet))
 }
 
 func (g *GenGo) genWriteMap(mb *ast.StructMember, prefix string, hasRet bool) {
@@ -550,18 +551,28 @@ func (g *GenGo) genWriteMap(mb *ast.StructMember, prefix string, hasRet bool) {
 	g.P("for k", vc, ", v", vc, " := range ", g.genVariableName(prefix, mb.Key), " {")
 	// for _, v := range can nesting for _, v := range，does not conflict, support multidimensional arrays
 
-	dummy := &ast.StructMember{}
-	dummy.Type = mb.Type.TypeK
-	dummy.Key = "k" + vc
+	dummy := &ast.StructMember{
+		Require: true,
+		Type:    mb.Type.TypeK,
+		Key:     "k" + vc,
+	}
 	g.genWriteVar(dummy, "", hasRet)
 
-	dummy = &ast.StructMember{}
-	dummy.Type = mb.Type.TypeV
-	dummy.Key = "v" + vc
-	dummy.Tag = 1
+	dummy = &ast.StructMember{
+		Tag:     1,
+		Require: true,
+		Type:    mb.Type.TypeV,
+		Key:     "v" + vc,
+	}
 	g.genWriteVar(dummy, "", hasRet)
 
 	g.P("}")
+}
+
+func (g *GenGo) genWriteStruct(mb *ast.StructMember, prefix string, hasRet bool) {
+	tag := strconv.Itoa(int(mb.Tag))
+	g.P("err = ", prefix, mb.Key, ".WriteBlock(buf, ", tag, ")")
+	g.P(errString(hasRet))
 }
 
 func (g *GenGo) genWriteVar(v *ast.StructMember, prefix string, hasRet bool) {
@@ -590,7 +601,6 @@ func (g *GenGo) genWriteVar(v *ast.StructMember, prefix string, hasRet bool) {
 		g.P("err = buf.Write", utils.UpperFirstLetter(g.genType(v.Type)), "(", g.genVariableName(prefix, v.Key), ", ", tag, ")")
 		g.P(errString(hasRet))
 	}
-	g.P()
 }
 
 func (g *GenGo) genFunWriteBlock(st *ast.StructInfo) {
@@ -621,8 +631,8 @@ func (g *GenGo) genFunWriteTo(st *ast.StructInfo) {
 	g.P("func (st *", st.Name, ") WriteTo(buf *codec.Buffer) (err error) {")
 	for _, v := range st.Mb {
 		g.genWriteVar(&v, "st.", false)
+		g.P()
 	}
-	g.P()
 	g.P("return err")
 	g.P("}")
 }
@@ -653,23 +663,22 @@ func (g *GenGo) genReadVector(mb *ast.StructMember, prefix string, hasRet bool) 
 	} else {
 		g.P("have, ty, err = readBuf.SkipToNoCheck(", tag, ", false)")
 		g.P(errStr)
-		g.P(`if have {`)
+		g.P("if have {")
 		// 结束标记
-		defer func() {
-			g.P("}")
-		}()
+		defer g.P("}")
 	}
 
-	g.P()
 	g.P("if ty == codec.LIST {")
 	g.P("err = readBuf.ReadInt32(&length, 0, true)")
 	g.P(errStr)
 	g.P(g.genVariableName(prefix, mb.Key), " = make(", g.genType(mb.Type), ", length)")
 	g.P(genForHead(vc), "{")
 
-	dummy := &ast.StructMember{}
-	dummy.Type = mb.Type.TypeK
-	dummy.Key = mb.Key + "[i" + vc + "]"
+	dummy := &ast.StructMember{
+		Require: true,
+		Type:    mb.Type.TypeK,
+		Key:     mb.Key + "[i" + vc + "]",
+	}
 	g.genReadVar(dummy, prefix, hasRet)
 
 	g.P("}")
@@ -681,7 +690,7 @@ func (g *GenGo) genReadVector(mb *ast.StructMember, prefix string, hasRet bool) 
 		g.P(errStr)
 	}
 	g.P("} else {")
-	g.P(`  err = fmt.Errorf("require vector, but not")`)
+	g.P(`err = fmt.Errorf("require vector, but not")`)
 	g.P(errStr)
 	g.P("}")
 }
@@ -695,28 +704,27 @@ func (g *GenGo) genReadArray(mb *ast.StructMember, prefix string, hasRet bool) {
 
 	g.P()
 	if mb.Require {
-		g.P(`_, ty, err = readBuf.SkipToNoCheck(`, tag, `, true)`)
+		g.P("_, ty, err = readBuf.SkipToNoCheck(", tag, ", true)")
 		g.P(errStr)
 	} else {
-		g.P(`have, ty, err = readBuf.SkipToNoCheck(`, tag, `, false)`)
+		g.P("have, ty, err = readBuf.SkipToNoCheck(", tag, ", false)")
 		g.P(errStr)
-		g.P(`if have {`)
+		g.P("if have {")
 		// 结束标记
-		defer func() {
-			g.P("}")
-		}()
+		defer g.P("}")
 	}
 
-	g.P()
 	g.P("if ty == codec.LIST {")
-	g.P("	err = readBuf.ReadInt32(&length, 0, true)")
+	g.P("err = readBuf.ReadInt32(&length, 0, true)")
 	g.P(errStr)
 	g.P(genForHead(vc), "{")
-	dummy := &ast.StructMember{}
-	dummy.Type = mb.Type.TypeK
-	dummy.Key = mb.Key + "[i" + vc + "]"
+	dummy := &ast.StructMember{
+		Require: true,
+		Type:    mb.Type.TypeK,
+		Key:     mb.Key + "[i" + vc + "]",
+	}
 	g.genReadVar(dummy, prefix, hasRet)
-	g.P(`}`)
+	g.P("}")
 
 	g.P("} else if ty == codec.SimpleList {")
 	if mb.Type.TypeK.Type == token.TByte {
@@ -726,19 +734,9 @@ func (g *GenGo) genReadArray(mb *ast.StructMember, prefix string, hasRet bool) {
 		g.P(errStr)
 	}
 	g.P("} else {")
-	g.P(`  err = fmt.Errorf("require array, but not")`)
+	g.P(`err = fmt.Errorf("require array, but not")`)
 	g.P(errStr)
 	g.P("}")
-}
-
-func (g *GenGo) genReadStruct(mb *ast.StructMember, prefix string, hasRet bool) {
-	tag := strconv.Itoa(int(mb.Tag))
-	require := "false"
-	if mb.Require {
-		require = "true"
-	}
-	g.P("err = ", prefix, mb.Key, ".ReadBlock(readBuf, ", tag, ", ", require, ")")
-	g.P(errString(hasRet))
 }
 
 func (g *GenGo) genReadMap(mb *ast.StructMember, prefix string, hasRet bool) {
@@ -755,9 +753,7 @@ func (g *GenGo) genReadMap(mb *ast.StructMember, prefix string, hasRet bool) {
 		g.P(errStr)
 		g.P("if have {")
 		// 结束标记
-		defer func() {
-			g.P("}")
-		}()
+		defer g.P("}")
 	}
 
 	g.P("err = readBuf.ReadInt32(&length, 0, true)")
@@ -767,18 +763,31 @@ func (g *GenGo) genReadMap(mb *ast.StructMember, prefix string, hasRet bool) {
 	g.P("var k", vc, " ", g.genType(mb.Type.TypeK))
 	g.P("var v", vc, " ", g.genType(mb.Type.TypeV))
 
-	dummy := &ast.StructMember{}
-	dummy.Type = mb.Type.TypeK
-	dummy.Key = "k" + vc
+	key := "k" + vc
+	dummy := &ast.StructMember{
+		Require: true,
+		Type:    mb.Type.TypeK,
+		Key:     key,
+	}
 	g.genReadVar(dummy, "", hasRet)
 
-	dummy = &ast.StructMember{}
-	dummy.Type = mb.Type.TypeV
-	dummy.Key = "v" + vc
-	dummy.Tag = 1
+	val := "v" + vc
+	dummy = &ast.StructMember{
+		Tag:     1,
+		Require: true,
+		Type:    mb.Type.TypeV,
+		Key:     val,
+	}
 	g.genReadVar(dummy, "", hasRet)
-	g.P(prefix, mb.Key, "[k", vc, "] = v", vc)
-	g.P(`}`)
+	g.P(prefix, mb.Key, "[", key, "] = ", val)
+	g.P("}")
+}
+
+func (g *GenGo) genReadStruct(mb *ast.StructMember, prefix string, hasRet bool) {
+	tag := strconv.Itoa(int(mb.Tag))
+	require := strconv.FormatBool(mb.Require)
+	g.P("err = ", prefix, mb.Key, ".ReadBlock(readBuf, ", tag, ", ", require, ")")
+	g.P(errString(hasRet))
 }
 
 func (g *GenGo) genReadVar(v *ast.StructMember, prefix string, hasRet bool) {
@@ -791,16 +800,16 @@ func (g *GenGo) genReadVar(v *ast.StructMember, prefix string, hasRet bool) {
 		g.genReadMap(v, prefix, hasRet)
 	case token.Name:
 		if v.Type.CType == token.Enum {
-			require := strconv.FormatBool(v.Require)
 			tag := strconv.Itoa(int(v.Tag))
+			require := strconv.FormatBool(v.Require)
 			g.P("err = readBuf.ReadInt32((*int32)(&", prefix, v.Key, "),", tag, ", ", require, ")")
 			g.P(errString(hasRet))
 		} else {
 			g.genReadStruct(v, prefix, hasRet)
 		}
 	default:
-		require := strconv.FormatBool(v.Require)
 		tag := strconv.Itoa(int(v.Tag))
+		require := strconv.FormatBool(v.Require)
 		g.P("err = readBuf.Read", utils.UpperFirstLetter(g.genType(v.Type)), "(&", prefix, v.Key, ", ", tag, ", ", require, ")")
 		g.P(errString(hasRet))
 	}
@@ -820,15 +829,15 @@ func (st *`, st.Name, `) ReadFrom(readBuf *codec.Reader) error {
 
 	for _, v := range st.Mb {
 		g.genReadVar(&v, "st.", false)
+		g.P()
 	}
 
-	g.P(`
-	_ = err
-	_ = length
-	_ = have
-	_ = ty
-	return nil
-}`)
+	g.P(`_ = err
+			 _ = length
+			 _ = have
+			 _ = ty
+			 return nil
+			}`)
 }
 
 func (g *GenGo) genFunReadBlock(st *ast.StructInfo) {
@@ -970,11 +979,12 @@ func (g *GenGo) genIFProxy(itf *ast.InterfaceInfo) {
 	servant model.Servant
 }`)
 
+	g.P("// New", itf.Name, " creates a new ", itf.Name, " servant.")
 	g.P(`func New`, itf.Name, `() *`, itf.Name, ` {
 	return new(`, itf.Name, `)
 }`)
-	if g.opt.AddServant {
-		g.P()
+	if g.opt.AddServant || !g.opt.WithoutTrace {
+		g.P("// New", itf.Name, "Client creates a new ", itf.Name, " client proxy for the given servant.")
 		g.P(`func New`, itf.Name, `Client(servant string, comm *tars.Communicator, option ...tars.EndpointManagerOption) *`, itf.Name, ` {
 	client := new(`, itf.Name, `)
 	comm.StringToProxy(servant, client, option...)
@@ -1004,12 +1014,12 @@ func (obj *`, itf.Name, `) Endpoints() []*endpoint.Endpoint {
 
 	if g.opt.AddServant {
 		g.P(`// AddServant adds servant  for the service.
-func (obj *`, itf.Name, `) AddServant(imp `, itf.Name, `Servant, servantObj string) {
-  tars.AddServant(obj, imp, servantObj)
+func (obj *`, itf.Name, `) AddServant(imp `, itf.Name, `Servant, servant string) {
+  tars.AddServant(obj, imp, servant)
 }`)
 		g.P(`// AddServantWithContext adds servant  for the service with context.
-func (obj *`, itf.Name, `) AddServantWithContext(imp `, itf.Name, `ServantWithContext, servantObj string) {
-  tars.AddServantWithContext(obj, imp, servantObj)
+func (obj *`, itf.Name, `) AddServantWithContext(imp `, itf.Name, `ServantWithContext, servant string) {
+  tars.AddServantWithContext(obj, imp, servant)
 }`)
 	}
 
@@ -1071,14 +1081,17 @@ func (g *GenGo) genIFProxyFun(interfName string, fun *ast.FunInfo, withContext b
 		if v.IsOut {
 			isOut = true
 		}
-		dummy := &ast.StructMember{}
-		dummy.Type = v.Type
-		dummy.Key = v.Name
-		dummy.Tag = int32(k + 1)
+		dummy := &ast.StructMember{
+			Tag:     int32(k + 1),
+			Require: true,
+			Type:    v.Type,
+			Key:     v.Name,
+		}
 		if v.IsOut {
 			dummy.Key = "(*" + dummy.Key + ")"
 		}
 		g.genWriteVar(dummy, "", fun.HasRet)
+		g.P()
 	}
 	// empty args and below separate
 	errStr := errString(fun.HasRet)
@@ -1095,7 +1108,7 @@ if ok && trace.Call() {
 		value := map[string]interface{}{}`)
 		for _, v := range fun.Args {
 			if !v.IsOut {
-				g.P(`value["`, v.Name, `"] = `, v.Name)
+				g.P("value[", strconv.Quote(v.Name), "] = ", v.Name)
 			}
 		}
 		g.P(`jm, _ := json.Marshal(value)
@@ -1103,7 +1116,7 @@ if ok && trace.Call() {
 	} else if traceParamFlag == tarstrace.EnpOverMaxLen {`)
 		g.P("traceParam = `{\"trace_param_over_max_len\":true}`")
 		g.P(`}
-	tars.Trace(trace.GetTraceKey(tarstrace.EstCS), tarstrace.AnnotationCS, tars.GetClientConfig().ModuleName, obj.servant.Name(), "`, fun.Name, `", 0, traceParam, "")
+	tars.Trace(trace.GetTraceKey(tarstrace.EstCS), tarstrace.AnnotationCS, tars.GetClientConfig().ModuleName, obj.servant.Name(), `, strconv.Quote(fun.OriginName), `, 0, traceParam, "")
 }`)
 	}
 	g.P()
@@ -1118,33 +1131,35 @@ if ok && trace.Call() {
 			
 			tarsResp := new(requestf.ResponsePacket)`)
 	if isOneWay {
-		g.P(`err = obj.servant.TarsInvoke(tarsCtx, 1, "`, fun.OriginName, `", buf.ToBytes(), statusMap, contextMap, tarsResp)`)
-		g.P(errStr)
+		g.P("err = obj.servant.TarsInvoke(tarsCtx, 1, ", strconv.Quote(fun.OriginName), ", buf.ToBytes(), statusMap, contextMap, tarsResp)")
 	} else {
-		g.P(`err = obj.servant.TarsInvoke(tarsCtx, 0, "`, fun.OriginName, `", buf.ToBytes(), statusMap, contextMap, tarsResp)`)
-		g.P(errStr)
+		g.P("err = obj.servant.TarsInvoke(tarsCtx, 0, ", strconv.Quote(fun.OriginName), ", buf.ToBytes(), statusMap, contextMap, tarsResp)")
 	}
+	g.P(errStr)
 
 	if (isOut || fun.HasRet) && !isOneWay {
 		g.P("readBuf := codec.NewReader(tools.Int8ToByte(tarsResp.SBuffer))")
 	}
 	if fun.HasRet && !isOneWay {
-		dummy := &ast.StructMember{}
-		dummy.Type = fun.RetType
-		dummy.Key = "ret"
-		dummy.Tag = 0
-		dummy.Require = true
+		dummy := &ast.StructMember{
+			Tag:     0,
+			Require: true,
+			Type:    fun.RetType,
+			Key:     "ret",
+		}
 		g.genReadVar(dummy, "", fun.HasRet)
+		g.P()
 	}
 
 	if !isOneWay {
 		for k, v := range fun.Args {
 			if v.IsOut {
-				dummy := &ast.StructMember{}
-				dummy.Type = v.Type
-				dummy.Key = "(*" + v.Name + ")"
-				dummy.Tag = int32(k + 1)
-				dummy.Require = true
+				dummy := &ast.StructMember{
+					Tag:     int32(k + 1),
+					Require: true,
+					Type:    v.Type,
+					Key:     "(*" + v.Name + ")",
+				}
 				g.genReadVar(dummy, "", fun.HasRet)
 			}
 		}
@@ -1164,7 +1179,7 @@ if ok && trace.Call() {
 			}
 			for _, v := range fun.Args {
 				if v.IsOut {
-					g.P(`value["`, v.Name, `"] = *`, v.Name)
+					g.P("value[", strconv.Quote(v.Name), "] = *", v.Name)
 				}
 			}
 			g.P(`jm, _ := json.Marshal(value)
@@ -1172,7 +1187,7 @@ if ok && trace.Call() {
 	} else if traceParamFlag == tarstrace.EnpOverMaxLen {`)
 			g.P("traceParam = `{\"trace_param_over_max_len\":true}`")
 			g.P(`}
-	tars.Trace(trace.GetTraceKey(tarstrace.EstCR), tarstrace.AnnotationCR, tars.GetClientConfig().ModuleName, obj.servant.Name(), "`, fun.Name, `", tarsResp.IRet, traceParam, "")
+	tars.Trace(trace.GetTraceKey(tarstrace.EstCR), tarstrace.AnnotationCR, tars.GetClientConfig().ModuleName, obj.servant.Name(), `, strconv.Quote(fun.OriginName), `, tarsResp.IRet, traceParam, "")
 }`)
 			g.P()
 		}
@@ -1333,7 +1348,7 @@ func (g *GenGo) genIFDispatch(itf *ast.InterfaceInfo) {
 }
 
 func (g *GenGo) genSwitchCase(tname string, fun *ast.FunInfo) {
-	g.P(`case "`, fun.OriginName, `":`)
+	g.P("case ", strconv.Quote(fun.OriginName), ":")
 	inArgsCount := 0
 	outArgsCount := 0
 	for _, v := range fun.Args {
@@ -1356,11 +1371,12 @@ func (g *GenGo) genSwitchCase(tname string, fun *ast.FunInfo) {
 		g.P("if tarsReq.IVersion == basef.TARSVERSION {")
 		for k, v := range fun.Args {
 			if !v.IsOut {
-				dummy := &ast.StructMember{}
-				dummy.Type = v.Type
-				dummy.Key = v.Name
-				dummy.Tag = int32(k + 1)
-				dummy.Require = true
+				dummy := &ast.StructMember{
+					Tag:     int32(k + 1),
+					Require: true,
+					Type:    v.Type,
+					Key:     v.Name,
+				}
 				g.genReadVar(dummy, "", false)
 			}
 		}
@@ -1374,14 +1390,15 @@ func (g *GenGo) genSwitchCase(tname string, fun *ast.FunInfo) {
 		for _, v := range fun.Args {
 			if !v.IsOut {
 				g.P()
-				g.P(`reqTup.GetBuffer("`, v.Name, `", &tupBuffer)`)
+				g.P("reqTup.GetBuffer(", strconv.Quote(v.Name), ", &tupBuffer)")
 				g.P("readBuf.Reset(tupBuffer)")
 
-				dummy := &ast.StructMember{}
-				dummy.Type = v.Type
-				dummy.Key = v.Name
-				dummy.Tag = 0
-				dummy.Require = true
+				dummy := &ast.StructMember{
+					Tag:     0,
+					Require: true,
+					Type:    v.Type,
+					Key:     v.Name,
+				}
 				g.genReadVar(dummy, "", false)
 			}
 		}
@@ -1398,7 +1415,7 @@ func (g *GenGo) genSwitchCase(tname string, fun *ast.FunInfo) {
 		for _, v := range fun.Args {
 			if !v.IsOut {
 				g.P("{")
-				g.P(`jsonStr, _ := json.Marshal(jsonData["`, v.Name, `"])`)
+				g.P("jsonStr, _ := json.Marshal(jsonData[", strconv.Quote(v.Name), "])")
 				if v.Type.CType == token.Struct {
 					g.P(v.Name, ".ResetDefault()")
 				}
@@ -1426,7 +1443,7 @@ if ok && trace.Call() {
 		value := map[string]interface{}{}`)
 		for _, v := range fun.Args {
 			if !v.IsOut {
-				g.P(`value["`, v.Name, `"] = `, v.Name)
+				g.P("value[", strconv.Quote(v.Name), "] = ", v.Name)
 			}
 		}
 		g.P(`jm, _ := json.Marshal(value)
@@ -1434,7 +1451,7 @@ if ok && trace.Call() {
 	} else if traceParamFlag == tarstrace.EnpOverMaxLen {`)
 		g.P("traceParam = `{\"trace_param_over_max_len\":true}`")
 		g.P(`}
-	tars.Trace(trace.GetTraceKey(tarstrace.EstSR), tarstrace.AnnotationSR, tars.GetClientConfig().ModuleName, tarsReq.SServantName, "`, fun.OriginName, `", 0, traceParam, "")
+	tars.Trace(trace.GetTraceKey(tarstrace.EstSR), tarstrace.AnnotationSR, tars.GetClientConfig().ModuleName, tarsReq.SServantName, `, strconv.Quote(fun.OriginName), `, 0, traceParam, "")
 }`)
 		g.P()
 	}
@@ -1497,21 +1514,23 @@ if ok && trace.Call() {
 	g.P("buf.Reset()")
 	g.P()
 	if fun.HasRet {
-		dummy := &ast.StructMember{}
-		dummy.Type = fun.RetType
-		dummy.Key = "funRet"
-		dummy.Tag = 0
-		dummy.Require = true
+		dummy := &ast.StructMember{
+			Tag:     0,
+			Require: true,
+			Type:    fun.RetType,
+			Key:     "funRet",
+		}
 		g.genWriteVar(dummy, "", false)
 	}
 
 	for k, v := range fun.Args {
 		if v.IsOut {
-			dummy := &ast.StructMember{}
-			dummy.Type = v.Type
-			dummy.Key = v.Name
-			dummy.Tag = int32(k + 1)
-			dummy.Require = true
+			dummy := &ast.StructMember{
+				Tag:     int32(k + 1),
+				Require: true,
+				Type:    v.Type,
+				Key:     v.Name,
+			}
 			g.genWriteVar(dummy, "", false)
 		}
 	}
@@ -1520,11 +1539,12 @@ if ok && trace.Call() {
 	g.P("rspTup := tup.NewUniAttribute()")
 	g.P()
 	if fun.HasRet {
-		dummy := &ast.StructMember{}
-		dummy.Type = fun.RetType
-		dummy.Key = "funRet"
-		dummy.Tag = 0
-		dummy.Require = true
+		dummy := &ast.StructMember{
+			Tag:     0,
+			Require: true,
+			Type:    fun.RetType,
+			Key:     "funRet",
+		}
 		g.genWriteVar(dummy, "", false)
 
 		g.P(`
@@ -1536,14 +1556,15 @@ if ok && trace.Call() {
 		if v.IsOut {
 			g.P()
 			g.P("buf.Reset()")
-			dummy := &ast.StructMember{}
-			dummy.Type = v.Type
-			dummy.Key = v.Name
-			dummy.Tag = 0
-			dummy.Require = true
+			dummy := &ast.StructMember{
+				Tag:     0,
+				Require: true,
+				Type:    v.Type,
+				Key:     v.Name,
+			}
 			g.genWriteVar(dummy, "", false)
 
-			g.P(`rspTup.PutBuffer("`, v.Name, `", buf.ToBytes())`)
+			g.P("rspTup.PutBuffer(", strconv.Quote(v.Name), ", buf.ToBytes())")
 		}
 	}
 
@@ -1561,7 +1582,7 @@ if ok && trace.Call() {
 
 	for _, v := range fun.Args {
 		if v.IsOut {
-			g.P(`rspJson["`, v.Name, `"] = `, v.Name)
+			g.P("rspJson[", strconv.Quote(v.Name), "] = ", v.Name)
 		}
 	}
 
@@ -1590,7 +1611,7 @@ if ok && trace.Call() {
 		}
 		for _, v := range fun.Args {
 			if v.IsOut {
-				g.P(`value["`, v.Name, `"] = `, v.Name)
+				g.P("value[", strconv.Quote(v.Name), "] = ", v.Name)
 			}
 		}
 		g.P(`jm, _ := json.Marshal(value)
@@ -1598,7 +1619,7 @@ if ok && trace.Call() {
 	} else if traceParamFlag == tarstrace.EnpOverMaxLen {`)
 		g.P("traceParam = `{\"trace_param_over_max_len\":true}`")
 		g.P(`}
-	tars.Trace(trace.GetTraceKey(tarstrace.EstSS), tarstrace.AnnotationSS, tars.GetClientConfig().ModuleName, tarsReq.SServantName, "`, fun.OriginName, `", 0, traceParam, "")
+	tars.Trace(trace.GetTraceKey(tarstrace.EstSS), tarstrace.AnnotationSS, tars.GetClientConfig().ModuleName, tarsReq.SServantName, `, strconv.Quote(fun.OriginName), `, 0, traceParam, "")
 }`)
 	}
 }
