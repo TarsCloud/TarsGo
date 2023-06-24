@@ -899,6 +899,7 @@ func (g *GenGo) genEnum(en *ast.EnumInfo) {
 
 	en.Rename()
 
+	g.P("//go:generate stringer -type " + en.Name + " -trimprefix " + en.Name + "_ -output " + strings.ToLower(en.Name) + "_string.go")
 	g.P("type ", en.Name, " int32")
 	g.P("const (")
 	var it int32
