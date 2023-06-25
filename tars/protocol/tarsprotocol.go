@@ -46,11 +46,13 @@ func (p *TarsProtocol) RequestPack(req *requestf.RequestPacket) ([]byte, error) 
 	return bs, nil
 
 }
+
 func (p *TarsProtocol) ResponseUnpack(pkg []byte) (*requestf.ResponsePacket, error) {
 	packet := &requestf.ResponsePacket{}
 	err := packet.ReadFrom(codec.NewReader(pkg[4:]))
 	return packet, err
 }
+
 func (p *TarsProtocol) ParsePackage(rev []byte) (int, int) {
 	return TarsRequest(rev)
 }

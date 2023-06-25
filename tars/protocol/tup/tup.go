@@ -13,18 +13,18 @@ type TarsStructIF interface {
 }
 
 type UniAttribute struct {
-	_data map[string][]byte
+	data map[string][]byte
 	//os 		codec.Buffer
 	//is 		codec.Reader
 }
 
 func NewUniAttribute() *UniAttribute {
-	return &UniAttribute{_data: make(map[string][]byte)}
+	return &UniAttribute{data: make(map[string][]byte)}
 }
 
 func (u *UniAttribute) PutBuffer(k string, buf []byte) {
-	u._data[k] = make([]byte, len(buf))
-	copy(u._data[k], buf)
+	u.data[k] = make([]byte, len(buf))
+	copy(u.data[k], buf)
 }
 
 func (u *UniAttribute) GetBuffer(k string, buf *[]byte) error {
@@ -32,7 +32,7 @@ func (u *UniAttribute) GetBuffer(k string, buf *[]byte) error {
 		err error
 		ok  bool
 	)
-	if *buf, ok = u._data[k]; !ok {
+	if *buf, ok = u.data[k]; !ok {
 		err = fmt.Errorf("tup get error: donot find key: %s", k)
 	}
 
@@ -44,11 +44,11 @@ func (u *UniAttribute) Encode(os *codec.Buffer) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteInt32(int32(len(u._data)), 0)
+	err = os.WriteInt32(int32(len(u.data)), 0)
 	if err != nil {
 		return err
 	}
-	for k, v := range u._data {
+	for k, v := range u.data {
 		err = os.WriteString(k, 0)
 		if err != nil {
 			return err
@@ -107,23 +107,23 @@ func (u *UniAttribute) Decode(is *codec.Reader) error {
 		}
 		if have {
 			if ty == codec.SimpleList {
-
 				_, err = is.SkipTo(codec.BYTE, 0, true)
 				if err != nil {
 					return err
 				}
+
 				var byteLen int32 = 0
 				err = is.ReadInt32(&byteLen, 0, true)
 				if err != nil {
 					return err
 				}
+
 				err = is.ReadBytes(&v, byteLen, true)
 				if err != nil {
 					return err
 				}
 
-				u._data[k] = v
-
+				u.data[k] = v
 			} else {
 				err = fmt.Errorf("require vector, but not")
 				if err != nil {
@@ -255,7 +255,7 @@ func (u *UniAttribute) Put(k string, data interface{}) error {
 	err = u.doPut(data, os)
 
 	if err == nil {
-		u._data[k] = os.ToBytes()
+		u.data[k] = os.ToBytes()
 		fmt.Printf("%s = %d \n", k, len(os.ToBytes()))
 	}
 	return err
@@ -263,7 +263,7 @@ func (u *UniAttribute) Put(k string, data interface{}) error {
 
 func (u *UniAttribute) getBase(data interface{}, is *codec.Reader) error {
 	var err error
-	// if v, ok := u._data[k]; ok {
+	// if v, ok := u.data[k]; ok {
 	// 	is := codec.NewReader(v)
 	switch d := data.(type) {
 	case *int64:
@@ -348,7 +348,7 @@ func (u *UniAttribute) DoGet(data interface{}, is *codec.Reader) error {
 
 func (u *UniAttribute) Get(k string, data interface{}) error {
 	var err error
-	if v, ok := u._data[k]; ok {
+	if v, ok := u.data[k]; ok {
 		//is := codec.NewReader(v)
 		//err = u.doGet(data, is)
 		err = fmt.Errorf("tup not support! Please use GetBuffer()")
