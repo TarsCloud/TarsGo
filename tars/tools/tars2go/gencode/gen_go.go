@@ -96,13 +96,14 @@ func (g *GenGo) W(v ...string) {
 }
 
 func (g *GenGo) genAll() {
-	if _, ok := fileMap.Load(g.filepath); ok {
+	g.module.Rename(g.opt.ModuleUpper)
+	key := g.module.Source + ":" + g.module.Name
+	if _, ok := fileMap.Load(key); ok {
 		// already compiled
 		return
 	}
-	fileMap.Store(g.filepath, struct{}{})
+	fileMap.Store(key, struct{}{})
 
-	g.module.Rename(g.opt.ModuleUpper)
 	g.genInclude(g.module.IncModule)
 
 	g.code.Reset()
