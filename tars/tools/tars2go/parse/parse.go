@@ -38,8 +38,9 @@ func NewParse(opt *options.Options, filePath string, incChain []string) *ast.Mod
 		filename := path.Base(filePath)
 		for _, include := range opt.Includes {
 			include = strings.TrimRight(include, "/")
-			filePath = include + "/" + filename
-			if _, err = os.Stat(filePath); err == nil {
+			newFilePath := include + "/" + filename
+			if _, err = os.Stat(newFilePath); err == nil {
+				filePath = newFilePath
 				break
 			}
 		}
