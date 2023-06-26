@@ -93,6 +93,7 @@ func TestTarsProtocol_ParsePackage(t *testing.T) {
 		})
 	}
 }
+
 func TestTarsProtocol_RequestPack(t *testing.T) {
 	req := &requestf.RequestPacket{
 		IVersion:     basef.TARSVERSION,
@@ -151,5 +152,4 @@ func TestTarsProtocol_ResponseUnpack(t *testing.T) {
 	}
 
 	assert.Equal(t, got, resp, "Failed to test ResponseUnpack")
-
 }
