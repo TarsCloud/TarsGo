@@ -91,6 +91,16 @@ tar: $(TARGET) $(CONFIG)
 		echo "tar cvfz $(TARGET).tgz ..."; \
 	fi
 
+TARS_WEB_HOST   ?= http://localhost:3000
+TARS_WEB_TOKEN  ?= ""
+UPLOAD_USER     ?= $(shell whoami)
+UPLOAD_OS       ?= linux
+upload: export GOOS=${UPLOAD_OS}
+upload: tar
+	@echo "$(TARGET).tgz --- $(APP).$(TARGET).tgz  OS: ${GOOS}"
+	curl ${TARS_WEB_HOST}/api/upload_and_publish?ticket=${TARS_WEB_TOKEN} -Fsuse=@${TARGET}.tgz -Fapplication=${APP} -Fmodule_name=${TARGET} -Fcomment=uploaded-by-${UPLOAD_USER}
+	@echo "\n---------------------------------------------------------------------------\n"
+
 
 HELP += $(HELP_TAR)
 
@@ -117,7 +127,7 @@ HELP_CLEANALL = "\n\033[1;33mcleanall\033[0m:\t[clean & rm .*.d]"
 HELP_TAR      = "\n\033[1;33mtar\033[0m:\t\t[will do 'tar $(TARGET).tgz $(RELEASE_FILE)']"
 
 help:
-	@echo -e $(HELP)"\n"
+	@echo $(HELP)"\n"
 
 #-------------------------------------------------------------------------------
 tars2go:
