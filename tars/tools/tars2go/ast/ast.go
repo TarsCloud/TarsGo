@@ -37,8 +37,8 @@ func (a StructMemberSorter) Len() int           { return len(a) }
 func (a StructMemberSorter) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a StructMemberSorter) Less(i, j int) bool { return a[i].Tag < a[j].Tag }
 
-// StructInfo record struct information.
-type StructInfo struct {
+// Struct record struct information.
+type Struct struct {
 	Name                string
 	OriginName          string //original name
 	Mb                  []StructMember
@@ -46,28 +46,28 @@ type StructInfo struct {
 	DependModuleWithJce map[string]string
 }
 
-// ArgInfo record argument information.
-type ArgInfo struct {
+// Arg record argument information.
+type Arg struct {
 	Name       string
 	OriginName string //original name
 	IsOut      bool
 	Type       *VarType
 }
 
-// FunInfo record function information.
-type FunInfo struct {
+// Func record function information.
+type Func struct {
 	Name       string // after the uppercase converted name
 	OriginName string // original name
 	HasRet     bool
 	RetType    *VarType
-	Args       []ArgInfo
+	Args       []Arg
 }
 
-// InterfaceInfo record interface information.
-type InterfaceInfo struct {
+// Interface record interface information.
+type Interface struct {
 	Name                string
 	OriginName          string // original name
-	Fun                 []FunInfo
+	Funcs               []Func
 	DependModule        map[string]bool
 	DependModuleWithJce map[string]string
 }
@@ -80,79 +80,87 @@ type EnumMember struct {
 	Name  string //type 1
 }
 
-// EnumInfo record EnumMember information include name.
-type EnumInfo struct {
+// Enum record EnumMember information include name.
+type Enum struct {
 	Module     string
 	Name       string
 	OriginName string // original name
 	Mb         []EnumMember
 }
 
-// ConstInfo record const information.
-type ConstInfo struct {
+// Const record const information.
+type Const struct {
 	Type       *VarType
 	Name       string
 	OriginName string // original name
 	Value      string
 }
 
-// HashKeyInfo record hash key information.
-type HashKeyInfo struct {
+// HashKey record hash key information.
+type HashKey struct {
 	Name   string
 	Member []string
 }
 
-type ModuleInfo struct {
+type TarsFile struct {
 	Source string
 	// proto file name(not include .tars)
-	ProtoName  string
+	ProtoName string
+	Module    Module
+
+	Include []string
+	// have parsed include file
+	IncTarsFile []*TarsFile
+}
+
+type Module struct {
 	Name       string
 	OriginName string
-	Include    []string
 
-	Struct    []StructInfo
-	HashKey   []HashKeyInfo
-	Enum      []EnumInfo
-	Const     []ConstInfo
-	Interface []InterfaceInfo
-
-	// have parsed include file
-	IncModule []*ModuleInfo
+	Struct    []Struct
+	HashKey   []HashKey
+	Enum      []Enum
+	Const     []Const
+	Interface []Interface
 }
 
 // Rename module
-func (p *ModuleInfo) Rename(moduleUpper bool) {
-	p.OriginName = p.Name
+func (m *Module) Rename(moduleUpper bool) {
+	m.OriginName = m.Name
 	if moduleUpper {
-		p.Name = utils.UpperFirstLetter(p.Name)
+		m.Name = utils.UpperFirstLetter(m.Name)
 	}
 }
 
+func (tf *TarsFile) Rename(moduleUpper bool) {
+	tf.Module.Rename(moduleUpper)
+}
+
 // FindTNameType Looking for the true type of user-defined identifier
-func (p *ModuleInfo) FindTNameType(tname string) (token.Type, string, string) {
-	for _, v := range p.Struct {
-		if p.Name+"::"+v.Name == tname {
-			return token.Struct, p.Name, p.ProtoName
+func (tf *TarsFile) FindTNameType(tName string) (token.Type, string, string) {
+	for _, v := range tf.Module.Struct {
+		if tf.Module.Name+"::"+v.Name == tName {
+			return token.Struct, tf.Module.Name, tf.ProtoName
 		}
 	}
 
-	for _, v := range p.Enum {
-		if p.Name+"::"+v.Name == tname {
-			return token.Enum, p.Name, p.ProtoName
+	for _, v := range tf.Module.Enum {
+		if tf.Module.Name+"::"+v.Name == tName {
+			return token.Enum, tf.Module.Name, tf.ProtoName
 		}
 	}
 
-	for _, pInc := range p.IncModule {
-		ret, mod, protoName := pInc.FindTNameType(tname)
+	for _, tarsFile := range tf.IncTarsFile {
+		ret, mod, protoName := tarsFile.FindTNameType(tName)
 		if ret != token.Name {
 			return ret, mod, protoName
 		}
 	}
 	// not find
-	return token.Name, p.Name, p.ProtoName
+	return token.Name, tf.Module.Name, tf.ProtoName
 }
 
-func (p *ModuleInfo) FindEnumName(ename string, moduleCycle bool) (*EnumMember, *EnumInfo, error) {
+func (tf *TarsFile) FindEnumName(ename string, moduleCycle bool) (*EnumMember, *Enum, error) {
 	if strings.Contains(ename, "::") {
 		vec := strings.Split(ename, "::")
 		if len(vec) >= 2 {
@@ -160,24 +168,24 @@ func (p *ModuleInfo) FindEnumName(ename string, moduleCycle bool) (*EnumMember, 
 		}
 	}
 	var cmb *EnumMember
-	var cenum *EnumInfo
-	for ek, enum := range p.Enum {
+	var cenum *Enum
+	for ek, enum := range tf.Module.Enum {
 		for mk, mb := range enum.Mb {
 			if mb.Key != ename {
 				continue
 			}
 			if cmb == nil {
 				cmb = &enum.Mb[mk]
-				cenum = &p.Enum[ek]
+				cenum = &tf.Module.Enum[ek]
 			} else {
 				return nil, nil, errors.New(ename + " name conflict [" + cenum.Name + "::" + cmb.Key + " or " + enum.Name + "::" + mb.Key)
 			}
 		}
 	}
 	var err error
-	for _, pInc := range p.IncModule {
+	for _, tarsFile := range tf.IncTarsFile {
 		if cmb == nil {
-			cmb, cenum, err = pInc.FindEnumName(ename, moduleCycle)
+			cmb, cenum, err = tarsFile.FindEnumName(ename, moduleCycle)
 			if err != nil {
 				return cmb, cenum, err
 			}
@@ -187,17 +195,16 @@ func (p *ModuleInfo) FindEnumName(ename string, moduleCycle bool) (*EnumMember, 
 	}
 	if cenum != nil && cenum.Module == "" {
 		if moduleCycle {
-			cenum.Module = p.ProtoName + "_" + p.Name
+			cenum.Module = tf.ProtoName + "_" + tf.Module.Name
 		} else {
-			cenum.Module = p.Name
+			cenum.Module = tf.Module.Name
 		}
 	}
 	return cmb, cenum, nil
 }
 
-// Rename struct
-// struct Name { 1 require Mb type}
-func (st *StructInfo) Rename() {
+// Rename Struct Name { 1 require Mb type}
+func (st *Struct) Rename() {
 	st.OriginName = st.Name
 	st.Name = utils.UpperFirstLetter(st.Name)
 	for i := range st.Mb {
@@ -206,17 +213,17 @@ func (st *StructInfo) Rename() {
 	}
 }
 
-// Rename interface
-// interface Name { Fun }
-func (itf *InterfaceInfo) Rename() {
+// Rename Interface Name { Funcs }
+func (itf *Interface) Rename() {
 	itf.OriginName = itf.Name
 	itf.Name = utils.UpperFirstLetter(itf.Name)
-	for i := range itf.Fun {
-		itf.Fun[i].Rename()
+	for i := range itf.Funcs {
+		itf.Funcs[i].Rename()
 	}
 }
 
-func (en *EnumInfo) Rename() {
+// Rename Enum Name { Mb }
+func (en *Enum) Rename() {
 	en.OriginName = en.Name
 	en.Name = utils.UpperFirstLetter(en.Name)
 	for i := range en.Mb {
@@ -224,20 +231,21 @@ func (en *EnumInfo) Rename() {
 	}
 }
 
-func (cst *ConstInfo) Rename() {
+// Rename Const Name
+func (cst *Const) Rename() {
 	cst.OriginName = cst.Name
 	cst.Name = utils.UpperFirstLetter(cst.Name)
 }
 
-// Rename func
-// type Fun (arg ArgType), in case keyword and name conflicts,argname need to capitalize.
-// Fun (type int32)
-func (fun *FunInfo) Rename() {
+// Rename Func Name { Args }
+// type Funcs (arg ArgType), in case keyword and name conflicts, arg name need to capitalize.
+// Funcs (type int32)
+func (fun *Func) Rename() {
 	fun.OriginName = fun.Name
 	fun.Name = utils.UpperFirstLetter(fun.Name)
 	for i := range fun.Args {
 		fun.Args[i].OriginName = fun.Args[i].Name
-		// func args donot upper firs
-		//fun.Args[i].Name = utils.UpperFirstLetter(fun.Args[i].Name)
+		// func args do not upper firs
+		// fun.Args[i].Name = utils.UpperFirstLetter(fun.Args[i].Name)
 	}
 }
