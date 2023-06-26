@@ -17,12 +17,12 @@ import (
 
 // Parse record information of parse file.
 type Parse struct {
-	opt    *options.Options
-	Module *ast.ModuleInfo
+	opt *options.Options
 
-	lex    *lexer.LexState
-	tk     *token.Token
-	lastTk *token.Token
+	lex      *lexer.LexState
+	tk       *token.Token
+	lastTk   *token.Token
+	tarsFile *ast.TarsFile
 
 	// jce include chain
 	IncChain            []string
@@ -32,7 +32,7 @@ type Parse struct {
 }
 
 // NewParse parse a file,return grammar tree.
-func NewParse(opt *options.Options, filePath string, incChain []string) *ast.ModuleInfo {
+func NewParse(opt *options.Options, filePath string, incChain []string) *ast.TarsFile {
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		// 查找tars文件路径
 		filename := path.Base(filePath)
@@ -53,7 +53,7 @@ func NewParse(opt *options.Options, filePath string, incChain []string) *ast.Mod
 	p := newParse(opt, filePath, b, incChain)
 	p.parse()
 
-	return p.Module
+	return p.tarsFile
 }
 
 func newParse(opt *options.Options, source string, data []byte, incChain []string) *Parse {
@@ -67,7 +67,7 @@ func newParse(opt *options.Options, source string, data []byte, incChain []strin
 
 	p := &Parse{
 		opt: opt,
-		Module: &ast.ModuleInfo{
+		tarsFile: &ast.TarsFile{
 			Source:    source,
 			ProtoName: utils.Path2ProtoName(source),
 		},
@@ -84,7 +84,7 @@ func (p *Parse) parseErr(err string) {
 		line = strconv.Itoa(p.tk.Line)
 	}
 
-	panic(p.Module.Source + ": " + line + ". " + err)
+	panic(p.tarsFile.Source + ": " + line + ". " + err)
 }
 
 func (p *Parse) next() {
@@ -141,10 +141,10 @@ func (p *Parse) parseType() *ast.VarType {
 }
 
 func (p *Parse) parseEnum() {
-	enum := ast.EnumInfo{}
+	enum := ast.Enum{}
 	p.expect(token.Name)
 	enum.Name = p.tk.S.S
-	for _, v := range p.Module.Enum {
+	for _, v := range p.tarsFile.Module.Enum {
 		if v.Name == enum.Name {
 			p.parseErr(enum.Name + " Redefine.")
 		}
@@ -191,7 +191,7 @@ LFOR:
 		}
 	}
 	p.expect(token.Semi)
-	p.Module.Enum = append(p.Module.Enum, enum)
+	p.tarsFile.Module.Enum = append(p.tarsFile.Module.Enum, enum)
 }
 
 func (p *Parse) parseStructMemberDefault(m *ast.StructMember) {
@@ -290,7 +290,7 @@ func (p *Parse) parseStructMember() *ast.StructMember {
 	return m
 }
 
-func (p *Parse) checkTag(st *ast.StructInfo) {
+func (p *Parse) checkTag(st *ast.Struct) {
 	set := make(map[int32]bool)
 	for _, v := range st.Mb {
 		if set[v.Tag] {
@@ -300,15 +300,15 @@ func (p *Parse) checkTag(st *ast.StructInfo) {
 	}
 }
 
-func (p *Parse) sortTag(st *ast.StructInfo) {
+func (p *Parse) sortTag(st *ast.Struct) {
 	sort.Sort(ast.StructMemberSorter(st.Mb))
 }
 
 func (p *Parse) parseStruct() {
-	st := ast.StructInfo{}
+	st := ast.Struct{}
 	p.expect(token.Name)
 	st.Name = p.tk.S.S
-	for _, v := range p.Module.Struct {
+	for _, v := range p.tarsFile.Module.Struct {
 		if v.Name == st.Name {
 			p.parseErr(st.Name + " Redefine.")
 		}
@@ -327,11 +327,11 @@ func (p *Parse) parseStruct() {
 	p.checkTag(&st)
 	p.sortTag(&st)
 
-	p.Module.Struct = append(p.Module.Struct, st)
+	p.tarsFile.Module.Struct = append(p.tarsFile.Module.Struct, st)
 }
 
-func (p *Parse) parseInterfaceFun() *ast.FunInfo {
-	fun := &ast.FunInfo{}
+func (p *Parse) parseInterfaceFun() *ast.Func {
+	fun := &ast.Func{}
 	p.next()
 	if p.tk.T == token.BraceRight {
 		return nil
@@ -360,7 +360,7 @@ func (p *Parse) parseInterfaceFun() *ast.FunInfo {
 	}
 
 	for {
-		arg := &ast.ArgInfo{}
+		arg := &ast.Arg{}
 		if p.tk.T == token.Out {
 			arg.IsOut = true
 			p.next()
@@ -390,10 +390,10 @@ func (p *Parse) parseInterfaceFun() *ast.FunInfo {
 }
 
 func (p *Parse) parseInterface() {
-	itf := &ast.InterfaceInfo{}
+	itf := &ast.Interface{}
 	p.expect(token.Name)
 	itf.Name = p.tk.S.S
-	for _, v := range p.Module.Interface {
+	for _, v := range p.tarsFile.Module.Interface {
 		if v.Name == itf.Name {
 			p.parseErr(itf.Name + " Redefine.")
 		}
@@ -405,14 +405,14 @@ func (p *Parse) parseInterface() {
 		if fun == nil {
 			break
 		}
-		itf.Fun = append(itf.Fun, *fun)
+		itf.Funcs = append(itf.Funcs, *fun)
 	}
 	p.expect(token.Semi) //semicolon at the end of struct.
-	p.Module.Interface = append(p.Module.Interface, *itf)
+	p.tarsFile.Module.Interface = append(p.tarsFile.Module.Interface, *itf)
 }
 
 func (p *Parse) parseConst() {
-	m := ast.ConstInfo{}
+	m := ast.Const{}
 
 	// type
 	p.next()
@@ -460,11 +460,11 @@ func (p *Parse) parseConst() {
 	}
 	p.expect(token.Semi)
 
-	p.Module.Const = append(p.Module.Const, m)
+	p.tarsFile.Module.Const = append(p.tarsFile.Module.Const, m)
 }
 
 func (p *Parse) parseHashKey() {
-	hashKey := ast.HashKeyInfo{}
+	hashKey := ast.HashKey{}
 	p.expect(token.SquareLeft)
 	p.expect(token.Name)
 	hashKey.Name = p.tk.S.S
@@ -477,7 +477,7 @@ func (p *Parse) parseHashKey() {
 		switch t.T {
 		case token.SquarerRight:
 			p.expect(token.Semi)
-			p.Module.HashKey = append(p.Module.HashKey, hashKey)
+			p.tarsFile.Module.HashKey = append(p.tarsFile.Module.HashKey, hashKey)
 			return
 		case token.Comma:
 		default:
@@ -516,43 +516,43 @@ func (p *Parse) parseModule() {
 	p.expect(token.Name)
 
 	// 解决一个tars文件中定义多个module
-	if p.Module.Name != "" {
-		name := p.Module.ProtoName + "_" + p.tk.S.S + ".tars"
-		newp := newParse(p.opt, p.Module.Source, nil, nil)
-		newp.Module.Name = p.tk.S.S
-		newp.Module.Include = p.Module.Include
-		m := *p.Module
-		newp.Module.IncModule = append(newp.Module.IncModule, &m)
+	if p.tarsFile.Module.Name != "" {
+		name := p.tarsFile.ProtoName + "_" + p.tk.S.S + ".tars"
+		newp := newParse(p.opt, p.tarsFile.Source, nil, nil)
+		newp.tarsFile.Module.Name = p.tk.S.S
+		newp.tarsFile.Include = p.tarsFile.Include
+		tf := *p.tarsFile
+		newp.tarsFile.IncTarsFile = append(newp.tarsFile.IncTarsFile, &tf)
 		newp.lex = p.lex
 		newp.parseModuleSegment()
 		newp.analyzeDepend()
 		if p.fileNames[name] {
 			// merge
-			for _, module := range p.Module.IncModule {
-				if module.Name == newp.Module.Name {
-					module.Struct = append(module.Struct, newp.Module.Struct...)
-					module.Interface = append(module.Interface, newp.Module.Interface...)
-					module.Enum = append(module.Enum, newp.Module.Enum...)
-					module.Const = append(module.Const, newp.Module.Const...)
-					module.HashKey = append(module.HashKey, newp.Module.HashKey...)
+			for _, tarsFile := range p.tarsFile.IncTarsFile {
+				if tarsFile.Module.Name == newp.tarsFile.Module.Name {
+					tarsFile.Module.Struct = append(tarsFile.Module.Struct, newp.tarsFile.Module.Struct...)
+					tarsFile.Module.Interface = append(tarsFile.Module.Interface, newp.tarsFile.Module.Interface...)
+					tarsFile.Module.Enum = append(tarsFile.Module.Enum, newp.tarsFile.Module.Enum...)
+					tarsFile.Module.Const = append(tarsFile.Module.Const, newp.tarsFile.Module.Const...)
+					tarsFile.Module.HashKey = append(tarsFile.Module.HashKey, newp.tarsFile.Module.HashKey...)
 					break
 				}
 			}
 		} else {
 			// 增加已经解析的module
-			p.Module.IncModule = append(p.Module.IncModule, newp.Module)
+			p.tarsFile.IncTarsFile = append(p.tarsFile.IncTarsFile, newp.tarsFile)
 			p.fileNames[name] = true
 		}
 		p.lex = newp.lex
 	} else {
-		p.Module.Name = p.tk.S.S
+		p.tarsFile.Module.Name = p.tk.S.S
 		p.parseModuleSegment()
 	}
 }
 
 func (p *Parse) parseInclude() {
 	p.expect(token.String)
-	p.Module.Include = append(p.Module.Include, p.tk.S.S)
+	p.tarsFile.Include = append(p.tarsFile.Include, p.tk.S.S)
 }
 
 func addToSet(m *map[string]bool, module string) {
@@ -573,17 +573,17 @@ func (p *Parse) checkDepTName(ty *ast.VarType, dm *map[string]bool, dmj *map[str
 	if ty.Type == token.Name {
 		name := ty.TypeSt
 		if strings.Count(name, "::") == 0 {
-			name = p.Module.Name + "::" + name
+			name = p.tarsFile.Module.Name + "::" + name
 		}
 
 		mod := ""
 		protoName := ""
-		ty.CType, mod, protoName = p.Module.FindTNameType(name)
+		ty.CType, mod, protoName = p.tarsFile.FindTNameType(name)
 		if ty.CType == token.Name {
 			p.parseErr(ty.TypeSt + " not find define")
 		}
 		if p.opt.ModuleCycle {
-			if mod != p.Module.Name || protoName != p.Module.ProtoName {
+			if mod != p.tarsFile.Module.Name || protoName != p.tarsFile.ProtoName {
 				var modStr string
 				if p.opt.ModuleUpper {
 					modStr = utils.UpperFirstLetter(mod)
@@ -602,7 +602,7 @@ func (p *Parse) checkDepTName(ty *ast.VarType, dm *map[string]bool, dmj *map[str
 				ty.TypeSt = strings.Replace(ty.TypeSt, mod+"::", "", 1)
 			}
 		} else {
-			if mod != p.Module.Name {
+			if mod != p.tarsFile.Module.Name {
 				addToSet(dm, mod)
 			} else {
 				// the same Module ,do not add self.
@@ -619,31 +619,31 @@ func (p *Parse) checkDepTName(ty *ast.VarType, dm *map[string]bool, dmj *map[str
 
 // analysis custom type，whether have definition
 func (p *Parse) analyzeTName() {
-	for i, v := range p.Module.Struct {
+	for i, v := range p.tarsFile.Module.Struct {
 		for _, v := range v.Mb {
 			ty := v.Type
-			p.checkDepTName(ty, &p.Module.Struct[i].DependModule, &p.Module.Struct[i].DependModuleWithJce)
+			p.checkDepTName(ty, &p.tarsFile.Module.Struct[i].DependModule, &p.tarsFile.Module.Struct[i].DependModuleWithJce)
 		}
 	}
 
-	for i, v := range p.Module.Interface {
-		for _, v := range v.Fun {
+	for i, v := range p.tarsFile.Module.Interface {
+		for _, v := range v.Funcs {
 			for _, v := range v.Args {
 				ty := v.Type
-				p.checkDepTName(ty, &p.Module.Interface[i].DependModule, &p.Module.Interface[i].DependModuleWithJce)
+				p.checkDepTName(ty, &p.tarsFile.Module.Interface[i].DependModule, &p.tarsFile.Module.Interface[i].DependModuleWithJce)
 			}
 			if v.RetType != nil {
-				p.checkDepTName(v.RetType, &p.Module.Interface[i].DependModule, &p.Module.Interface[i].DependModuleWithJce)
+				p.checkDepTName(v.RetType, &p.tarsFile.Module.Interface[i].DependModule, &p.tarsFile.Module.Interface[i].DependModuleWithJce)
 			}
 		}
 	}
 }
 
 func (p *Parse) analyzeDefault() {
-	for _, v := range p.Module.Struct {
+	for _, v := range p.tarsFile.Module.Struct {
 		for i, r := range v.Mb {
 			if r.Default != "" && r.DefType == token.Name {
-				mb, enum, err := p.Module.FindEnumName(r.Default, p.opt.ModuleCycle)
+				mb, enum, err := p.tarsFile.FindEnumName(r.Default, p.opt.ModuleCycle)
 				if err != nil {
 					p.parseErr(err.Error())
 				}
@@ -653,9 +653,9 @@ func (p *Parse) analyzeDefault() {
 				defValue := enum.Name + "_" + utils.UpperFirstLetter(mb.Key)
 				var currModule string
 				if p.opt.ModuleCycle {
-					currModule = p.Module.ProtoName + "_" + p.Module.Name
+					currModule = p.tarsFile.ProtoName + "_" + p.tarsFile.Module.Name
 				} else {
-					currModule = p.Module.Name
+					currModule = p.tarsFile.Module.Name
 				}
 				if len(enum.Module) > 0 && currModule != enum.Module {
 					defValue = enum.Module + "." + defValue
@@ -672,11 +672,11 @@ func (p *Parse) analyzeHashKey() {
 }
 
 func (p *Parse) analyzeDepend() {
-	for _, v := range p.Module.Include {
-		relativePath := path.Dir(p.Module.Source)
+	for _, v := range p.tarsFile.Include {
+		relativePath := path.Dir(p.tarsFile.Source)
 		dependFile := relativePath + "/" + v
 		pInc := NewParse(p.opt, dependFile, p.IncChain)
-		p.Module.IncModule = append(p.Module.IncModule, pInc)
+		p.tarsFile.IncTarsFile = append(p.tarsFile.IncTarsFile, pInc)
 		log.Println("parse include: ", v)
 	}
 
