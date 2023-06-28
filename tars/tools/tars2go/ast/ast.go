@@ -132,10 +132,6 @@ func (m *Module) Rename(moduleUpper bool) {
 	}
 }
 
-func (tf *TarsFile) Rename(moduleUpper bool) {
-	tf.Module.Rename(moduleUpper)
-}
-
 // FindTNameType Looking for the true type of user-defined identifier
 func (tf *TarsFile) FindTNameType(tName string) (token.Type, string, string) {
 	for _, v := range tf.Module.Struct {
