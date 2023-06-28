@@ -194,7 +194,9 @@ func (t *tcpHandler) CloseIdles(n int64) bool {
 		TLOG.Debugf("num invoke %d %v", atomic.LoadInt32(&conn.numInvoke), conn.idleTime+n > time.Now().Unix())
 		if atomic.LoadInt32(&conn.numInvoke) > 0 || conn.idleTime+n > time.Now().Unix() {
 			allClosed = false
+			return true
 		}
+		conn.conn.Close()
 		return true
 	})
 	return allClosed
@@ -235,8 +237,8 @@ func (t *tcpHandler) recv(connSt *connInfo) {
 		}
 		connSt.idleTime = time.Now().Unix()
 		n, err = conn.Read(buffer)
-		// TLOG.Debugf("%s closed: %d, read %d, nil buff: %d, err: %v", t.server.config.Address, atomic.LoadInt32(&t.server.isClosed), n, len(currBuffer), err)
 		if err != nil {
+			TLOG.Debugf("%s closed: %d, read %d, nil buff: %d, err: %v", t.server.config.Address, atomic.LoadInt32(&t.server.isClosed), n, len(currBuffer), err)
 			if atomic.LoadInt32(&t.server.isClosed) == 1 && currBuffer == nil {
 				return
 			}
