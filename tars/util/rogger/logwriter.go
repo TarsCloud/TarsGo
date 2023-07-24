@@ -89,6 +89,7 @@ func (w *RollFileWriter) Write(v []byte) {
 	n, _ := w.currFile.Write(v)
 	w.currSize += int64(n)
 	if w.currSize >= w.size {
+		w.currFile.Close()
 		w.currSize = 0
 		for i := w.num - 1; i >= 1; i-- {
 			var n1, n2 string
