@@ -126,7 +126,7 @@ func (a *application) initConfig() {
 	a.svrCfg = newServerConfig()
 	a.cltCfg = newClientConfig()
 	if ServerConfigPath == "" {
-		svrFlag := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
+		svrFlag := flag.NewFlagSet(os.Args[0], 3)
 		svrFlag.StringVar(&ServerConfigPath, "config", "", "server config path")
 		_ = svrFlag.Parse(os.Args[1:])
 	}
