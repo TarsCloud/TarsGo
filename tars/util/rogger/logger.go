@@ -228,14 +228,19 @@ func (l *Logger) SetPrefix(prefix string) {
 	l.prefix = prefix
 }
 
+// Prefix returns the log line prefix
+func (l *Logger) Prefix() string {
+	return l.prefix
+}
+
 // SetLevel sets the log level
 func (l *Logger) SetLevel(level LogLevel) {
 	l.logLevel = &level
 }
 
-// Prefix returns the log line prefix
-func (l *Logger) Prefix() string {
-	return l.prefix
+// Level returns the log level
+func (l *Logger) Level() LogLevel {
+	return *l.logLevel
 }
 
 // SetFileRoller sets the file rolled by size in MB, with max num of files.
