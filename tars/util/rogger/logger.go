@@ -48,9 +48,10 @@ var (
 
 // Logger is the struct with name and writer.
 type Logger struct {
-	name   string
-	prefix string
-	writer LogWriter
+	logLevel *LogLevel
+	name     string
+	prefix   string
+	writer   LogWriter
 }
 
 type JsonLog struct {
@@ -227,6 +228,11 @@ func (l *Logger) SetPrefix(prefix string) {
 	l.prefix = prefix
 }
 
+// SetLevel sets the log level
+func (l *Logger) SetLevel(level LogLevel) {
+	l.logLevel = &level
+}
+
 // Prefix returns the log line prefix
 func (l *Logger) Prefix() string {
 	return l.prefix
@@ -336,7 +342,11 @@ func (l *Logger) Errorf(format string, v ...interface{}) {
 }
 
 func (l *Logger) Writef(depth int, level LogLevel, format string, v []interface{}) {
-	if level < logLevel {
+	innerLevel := logLevel
+	if l.logLevel != nil {
+		innerLevel = *l.logLevel
+	}
+	if level < innerLevel {
 		return
 	}
 
