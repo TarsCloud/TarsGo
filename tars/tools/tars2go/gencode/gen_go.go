@@ -438,11 +438,11 @@ func (g *GenGo) genStructDefine(st *ast.Struct) {
 	g.P("// ", st.Name, " struct implement")
 	g.P("type ", st.Name, " struct {")
 	for _, v := range st.Mb {
-		tarsTag := `tars:"` + v.OriginKey + `,tag:` + strconv.Itoa(int(v.Tag)) + `,require:` + strconv.FormatBool(v.Require) + `"`
+		tarsTag := `yaml:"` + v.OriginKey + `" tars:"` + v.OriginKey + `,tag:` + strconv.Itoa(int(v.Tag)) + `,require:` + strconv.FormatBool(v.Require) + `"`
 		if g.opt.JsonOmitEmpty {
-			g.P(v.Key, " ", g.genType(v.Type), " `json:\"", v.OriginKey, ",omitempty\" ", tarsTag, "`")
+			g.P(v.Key, " ", g.genType(v.Type), " `json:", strconv.Quote(v.OriginKey+",omitempty"), " ", tarsTag, "`")
 		} else {
-			g.P(v.Key, " ", g.genType(v.Type), " `json:\"", v.OriginKey, "\" ", tarsTag, "`")
+			g.P(v.Key, " ", g.genType(v.Type), " `json:", strconv.Quote(v.OriginKey), " ", tarsTag, "`")
 		}
 	}
 	g.P("}")
