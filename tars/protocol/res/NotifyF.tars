@@ -16,36 +16,36 @@
 
 module notifyf 
 {
-
-/**
-* notify信息的键值
-*/
-struct NotifyKey
-{
-    1 require string name; //为app+servername 例如：Comm.BindServer
-    2 require string ip;   //ip
-    3 require int page;
-};
-
-/**
-* 上报信息的单条内容
-*/
-struct NotifyItem
-{
-    1 require string sTimeStamp;
-    2 require string sServerId;
-    3 require int    iLevel;
-    4 require string sMessage;
-};
-
-/**
-* 上报的信息分页记录
-*/
-struct NotifyInfo
-{
-    1 require int nextpage;
-    2 require vector<NotifyItem> notifyItems;
-};
+//
+///**
+//* notify信息的键值
+//*/
+//struct NotifyKey
+//{
+//    1 require string name; //为app+servername 例如：Comm.BindServer
+//    2 require string ip;   //ip
+//    3 require int page;
+//};
+//
+///**
+//* 上报信息的单条内容
+//*/
+//struct NotifyItem
+//{
+//    1 require string sTimeStamp;
+//    2 require string sServerId;
+//    3 require int    iLevel;
+//    4 require string sMessage;
+//};
+//
+///**
+//* 上报的信息分页记录
+//*/
+//struct NotifyInfo
+//{
+//    1 require int nextpage;
+//    2 require vector<NotifyItem> notifyItems;
+//};
 
 /**
 * 定义上报信息的等级
@@ -85,30 +85,30 @@ struct ReportInfo
 
 interface Notify
 {
-    /**
-    * 框架上报的信息, 保存于数据库中
-    * @param sServerName, server name
-    * @param sThreadId, server current thread id
-    * @param sMessage, message
-    **/
-    void reportServer(string sServerName, string sThreadId, string sMessage);
-
-
-    /**
-    * 业务上报的信息, 用于报警
-    * @param sServerName, server name
-    * @param level, notify level
-    * @param sMessage, message
-    **/
-    void notifyServer(string sServerName, NOTIFYLEVEL level, string sMessage);
-
-    /**
-    * 获取上报信息
-    * @param sServerName, server name
-    * @param out , notify info detail
-    * @return int 0=success, others=failed
-    **/
-    int getNotifyInfo(NotifyKey stKey, out NotifyInfo stInfo);
+    ///**
+    //* 框架上报的信息, 保存于数据库中
+    //* @param sServerName, server name
+    //* @param sThreadId, server current thread id
+    //* @param sMessage, message
+    //**/
+    //void reportServer(string sServerName, string sThreadId, string sMessage);
+    //
+    //
+    ///**
+    //* 业务上报的信息, 用于报警
+    //* @param sServerName, server name
+    //* @param level, notify level
+    //* @param sMessage, message
+    //**/
+    //void notifyServer(string sServerName, NOTIFYLEVEL level, string sMessage);
+    //
+    ///**
+    //* 获取上报信息
+    //* @param sServerName, server name
+    //* @param out , notify info detail
+    //* @return int 0=success, others=failed
+    //**/
+    //int getNotifyInfo(NotifyKey stKey, out NotifyInfo stInfo);
 
     /*
     *上报框架信息以及业务告警信息

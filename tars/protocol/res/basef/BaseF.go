@@ -13,7 +13,7 @@ import (
 var _ = fmt.Errorf
 var _ = codec.FromInt8
 
-// const as define in tars file
+//const as define in tars file
 const (
 	TARSVERSION             int16 = 0x01
 	TUPVERSION              int16 = 0x03
