@@ -102,7 +102,7 @@ func (a *application) AddHttpServantWithExceptionStatusChecker(mux HttpHandler, 
 		ExceptionStatusChecker: exceptionStatusChecker,
 	}
 	mux.SetConfig(httpConf)
-	s := &http.Server{Addr: cfg.Address, Handler: mux, TLSConfig: cfg.TlsConfig}
+	s := &http.Server{Addr: cfg.Address, Handler: mux, TLSConfig: cfg.TlsConfig, ReadTimeout: cfg.ReadTimeout, WriteTimeout: cfg.WriteTimeout, IdleTimeout: cfg.IdleTimeout}
 	a.httpSvrs[obj] = s
 }
 
