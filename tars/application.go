@@ -184,7 +184,7 @@ func (a *application) initConfig() {
 	}
 	rogger.SetLevel(rogger.StringToLevel(a.svrCfg.LogLevel))
 	if a.svrCfg.LogPath != "" {
-		_ = TLOG.SetFileRoller(a.svrCfg.LogPath+"/"+a.svrCfg.App+"/"+a.svrCfg.Server, 10, 100)
+		_ = TLOG.SetFileRoller(a.svrCfg.LogPath+"/"+a.svrCfg.App+"/"+a.svrCfg.Server, int(a.svrCfg.LogNum), int(a.svrCfg.LogSize))
 	}
 
 	// cache
