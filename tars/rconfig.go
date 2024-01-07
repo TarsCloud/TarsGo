@@ -80,7 +80,7 @@ func (c *RConf) GetConfigList() (fList []string, err error) {
 		   Containername:string
 		*/
 	}
-	ret, err := c.tc.ListAllConfigByInfo(&info, &fList)
+	ret, err := c.tc.ListAllConfigByInfo(&info, &fList, c.comm.Client.Context())
 	if err != nil {
 		return fList, err
 	}
@@ -117,7 +117,7 @@ func (c *RConf) getConfig(info configf.ConfigInfo) (config string, err error) {
 		set = v
 	}
 	info.Setdivision = set
-	ret, err := c.tc.LoadConfigByInfo(&info, &config)
+	ret, err := c.tc.LoadConfigByInfo(&info, &config, c.comm.Client.Context())
 	if err != nil {
 		return config, err
 	}

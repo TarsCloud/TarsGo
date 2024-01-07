@@ -14,6 +14,7 @@ type RemoteTimeWriter struct {
 	reportSuccessPtr *PropertyReport
 	reportFailPtr    *PropertyReport
 	hasPrefix        bool
+	comm             *Communicator
 }
 
 // NewRemoteTimeWriter new and init RemoteTimeWriter
@@ -34,6 +35,7 @@ func NewRemoteTimeWriter() *RemoteTimeWriter {
 	log := GetServerConfig().Log
 	comm := GetCommunicator()
 	comm.StringToProxy(log, rw.logPtr)
+	rw.comm = comm
 	go rw.Sync2remote()
 	return rw
 }
@@ -71,7 +73,7 @@ func (rw *RemoteTimeWriter) Sync2remote() {
 }
 
 func (rw *RemoteTimeWriter) sync2remote(s []string) error {
-	err := rw.logPtr.LoggerbyInfo(rw.logInfo, s)
+	err := rw.logPtr.LoggerbyInfo(rw.logInfo, s, rw.comm.Client.Context())
 	return err
 }
 

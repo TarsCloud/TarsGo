@@ -425,7 +425,7 @@ func (p *PropertyReportHelper) ReportToServer() {
 	for k, v := range statMsg {
 		cnt++
 		if cnt >= 20 {
-			_, err := p.pf.ReportPropMsg(tmpStatMsg)
+			_, err := p.pf.ReportPropMsg(tmpStatMsg, p.comm.Client.Context())
 			if err != nil {
 				TLOG.Error("Send to property server Error", reflect.TypeOf(err), err)
 			}
@@ -434,7 +434,7 @@ func (p *PropertyReportHelper) ReportToServer() {
 		tmpStatMsg[k] = v
 	}
 	if len(tmpStatMsg) > 0 {
-		_, err := p.pf.ReportPropMsg(tmpStatMsg)
+		_, err := p.pf.ReportPropMsg(tmpStatMsg, p.comm.Client.Context())
 		if err != nil {
 			TLOG.Error("Send to property server Error", reflect.TypeOf(err), err)
 		}
