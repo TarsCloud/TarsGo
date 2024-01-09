@@ -112,12 +112,12 @@ func (ts *TarsServer) invoke(ctx context.Context, pkg []byte) []byte {
 	if cfg.HandleTimeout == 0 {
 		rsp = ts.protocol.Invoke(ctx, pkg)
 	} else {
-		invokeDone, cancelFunc := context.WithTimeout(context.Background(), cfg.HandleTimeout)
+		invokeCtx, cancelFunc := context.WithTimeout(ctx, cfg.HandleTimeout)
 		go func() {
-			rsp = ts.protocol.Invoke(ctx, pkg)
+			rsp = ts.protocol.Invoke(invokeCtx, pkg)
 			cancelFunc()
 		}()
-		<-invokeDone.Done()
+		<-invokeCtx.Done()
 		if len(rsp) == 0 { // The rsp must be none-empty
 			rsp = ts.protocol.InvokeTimeout(pkg)
 		}
