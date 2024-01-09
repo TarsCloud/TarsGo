@@ -1,6 +1,8 @@
 package tars
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
@@ -99,6 +101,24 @@ func GetServerConfig() *serverConfig {
 // GetClientConfig Get client config
 func GetClientConfig() *clientConfig {
 	return defaultApp.ClientConfig()
+}
+
+func (c *clientConfig) ValidateStat() error {
+	if c.Stat == "" || (c.LocatorEmpty() && !strings.Contains(c.Stat, "@")) {
+		return fmt.Errorf("stat config emptry")
+	}
+	return nil
+}
+
+func (c *clientConfig) ValidateProperty() error {
+	if c.Property == "" || (c.LocatorEmpty() && !strings.Contains(c.Property, "@")) {
+		return fmt.Errorf("property config emptry")
+	}
+	return nil
+}
+
+func (c *clientConfig) LocatorEmpty() bool {
+	return c.Locator == ""
 }
 
 // ServerConfig returns server config

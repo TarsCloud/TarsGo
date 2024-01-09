@@ -170,9 +170,9 @@ var (
 
 func initReport(app *application) error {
 	cfg := app.ClientConfig()
-	if cfg.Stat == "" || (cfg.Locator == "" && !strings.Contains(cfg.Stat, "@")) {
+	if err := cfg.ValidateStat(); err != nil {
 		statInited <- struct{}{}
-		return fmt.Errorf("stat init error")
+		return err
 	}
 	comm := app.Communicator()
 	StatReport = new(StatFHelper)
