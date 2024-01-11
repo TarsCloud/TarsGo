@@ -1,7 +1,6 @@
 package tars
 
 import (
-	"fmt"
 	"reflect"
 	"sort"
 	"strconv"
@@ -326,14 +325,19 @@ var (
 	proOnce   utilSync.Once
 )
 
+func newPropertyReportHelper(comm *Communicator, node string) *PropertyReportHelper {
+	p := new(PropertyReportHelper)
+	p.Init(comm, node)
+	return p
+}
+
 func initProReport() error {
 	cfg := GetClientConfig()
-	if cfg.Property == "" || (cfg.Locator == "" && !strings.Contains(cfg.Property, "@")) {
-		return fmt.Errorf("property emptry")
+	if err := cfg.ValidateProperty(); err != nil {
+		return err
 	}
 	comm := GetCommunicator()
-	ProHelper = new(PropertyReportHelper)
-	ProHelper.Init(comm, GetClientConfig().Property)
+	ProHelper = newPropertyReportHelper(comm, cfg.Property)
 	go ProHelper.Run()
 	return nil
 }
