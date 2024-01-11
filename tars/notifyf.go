@@ -41,7 +41,7 @@ func (n *NotifyHelper) ReportNotifyInfo(level int32, info string) {
 	n.tm.ELevel = notifyf.NOTIFYLEVEL(level)
 	n.tm.SMessage = info
 	TLOG.Debug(n.tm)
-	if err := n.tn.ReportNotifyInfo(&n.tm); err != nil {
+	if err := n.tn.ReportNotifyInfo(&n.tm, n.comm.Client.Context()); err != nil {
 		TLOG.Errorf("ReportNotifyInfo err: %v", err)
 	}
 }

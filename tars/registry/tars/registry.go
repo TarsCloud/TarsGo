@@ -8,12 +8,17 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/registry"
 )
 
-type tarsRegistry struct {
-	query *queryf.QueryF
+type Context interface {
+	Context() map[string]string
 }
 
-func New(query *queryf.QueryF) registry.Registrar {
-	return &tarsRegistry{query: query}
+type tarsRegistry struct {
+	query *queryf.QueryF
+	ctx   Context
+}
+
+func New(query *queryf.QueryF, ctx Context) registry.Registrar {
+	return &tarsRegistry{query: query, ctx: ctx}
 }
 
 func (t *tarsRegistry) Registry(_ context.Context, _ *registry.ServantInstance) error {
@@ -25,7 +30,7 @@ func (t *tarsRegistry) Deregister(_ context.Context, _ *registry.ServantInstance
 }
 
 func (t *tarsRegistry) QueryServant(ctx context.Context, id string) (activeEp []registry.Endpoint, inactiveEp []registry.Endpoint, err error) {
-	ret, err := t.query.FindObjectByIdInSameGroupWithContext(ctx, id, &activeEp, &inactiveEp)
+	ret, err := t.query.FindObjectByIdInSameGroupWithContext(ctx, id, &activeEp, &inactiveEp, t.ctx.Context())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -36,7 +41,7 @@ func (t *tarsRegistry) QueryServant(ctx context.Context, id string) (activeEp []
 }
 
 func (t *tarsRegistry) QueryServantBySet(ctx context.Context, id, set string) (activeEp []registry.Endpoint, inactiveEp []registry.Endpoint, err error) {
-	ret, err := t.query.FindObjectByIdInSameSetWithContext(ctx, id, set, &activeEp, &inactiveEp)
+	ret, err := t.query.FindObjectByIdInSameSetWithContext(ctx, id, set, &activeEp, &inactiveEp, t.ctx.Context())
 	if err != nil {
 		return nil, nil, err
 	}

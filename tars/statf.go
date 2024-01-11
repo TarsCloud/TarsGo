@@ -115,7 +115,7 @@ func (s *StatFHelper) getIntervCount(totalRspTime int32, intervalCount map[int32
 func (s *StatFHelper) reportAndClear(mStat string, bFromClient bool) {
 	// report mStatInfo
 	if mStat == "mStatInfo" {
-		_, err := s.sf.ReportMicMsg(s.mStatInfo, bFromClient)
+		_, err := s.sf.ReportMicMsg(s.mStatInfo, bFromClient, s.comm.Client.Context())
 		if err != nil {
 			TLOG.Debug("mStatInfo report err:", err.Error())
 		}
@@ -124,7 +124,7 @@ func (s *StatFHelper) reportAndClear(mStat string, bFromClient bool) {
 	}
 	// report mStatInfoFromServer
 	if mStat == "mStatInfoFromServer" {
-		_, err := s.sf.ReportMicMsg(s.mStatInfoFromServer, bFromClient)
+		_, err := s.sf.ReportMicMsg(s.mStatInfoFromServer, bFromClient, s.comm.Client.Context())
 		if err != nil {
 			TLOG.Debug("mStatInfoFromServer report err:", err.Error())
 		}

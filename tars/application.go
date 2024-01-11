@@ -152,7 +152,8 @@ func (a *application) initConfig() {
 	a.svrCfg.Node = sMap["node"]
 	a.svrCfg.App = sMap["app"]
 	a.svrCfg.Server = sMap["server"]
-	a.svrCfg.LocalIP = sMap["localip"]
+	a.svrCfg.LocalIP = c.GetStringWithDef("/tars/application/server<localip>", a.svrCfg.LocalIP)
+	a.svrCfg.NodeName = c.GetStringWithDef("/tars/application/server<node_name>", a.svrCfg.LocalIP)
 	a.svrCfg.Local = c.GetString("/tars/application/server<local>")
 	// svrCfg.Container = c.GetString("/tars/application<container>")
 
@@ -252,6 +253,7 @@ func (a *application) initConfig() {
 	a.cltCfg.ClientDialTimeout = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/client<clientdialtimeout>", ClientDialTimeout))
 	a.cltCfg.ReqDefaultTimeout = c.GetInt32WithDef("/tars/application/client<reqdefaulttimeout>", ReqDefaultTimeout)
 	a.cltCfg.ObjQueueMax = c.GetInt32WithDef("/tars/application/client<objqueuemax>", ObjQueueMax)
+	a.cltCfg.context["node_name"] = a.svrCfg.NodeName
 	ca := c.GetString("/tars/application/client<ca>")
 	if ca != "" {
 		cert := c.GetString("/tars/application/client<cert>")

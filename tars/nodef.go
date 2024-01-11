@@ -36,7 +36,7 @@ func (n *NodeFHelper) KeepAlive(adapter string) {
 	}
 	n.si.Pid = int32(os.Getpid())
 	n.si.Adapter = adapter
-	_, err := n.sf.KeepAlive(&n.si)
+	_, err := n.sf.KeepAlive(&n.si, n.comm.Client.Context())
 	if err != nil {
 		TLOG.Error("keepalive fail:", adapter)
 	}
@@ -47,7 +47,7 @@ func (n *NodeFHelper) ReportVersion(version string) {
 	if n.sf == nil {
 		return
 	}
-	_, err := n.sf.ReportVersion(n.si.Application, n.si.ServerName, version)
+	_, err := n.sf.ReportVersion(n.si.Application, n.si.ServerName, version, n.comm.Client.Context())
 	if err != nil {
 		TLOG.Error("report Version fail:")
 	}

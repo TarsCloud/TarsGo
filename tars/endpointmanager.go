@@ -259,7 +259,7 @@ func newEndpointManager(objName string, comm *Communicator, opts ...EndpointMana
 			query := new(queryf.QueryF)
 			TLOG.Debug("string to proxy locator ", obj)
 			e.comm.StringToProxy(obj, query)
-			e.registrar = tarsregistry.New(query)
+			e.registrar = tarsregistry.New(query, e.comm.Client)
 		} else {
 			e.registrar = e.comm.opt.registrar
 		}

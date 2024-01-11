@@ -25,6 +25,7 @@ type serverConfig struct {
 	LogNum   uint64
 	LogLevel string
 	Version  string
+	NodeName string
 	LocalIP  string
 	Local    string
 	BasePath string
@@ -91,6 +92,7 @@ type clientConfig struct {
 	ClientDialTimeout  time.Duration
 	ReqDefaultTimeout  int32
 	ObjQueueMax        int32
+	context            map[string]string
 }
 
 // GetServerConfig Get server config
@@ -180,6 +182,11 @@ func newClientConfig() *clientConfig {
 		ClientDialTimeout:       tools.ParseTimeOut(ClientDialTimeout),
 		ReqDefaultTimeout:       ReqDefaultTimeout,
 		ObjQueueMax:             ObjQueueMax,
+		context:                 make(map[string]string),
 	}
 	return conf
+}
+
+func (c *clientConfig) Context() map[string]string {
+	return c.context
 }
