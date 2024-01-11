@@ -38,16 +38,21 @@ type StatFHelper struct {
 	mStatCountFromServer map[statf.StatMicMsgHead]int
 }
 
+func newStatFHelper(app *application) *StatFHelper {
+	return &StatFHelper{
+		chStatInfo:           make(chan StatInfo, app.ServerConfig().StatReportChannelBufLen),
+		mStatInfo:            make(map[statf.StatMicMsgHead]statf.StatMicMsgBody),
+		mStatCount:           make(map[statf.StatMicMsgHead]int),
+		app:                  app,
+		chStatInfoFromServer: make(chan StatInfo, app.ServerConfig().StatReportChannelBufLen),
+		mStatInfoFromServer:  make(map[statf.StatMicMsgHead]statf.StatMicMsgBody),
+		mStatCountFromServer: make(map[statf.StatMicMsgHead]int),
+	}
+}
+
 // Init the StatFHelper
 func (s *StatFHelper) Init(comm *Communicator, servant string) {
 	s.servant = servant
-	s.app = comm.app
-	s.chStatInfo = make(chan StatInfo, s.app.ServerConfig().StatReportChannelBufLen)
-	s.chStatInfoFromServer = make(chan StatInfo, s.app.ServerConfig().StatReportChannelBufLen)
-	s.mStatInfo = make(map[statf.StatMicMsgHead]statf.StatMicMsgBody)
-	s.mStatCount = make(map[statf.StatMicMsgHead]int)
-	s.mStatInfoFromServer = make(map[statf.StatMicMsgHead]statf.StatMicMsgBody)
-	s.mStatCountFromServer = make(map[statf.StatMicMsgHead]int)
 	s.comm = comm
 	s.sf = new(statf.StatF)
 	s.comm.StringToProxy(s.servant, s.sf)
@@ -175,7 +180,7 @@ func initReport(app *application) error {
 		return fmt.Errorf("stat init error")
 	}
 	comm := app.Communicator()
-	StatReport = new(StatFHelper)
+	StatReport = newStatFHelper(app)
 	StatReport.Init(comm, cfg.Stat)
 	statInited <- struct{}{}
 	go StatReport.Run()
