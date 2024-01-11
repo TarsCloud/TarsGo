@@ -83,6 +83,8 @@ func init() {
 func newApp() *application {
 	return &application{
 		opt:                &options{},
+		cltCfg:             newClientConfig(),
+		svrCfg:             newServerConfig(),
 		tarsConfig:         make(map[string]*transport.TarsServerConf),
 		goSvrs:             make(map[string]*transport.TarsServer),
 		httpSvrs:           make(map[string]*http.Server),
@@ -123,8 +125,6 @@ func (a *application) initConfig() {
 			})
 		}()
 	}()
-	a.svrCfg = newServerConfig()
-	a.cltCfg = newClientConfig()
 	if ServerConfigPath == "" {
 		svrFlag := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 		svrFlag.StringVar(&ServerConfigPath, "config", "", "server config path")
@@ -140,9 +140,32 @@ func (a *application) initConfig() {
 		TLOG.Errorf("Parse server config fail %v", err)
 		return
 	}
+
+	// parse config
+	a.parseServerConfig(c)
+	a.parseClientConfig(c)
 	a.conf = c
 
-	// Config.go
+	cachePath := filepath.Join(a.svrCfg.DataPath, a.svrCfg.Server) + ".tarsdat"
+	if cacheData, err := os.ReadFile(cachePath); err == nil {
+		_ = json.Unmarshal(cacheData, &a.appCache)
+	}
+	// cache
+	a.appCache.TarsVersion = Version
+	if a.svrCfg.LogLevel == "" {
+		a.svrCfg.LogLevel = a.appCache.LogLevel
+	} else {
+		a.appCache.LogLevel = a.svrCfg.LogLevel
+	}
+	rogger.SetLevel(rogger.StringToLevel(a.svrCfg.LogLevel))
+	if a.svrCfg.LogPath != "" {
+		_ = TLOG.SetFileRoller(a.svrCfg.LogPath+"/"+a.svrCfg.App+"/"+a.svrCfg.Server, int(a.svrCfg.LogNum), int(a.svrCfg.LogSize))
+	}
+	protocol.SetMaxPackageLength(a.svrCfg.MaxPackageLength)
+	_, _ = maxprocs.Set(maxprocs.Logger(TLOG.Infof))
+}
+
+func (a *application) parseServerConfig(c *conf.Conf) {
 	// init server config
 	if strings.EqualFold(c.GetString("/tars/application<enableset>"), "Y") {
 		a.svrCfg.Enableset = true
@@ -173,24 +196,6 @@ func (a *application) initConfig() {
 	// add adapters config
 	a.svrCfg.Adapters = make(map[string]adapterConfig)
 
-	cachePath := filepath.Join(a.svrCfg.DataPath, a.svrCfg.Server) + ".tarsdat"
-	if cacheData, err := os.ReadFile(cachePath); err == nil {
-		_ = json.Unmarshal(cacheData, &a.appCache)
-	}
-
-	if a.svrCfg.LogLevel == "" {
-		a.svrCfg.LogLevel = a.appCache.LogLevel
-	} else {
-		a.appCache.LogLevel = a.svrCfg.LogLevel
-	}
-	rogger.SetLevel(rogger.StringToLevel(a.svrCfg.LogLevel))
-	if a.svrCfg.LogPath != "" {
-		_ = TLOG.SetFileRoller(a.svrCfg.LogPath+"/"+a.svrCfg.App+"/"+a.svrCfg.Server, int(a.svrCfg.LogNum), int(a.svrCfg.LogSize))
-	}
-
-	// cache
-	a.appCache.TarsVersion = Version
-
 	// add timeout config
 	a.svrCfg.AcceptTimeout = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/server<accepttimeout>", AcceptTimeout))
 	a.svrCfg.ReadTimeout = tools.ParseTimeOut(c.GetIntWithDef("/tars/application/server<readtimeout>", ReadTimeout))
@@ -214,11 +219,14 @@ func (a *application) initConfig() {
 	a.svrCfg.StatReportChannelBufLen = c.GetInt32WithDef("/tars/application/server<statreportchannelbuflen>", StatReportChannelBufLen)
 	// maxPackageLength
 	a.svrCfg.MaxPackageLength = c.GetIntWithDef("/tars/application/server<maxPackageLength>", MaxPackageLength)
-	protocol.SetMaxPackageLength(a.svrCfg.MaxPackageLength)
+
 	// tls
 	a.svrCfg.Key = c.GetString("/tars/application/server<key>")
 	a.svrCfg.Cert = c.GetString("/tars/application/server<cert>")
-	var tlsConfig *tls.Config
+	var (
+		tlsConfig *tls.Config
+		err       error
+	)
 	if a.svrCfg.Key != "" && a.svrCfg.Cert != "" {
 		a.svrCfg.CA = c.GetString("/tars/application/server<ca>")
 		a.svrCfg.VerifyClient = c.GetStringWithDef("/tars/application/server<verifyclient>", "0") != "0"
@@ -233,6 +241,55 @@ func (a *application) initConfig() {
 	a.svrCfg.SampleAddress = c.GetString("/tars/application/server<sampleaddress>")
 	a.svrCfg.SampleEncoding = c.GetStringWithDef("/tars/application/server<sampleencoding>", "json")
 
+	serList := c.GetDomain("/tars/application/server")
+	for _, adapter := range serList {
+		endString := c.GetString("/tars/application/server/" + adapter + "<endpoint>")
+		end := endpoint.Parse(endString)
+		svrObj := c.GetString("/tars/application/server/" + adapter + "<servant>")
+		proto := c.GetString("/tars/application/server/" + adapter + "<protocol>")
+		queuecap := c.GetIntWithDef("/tars/application/server/"+adapter+"<queuecap>", a.svrCfg.QueueCap)
+		threads := c.GetInt("/tars/application/server/" + adapter + "<threads>")
+		a.svrCfg.Adapters[adapter] = adapterConfig{end, proto, svrObj, threads}
+		host := end.Host
+		if end.Bind != "" {
+			host = end.Bind
+		}
+		var opts []ServerConfOption
+		opts = append(opts, WithQueueCap(queuecap))
+		if end.IsSSL() {
+			key := c.GetString("/tars/application/server/" + adapter + "<key>")
+			cert := c.GetString("/tars/application/server/" + adapter + "<cert>")
+			if key != "" && cert != "" {
+				ca := c.GetString("/tars/application/server/" + adapter + "<ca>")
+				verifyClient := c.GetString("/tars/application/server/"+adapter+"<verifyclient>") != "0"
+				ciphers := c.GetString("/tars/application/server/" + adapter + "<ciphers>")
+				var adpTlsConfig *tls.Config
+				adpTlsConfig, err = ssl.NewServerTlsConfig(ca, cert, key, verifyClient, ciphers)
+				if err != nil {
+					panic(err)
+				}
+				opts = append(opts, WithTlsConfig(adpTlsConfig))
+			} else {
+				// common tls.Config
+				opts = append(opts, WithTlsConfig(tlsConfig))
+			}
+		}
+		a.tarsConfig[svrObj] = newTarsServerConf(end.Proto, fmt.Sprintf("%s:%d", host, end.Port), a.svrCfg, opts...)
+	}
+	a.serList = serList
+
+	if len(a.svrCfg.Local) > 0 {
+		localPoint := endpoint.Parse(a.svrCfg.Local)
+		// 管理端口不启动协程池
+		a.tarsConfig["AdminObj"] = newTarsServerConf(localPoint.Proto, fmt.Sprintf("%s:%d", localPoint.Host, localPoint.Port), a.svrCfg, WithMaxInvoke(0))
+		a.svrCfg.Adapters["AdminAdapter"] = adapterConfig{localPoint, localPoint.Proto, "AdminObj", 1}
+		RegisterAdmin(rogger.Admin, rogger.HandleDyeingAdmin)
+	}
+
+	TLOG.Debug("config add ", a.tarsConfig)
+}
+
+func (a *application) parseClientConfig(c *conf.Conf) {
 	// init client config
 	cMap := c.GetMap("/tars/application/client")
 	a.cltCfg.Locator = cMap["locator"]
@@ -266,53 +323,6 @@ func (a *application) initConfig() {
 		a.clientTlsConfig = clientTlsConfig
 	}
 
-	serList := c.GetDomain("/tars/application/server")
-	for _, adapter := range serList {
-		endString := c.GetString("/tars/application/server/" + adapter + "<endpoint>")
-		end := endpoint.Parse(endString)
-		svrObj := c.GetString("/tars/application/server/" + adapter + "<servant>")
-		proto := c.GetString("/tars/application/server/" + adapter + "<protocol>")
-		queuecap := c.GetIntWithDef("/tars/application/server/"+adapter+"<queuecap>", a.svrCfg.QueueCap)
-		threads := c.GetInt("/tars/application/server/" + adapter + "<threads>")
-		a.svrCfg.Adapters[adapter] = adapterConfig{end, proto, svrObj, threads}
-		host := end.Host
-		if end.Bind != "" {
-			host = end.Bind
-		}
-		var opts []ServerConfOption
-		opts = append(opts, WithQueueCap(queuecap))
-		if end.IsSSL() {
-			key := c.GetString("/tars/application/server/" + adapter + "<key>")
-			cert := c.GetString("/tars/application/server/" + adapter + "<cert>")
-			if key != "" && cert != "" {
-				ca = c.GetString("/tars/application/server/" + adapter + "<ca>")
-				verifyClient := c.GetString("/tars/application/server/"+adapter+"<verifyclient>") != "0"
-				ciphers := c.GetString("/tars/application/server/" + adapter + "<ciphers>")
-				var adpTlsConfig *tls.Config
-				adpTlsConfig, err = ssl.NewServerTlsConfig(ca, cert, key, verifyClient, ciphers)
-				if err != nil {
-					panic(err)
-				}
-				opts = append(opts, WithTlsConfig(adpTlsConfig))
-			} else {
-				// common tls.Config
-				opts = append(opts, WithTlsConfig(tlsConfig))
-			}
-		}
-		a.tarsConfig[svrObj] = newTarsServerConf(end.Proto, fmt.Sprintf("%s:%d", host, end.Port), a.svrCfg, opts...)
-	}
-	a.serList = serList
-
-	TLOG.Debug("config add ", a.tarsConfig)
-
-	if len(a.svrCfg.Local) > 0 {
-		localPoint := endpoint.Parse(a.svrCfg.Local)
-		// 管理端口不启动协程池
-		a.tarsConfig["AdminObj"] = newTarsServerConf(localPoint.Proto, fmt.Sprintf("%s:%d", localPoint.Host, localPoint.Port), a.svrCfg, WithMaxInvoke(0))
-		a.svrCfg.Adapters["AdminAdapter"] = adapterConfig{localPoint, localPoint.Proto, "AdminObj", 1}
-		RegisterAdmin(rogger.Admin, rogger.HandleDyeingAdmin)
-	}
-
 	auths := c.GetDomain("/tars/application/client")
 	for _, objName := range auths {
 		authInfo := make(map[string]string)
@@ -324,15 +334,13 @@ func (a *application) initConfig() {
 		authInfo["ciphers"] = c.GetString("/tars/application/client/" + objName + "<ciphers>")
 		a.clientObjInfo[objName] = authInfo
 		if authInfo["ca"] != "" {
-			var objTlsConfig *tls.Config
-			objTlsConfig, err = ssl.NewClientTlsConfig(authInfo["ca"], authInfo["cert"], authInfo["key"], authInfo["ciphers"])
+			objTlsConfig, err := ssl.NewClientTlsConfig(authInfo["ca"], authInfo["cert"], authInfo["key"], authInfo["ciphers"])
 			if err != nil {
 				panic(err)
 			}
 			a.clientObjTlsConfig[objName] = objTlsConfig
 		}
 	}
-	_, _ = maxprocs.Set(maxprocs.Logger(TLOG.Infof))
 }
 
 // Run the application
