@@ -14,7 +14,6 @@ import (
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/requestf"
 	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/endpoint"
-	"github.com/TarsCloud/TarsGo/tars/util/rtimer"
 	"github.com/TarsCloud/TarsGo/tars/util/tools"
 )
 
@@ -159,16 +158,25 @@ func (s *ServantProxy) TarsInvoke(ctx context.Context, cType byte,
 	msg := &Message{Req: &req, Ser: s, Resp: resp}
 	msg.Init()
 
-	timeout := time.Duration(s.timeout) * time.Millisecond
 	if ok, hashType, hashCode, isHash := current.GetClientHash(ctx); ok {
 		msg.isHash = isHash
 		msg.hashType = HashType(hashType)
 		msg.hashCode = hashCode
 	}
 
+	timeout := time.Duration(s.timeout) * time.Millisecond
 	if ok, to, isTimeout := current.GetClientTimeout(ctx); ok && isTimeout {
 		timeout = time.Duration(to) * time.Millisecond
 		req.ITimeout = int32(to)
+	}
+	// timeout delivery
+	if dl, ok := ctx.Deadline(); ok {
+		timeout = time.Until(dl)
+		req.ITimeout = int32(timeout / time.Millisecond)
+	} else {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, timeout)
+		defer cancel()
 	}
 
 	var err error
@@ -253,7 +261,7 @@ func (s *ServantProxy) doInvoke(ctx context.Context, msg *Message, timeout time.
 		return nil
 	}
 	select {
-	case <-rtimer.After(timeout):
+	case <-ctx.Done():
 		msg.Status = basef.TARSINVOKETIMEOUT
 		adp.failAdd()
 		msg.End()
