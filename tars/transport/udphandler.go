@@ -38,6 +38,28 @@ func (u *udpHandler) getConnContext(udpAddr *net.UDPAddr) context.Context {
 	return ctx
 }
 
+func (u *udpHandler) handleUDPAddr(udpAddr *net.UDPAddr, pkg []byte) {
+	ctx := u.getConnContext(udpAddr)
+	atomic.AddInt32(&u.server.numInvoke, 1)
+	go func() {
+		defer atomic.AddInt32(&u.server.numInvoke, -1)
+		rsp := u.server.invoke(ctx, pkg) // no need to check package
+
+		cPacketType, ok := current.GetPacketTypeFromContext(ctx)
+		if !ok {
+			TLOG.Error("Failed to GetPacketTypeFromContext")
+		}
+
+		if cPacketType == basef.TARSONEWAY {
+			return
+		}
+
+		if _, err := u.conn.WriteToUDP(rsp, udpAddr); err != nil {
+			TLOG.Errorf("send pkg to %v failed %v", udpAddr, err)
+		}
+	}()
+}
+
 func (u *udpHandler) Handle() error {
 	atomic.AddInt32(&u.server.numConn, 1)
 	// wait invoke done
@@ -67,25 +89,7 @@ func (u *udpHandler) Handle() error {
 		}
 		pkg := make([]byte, n)
 		copy(pkg, buffer[0:n])
-		ctx := u.getConnContext(udpAddr)
-		go func() {
-			atomic.AddInt32(&u.server.numInvoke, 1)
-			defer atomic.AddInt32(&u.server.numInvoke, -1)
-			rsp := u.server.invoke(ctx, pkg) // no need to check package
-
-			cPacketType, ok := current.GetPacketTypeFromContext(ctx)
-			if !ok {
-				TLOG.Error("Failed to GetPacketTypeFromContext")
-			}
-
-			if cPacketType == basef.TARSONEWAY {
-				return
-			}
-
-			if _, err := u.conn.WriteToUDP(rsp, udpAddr); err != nil {
-				TLOG.Errorf("send pkg to %v failed %v", udpAddr, err)
-			}
-		}()
+		u.handleUDPAddr(udpAddr, pkg)
 	}
 }
 
