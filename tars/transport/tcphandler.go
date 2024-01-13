@@ -72,6 +72,7 @@ func (t *tcpHandler) getConnContext(connSt *connInfo) context.Context {
 func (t *tcpHandler) handleConn(connSt *connInfo, pkg []byte) {
 	// recvPkgTs are more accurate
 	ctx := t.getConnContext(connSt)
+	atomic.AddInt32(&connSt.numInvoke, 1)
 	handler := func() {
 		defer atomic.AddInt32(&connSt.numInvoke, -1)
 		rsp := t.server.invoke(ctx, pkg)
@@ -262,7 +263,6 @@ func (t *tcpHandler) recv(connSt *connInfo) {
 				break
 			}
 			if status == PackageFull {
-				atomic.AddInt32(&connSt.numInvoke, 1)
 				pkg := make([]byte, pkgLen)
 				copy(pkg, currBuffer[:pkgLen])
 				currBuffer = currBuffer[pkgLen:]

@@ -7,6 +7,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/TarsCloud/TarsGo/tars/util/gpool"
+
 	"github.com/TarsCloud/TarsGo/tars/protocol/res/basef"
 	"github.com/TarsCloud/TarsGo/tars/util/current"
 	"github.com/TarsCloud/TarsGo/tars/util/grace"
@@ -17,6 +19,7 @@ type udpHandler struct {
 	server *TarsServer
 
 	conn *net.UDPConn
+	pool *gpool.Pool
 }
 
 func (u *udpHandler) Listen() (err error) {
@@ -26,6 +29,11 @@ func (u *udpHandler) Listen() (err error) {
 		return err
 	}
 	TLOG.Info("UDP listen", u.conn.LocalAddr())
+
+	// init goroutine pool
+	if cfg.MaxInvoke > 0 {
+		u.pool = gpool.NewPool(int(cfg.MaxInvoke), cfg.QueueCap)
+	}
 	return nil
 }
 
@@ -36,6 +44,35 @@ func (u *udpHandler) getConnContext(udpAddr *net.UDPAddr) context.Context {
 	current.SetRecvPkgTsFromContext(ctx, time.Now().UnixNano()/1e6)
 	current.SetRawConnWithContext(ctx, u.conn, udpAddr)
 	return ctx
+}
+
+func (u *udpHandler) handleUDPAddr(udpAddr *net.UDPAddr, pkg []byte) {
+	ctx := u.getConnContext(udpAddr)
+	atomic.AddInt32(&u.server.numInvoke, 1)
+	handler := func() {
+		defer atomic.AddInt32(&u.server.numInvoke, -1)
+		rsp := u.server.invoke(ctx, pkg) // no need to check package
+
+		cPacketType, ok := current.GetPacketTypeFromContext(ctx)
+		if !ok {
+			TLOG.Error("Failed to GetPacketTypeFromContext")
+		}
+
+		if cPacketType == basef.TARSONEWAY {
+			return
+		}
+
+		if _, err := u.conn.WriteToUDP(rsp, udpAddr); err != nil {
+			TLOG.Errorf("send pkg to %v failed %v", udpAddr, err)
+		}
+	}
+
+	cfg := u.config
+	if cfg.MaxInvoke > 0 { // use goroutine pool
+		u.pool.JobQueue <- handler
+	} else {
+		go handler()
+	}
 }
 
 func (u *udpHandler) Handle() error {
@@ -67,25 +104,7 @@ func (u *udpHandler) Handle() error {
 		}
 		pkg := make([]byte, n)
 		copy(pkg, buffer[0:n])
-		ctx := u.getConnContext(udpAddr)
-		go func() {
-			atomic.AddInt32(&u.server.numInvoke, 1)
-			defer atomic.AddInt32(&u.server.numInvoke, -1)
-			rsp := u.server.invoke(ctx, pkg) // no need to check package
-
-			cPacketType, ok := current.GetPacketTypeFromContext(ctx)
-			if !ok {
-				TLOG.Error("Failed to GetPacketTypeFromContext")
-			}
-
-			if cPacketType == basef.TARSONEWAY {
-				return
-			}
-
-			if _, err := u.conn.WriteToUDP(rsp, udpAddr); err != nil {
-				TLOG.Errorf("send pkg to %v failed %v", udpAddr, err)
-			}
-		}()
+		u.handleUDPAddr(udpAddr, pkg)
 	}
 }
 
