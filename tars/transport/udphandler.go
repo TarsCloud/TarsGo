@@ -67,10 +67,10 @@ func (u *udpHandler) Handle() error {
 		}
 		pkg := make([]byte, n)
 		copy(pkg, buffer[0:n])
+		ctx := u.getConnContext(udpAddr)
 		go func() {
 			atomic.AddInt32(&u.server.numInvoke, 1)
 			defer atomic.AddInt32(&u.server.numInvoke, -1)
-			ctx := u.getConnContext(udpAddr)
 			rsp := u.server.invoke(ctx, pkg) // no need to check package
 
 			cPacketType, ok := current.GetPacketTypeFromContext(ctx)

@@ -44,6 +44,21 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 	is := codec.NewReader(req[4:])
 	reqPackage.ReadFrom(is)
 
+	recvPkgTs, ok := current.GetRecvPkgTsFromContext(ctx)
+	if !ok {
+		recvPkgTs = time.Now().UnixNano() / 1e6
+	}
+
+	// timeout delivery
+	now := time.Now().UnixNano() / 1e6
+	if reqPackage.ITimeout > 0 {
+		sub := now - recvPkgTs // coroutine scheduling time difference
+		timeout := int64(reqPackage.ITimeout) - sub
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, time.Duration(timeout)*time.Millisecond)
+		defer cancel()
+	}
+
 	if reqPackage.HasMessageType(basef.TARSMESSAGETYPEDYED) {
 		if dyeingKey, ok := reqPackage.Status[current.StatusDyedKey]; ok {
 			if ok = current.SetDyeingKey(ctx, dyeingKey); !ok {
@@ -62,10 +77,6 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 		}
 	}
 
-	recvPkgTs, ok := current.GetRecvPkgTsFromContext(ctx)
-	if !ok {
-		recvPkgTs = time.Now().UnixNano() / 1e6
-	}
 	if reqPackage.CPacketType == basef.TARSONEWAY {
 		defer func() {
 			endTime := time.Now().UnixNano() / 1e6
@@ -81,52 +92,54 @@ func (s *Protocol) Invoke(ctx context.Context, req []byte) (rsp []byte) {
 	rspPackage.IVersion = reqPackage.IVersion
 	rspPackage.IRequestId = reqPackage.IRequestId
 
-	// Improve server timeout handling
-	now := time.Now().UnixNano() / 1e6
-	if ok && reqPackage.ITimeout > 0 && now-recvPkgTs > int64(reqPackage.ITimeout) {
+	select {
+	case <-ctx.Done():
 		rspPackage.IRet = basef.TARSSERVERQUEUETIMEOUT
+		rspPackage.SResultDesc = "server invoke timeout"
 		ip, _ := current.GetClientIPFromContext(ctx)
 		port, _ := current.GetClientPortFromContext(ctx)
-		TLOG.Errorf("handle queue timeout, obj:%s, func:%s, recv time:%d, now:%d, timeout:%d, cost:%d,  addr:(%s:%s), reqId:%d",
-			reqPackage.SServantName, reqPackage.SFuncName, recvPkgTs, now, reqPackage.ITimeout, now-recvPkgTs, ip, port, reqPackage.IRequestId)
-	} else if reqPackage.SFuncName != "tars_ping" { // not tars_ping, normal business call branch
-		if s.withContext {
-			if ok = current.SetRequestStatus(ctx, reqPackage.Status); !ok {
-				TLOG.Error("Set request status in context fail!")
-			}
-			if ok = current.SetRequestContext(ctx, reqPackage.Context); !ok {
-				TLOG.Error("Set request context in context fail!")
-			}
-		}
-		var err error
-		if s.app.allFilters.sf != nil {
-			err = s.app.allFilters.sf(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
-		} else if sf := s.app.getMiddlewareServerFilter(); sf != nil {
-			err = sf(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
-		} else {
-			// execute pre server filters
-			for i, v := range s.app.allFilters.preSfs {
-				err = v(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
-				if err != nil {
-					TLOG.Errorf("Pre filter error, No.%v, err: %v", i, err)
+		TLOG.Errorf("handle queue timeout, obj:%s, func:%s, recv time:%d, now:%d, timeout:%d, cost:%d,  addr:(%s:%s), reqId:%d, err: %v",
+			reqPackage.SServantName, reqPackage.SFuncName, recvPkgTs, now, reqPackage.ITimeout, now-recvPkgTs, ip, port, reqPackage.IRequestId, ctx.Err())
+	default:
+		if reqPackage.SFuncName != "tars_ping" { // not tars_ping, normal business call branch
+			if s.withContext {
+				if ok = current.SetRequestStatus(ctx, reqPackage.Status); !ok {
+					TLOG.Error("Set request status in context fail!")
+				}
+				if ok = current.SetRequestContext(ctx, reqPackage.Context); !ok {
+					TLOG.Error("Set request context in context fail!")
 				}
 			}
-			// execute business server
-			err = s.dispatcher.Dispatch(ctx, s.serverImp, &reqPackage, &rspPackage, s.withContext)
-			// execute post server filters
-			for i, v := range s.app.allFilters.postSfs {
-				err = v(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
-				if err != nil {
-					TLOG.Errorf("Post filter error, No.%v, err: %v", i, err)
+			var err error
+			if s.app.allFilters.sf != nil {
+				err = s.app.allFilters.sf(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
+			} else if sf := s.app.getMiddlewareServerFilter(); sf != nil {
+				err = sf(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
+			} else {
+				// execute pre server filters
+				for i, v := range s.app.allFilters.preSfs {
+					err = v(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
+					if err != nil {
+						TLOG.Errorf("Pre filter error, No.%v, err: %v", i, err)
+					}
+				}
+				// execute business server
+				err = s.dispatcher.Dispatch(ctx, s.serverImp, &reqPackage, &rspPackage, s.withContext)
+				// execute post server filters
+				for i, v := range s.app.allFilters.postSfs {
+					err = v(ctx, s.dispatcher.Dispatch, s.serverImp, &reqPackage, &rspPackage, s.withContext)
+					if err != nil {
+						TLOG.Errorf("Post filter error, No.%v, err: %v", i, err)
+					}
 				}
 			}
-		}
-		if err != nil {
-			TLOG.Errorf("RequestID:%d, Found err: %v", reqPackage.IRequestId, err)
-			rspPackage.IRet = 1
-			rspPackage.SResultDesc = err.Error()
-			if tarsErr, ok := err.(*Error); ok {
-				rspPackage.IRet = tarsErr.Code
+			if err != nil {
+				TLOG.Errorf("RequestID:%d, Found err: %v", reqPackage.IRequestId, err)
+				rspPackage.IRet = 1
+				rspPackage.SResultDesc = err.Error()
+				if tarsErr, ok := err.(*Error); ok {
+					rspPackage.IRet = tarsErr.Code
+				}
 			}
 		}
 	}
