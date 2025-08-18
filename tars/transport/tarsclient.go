@@ -135,15 +135,17 @@ func (c *connection) ReConnect() (err error) {
 		}
 
 		if err != nil {
+			go c.client.protocol.OnClose(c.client.address)
 			return err
 		}
 		if c.client.config.Proto == "tcp" {
 			if c.conn != nil {
-				_ = c.conn.(*net.TCPConn).SetKeepAlive(true)
+				c.conn.(*net.TCPConn).SetKeepAlive(true)
 			}
 		}
 		c.idleTime = time.Now()
 		c.isClosed = false
+		go c.client.protocol.OnConnect(c.client.address)
 		connDone := make(chan bool, 1)
 		go c.recv(c.conn, connDone)
 		go c.send(c.conn, connDone)
@@ -270,4 +272,5 @@ func (c *connection) close(conn net.Conn) {
 	if conn != nil {
 		_ = conn.Close()
 	}
+	go c.client.protocol.OnClose(c.client.address)
 }

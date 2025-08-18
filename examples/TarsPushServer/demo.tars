@@ -1,0 +1,30 @@
+module demo
+{
+    struct Result
+    {
+        0 optional int    code;
+        1 optional string msg;
+    };
+
+    struct RegReq
+    {
+        0 optional string msg;
+    };
+
+    struct RegRsp
+    {
+        0 optional string msg;
+    };
+
+    struct Notify
+    {
+        0 optional string msg;
+    };
+
+    interface DemoObj
+    {
+        void Push(out string msg);
+        Result Reg(RegReq req, out RegRsp rsp);
+        Result Notify(Notify notify);
+    };
+};

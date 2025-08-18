@@ -3,6 +3,7 @@ package transport
 import (
 	"context"
 	"crypto/tls"
+	"github.com/google/uuid"
 	"io"
 	"net"
 	"os"
@@ -32,12 +33,14 @@ type tcpHandler struct {
 }
 
 type connInfo struct {
+	uuid      string
 	conn      net.Conn
 	idleTime  int64
 	numInvoke int32
 }
 
 func (t *tcpHandler) Listen() (err error) {
+	uuid.EnableRandPool()
 	cfg := t.config
 	t.listener, err = grace.CreateListener("tcp", cfg.Address)
 	if err != nil {
@@ -62,6 +65,7 @@ func (t *tcpHandler) Listen() (err error) {
 func (t *tcpHandler) getConnContext(connSt *connInfo) context.Context {
 	ctx := current.ContextWithTarsCurrent(context.Background())
 	ipPort := strings.Split(connSt.conn.RemoteAddr().String(), ":")
+	current.SetUUIDWithContext(ctx, connSt.uuid)
 	current.SetClientIPWithContext(ctx, ipPort[0])
 	current.SetClientPortWithContext(ctx, ipPort[1])
 	current.SetRecvPkgTsFromContext(ctx, time.Now().UnixNano()/1e6)
@@ -137,7 +141,7 @@ func (t *tcpHandler) Handle() error {
 			case *tls.Conn:
 				TLOG.Debugf("TLS accept: %s, %d", conn.RemoteAddr(), os.Getpid())
 			}
-			cf := &connInfo{conn: conn}
+			cf := &connInfo{conn: conn, uuid: uuid.New().String()}
 			t.conns.Store(key, cf)
 			t.recv(cf)
 			t.conns.Delete(key)

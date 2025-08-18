@@ -3,6 +3,7 @@ module github.com/TarsCloud/TarsGo
 go 1.14
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/stretchr/testify v1.8.4

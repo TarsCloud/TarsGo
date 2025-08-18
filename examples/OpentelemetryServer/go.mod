@@ -3,7 +3,7 @@ module OpentelemetryServer
 go 1.19
 
 require (
-	github.com/TarsCloud/TarsGo v1.3.10
+	github.com/TarsCloud/TarsGo v1.4.4
 	github.com/TarsCloud/TarsGo/contrib/middleware/opentelemetry v0.0.0
 	github.com/prometheus/client_golang v1.14.0
 	go.opentelemetry.io/otel v1.15.0-rc.1
@@ -52,7 +52,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.14.0 // indirect
 	go.opentelemetry.io/otel/metric v1.15.0-rc.1 // indirect
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
-	go.uber.org/automaxprocs v1.5.1 // indirect
+	go.uber.org/automaxprocs v1.5.2 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
