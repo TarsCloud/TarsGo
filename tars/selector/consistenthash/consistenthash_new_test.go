@@ -44,13 +44,40 @@ func TestKetamaHashAlg_Hash(t *testing.T) {
 		{
 			name: "2.2.2.2",
 			str:  "2.2.2.2",
-			want: 329942752,
+			want: 2857797211,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			k := KetamaHashAlg{}
 			if code := k.Hash(tt.str); code != tt.want {
+				t.Errorf("Hash() = %v, want %v", code, tt.want)
+			}
+		})
+	}
+}
+
+func TestDefaultHashAlg_Hash(t *testing.T) {
+	tests := []struct {
+		name string
+		str  string
+		want uint32
+	}{
+		{
+			name: "1.1.1.1",
+			str:  "1.1.1.1",
+			want: 3029007777,
+		},
+		{
+			name: "2.2.2.2",
+			str:  "2.2.2.2",
+			want: 2705725636,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			d := DefaultHashAlg{}
+			if code := d.Hash(tt.str); code != tt.want {
 				t.Errorf("Hash() = %v, want %v", code, tt.want)
 			}
 		})
